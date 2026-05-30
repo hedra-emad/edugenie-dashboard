@@ -6,7 +6,6 @@ import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/a
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
 import { AuthTabsComponent } from '../../../../shared/components/auth-tabs/auth-tabs.component';
-import { RoleSelectorComponent } from '../../../../shared/components/role-selector/role-selector.component';
 import { AuthInputComponent } from '../../../../shared/components/auth-input/auth-input.component';
 import { PasswordInputComponent } from '../../../../shared/components/password-input/password-input.component';
 import { RememberMeComponent } from '../../../../shared/components/remember-me/remember-me.component';
@@ -24,7 +23,6 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
     AuthLogoComponent,
     AuthCardComponent,
     AuthTabsComponent,
-    RoleSelectorComponent,
     AuthInputComponent,
     PasswordInputComponent,
     RememberMeComponent,
@@ -32,8 +30,60 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
     AuthDividerComponent,
     SocialLoginComponent
   ],
-  templateUrl: './login.page.html',
-  styleUrl: './login.page.css'
+  template: `
+    <app-auth-layout>
+      <app-auth-logo></app-auth-logo>
+      
+      <app-auth-card>
+        <app-auth-tabs 
+          [activeTab]="activeTab()" 
+          (onTabChange)="setTab($event)">
+        </app-auth-tabs>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          
+          <app-role-selector formControlName="role"></app-role-selector>
+
+          <app-auth-input 
+            [control]="loginForm.controls['email']" 
+            label="Email Address" 
+            id="email" 
+            type="email" 
+            placeholder="name@example.com">
+            <svg icon class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </app-auth-input>
+
+          <app-password-input 
+            [control]="loginForm.controls['password']" 
+            label="Password" 
+            id="password" 
+            placeholder="••••••••">
+          </app-password-input>
+
+          <app-remember-me formControlName="rememberMe"></app-remember-me>
+
+          <app-auth-button 
+            type="submit" 
+            [loading]="isLoading()" 
+            [disabled]="loginForm.invalid && loginForm.touched">
+            Sign In
+          </app-auth-button>
+
+        </form>
+
+        <app-auth-divider>or continue with</app-auth-divider>
+
+        <app-social-login 
+          (onGoogle)="loginWithGoogle()" 
+          (onGithub)="loginWithGithub()">
+        </app-social-login>
+        
+      </app-auth-card>
+    </app-auth-layout>
+  `,
+  styles: []
 })
 export class LoginPageComponent {
   private fb = inject(FormBuilder);

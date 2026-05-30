@@ -8,8 +8,6 @@
         </app-auth-tabs>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          
-          <app-role-selector formControlName="role"></app-role-selector>
 
           <app-auth-input 
             [control]="loginForm.controls['email']" 
