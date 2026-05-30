@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -34,11 +34,21 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',
 })
-export class LoginPageComponent {
+export class LoginPageComponent implements OnInit {
   private fb = inject(FormBuilder);
   
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
+  isWatchMode = signal(false);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isWatchMode.set(window.innerWidth <= 360);
+  }
+
+  ngOnInit() {
+    this.onResize();
+  }
 
   private router = inject(Router);
 

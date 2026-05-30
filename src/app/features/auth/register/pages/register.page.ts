@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -34,13 +34,37 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
   templateUrl: './register.page.html',
   styleUrl: './register.page.css',
 })
-export class RegisterPageComponent {
+export class RegisterPageComponent implements OnInit {
   fb = inject(FormBuilder);
   router = inject(Router);
 
   currentStep = 1;
   totalSteps = 2;
   isSubmitting = false;
+  isWatchMode = signal(false);
+
+  @HostListener('window:resize')
+  onResize() {
+    const isWatch = window.innerWidth <= 360;
+    this.isWatchMode.set(isWatch);
+
+    if (this.registerForm) {
+      const acc = this.accountCreation;
+      if (isWatch) {
+        acc.get('lastName')?.disable();
+        acc.get('confirmPassword')?.disable();
+        acc.get('role')?.disable();
+      } else {
+        acc.get('lastName')?.enable();
+        acc.get('confirmPassword')?.enable();
+        acc.get('role')?.enable();
+      }
+    }
+  }
+
+  ngOnInit() {
+    this.onResize();
+  }
 
   registerForm: FormGroup = this.fb.group({
     accountCreation: this.fb.group({
@@ -62,6 +86,7 @@ export class RegisterPageComponent {
   get profileSetup() { return this.registerForm.get('profileSetup') as FormGroup; }
 
   passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
+    if (g.get('confirmPassword')?.disabled) return null;
     return g.get('password')?.value === g.get('confirmPassword')?.value
       ? null : { mismatch: true };
   }
@@ -134,7 +159,11 @@ export class RegisterPageComponent {
         setTimeout(() => {
           console.log('Account Created successfully:', this.accountCreation.value);
           this.isSubmitting = false;
-          this.currentStep = 2;
+          if (this.isWatchMode()) {
+            this.router.navigate(['/login']);
+          } else {
+            this.currentStep = 2;
+          }
         }, 1200);
       } else {
         this.accountCreation.markAllAsTouched();
