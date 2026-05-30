@@ -1,0 +1,20 @@
+<div class="flex items-center justify-between mb-6">
+      <div class="flex items-center">
+        <input
+          id="remember-me"
+          type="checkbox"
+          [checked]="value"
+          (change)="toggle($event)"
+          class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
+        />
+        <label for="remember-me" class="ml-2 block text-sm text-text-primary cursor-pointer">
+          Remember me
+        </label>
+      </div>
+
+      <div class="text-sm">
+        <a href="#" class="font-semibold text-secondary hover:text-blue-500 transition-colors">
+          Forgot Password?
+        </a>
+      </div>
+    </div>
