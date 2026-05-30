@@ -1,1 +1,36 @@
 /* You can add global styles to this file, and also import other style files */
+حول ده ل css 
+/* EduGenie Design Tokens */
+
+:root {
+  /* Primary Colors */
+  --color-primary: #3B1892;
+  --color-primary-light: #5B3DB8;
+
+  /* Secondary Colors */
+  --color-secondary: #00B0FF;
+
+  /* Accent */
+  --color-tertiary: #621E00;
+
+  /* Neutrals */
+  --color-background: #F4F7F9;
+  --color-surface: #FFFFFF;
+
+  /* Text */
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+} 
