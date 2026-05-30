@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
@@ -92,8 +91,6 @@ export class LoginPageComponent {
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
 
-  private router = inject(Router);
-
   loginForm: FormGroup = this.fb.group({
     role: ['student', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
@@ -102,12 +99,9 @@ export class LoginPageComponent {
   });
 
   setTab(tab: 'signin' | 'signup') {
-  this.activeTab.set(tab);
-
-  if (tab === 'signup') {
-    this.router.navigate(['/register']);
+    this.activeTab.set(tab);
+    // Setup logic if changing to register
   }
-}
 
   onSubmit() {
     if (this.loginForm.valid) {

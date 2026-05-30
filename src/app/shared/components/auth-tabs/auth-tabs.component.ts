@@ -11,8 +11,4 @@ import { CommonModule } from '@angular/common';
 export class AuthTabsComponent {
   @Input() activeTab: 'signin' | 'signup' = 'signin';
   @Output() onTabChange = new EventEmitter<'signin' | 'signup'>();
-
-  selectTab(tab: 'signin' | 'signup') {
-    this.onTabChange.emit(tab);
-  }
 }

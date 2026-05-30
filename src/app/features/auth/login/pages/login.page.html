@@ -29,14 +29,12 @@
 
           <app-remember-me formControlName="rememberMe"></app-remember-me>
 
-          <div class="mt-8">
-            <app-auth-button 
-              type="submit" 
-              [loading]="isLoading()" 
-              [disabled]="loginForm.invalid && loginForm.touched">
-              Sign In
-            </app-auth-button>
-          </div>
+          <app-auth-button 
+            type="submit" 
+            [loading]="isLoading()" 
+            [disabled]="loginForm.invalid && loginForm.touched">
+            Sign In
+          </app-auth-button>
 
         </form>
 
