@@ -1,15 +1,13 @@
-<app-auth-layout>
+<app-auth-layout >
       <app-auth-logo></app-auth-logo>
       
       <app-auth-card>
-        <app-auth-tabs 
+        <app-auth-tabs *ngIf="!isWatchMode()"
           [activeTab]="activeTab()" 
           (onTabChange)="setTab($event)">
         </app-auth-tabs>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          
-          <app-role-selector formControlName="role"></app-role-selector>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-5 max-[360px]:space-y-3">
 
           <app-auth-input 
             [control]="loginForm.controls['email']" 
@@ -29,23 +27,29 @@
             placeholder="••••••••">
           </app-password-input>
 
-          <app-remember-me formControlName="rememberMe"></app-remember-me>
+          <div *ngIf="!isWatchMode()">
+            <app-remember-me formControlName="rememberMe"></app-remember-me>
+          </div>
 
-          <app-auth-button 
-            type="submit" 
-            [loading]="isLoading()" 
-            [disabled]="loginForm.invalid && loginForm.touched">
-            Sign In
-          </app-auth-button>
+          <div class="mt-8">
+            <app-auth-button 
+              type="submit" 
+              [loading]="isLoading()" 
+              [disabled]="loginForm.invalid && loginForm.touched">
+              Sign In
+            </app-auth-button>
+          </div>
 
         </form>
 
-        <app-auth-divider>or continue with</app-auth-divider>
+        <ng-container *ngIf="!isWatchMode()">
+          <app-auth-divider>or continue with</app-auth-divider>
 
-        <app-social-login 
-          (onGoogle)="loginWithGoogle()" 
-          (onGithub)="loginWithGithub()">
-        </app-social-login>
+          <app-social-login 
+            (onGoogle)="loginWithGoogle()" 
+            (onGithub)="loginWithGithub()">
+          </app-social-login>
+        </ng-container>
         
       </app-auth-card>
     </app-auth-layout>
