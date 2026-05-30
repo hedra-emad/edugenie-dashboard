@@ -7,9 +7,9 @@
           (onTabChange)="setTab($event)">
         </app-auth-tabs>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
           
-          <app-role-selector formControlName="role"></app-role-selector>
+          <!-- <app-role-selector formControlName="role"></app-role-selector> -->
 
           <app-auth-input 
             [control]="loginForm.controls['email']" 
@@ -31,12 +31,14 @@
 
           <app-remember-me formControlName="rememberMe"></app-remember-me>
 
-          <app-auth-button 
-            type="submit" 
-            [loading]="isLoading()" 
-            [disabled]="loginForm.invalid && loginForm.touched">
-            Sign In
-          </app-auth-button>
+          <div class="mt-8">
+            <app-auth-button 
+              type="submit" 
+              [loading]="isLoading()" 
+              [disabled]="loginForm.invalid && loginForm.touched">
+              Sign In
+            </app-auth-button>
+          </div>
 
         </form>
 
