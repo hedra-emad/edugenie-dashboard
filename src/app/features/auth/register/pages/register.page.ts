@@ -95,9 +95,10 @@ export class RegisterPageComponent implements OnInit {
      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
   ]
 ],
-      password: ['', [Validators.required, this.passwordValidator]], 
+      password: ['', [Validators.required, this.passwordValidator]],
       confirmPassword: ['', [Validators.required]],
-      role: ['student', [Validators.required]]
+      role: ['student', [Validators.required]],
+      bio: [''],  
     }, { validators: this.passwordMatchValidator }),
     profileSetup: this.fb.group({
       level: ['', Validators.required],
@@ -202,29 +203,35 @@ export class RegisterPageComponent implements OnInit {
   }
 
   nextStep() {
-    if (this.currentStep === 1) {
-      if (this.accountCreation.valid) {
-        this.isSubmitting = true;
-        // Mock account creation API
-        setTimeout(() => {
-          console.log('Account Created successfully:', this.accountCreation.value);
-          this.isSubmitting = false;
-          if (this.isWatchMode()) {
-            this.router.navigate(['/login']);
-          } else {
-            this.currentStep = 2;
-          }
-        }, 1200);
-      } else {
-        this.accountCreation.markAllAsTouched();
-      }
-    } else if (this.currentStep === 2) {
-      this.onSubmit();
+  if (this.currentStep === 1) {
+    if (this.accountCreation.valid) {
+      this.isSubmitting = true;
+
+      setTimeout(() => {
+        this.isSubmitting = false;
+
+        // 👇 لو Instructor
+        if (this.role === 'instructor') {
+          console.log('Instructor Signup:', this.accountCreation.value);
+          this.router.navigate(['/login']);
+          return;
+        }
+
+        // 👇 لو Student
+        this.currentStep = 2;
+
+      }, 800);
+
+    } else {
+      this.accountCreation.markAllAsTouched();
     }
+  } 
+  else if (this.currentStep === 2) {
+    this.onSubmit();
   }
+}
 
   skipProfile() {
-    console.log('Profile setup skipped');
     this.router.navigate(['/login']);
   }
 
@@ -244,6 +251,10 @@ export class RegisterPageComponent implements OnInit {
       this.router.navigate(['/login']);
     }
   }
+
+  get role() {
+  return this.accountCreation.get('role')?.value;
+}
 
 }
 
