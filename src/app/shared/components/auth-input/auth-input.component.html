@@ -20,7 +20,8 @@
           @if (control?.errors?.['required']) {
             <span>{{ label }} is required.</span>
           }
-          @if (control?.errors?.['email']) {
+
+          @if (control?.errors?.['email'] || control?.errors?.['pattern']) {
             <span>Invalid email address.</span>
           }
         </div>
