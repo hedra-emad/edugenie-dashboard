@@ -1,15 +1,16 @@
-<div class="min-h-screen flex flex-col bg-[#eef2f6]">
-  <main class="flex-grow flex justify-center items-center w-full px-4 sm:px-6 lg:px-8 max-[360px]:p-0">
-    <div class="w-full max-w-[1100px] bg-white sm:rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col lg:flex-row overflow-hidden">
+<div class="h-screen flex flex-col bg-[#eef2f6] overflow-hidden">
+<main class="flex-1 flex justify-center items-center w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-10 max-[360px]:p-0 min-h-0 overflow-hidden">
+    <div class="w-full max-w-[1000px] bg-white sm:rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col lg:flex-row overflow-hidden max-h-full">
 
-      <!-- Left Sidebar (Auth Sidebar) -->
+      <!-- Left Sidebar -->
       <div class="hidden lg:flex lg:w-[45%] bg-[#0b192c] relative rounded-l-[2rem] overflow-hidden">
         <app-auth-sidebar class="w-full h-full block"></app-auth-sidebar>
       </div>
 
-      <!-- Right Content Area -->
-      <div class="w-full lg:w-[55%] flex flex-col items-center justify-center relative">
-        <ng-content></ng-content>
+      <div class="auth-right-panel w-full lg:w-[55%] relative overflow-y-auto max-[1023px]:overflow-y-auto">
+        <div class="min-h-full flex flex-col items-center justify-center py-8 lg:py-10 max-[360px]:py-6">
+          <ng-content></ng-content>
+        </div>
       </div>
 
     </div>
@@ -29,4 +30,3 @@
     </div>
   </footer>
 </div>
-
