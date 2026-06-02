@@ -1,185 +1,242 @@
 <app-auth-layout>
   <app-auth-logo></app-auth-logo>
-  
-  <app-auth-card>
-    <app-auth-tabs *ngIf="!isWatchMode()" [activeTab]="'signup'" (onTabChange)="handleTabChange($event)"></app-auth-tabs>
 
-    <!-- Progress bar -->
-      <div class="mb-8 max-[360px]:mb-5" *ngIf="!isWatchMode()">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-xs font-semibold text-text-secondary uppercase tracking-wider max-[360px]:text-[10px]">Step {{ currentStep }} of {{ totalSteps }}</span>
-          <span class="text-xs font-semibold text-primary max-[360px]:text-[10px]">{{ getStepTitle() }}</span>
-        </div>
-        <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-          <div class="h-full bg-primary transition-all duration-400 ease-in-out rounded-full" [style.width]="(currentStep / totalSteps * 100) + '%'"></div>
+  <app-auth-card>
+
+    <!-- Tabs -->
+    <app-auth-tabs
+      *ngIf="!isWatchMode()"
+      [activeTab]="'signup'"
+      (onTabChange)="handleTabChange($event)">
+    </app-auth-tabs>
+
+    <!-- Progress Bar -->
+    <div class="mb-5 max-[360px]:mb-4" *ngIf="!isWatchMode()">
+      <div class="flex justify-between items-center mb-1.5">
+        <span class="text-xs font-semibold text-text-secondary uppercase tracking-wider max-[360px]:text-[10px]">
+          Step {{ currentStep }} of {{ totalSteps }}
+        </span>
+        <span class="text-xs font-semibold text-primary max-[360px]:text-[10px]">
+          {{ getStepTitle() }}
+        </span>
+      </div>
+      <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div
+          class="h-full bg-primary transition-all duration-400 ease-in-out rounded-full"
+          [style.width]="progressPercent + '%'">
         </div>
       </div>
+    </div>
 
-      <form [formGroup]="registerForm" (ngSubmit)="nextStep()">
-        
-        <!-- Step 1: Account Creation -->
-        <ng-container *ngIf="currentStep === 1" formGroupName="accountCreation">
-          <div class="animate-fade-in max-[360px]:space-y-3">
-            
-            <div class="flex flex-col sm:flex-row gap-4 max-[360px]:gap-3">
-              <div class="flex-1 min-w-0">
-                <app-auth-input id="firstName" label="First Name" placeholder="John" [control]="accountCreation.get('firstName')">
-                  <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                  </svg>
-              </app-auth-input>
-              </div>
-              <div class="flex-1 min-w-0" *ngIf="!isWatchMode()">
-                <app-auth-input id="lastName" label="Last Name" placeholder="Doe" [control]="accountCreation.get('lastName')">
-                  <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                  </svg>
-                </app-auth-input>
-              </div>
-            </div>
+    
+    <form [formGroup]="registerForm" (ngSubmit)="nextStep()">
 
-            <div class="relative group">
-              <app-auth-input
-                id="email"
-                type="email"
-                label="Email Address"
-                placeholder="john@example.com"
-                [control]="accountCreation.get('email')">
-                <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-              </app-auth-input>
-              <div *ngIf="accountCreation.get('email')?.valid && accountCreation.get('email')?.touched" class="absolute right-3 pointer-events-none top-[43px]">
-                <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-            </div>
+      <!-- Role Selection -->
+      <ng-container *ngIf="currentStep === 1" formGroupName="roleSelection">
+        <div class="animate-fade-in">
+          <app-role-selector formControlName="role"></app-role-selector>
+        </div>
+      </ng-container>
 
-            <app-password-input
-              id="password"
-              label="Password"
-              placeholder="Create a strong password"
-              [control]="accountCreation.get('password')">
-            </app-password-input>
-            
-            <div class="mb-4" *ngIf="!isWatchMode()">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-xs text-text-secondary">Password strength</span>
-                <span class="text-xs font-medium" 
-                      [ngClass]="{'text-error': getPasswordStrength() === 1, 'text-warning': getPasswordStrength() === 2, 'text-success': getPasswordStrength() >= 3}">
-                  {{ getPasswordStrengthText() }}
-                </span>
-              </div>
-              <div class="flex gap-1 h-1.5">
-                <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(0)"></div>
-                <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(1)"></div>
-                <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(2)"></div>
-                <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(3)"></div>
-              </div>
-            </div>
+      <!-- Account Information -->
+      <ng-container *ngIf="currentStep === 2" formGroupName="accountInfo">
+        <div class="animate-fade-in space-y-3 max-[360px]:space-y-2.5">
 
-            <div *ngIf="!isWatchMode()">
-              <app-password-input
-                id="confirmPassword"
-                label="Confirm Password"
-                placeholder="Confirm your password"
-                [control]="accountCreation.get('confirmPassword')">
-              </app-password-input>
-              <div *ngIf="accountCreation.hasError('mismatch') && accountCreation.get('confirmPassword')?.touched" class="text-error text-xs mt-1">
-                Passwords do not match.
-              </div>
-            </div>
+          <!-- First Name + Last Name  -->
+          <div class="grid grid-cols-2 gap-3 max-[360px]:grid-cols-1 max-[360px]:gap-2">
+            <app-auth-input
+              id="firstName"
+              label="First Name"
+              placeholder="John"
+              [control]="accountInfo.get('firstName')">
+              <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </app-auth-input>
 
-            <app-role-selector *ngIf="!isWatchMode()" formControlName="role"></app-role-selector>
+            <app-auth-input
+              *ngIf="!isWatchMode()"
+              id="lastName"
+              label="Last Name"
+              placeholder="Doe"
+              [control]="accountInfo.get('lastName')">
+              <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </app-auth-input>
+          </div>
 
-            <!-- Instructor bio -->
-            <div *ngIf="accountCreation.get('role')?.value === 'instructor'" class="mt-4">
-              <label class="block text-sm font-medium text-text-primary mb-2">
-                Bio
-              </label>
-
-              <textarea
-                formControlName="bio"
-                rows="4"
-                class="w-full bg-surface border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-primary outline-none"
-                placeholder="Write a short bio...">
-              </textarea>
+          <!-- Email -->
+          <div class="relative group">
+            <app-auth-input
+              id="email"
+              type="email"
+              label="Email Address"
+              placeholder="john@example.com"
+              [control]="accountInfo.get('email')">
+              <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </app-auth-input>
+            <div
+              *ngIf="accountInfo.get('email')?.valid && accountInfo.get('email')?.touched"
+              class="absolute right-3 pointer-events-none top-[43px]">
+              <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
             </div>
           </div>
-        </ng-container>
 
-        <!-- Step 2: Profile Setup -->
-        <ng-container *ngIf="currentStep === 2" formGroupName="profileSetup">
-          <div class="space-y-4 sm:space-y-5 animate-fade-in max-[360px]:space-y-3">
-            
+          <!-- Password -->
+          <app-password-input
+            id="password"
+            label="Password"
+            placeholder="Create a strong password"
+            [control]="accountInfo.get('password')">
+          </app-password-input>
+
+          <!-- Password Strength Meter -->
+          <div *ngIf="!isWatchMode()">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs text-text-secondary">Password strength</span>
+              <span
+                class="text-xs font-medium"
+                [ngClass]="{
+                  'text-error':   getPasswordStrength() === 1,
+                  'text-warning': getPasswordStrength() === 2,
+                  'text-success': getPasswordStrength() >= 3
+                }">
+                {{ getPasswordStrengthText() }}
+              </span>
+            </div>
+            <div class="flex gap-1 h-1.5">
+              <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(0)"></div>
+              <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(1)"></div>
+              <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(2)"></div>
+              <div class="flex-1 rounded-full transition-colors duration-300" [ngClass]="getStrengthColor(3)"></div>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div *ngIf="!isWatchMode()">
+            <app-password-input
+              id="confirmPassword"
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              [control]="accountInfo.get('confirmPassword')">
+            </app-password-input>
+            <div
+              *ngIf="accountInfo.hasError('mismatch') && accountInfo.get('confirmPassword')?.touched"
+              class="text-error text-xs mt-1 mb-0.5">
+              Passwords do not match.
+            </div>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- Student Profile Setup  -->
+      <ng-container *ngIf="currentStep === 3" formGroupName="profileSetup">
+        <div class="space-y-3 animate-fade-in max-[360px]:space-y-2.5">
+
+          <!-- Current Level + Primary Goal  -->
+          <div class="grid grid-cols-2 gap-3 max-[360px]:grid-cols-1 max-[360px]:gap-2.5">
+
+            <!-- Current Level -->
             <div class="relative">
-              <label for="level" class="block text-sm font-medium text-text-primary mb-2">Current Level</label>
-              <select id="level" formControlName="level" class="w-full bg-surface border border-gray-200 text-text-primary rounded-xl py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 appearance-none">
-                <option value="" disabled selected>Select your level</option>
+              <label for="level" class="block text-sm font-medium text-text-primary mb-1.5">
+                Current Level
+              </label>
+              <select
+                id="level"
+                formControlName="level"
+                class="w-full bg-surface border border-gray-200 text-text-primary rounded-xl py-2.5 pl-3 pr-8
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+                       transition-all duration-200 appearance-none text-sm">
+                <option value="" disabled selected>Select level</option>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>
               </select>
-              <div class="pointer-events-none absolute bottom-0 right-0 flex items-center px-4 text-gray-500 top-[28px]">
+              <div class="pointer-events-none absolute right-2.5 flex items-center text-gray-500 top-[37px]">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </div>
             </div>
 
+            <!-- Primary Goal -->
             <app-auth-input
               id="goal"
               label="Primary Goal"
-              placeholder="What do you want to achieve?"
+              placeholder="Your main goal"
               [control]="profileSetup.get('goal')">
               <svg icon class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </app-auth-input>
 
-            <div>
-              <label class="block text-sm font-medium text-text-primary mb-2">Areas of Interest</label>
-              <div class="flex flex-wrap gap-2 max-[360px]:gap-1.5">
-                <button type="button" 
-                        *ngFor="let interest of availableInterests"
-                        (click)="toggleInterest(interest)"
-                        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border max-[360px]:px-3 max-[360px]:py-1.5 max-[360px]:text-[11px]"
-                        [ngClass]="profileSetup.get('interests')?.value.includes(interest) ? 'bg-primary/10 border-primary text-primary' : 'bg-surface border-gray-200 text-text-secondary hover:border-gray-300'">
-                  {{ interest }}
-                </button>
-              </div>
+          </div>
+
+          <!-- Areas of Interest -->
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">Areas of Interest</label>
+            <div class="flex flex-wrap gap-1.5 max-[360px]:gap-1">
+              <button
+                type="button"
+                *ngFor="let interest of availableInterests"
+                (click)="toggleInterest(interest)"
+                class="px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
+                       max-[360px]:px-3 max-[360px]:py-1 max-[360px]:text-[11px]"
+                [ngClass]="profileSetup.get('interests')?.value.includes(interest)
+                  ? 'bg-primary/10 border-primary text-primary'
+                  : 'bg-surface border-gray-200 text-text-secondary hover:border-gray-300'">
+                {{ interest }}
+              </button>
             </div>
-
           </div>
-        </ng-container>
 
-        <!-- Form Actions -->
-        <div class="mt-8 flex flex-col sm:flex-row gap-3 items-center max-[360px]:mt-6 max-[360px]:gap-2">
-          <button type="button" *ngIf="currentStep === 2" (click)="skipProfile()" class="w-full sm:w-auto px-4 py-2 text-sm rounded-xl border border-gray-200 text-text-secondary font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
-            Skip for now
-          </button>
-          
-          <div class="flex-1 w-full">
-            <app-auth-button 
-              [type]="'submit'"
-              [loading]="isSubmitting"
-              [disabled]="isStepInvalid()">
-                {{ role === 'instructor' && currentStep === 1 ? 'Login' :
-                currentStep === totalSteps ? 'Complete Profile' : 'Continue' }}
-            </app-auth-button>
-          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Actions -->
+      <div class="mt-5 flex flex-col sm:flex-row gap-2.5 items-center max-[360px]:mt-4 max-[360px]:gap-2">
+
+        <button
+          type="button"
+          *ngIf="currentStep === 3"
+          (click)="skipProfile()"
+          class="w-full sm:w-auto px-4 py-2 text-sm rounded-xl border border-gray-200 text-text-secondary
+                 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary
+                 focus:border-transparent transition-all duration-200">
+          Skip for now
+        </button>
+
+        <div class="flex-1 w-full">
+          <app-auth-button
+            [type]="'submit'"
+            [loading]="isSubmitting"
+            [disabled]="isStepInvalid()">
+            {{ currentStep === 3 ? 'Register' : 'Continue' }}
+          </app-auth-button>
         </div>
 
-      </form>
-
-      <div *ngIf="!isWatchMode()">
-        <app-auth-divider *ngIf="currentStep === 1">or continue with</app-auth-divider>
-        
-        <div *ngIf="currentStep === 1" class="mt-6 max-[360px]:mt-4">
-          <app-social-login></app-social-login>
-        </div>
       </div>
+
+    </form>
+
+    <!-- Social Login — Account Information step only -->
+    <div *ngIf="!isWatchMode() && currentStep === 2">
+      <app-auth-divider>or continue with</app-auth-divider>
+      <div class="mt-4 max-[360px]:mt-3">
+        <app-social-login></app-social-login>
+      </div>
+    </div>
 
   </app-auth-card>
 </app-auth-layout>
