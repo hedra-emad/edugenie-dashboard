@@ -1,55 +1,70 @@
-<app-auth-layout >
-      <app-auth-logo></app-auth-logo>
-      
-      <app-auth-card>
-        <app-auth-tabs *ngIf="!isWatchMode()"
-          [activeTab]="activeTab()" 
-          (onTabChange)="setTab($event)">
-        </app-auth-tabs>
+<app-auth-layout>
+  <app-auth-logo></app-auth-logo>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-2 sm:space-y-3 max-[360px]:space-y-2">
+  <app-auth-card>
+    <div class="auth-card-header">
+      <app-auth-tabs
+        *ngIf="!isWatchMode()"
+        [activeTab]="activeTab()"
+        (onTabChange)="setTab($event)"
+      >
+      </app-auth-tabs>
+    </div>
 
-          <app-auth-input 
-            [control]="loginForm.controls['email']" 
-            label="Email Address" 
-            id="email" 
-            type="email" 
-            placeholder="name@example.com">
-            <svg icon class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </app-auth-input>
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="onSubmit()"
+      class="auth-card-form space-y-2 sm:space-y-3 max-[360px]:space-y-2"
+    >
+      <div class="auth-step-region space-y-2 sm:space-y-3 max-[360px]:space-y-2">
+        <app-auth-input
+          [control]="loginForm.controls['email']"
+          label="Email Address"
+          id="email"
+          type="email"
+          placeholder="name@example.com"
+        >
+          <svg
+            icon
+            class="h-5 w-5 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+        </app-auth-input>
 
-          <app-password-input 
-            [control]="loginForm.controls['password']" 
-            label="Password" 
-            id="password" 
-            placeholder="••••••••">
-          </app-password-input>
+        <app-password-input
+          [control]="loginForm.controls['password']"
+          label="Password"
+          id="password"
+          placeholder="••••••••"
+        >
+        </app-password-input>
 
-          <div *ngIf="!isWatchMode()">
-            <app-remember-me formControlName="rememberMe"></app-remember-me>
-          </div>
+        <div *ngIf="!isWatchMode()">
+          <app-remember-me formControlName="rememberMe"></app-remember-me>
+        </div>
+      </div>
 
-          <div class="mt-4">
-            <app-auth-button 
-              type="submit" 
-              [loading]="isLoading()" 
-              [disabled]="loginForm.invalid">
-              Sign In
-            </app-auth-button>
-          </div>
+      <div class="auth-card-actions mt-2">
+        <app-auth-button type="submit" [loading]="isLoading()" [disabled]="loginForm.invalid">
+          Sign In
+        </app-auth-button>
+      </div>
+    </form>
 
-        </form>
+    <div *ngIf="!isWatchMode()" class="auth-card-social">
+      <app-auth-divider>or continue with</app-auth-divider>
 
-        <ng-container *ngIf="!isWatchMode()">
-          <app-auth-divider>or continue with</app-auth-divider>
-
-          <app-social-login 
-            (onGoogle)="loginWithGoogle()" 
-            (onGithub)="loginWithGithub()">
-          </app-social-login>
-        </ng-container>
-        
-      </app-auth-card>
-    </app-auth-layout>
+      <app-social-login (onGoogle)="loginWithGoogle()" (onGithub)="loginWithGithub()">
+      </app-social-login>
+    </div>
+  </app-auth-card>
+</app-auth-layout>

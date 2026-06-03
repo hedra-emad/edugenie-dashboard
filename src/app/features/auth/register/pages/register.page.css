@@ -13,17 +13,3 @@
     transform: translateY(0);
   }
 }
-
-/* ── Custom focus states */
-:host ::ng-deep input:focus,
-:host ::ng-deep select:focus {
-  border-color: #00affe !important;
-  box-shadow: 0 0 0 4px rgba(0, 175, 254, 0.15) !important;
-}
-
-:host ::ng-deep .auth-input-error,
-:host ::ng-deep [class*="text-error"] {
-  margin-top: 2px;
-  margin-bottom: 4px;
-  line-height: 1.4;
-}

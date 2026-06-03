@@ -9,6 +9,7 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ViewChild, ElementRef } from '@angular/core';
 
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
@@ -20,6 +21,7 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { RoleSelectorComponent } from '../../../../shared/components/role-selector/role-selector.component';
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
+
 
 @Component({
   selector: 'app-register-page',
@@ -49,6 +51,17 @@ export class RegisterPageComponent implements OnInit {
   isSubmitting = false;
   isWatchMode = signal(false);
 
+  @ViewChild('levelSelect') levelSelectRef!: ElementRef;
+
+@HostListener('document:click', ['$event'])
+handleClickOutside(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+
+  if (!this.levelSelectRef?.nativeElement.contains(target)) {
+    this.openLevel = false;
+  }
+}
+
   //  Validators
 
   passwordValidator = (control: AbstractControl): ValidationErrors | null => {
@@ -77,12 +90,7 @@ export class RegisterPageComponent implements OnInit {
     if (hasSpecial) score++;
     if (longEnough) score++;
 
-    return score < 4 || isBlacklisted ? { weakPassword: true } : null;
-  };
-
-  interestsValidator = (control: AbstractControl): ValidationErrors | null => {
-    const arr = Array.isArray(control.value) ? control.value : [];
-    return arr.length < 1 ? { noInterest: true } : null;
+    return score < 3 || isBlacklisted ? { weakPassword: true } : null;
   };
 
   passwordMatchValidator = (group: AbstractControl): ValidationErrors | null => {
@@ -105,7 +113,7 @@ export class RegisterPageComponent implements OnInit {
           [
             Validators.required,
             Validators.minLength(2),
-            Validators.pattern(/^[a-zA-Z\u0600-\u06FF\s'-]+$/),
+            Validators.pattern(/^[\p{L}\s'-]+$/u),
           ],
         ],
         lastName: [
@@ -113,7 +121,7 @@ export class RegisterPageComponent implements OnInit {
           [
             Validators.required,
             Validators.minLength(2),
-            Validators.pattern(/^([\p{L}\s'-]+)$/u),
+            Validators.pattern(/^[\p{L}\s'-]+$/u),
           ],
         ],
         email: [
@@ -123,15 +131,18 @@ export class RegisterPageComponent implements OnInit {
             Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
           ],
         ],
+      }
+    ),
+    securityInfo: this.fb.group(
+      {
         password: ['', [Validators.required, this.passwordValidator]],
         confirmPassword: ['', Validators.required],
       },
       { validators: this.passwordMatchValidator }
     ),
     profileSetup: this.fb.group({
-      level: ['', Validators.required],
-      goal: ['', [Validators.required, Validators.minLength(10)]],
-      interests: [[], this.interestsValidator],
+      level: [''],
+      interests: [[]],
     }),
   });
 
@@ -145,8 +156,27 @@ export class RegisterPageComponent implements OnInit {
     return this.registerForm.get('accountInfo') as FormGroup;
   }
 
+  get securityInfo(): FormGroup {
+    return this.registerForm.get('securityInfo') as FormGroup;
+  }
+
   get profileSetup(): FormGroup {
     return this.registerForm.get('profileSetup') as FormGroup;
+  }
+
+  get isProfileEmpty(): boolean {
+    const val = this.profileSetup.value;
+    const levelEmpty = !val.level;
+    const interestsEmpty = !val.interests || val.interests.length === 0;
+    return levelEmpty && interestsEmpty;
+  }
+
+  get isProfileComplete(): boolean {
+    return this.profileSetup.valid;
+  }
+
+  get isProfilePartial(): boolean {
+    return !this.isProfileEmpty && !this.isProfileComplete;
   }
 
   get role(): 'student' | 'instructor' {
@@ -155,13 +185,22 @@ export class RegisterPageComponent implements OnInit {
 
   /** Total steps depend on the selected role */
   get totalSteps(): number {
-    return this.role === 'instructor' ? 2 : 3;
+    return this.role === 'instructor' ? 3 : 4;
   }
 
   /** Progress percentage adapts to role */
   get progressPercent(): number {
     return (this.currentStep / this.totalSteps) * 100;
   }
+
+  openLevel = false;
+selectedLevel = '';
+
+selectLevel(level: string) {
+  this.selectedLevel = level;
+  this.profileSetup.get('level')?.setValue(level);
+  this.openLevel = false;
+}
 
   //  Lifecycle
 
@@ -170,6 +209,14 @@ export class RegisterPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.onResize();
+
+    this.profileSetup.valueChanges.subscribe(() => {
+      if (this.isProfilePartial) {
+        this.profileSetup.markAllAsTouched();
+      } else if (this.isProfileEmpty) {
+        this.profileSetup.markAsUntouched();
+      }
+    });
   }
 
   //  Step Metadata 
@@ -178,7 +225,8 @@ export class RegisterPageComponent implements OnInit {
     switch (this.currentStep) {
       case 1: return 'Choose Your Role';
       case 2: return 'Account Information';
-      case 3: return 'Profile Setup';
+      case 3: return 'Security Information';
+      case 4: return 'Profile Setup';
       default: return '';
     }
   }
@@ -187,12 +235,19 @@ export class RegisterPageComponent implements OnInit {
     switch (this.currentStep) {
       case 1: return this.roleSelection.invalid;
       case 2: return this.accountInfo.invalid;
-      case 3: return this.profileSetup.invalid;
+      case 3: return this.securityInfo.invalid;
+      case 4: return this.profileSetup.invalid;
       default: return true;
     }
   }
 
   //  Navigation ──
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+    }
+  }
 
   nextStep(): void {
     if (this.currentStep === 1) {
@@ -209,26 +264,39 @@ export class RegisterPageComponent implements OnInit {
         this.accountInfo.markAllAsTouched();
         return;
       }
+      this.currentStep = 3;
+      return;
+    }
+
+    if (this.currentStep === 3) {
+      if (this.securityInfo.invalid) {
+        this.securityInfo.markAllAsTouched();
+        return;
+      }
 
       this.isSubmitting = true;
       setTimeout(() => {
         this.isSubmitting = false;
 
         if (this.role === 'instructor') {
-          // Instructor flow: account only → login
-          console.log('Instructor registered:', this.accountInfo.value);
+          // Instructor flow: register here
+          console.log('Instructor registered:', { ...this.accountInfo.value, ...this.securityInfo.value });
           this.router.navigate(['/login']);
           return;
         }
 
-        // Student flow: continue to step 3
-        this.currentStep = 3;
+        // Student flow: continue to step 4
+        this.currentStep = 4;
       }, 800);
       return;
     }
 
-    if (this.currentStep === 3) {
-      this.submitStudentProfile(true);
+    if (this.currentStep === 4) {
+      if (this.isProfileEmpty) {
+        this.skipProfile();
+      } else if (this.isProfileComplete) {
+        this.submitStudentProfile(true);
+      }
     }
   }
 
@@ -250,6 +318,7 @@ export class RegisterPageComponent implements OnInit {
       this.isSubmitting = false;
       console.log('Student registered:', {
         account: this.accountInfo.value,
+        security: this.securityInfo.value,
         profile: withProfile ? this.profileSetup.value : null,
       });
       this.router.navigate(['/login']);
@@ -259,7 +328,7 @@ export class RegisterPageComponent implements OnInit {
   //  Password Helpers ──
 
   getPasswordStrength(): number {
-    const pwd = this.accountInfo.get('password')?.value || '';
+    const pwd = this.securityInfo.get('password')?.value || '';
     if (!pwd) return 0;
 
     let strength = 0;
@@ -273,7 +342,7 @@ export class RegisterPageComponent implements OnInit {
   }
 
   getPasswordStrengthText(): string {
-    if (!this.accountInfo.get('password')?.value) return '';
+    if (!this.securityInfo.get('password')?.value) return '';
     switch (this.getPasswordStrength()) {
       case 1: return 'Weak';
       case 2: return 'Fair';
@@ -284,13 +353,33 @@ export class RegisterPageComponent implements OnInit {
   }
 
   getStrengthColor(index: number): string {
-    const strength = this.getPasswordStrength();
-    if (!this.accountInfo.get('password')?.value) return 'bg-gray-200';
-    if (index >= strength) return 'bg-gray-200';
-    if (strength === 1) return 'bg-error';
-    if (strength === 2) return 'bg-warning';
-    return 'bg-success';
-  }
+  const strength = this.getPasswordStrength();
+  const hasValue = !!this.securityInfo.get('password')?.value;
+
+  if (!hasValue) return 'bg-gray-200';
+
+  // empty bars
+  if (index >= strength) return 'bg-gray-200';
+
+  // choose color by total strength level
+  if (strength <= 1) return 'bg-red-500';              // Weak
+  if (strength === 2) return 'bg-[#ff8800]';          // Fair
+  if (strength === 3) return 'bg-[#ffc300]';           // Good
+  return 'bg-green-500';                                // Strong
+}
+
+getStrengthTextColor(): string {
+  const strength = this.getPasswordStrength();
+  const hasValue = !!this.securityInfo.get('password')?.value;
+
+  if (!hasValue) return 'text-gray-400';
+
+  if (strength <= 1) return 'text-red-500';     // Weak
+  if (strength === 2) return 'text-[#ff8800]';  // Fair
+  if (strength === 3) return 'text-[#ffc300]';  // Good
+  return 'text-green-500';                      // Strong
+}
+
 
   //  Interests 
 
