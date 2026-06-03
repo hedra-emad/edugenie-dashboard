@@ -1,13 +1,13 @@
-<div class="mb-5">
-      <label class="block text-sm font-medium text-text-primary mb-2">
+<div>
+      <label class="block text-sm font-medium text-text-primary mb-1">
         Select your role
       </label>
       <div class="grid grid-cols-2 gap-4">
         <button
           type="button"
           (click)="selectRole('student')"
-          class="flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200"
-          [ngClass]="value === 'student' ? 'border-secondary bg-blue-50/30 ring-1 ring-secondary' : 'border-gray-200 hover:border-gray-300 bg-white'"
+          class="flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          [ngClass]="value === 'student' ? 'border-primary ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300 bg-white'"
         >
           <svg class="w-6 h-6 mb-2" [ngClass]="value === 'student' ? 'text-primary' : 'text-primary'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
@@ -19,7 +19,7 @@
         <button
           type="button"
           (click)="selectRole('instructor')"
-          class="flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200"
+          class="flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           [ngClass]="value === 'instructor' ? 'border-secondary bg-blue-50/30 ring-1 ring-secondary' : 'border-gray-200 hover:border-gray-300 bg-white'"
         >
           <svg class="w-6 h-6 mb-2" [ngClass]="value === 'instructor' ? 'text-primary' : 'text-primary'" fill="none" stroke="currentColor" viewBox="0 0 24 24">

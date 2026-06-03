@@ -7,7 +7,6 @@ import { AbstractControl, FormControl, ReactiveFormsModule } from '@angular/form
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './auth-input.component.html',
-  styleUrl: './auth-input.component.css'
 })
 export class AuthInputComponent {
   @Input({ required: true }) control!: AbstractControl | null;
@@ -15,8 +14,23 @@ export class AuthInputComponent {
   @Input() type = 'text';
   @Input() placeholder = '';
   @Input() id = '';
+  @Input() showSuccessWhenValid = false;
+
+  @Input() errorMessages: Record<string, string> = {};
+
+  Object = Object;
 
   get formControl(): FormControl {
     return this.control as FormControl;
   }
+  getErrorMessage(errorKey: string): string {
+  const messages: Record<string, string> = {
+    required: `${this.label} is required`,
+    minlength: 'Minimum length not met',
+    pattern: 'Invalid format',
+    email: 'Invalid email address',
+  };
+
+  return messages[errorKey] || 'Invalid value';
+}
 }
