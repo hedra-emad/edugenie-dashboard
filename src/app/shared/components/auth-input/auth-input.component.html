@@ -17,11 +17,17 @@
       [type]="type"
       [formControl]="formControl"
       [placeholder]="placeholder"
-      class="w-full bg-surface border border-gray-200 text-text-primary rounded-xl py-2 pl-11 pr-4 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
-      [ngClass]="{
-        'border-error focus:ring-error focus:border-error': control?.invalid && control?.touched,
-        'border-primary focus:ring-primary': control?.valid && control?.touched
-      }"
+     class="w-full bg-surface text-text-primary rounded-[var(--radius-md)] py-2 pl-11 pr-4
+border transition-all duration-200
+focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]
+placeholder:text-gray-400"
+ [ngClass]="{
+  'border-[var(--color-error)]': control?.invalid && control?.touched,
+
+  'border-[var(--color-primary)]': control?.valid && control?.touched,
+
+  'border-gray-200': !control?.touched
+}"
     />
 
     <!-- success icon -->
@@ -45,7 +51,7 @@
 
   <!-- ERROR OUTSIDE input wrapper -->
   @if (control?.invalid && control?.touched) {
-    <div class="mt-1 text-xs text-error w-full min-h-[16px]">
+    <div class="mt-1 text-xs text-error w-full min-h-error">
       @for (errorKey of Object.keys(control?.errors || {}); track errorKey; let first = $first) {
         @if (first) {
           <span class="block">

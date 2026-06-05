@@ -17,15 +17,50 @@ module.exports = {
         success: 'var(--color-success)',
         warning: 'var(--color-warning)',
         error: 'var(--color-error)',
+        'background-page': 'var(--color-background-page)',
+        'sidebar-bg': 'var(--color-sidebar-bg)',
       },
       borderRadius: {
         sm: 'var(--radius-sm)',
         md: 'var(--radius-md)',
         lg: 'var(--radius-lg)',
+        panel: 'var(--radius-panel)',
       },
       boxShadow: {
         card: 'var(--shadow-card)',
-      }
+        layout: 'var(--shadow-layout)',
+        footer: 'var(--shadow-footer)',
+        'interest-active': 'var(--shadow-interest-active)',
+      },
+      maxWidth: {
+        container: 'var(--width-container)',
+        'sidebar-p': 'var(--spacing-sidebar-maxw)',
+      },
+      width: {
+        card: 'var(--width-card)',
+      },
+      height: {
+        'btn-back': 'var(--height-btn-back)',
+      },
+      minHeight: {
+        'error': 'var(--spacing-error-min-h)',
+      },
+      fontSize: {
+        micro: 'var(--text-micro)',
+        '2xs': 'var(--text-2xs)',
+        'xs-alt': 'var(--text-xs-alt)',
+        'xs-fixed': 'var(--text-xs-fixed)',
+      },
+      letterSpacing: {
+        'wide-custom': 'var(--tracking-wide)',
+        'wider-custom': 'var(--tracking-wider)',
+      },
+      blur: {
+        glow: 'var(--blur-glow)',
+      },
+      dropShadow: {
+        'logo-glow': 'var(--shadow-logo-glow)',
+      },
     },
   },
   plugins: [],
