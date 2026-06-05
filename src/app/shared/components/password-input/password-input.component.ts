@@ -14,6 +14,7 @@ export class PasswordInputComponent {
   @Input() label = 'Password';
   @Input() placeholder = '••••••••';
   @Input() id = 'password';
+  @Input() showSuccessWhenValid = false;
 
   showPassword = signal(false);
 

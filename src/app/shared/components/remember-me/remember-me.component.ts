@@ -18,27 +18,31 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class RememberMeComponent implements ControlValueAccessor {
   value = false;
-  onChange: any = () => {};
-  onTouch: any = () => {};
+
+  onChange: (value: boolean) => void = () => {};
+  onTouched: () => void = () => {};
 
   toggle(event: Event) {
-    const target = event.target as HTMLInputElement;
-    this.value = target.checked;
-    this.onChange(this.value);
-    this.onTouch();
+    const checked = (event.target as HTMLInputElement).checked;
+    this.value = checked;
+
+    this.onChange(checked);
+    this.onTouched();
   }
 
-  writeValue(obj: any): void {
-    if (obj !== undefined) {
-      this.value = obj;
-    }
+  writeValue(value: boolean): void {
+    this.value = !!value;
   }
-  
+
   registerOnChange(fn: any): void {
     this.onChange = fn;
   }
-  
+
   registerOnTouched(fn: any): void {
-    this.onTouch = fn;
+    this.onTouched = fn;
+  }
+
+  setDisabledState?(isDisabled: boolean): void {
+    // optional improvement
   }
 }

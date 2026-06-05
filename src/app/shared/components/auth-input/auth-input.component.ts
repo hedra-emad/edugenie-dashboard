@@ -24,13 +24,15 @@ export class AuthInputComponent {
     return this.control as FormControl;
   }
   getErrorMessage(errorKey: string): string {
-  const messages: Record<string, string> = {
-    required: `${this.label} is required`,
-    minlength: 'Minimum length not met',
-    pattern: 'Invalid format',
-    email: 'Invalid email address',
-  };
-
-  return messages[errorKey] || 'Invalid value';
+  return (
+    this.errorMessages[errorKey] ||
+    {
+      required: `${this.label} is require`,
+      minlength: 'Minimum length not met',
+      pattern: 'Invalid format',
+      email: 'Invalid email address',
+    }[errorKey] ||
+    'Invalid value'
+  );
 }
 }

@@ -21,7 +21,7 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { RoleSelectorComponent } from '../../../../shared/components/role-selector/role-selector.component';
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
-
+import { AuthService } from '../../../../core/services/auth';
 
 @Component({
   selector: 'app-register-page',
@@ -44,6 +44,7 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
   styleUrl: './register.page.css',
 })
 export class RegisterPageComponent implements OnInit {
+  private authService = inject(AuthService);
   fb = inject(FormBuilder);
   router = inject(Router);
 
@@ -53,45 +54,37 @@ export class RegisterPageComponent implements OnInit {
 
   @ViewChild('levelSelect') levelSelectRef!: ElementRef;
 
-@HostListener('document:click', ['$event'])
-handleClickOutside(event: MouseEvent) {
-  const target = event.target as HTMLElement;
+  @HostListener('document:click', ['$event'])
 
-  if (!this.levelSelectRef?.nativeElement.contains(target)) {
-    this.openLevel = false;
+  handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    if (this.levelSelectRef?.nativeElement && !this.levelSelectRef.nativeElement.contains(target)) {
+      this.openLevel = false;
+    }
   }
-}
 
   //  Validators
 
-  passwordValidator = (control: AbstractControl): ValidationErrors | null => {
-    const pwd: string = control.value || '';
-    if (!pwd) return null;
+ passwordValidator = (control: AbstractControl): ValidationErrors | null => {
+  const pwd: string = control.value || '';
+  if (!pwd) return null;
 
-    const hasUpper = /[A-Z]/.test(pwd);
-    const hasLower = /[a-z]/.test(pwd);
-    const hasNumber = /[0-9]/.test(pwd);
-    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
-    const longEnough = pwd.length >= 10;
+  const hasUpper = /[A-Z]/.test(pwd);
+  const hasLower = /[a-z]/.test(pwd);
+  const hasNumber = /[0-9]/.test(pwd);
+  const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+  const longEnough = pwd.length >= 10;
 
-    const blacklist = [
-      '123456', 'password', '123456789', 'qwerty', '12345678',
-      '111111', '1234567', 'sunshine', 'iloveyou', 'princess',
-      'admin', 'welcome', '666666', 'abc123', 'football', '123123',
-      'monkey', '654321',
-    ];
+  let score = 0;
+  if (hasUpper) score++;
+  if (hasLower) score++;
+  if (hasNumber) score++;
+  if (hasSpecial) score++;
+  if (longEnough) score++;
 
-    const isBlacklisted = blacklist.includes(pwd.toLowerCase());
-
-    let score = 0;
-    if (hasUpper) score++;
-    if (hasLower) score++;
-    if (hasNumber) score++;
-    if (hasSpecial) score++;
-    if (longEnough) score++;
-
-    return score < 3 || isBlacklisted ? { weakPassword: true } : null;
-  };
+  return score < 3 ? { weakPassword: true } : null;
+};
 
   passwordMatchValidator = (group: AbstractControl): ValidationErrors | null => {
     const password = group.get('password')?.value;
@@ -100,39 +93,29 @@ handleClickOutside(event: MouseEvent) {
     return password === confirm ? null : { mismatch: true };
   };
 
-  //  Form 
+  //  Form
 
   registerForm: FormGroup = this.fb.group({
     roleSelection: this.fb.group({
       role: ['student', Validators.required],
     }),
-    accountInfo: this.fb.group(
-      {
-        firstName: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(2),
-            Validators.pattern(/^[\p{L}\s'-]+$/u),
-          ],
+    accountInfo: this.fb.group({
+      firstName: [
+        '',
+        [Validators.required, Validators.minLength(2), Validators.pattern(/^[\p{L}\s'-]+$/u)],
+      ],
+      lastName: [
+        '',
+        [Validators.required, Validators.minLength(2), Validators.pattern(/^[\p{L}\s'-]+$/u)],
+      ],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
         ],
-        lastName: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(2),
-            Validators.pattern(/^[\p{L}\s'-]+$/u),
-          ],
-        ],
-        email: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
-          ],
-        ],
-      }
-    ),
+      ],
+    }),
     securityInfo: this.fb.group(
       {
         password: ['', [Validators.required, this.passwordValidator]],
@@ -146,7 +129,7 @@ handleClickOutside(event: MouseEvent) {
     }),
   });
 
-  //  Computed Properties 
+  //  Computed Properties
 
   get roleSelection(): FormGroup {
     return this.registerForm.get('roleSelection') as FormGroup;
@@ -165,7 +148,7 @@ handleClickOutside(event: MouseEvent) {
   }
 
   get isProfileEmpty(): boolean {
-    const val = this.profileSetup.value;
+    const val = this.profileSetup.value || {};
     const levelEmpty = !val.level;
     const interestsEmpty = !val.interests || val.interests.length === 0;
     return levelEmpty && interestsEmpty;
@@ -173,6 +156,10 @@ handleClickOutside(event: MouseEvent) {
 
   get isProfileComplete(): boolean {
     return this.profileSetup.valid;
+  }
+
+  get interests(): string[] {
+    return this.profileSetup.get('interests')?.value || [];
   }
 
   get isProfilePartial(): boolean {
@@ -194,22 +181,28 @@ handleClickOutside(event: MouseEvent) {
   }
 
   openLevel = false;
-selectedLevel = '';
+  selectedLevel = '';
 
-selectLevel(level: string) {
-  this.selectedLevel = level;
-  this.profileSetup.get('level')?.setValue(level);
-  this.openLevel = false;
-}
+  selectLevel(level: string) {
+    this.selectedLevel = level;
+    this.profileSetup.get('level')?.setValue(level);
+    this.openLevel = false;
+  }
+
+  // Payload
+  private buildBasePayload() {
+    return {
+      firstName: this.accountInfo.value?.firstName || '',
+      lastName: this.accountInfo.value?.lastName || '',
+      email: this.accountInfo.value?.email || '',
+      password: this.securityInfo.value?.password || '',
+      role: this.roleSelection.value?.role || 'student',
+    };
+  }
 
   //  Lifecycle
 
-  @HostListener('window:resize')
-  onResize(): void {}
-
   ngOnInit(): void {
-    this.onResize();
-
     this.profileSetup.valueChanges.subscribe(() => {
       if (this.isProfilePartial) {
         this.profileSetup.markAllAsTouched();
@@ -219,25 +212,35 @@ selectLevel(level: string) {
     });
   }
 
-  //  Step Metadata 
+  //  Step Metadata
 
   getStepTitle(): string {
     switch (this.currentStep) {
-      case 1: return 'Choose Your Role';
-      case 2: return 'Account Information';
-      case 3: return 'Security Information';
-      case 4: return 'Profile Setup';
-      default: return '';
+      case 1:
+        return 'Choose Your Role';
+      case 2:
+        return 'Account Information';
+      case 3:
+        return 'Security Information';
+      case 4:
+        return 'Profile Setup';
+      default:
+        return '';
     }
   }
 
   isStepInvalid(): boolean {
     switch (this.currentStep) {
-      case 1: return this.roleSelection.invalid;
-      case 2: return this.accountInfo.invalid;
-      case 3: return this.securityInfo.invalid;
-      case 4: return this.profileSetup.invalid;
-      default: return true;
+      case 1:
+        return this.roleSelection.invalid;
+      case 2:
+        return this.accountInfo.invalid;
+      case 3:
+        return this.securityInfo.invalid;
+      case 4:
+        return this.profileSetup.invalid;
+      default:
+        return true;
     }
   }
 
@@ -274,20 +277,14 @@ selectLevel(level: string) {
         return;
       }
 
-      this.isSubmitting = true;
-      setTimeout(() => {
-        this.isSubmitting = false;
+      if (this.role === 'instructor') {
+        const payload = this.buildBasePayload();
+        this.submitRegistration(payload);
+        return;
+      }
 
-        if (this.role === 'instructor') {
-          // Instructor flow: register here
-          console.log('Instructor registered:', { ...this.accountInfo.value, ...this.securityInfo.value });
-          this.router.navigate(['/login']);
-          return;
-        }
-
-        // Student flow: continue to step 4
-        this.currentStep = 4;
-      }, 800);
+      // Student flow
+      this.currentStep = 4;
       return;
     }
 
@@ -302,8 +299,8 @@ selectLevel(level: string) {
 
   /** Skip profile setup — submit account only, navigate to login */
   skipProfile(): void {
-    console.log('Student registered (no profile):', this.accountInfo.value);
-    this.router.navigate(['/login']);
+    const payload = this.buildBasePayload();
+    this.submitRegistration(payload);
   }
 
   /** Submit with full profile data */
@@ -313,16 +310,30 @@ selectLevel(level: string) {
       return;
     }
 
+    const payload = {
+      ...this.buildBasePayload(),
+      level: this.profileSetup.value?.level || undefined,
+      interests: this.profileSetup.value?.interests || [],
+    };
+
+    this.submitRegistration(payload);
+  }
+
+  /** Common registration submit logic */
+  private submitRegistration(payload: any): void {
     this.isSubmitting = true;
-    setTimeout(() => {
-      this.isSubmitting = false;
-      console.log('Student registered:', {
-        account: this.accountInfo.value,
-        security: this.securityInfo.value,
-        profile: withProfile ? this.profileSetup.value : null,
-      });
-      this.router.navigate(['/login']);
-    }, 1000);
+
+    this.authService.register(payload).subscribe({
+      next: (res) => {
+        console.log('Register Success', res);
+        this.isSubmitting = false;
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        console.error('Register Error', err);
+        this.isSubmitting = false;
+      },
+    });
   }
 
   //  Password Helpers ──
@@ -344,44 +355,48 @@ selectLevel(level: string) {
   getPasswordStrengthText(): string {
     if (!this.securityInfo.get('password')?.value) return '';
     switch (this.getPasswordStrength()) {
-      case 1: return 'Weak';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Strong';
-      default: return '';
+      case 1:
+        return 'Weak';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Strong';
+      default:
+        return '';
     }
   }
 
   getStrengthColor(index: number): string {
-  const strength = this.getPasswordStrength();
-  const hasValue = !!this.securityInfo.get('password')?.value;
+    const strength = this.getPasswordStrength();
+    const hasValue = !!this.securityInfo.get('password')?.value;
 
-  if (!hasValue) return 'bg-gray-200';
+    if (!hasValue) return 'bg-gray-200';
 
-  // empty bars
-  if (index >= strength) return 'bg-gray-200';
+    // empty bars
+    if (index >= strength) return 'bg-gray-200';
 
-  // choose color by total strength level
-  if (strength <= 1) return 'bg-red-500';              // Weak
-  if (strength === 2) return 'bg-[#ff8800]';          // Fair
-  if (strength === 3) return 'bg-[#ffc300]';           // Good
-  return 'bg-green-500';                                // Strong
-}
+    // choose color by total strength level
+    if (strength <= 1) return 'bg-red-500'; // Weak
+    if (strength === 2) return 'bg-[#ff8800]'; // Fair
+    if (strength === 3) return 'bg-[#ffc300]'; // Good
+    return 'bg-green-500'; // Strong
+  }
 
-getStrengthTextColor(): string {
-  const strength = this.getPasswordStrength();
-  const hasValue = !!this.securityInfo.get('password')?.value;
+  getStrengthTextColor(): string {
+    const strength = this.getPasswordStrength();
+    const hasValue = !!this.securityInfo.get('password')?.value;
 
-  if (!hasValue) return 'text-gray-400';
+    if (!hasValue) return 'text-gray-400';
 
-  if (strength <= 1) return 'text-red-500';     // Weak
-  if (strength === 2) return 'text-[#ff8800]';  // Fair
-  if (strength === 3) return 'text-[#ffc300]';  // Good
-  return 'text-green-500';                      // Strong
-}
+    if (strength <= 1) return 'text-red-500'; // Weak
+    if (strength === 2) return 'text-[#ff8800]'; // Fair
+    if (strength === 3) return 'text-[#ffc300]'; // Good
+    return 'text-green-500'; // Strong
+  }
 
-
-  //  Interests 
+  //  Interests
 
   availableInterests = ['AI & ML', 'Design', 'Business', 'Web Dev', 'Data Science'];
 
@@ -389,9 +404,7 @@ getStrengthTextColor(): string {
     const ctrl = this.profileSetup.get('interests');
     const current = (ctrl?.value || []) as string[];
     ctrl?.setValue(
-      current.includes(interest)
-        ? current.filter((i) => i !== interest)
-        : [...current, interest]
+      current.includes(interest) ? current.filter((i) => i !== interest) : [...current, interest]
     );
   }
 
