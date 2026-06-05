@@ -12,9 +12,9 @@
     </div>
 
     @if (errorMessage()) {
-  <div class="auth-error flex items-start gap-2 rounded-[var(--radius-md)] border border-red-200 bg-[var(--color-error-light)] px-3 py-2 text-sm text-[var(--color-error)] shadow-sm">
+  <div class="auth-error flex items-start gap-2 rounded-[var(--radius-md)] border var(--color-error) bg-[var(--color-error-light)] px-3 py-2 text-sm text-[var(--color-error)] shadow-sm">
   
-  <svg class="w-4 h-4 mt-[2px] shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg class="w-4 h-4 mt-[2px] shrink-0 var(--color-error)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
@@ -41,7 +41,7 @@
         
           <svg
             icon
-            class="h-5 w-5 text-gray-400"
+            class="h-5 w-5 var(--color-text-secondary)"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

@@ -1,0 +1,8 @@
+<div class="flex flex-col gap-3">
+  <app-sidebar-menu-item
+    *ngFor="let item of items"
+    [icon]="item.icon"
+    [label]="item.label"
+    [active]="item.active ?? false">
+  </app-sidebar-menu-item>
+</div>

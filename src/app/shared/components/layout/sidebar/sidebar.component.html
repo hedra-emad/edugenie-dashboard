@@ -1,0 +1,25 @@
+<aside
+class="fixed lg:static z-50 h-full w-64 bg-[var(--color-surface)]
+shadow-[var(--shadow-layout)] border-r border-gray-100 p-4
+transform transition-transform duration-300 ease-in-out"
+[class.-translate-x-full]="isMobile && !sidebarOpen"
+>
+<div class="flex items-center justify-between lg:hidden">
+  
+  <button
+  class="p-2 rounded-md hover:bg-gray-100 lg:hidden"
+  (click)="close.emit()"
+>
+  <mat-icon>close</mat-icon>
+</button>
+
+</div>
+  <app-sidebar-profile></app-sidebar-profile>
+
+  <app-sidebar-action></app-sidebar-action>
+
+  <div class="mt-4 flex flex-col gap-2">
+    <app-sidebar-menu></app-sidebar-menu>
+  </div>
+
+</aside>
