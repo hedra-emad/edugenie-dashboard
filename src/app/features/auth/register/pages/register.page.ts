@@ -74,7 +74,7 @@ export class RegisterPageComponent implements OnInit {
   const hasLower = /[a-z]/.test(pwd);
   const hasNumber = /[0-9]/.test(pwd);
   const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
-  const longEnough = pwd.length >= 10;
+  const longEnough = pwd.length >= 6;
 
   let score = 0;
   if (hasUpper) score++;
@@ -118,7 +118,14 @@ export class RegisterPageComponent implements OnInit {
     }),
     securityInfo: this.fb.group(
       {
-        password: ['', [Validators.required, this.passwordValidator]],
+       password: [
+  '',
+  [
+    Validators.required,
+    Validators.minLength(6),
+    this.passwordValidator,
+  ],
+],
         confirmPassword: ['', Validators.required],
       },
       { validators: this.passwordMatchValidator }
@@ -338,35 +345,52 @@ export class RegisterPageComponent implements OnInit {
 
   //  Password Helpers ──
 
+
   getPasswordStrength(): number {
-    const pwd = this.securityInfo.get('password')?.value || '';
-    if (!pwd) return 0;
+  const pwd = this.securityInfo.get('password')?.value || '';
 
-    let strength = 0;
-    if (pwd.length >= 10) strength++;
-    if (/[A-Z]/.test(pwd)) strength++;
-    if (/[a-z]/.test(pwd)) strength++;
-    if (/[0-9]/.test(pwd)) strength++;
-    if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+  if (!pwd) return 0;
 
-    return strength;
+  let score = 0;
+
+  // varaity
+  if (/[a-z]/.test(pwd)) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+  //Length limit
+  if (pwd.length < 6) {
+    return Math.min(score, 2);
   }
 
-  getPasswordStrengthText(): string {
-    if (!this.securityInfo.get('password')?.value) return '';
-    switch (this.getPasswordStrength()) {
-      case 1:
-        return 'Weak';
-      case 2:
-        return 'Fair';
-      case 3:
-        return 'Good';
-      case 4:
-        return 'Strong';
-      default:
-        return '';
-    }
+  if (pwd.length < 8) {
+    return Math.min(score, 3);
   }
+
+  return Math.min(score, 4);
+}
+
+getPasswordStrengthText(): string {
+  const strength = this.getPasswordStrength();
+
+  switch (strength) {
+    case 1:
+      return 'Weak';
+
+    case 2:
+      return 'Fair';
+
+    case 3:
+      return 'Good';
+
+    case 4:
+      return 'Strong';
+
+    default:
+      return '';
+  }
+}
 
   getStrengthColor(index: number): string {
     const strength = this.getPasswordStrength();
