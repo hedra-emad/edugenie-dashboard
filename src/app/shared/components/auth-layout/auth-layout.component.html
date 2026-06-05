@@ -1,12 +1,12 @@
-<div class="min-h-screen flex flex-col bg-[#eef2f6] " >
+<div class="min-h-screen flex flex-col bg-background-page " >
   <main
   class="flex-1 flex w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-[360px]:px-3"
 >
     <div
-      class="w-full max-w-[900px] m-auto bg-white sm:rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col lg:flex-row overflow-hidden"
+      class="w-full max-w-container m-auto bg-white sm:rounded-panel shadow-layout flex flex-col lg:flex-row overflow-hidden"
     >
       <!-- Left Sidebar -->
-      <div class="hidden lg:flex lg:w-[45%] bg-[#0b192c] relative rounded-l-[2rem] overflow-hidden">
+      <div class="hidden lg:flex lg:w-[45%] bg-sidebar-bg relative rounded-l-panel overflow-hidden">
         <app-auth-sidebar class="w-full h-full block"></app-auth-sidebar>
       </div>
 
@@ -21,7 +21,7 @@
   </main>
 
   <footer
-    class="bg-surface px-4 py-2 sm:px-6 lg:px-8 shadow-[0_-1px_10px_rgba(0,0,0,0.05)] max-[360px]:py-4 max-[360px]:px-3 max-[360px]:hidden"
+    class="bg-surface px-4 py-2 sm:px-6 lg:px-8 shadow-footer max-[360px]:py-4 max-[360px]:px-3 max-[360px]:hidden"
   >
     <div
       class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center max-[360px]:gap-3"
@@ -33,7 +33,7 @@
         </p>
       </div>
       <div
-        class="flex flex-wrap gap-4 sm:gap-6 text-sm font-medium text-text-secondary max-[360px]:gap-2.5 max-[360px]:text-[11px] max-[360px]:justify-center"
+        class="flex flex-wrap gap-4 sm:gap-6 text-sm font-medium text-text-secondary max-[360px]:gap-2.5 max-[360px]:text-xs-alt max-[360px]:justify-center"
       >
         <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
         <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
