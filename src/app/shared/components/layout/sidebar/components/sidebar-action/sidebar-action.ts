@@ -1,12 +1,19 @@
-import { Component } from '@angular/core';
-import { MatIconModule, MatIcon } from '@angular/material/icon';
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-sidebar-action',
-  imports: [MatIconModule, MatIcon],
+  standalone: true,
+  imports: [CommonModule, MatIconModule],
   templateUrl: './sidebar-action.html',
   styleUrl: './sidebar-action.css',
 })
 export class SidebarAction {
+  @Input() isMobile = false;
+  @Input() sidebarExpanded = false;
 
+  get showLabel(): boolean {
+    return !this.isMobile || this.sidebarExpanded;
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -7,18 +7,13 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   selector: 'app-navbar',
   standalone: true,
   imports: [
-    MatToolbarModule,       // <--- from @angular/material/toolbar
-    MatIconModule,          // <--- from @angular/material/icon
-    MatButtonModule         // <--- from @angular/material/button
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
   ],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.css']
+  styleUrls: ['./navbar.component.css'],
 })
 export class NavbarComponent {
-  
-
-  
-   @Input() sidebarOpen = false;
-  @Output() menuClick = new EventEmitter<void>();
-
+  @Input() isMobile = false;
 }

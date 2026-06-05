@@ -8,6 +8,7 @@
   /* Primary Colors */
   --color-primary: #3B1892;
   --color-primary-light: #5B3DB8;
+  --color-primary-dark: #2A1069;
 
   /* Secondary Colors */
   --color-secondary: #00B0FF;
@@ -22,6 +23,9 @@
   /* Text */
   --color-text-primary: #1F2937;
   --color-text-secondary: #6B7280;
+
+  /* Border */
+  --color-border: #E5E7EB;
 
   /* Status */
   --color-success: #22C55E;
@@ -72,6 +76,18 @@
   --spacing-sidebar-maxw: 260px;
   --blur-glow: 50px;
   --shadow-logo-glow: 0 0 15px rgba(59, 130, 246, 0.5);
+
+
+  /* Sidebar */
+  --sidebar-width: 260px;
+  --sidebar-width-mini: 56px;
+
+  --sidebar-item-height: 44px;
+
+  --color-sidebar-hover: #f3f4f6;
+  --color-sidebar-active: #ede9fe;
+
+  --transition-sidebar: 0.3s ease;
 } 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

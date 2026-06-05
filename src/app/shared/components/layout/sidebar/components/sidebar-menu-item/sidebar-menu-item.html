@@ -1,10 +1,21 @@
 <button
-[ngClass]="active ? 'bg-gray-100 text-[var(--color-primary)] font-medium' : ''"
-  class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition
-         text-[var(--color-text-secondary)]
-         hover:bg-gray-100 hover:text-[var(--color-primary)]
-"
+  class="menu-item flex items-center w-full text-sm cursor-pointer
+         transition-all duration-300 border-0 bg-transparent
+         focus:outline-none"
+  [ngClass]="{
+    'menu-item--mobile': isMobile,
+    'menu-item--desktop': !isMobile,
+    'menu-item--active-mobile': active && isMobile,
+    'menu-item--active-desktop': active && !isMobile,
+    'menu-item--collapsed': isMobile && !sidebarExpanded,
+    'menu-item--expanded': !isMobile || sidebarExpanded
+  }">
 
-> <mat-icon>{{ icon }}</mat-icon>
-  <span>{{ label }}</span>
+  <mat-icon class="menu-item__icon shrink-0">{{ icon }}</mat-icon>
+
+  <span *ngIf="showLabel"
+        class="menu-item__label whitespace-nowrap overflow-hidden transition-all duration-300">
+    {{ label }}
+  </span>
+
 </button>

@@ -1,10 +1,8 @@
-<mat-toolbar class="bg-white shadow-sm">
-
-  <button mat-icon-button class="lg:hidden" (click)="menuClick.emit()">
-  <mat-icon>
-    {{ sidebarOpen ? 'close' : 'menu' }}
-  </mat-icon>
-</button>
+<mat-toolbar
+  class="flex items-center"
+  [style.background]="'var(--color-surface)'"
+  [style.border-bottom]="'1px solid var(--color-border)'"
+  [style.color]="'var(--color-text-primary)'">
 
   <span class="flex-1"></span>
 
