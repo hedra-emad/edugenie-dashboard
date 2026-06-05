@@ -92,20 +92,16 @@ export class LoginPageComponent implements OnInit {
   this.isLoading.set(false);
 
   const { rememberMe } = this.loginForm.value;
-  // console.log('LOGIN RESPONSE:', res);
-  console.log('USER OBJECT:', res.user);
 
-  const token = res.token;
 
-  if (rememberMe) {
-    localStorage.setItem('token', token);
-  } else {
-    sessionStorage.setItem('token', token);
-  }
+  // if (rememberMe) {
+  //   localStorage.setItem('token', token);
+  // } else {
+  //   sessionStorage.setItem('token', token);
+  // }
 
-  console.log('Saved token:', token);
 
-  this.router.navigate(['/dashboard']);
+  this.router.navigate(['/register']);
 },
 
           error: (err) => {
@@ -131,25 +127,6 @@ export class LoginPageComponent implements OnInit {
     
   }
 
-  login() {
-  const { email, password, rememberMe } = this.loginForm.value;
-
- this.authService.login({
-  email,
-  password,
-}).subscribe({
-    next: (res: LoginResponse) => {
-
-    if (rememberMe) {
-      localStorage.setItem('token', res.token);
-    } else {
-      sessionStorage.setItem('token', res.token);
-    }
-
-  },
-
-  });
-}
   loginWithGoogle() {
     console.log('Google login clicked');
   }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 export interface LoginResponse {
-  token: string;
+  message: string;
   user: any;
 }
 
@@ -24,6 +24,6 @@ export class AuthService {
 }
 
   register(data: any) {
-    return this.http.post(`${this.apiUrl}/register`, data);
+    return this.http.post(`https://edugenie-api.vercel.app/auth/register`, data);
   }
 }
