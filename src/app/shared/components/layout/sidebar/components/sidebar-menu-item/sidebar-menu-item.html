@@ -1,0 +1,10 @@
+<button
+[ngClass]="active ? 'bg-gray-100 text-[var(--color-primary)] font-medium' : ''"
+  class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition
+         text-[var(--color-text-secondary)]
+         hover:bg-gray-100 hover:text-[var(--color-primary)]
+"
+
+> <mat-icon>{{ icon }}</mat-icon>
+  <span>{{ label }}</span>
+</button>

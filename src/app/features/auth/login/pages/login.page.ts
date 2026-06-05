@@ -64,7 +64,7 @@ export class LoginPageComponent implements OnInit {
       Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
     ],
   ],
-  password: ['', [Validators.required, Validators.minLength(8)]],
+  password: ['', [Validators.required, Validators.minLength(6)]],
   rememberMe: [false],
 });
 
