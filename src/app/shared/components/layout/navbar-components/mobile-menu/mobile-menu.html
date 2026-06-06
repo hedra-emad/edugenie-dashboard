@@ -9,7 +9,7 @@
   class="fixed top-0 right-0
          w-1/2 h-screen
          bg-white shadow-xl z-[999]
-         flex flex-col h-full p py-6 gap-4"
+         flex flex-col py-6 gap-4"
 >
 <div class="flex justify-center">
   <button
@@ -22,12 +22,9 @@
   </button>
 </div>
 <!-- Search -->
-<div class="px-2 w-full">
-  <app-navbar-search></app-navbar-search>
-</div>
 
   <!-- Links -->
-  <div class="flex flex-col">
+  <div class="flex flex-col flex-1">
 
     <a
       routerLink="/"
@@ -36,7 +33,7 @@
        text-[var(--color-text-primary)]
        hover:bg-[var(--color-sidebar-hover)]
        transition-colors duration-200
-       cursor-pointer"
+       cursor-pointer text-center"
     >
       Home
     </a>
@@ -48,7 +45,7 @@
        text-[var(--color-text-primary)]
        hover:bg-[var(--color-sidebar-hover)]
        transition-colors duration-200
-       cursor-pointer"
+       cursor-pointer text-center"
     >
       Courses
     </a>
@@ -60,10 +57,25 @@
        text-[var(--color-text-primary)]
        hover:bg-[var(--color-sidebar-hover)]
        transition-colors duration-200
-       cursor-pointer"
+       cursor-pointer text-center"
     >
       About
     </a>
 
+    @if (user) {
+      <div class="mt-auto px-3 pb-4">
+    
+        <button
+          (click)="logout()"
+          class="w-full py-3 rounded-[var(--radius-md)]
+                 bg-red-500 text-white font-medium
+                 hover:bg-red-600
+                 transition-colors duration-200"
+        >
+          Logout
+        </button>
+    
+      </div>
+    }
   </div>
 </div>

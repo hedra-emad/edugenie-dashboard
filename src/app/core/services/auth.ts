@@ -86,5 +86,17 @@ export class AuthService {
   getCurrentUser(): UserProfile | null {
     return this.currentUserSubject.value;
   }
+
+  logout() {
+    return this.http.post(
+      `${this.apiUrl}/logout`,
+      {},
+      { withCredentials: true }
+    ).pipe(
+      tap(() => {
+        this.setCurrentUser(null);
+      })
+    );
+  }
 }
 

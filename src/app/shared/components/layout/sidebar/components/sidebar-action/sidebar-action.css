@@ -1,0 +1,50 @@
+/* ==============================================
+   Sidebar Action (Create Course) Styles
+   ============================================== */
+
+.sidebar-action__btn {
+  border: none;
+}
+
+/* Circle button — mobile collapsed */
+.sidebar-action__btn--circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+/* Full width button */
+.sidebar-action__btn--full {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+}
+
+/* Mobile variant: white text on primary-dark bg */
+.sidebar-action__btn--mobile {
+  background-color: var(--color-primary-dark);
+  color: var(--color-surface);
+}
+
+.sidebar-action__btn--mobile:hover {
+  background-color: var(--color-primary-light);
+}
+
+.sidebar-action__btn--mobile:focus {
+  ring-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Desktop variant: primary bg, white text */
+.sidebar-action__btn--desktop {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.sidebar-action__btn--desktop:hover {
+  background-color: var(--color-primary-light);
+}
+
+.sidebar-action__btn--desktop:focus {
+  --tw-ring-color: var(--color-primary-light);
+}

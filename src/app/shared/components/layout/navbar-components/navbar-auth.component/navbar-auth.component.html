@@ -1,13 +1,30 @@
-<div class="flex items-center gap-2">
-  <button
-    class="h-10 px-4 rounded-xl text-sm font-medium text-primary border border-[var(--color-primary)] hover:bg-[var(--color-sidebar-hover)]"
-  >
-    Login
-  </button>
+<div class="hidden lg:flex items-center gap-2">
 
-  <button
-    class="h-10 px-5 rounded-xl text-sm font-medium text-white border border-[var(--color-primary)] bg-primary"
-  >
-    Sign Up
-  </button>
+  @if (!user) {
+
+    <button
+      routerLink="/login"
+      class="h-10 px-4 rounded-xl text-sm font-medium text-primary border border-[var(--color-primary)] hover:bg-[var(--color-sidebar-hover)]"
+    >
+      Login
+    </button>
+
+    <button
+      routerLink="/register"
+      class="h-10 px-5 rounded-xl text-sm font-medium text-white border border-[var(--color-primary)] bg-primary"
+    >
+      Sign Up
+    </button>
+
+  } @else {
+
+    <button
+      (click)="logout()"
+      class="h-10 px-5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+    >
+      Logout
+    </button>
+
+  }
+
 </div>
