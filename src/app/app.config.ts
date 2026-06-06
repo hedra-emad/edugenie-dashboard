@@ -5,6 +5,8 @@ import {
   APP_INITIALIZER
 } from '@angular/core';
 
+
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { firstValueFrom } from 'rxjs';
@@ -21,5 +23,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideAnimations(),
+   provideCharts(withDefaultRegisterables())
   ]
 };
