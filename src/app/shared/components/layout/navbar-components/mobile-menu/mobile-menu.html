@@ -1,0 +1,69 @@
+<!-- Backdrop -->
+<div
+  class="fixed inset-0 bg-black/30 z-[998]"
+  (click)="closeMenu.emit()"
+></div>
+
+<!-- Right Panel -->
+<div
+  class="fixed top-0 right-0
+         w-1/2 h-screen
+         bg-white shadow-xl z-[999]
+         flex flex-col h-full p py-6 gap-4"
+>
+<div class="flex justify-center">
+  <button
+    (click)="closeMenu.emit()"
+    class="w-10 h-10 flex items-center justify-center rounded-[var(--radius-md)]
+       hover:bg-[var(--color-border)]
+       transition-colors duration-200"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<!-- Search -->
+<div class="px-2 w-full">
+  <app-navbar-search></app-navbar-search>
+</div>
+
+  <!-- Links -->
+  <div class="flex flex-col">
+
+    <a
+      routerLink="/"
+      (click)="closeMenu.emit()"
+      class="py-3 px-3 rounded-[var(--radius-md)]
+       text-[var(--color-text-primary)]
+       hover:bg-[var(--color-sidebar-hover)]
+       transition-colors duration-200
+       cursor-pointer"
+    >
+      Home
+    </a>
+
+    <a
+      routerLink="/courses"
+      (click)="closeMenu.emit()"
+      class="py-3 px-3 rounded-[var(--radius-md)]
+       text-[var(--color-text-primary)]
+       hover:bg-[var(--color-sidebar-hover)]
+       transition-colors duration-200
+       cursor-pointer"
+    >
+      Courses
+    </a>
+
+    <a
+      routerLink="/about"
+      (click)="closeMenu.emit()"
+      class="py-3 px-3 rounded-[var(--radius-md)]
+       text-[var(--color-text-primary)]
+       hover:bg-[var(--color-sidebar-hover)]
+       transition-colors duration-200
+       cursor-pointer"
+    >
+      About
+    </a>
+
+  </div>
+</div>

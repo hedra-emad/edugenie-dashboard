@@ -15,6 +15,7 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
 import { AuthService } from '../../../../core/services/auth';
 import {LoginResponse} from '../../../../core/services/auth'
+import UserService from '../../../../core/services/user';
 
 @Component({
   selector: 'app-login-page',
@@ -40,6 +41,7 @@ export class LoginPageComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private userService = inject(UserService);
 
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
@@ -88,20 +90,14 @@ export class LoginPageComponent implements OnInit {
   password,
 })
         .subscribe({
-         next: (res: LoginResponse) => {
+        next: (res: LoginResponse) => {
   this.isLoading.set(false);
 
-  const { rememberMe } = this.loginForm.value;
+  this.userService.setUser(res.user);
 
+  localStorage.setItem('user', JSON.stringify(res.user));
 
-  // if (rememberMe) {
-  //   localStorage.setItem('token', token);
-  // } else {
-  //   sessionStorage.setItem('token', token);
-  // }
-
-
-  this.router.navigate(['/register']);
+  this.router.navigate(['/dashboard']);
 },
 
           error: (err) => {
