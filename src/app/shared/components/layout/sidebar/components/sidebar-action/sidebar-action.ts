@@ -16,4 +16,7 @@ export class SidebarAction {
   get showLabel(): boolean {
     return !this.isMobile || this.sidebarExpanded;
   }
+  get collapsed(): boolean {
+  return this.isMobile && !this.sidebarExpanded;
+}
 }
