@@ -1,21 +1,44 @@
-<mat-toolbar
-  class="flex items-center"
-  [style.background]="'var(--color-surface)'"
-  [style.border-bottom]="'1px solid var(--color-border)'"
-  [style.color]="'var(--color-text-primary)'">
+<nav
+  class="sticky top-0 z-50 bg-surface border-b border-border shadow-sm relative"
+>
+  <div
+    class="max-w-7xl mx-auto h-16 px-4 md:px-8 lg:px-12 flex items-center justify-between"
+  >
+    <!-- Logo -->
+    <app-navbar-logo></app-navbar-logo>
 
-  <span class="flex-1"></span>
+    <!-- Desktop Links -->
+    <div class="hidden lg:block">
+      <app-navbar-links></app-navbar-links>
+    </div>
 
-  <button mat-icon-button>
-    <mat-icon>notifications</mat-icon>
-  </button>
+    <!-- Right Side -->
+    <div class="flex items-center gap-3">
 
-  <button mat-icon-button>
-    <mat-icon>settings</mat-icon>
-  </button>
+      <!-- Search Desktop -->
+      <div class="hidden lg:block">
+        <app-navbar-search></app-navbar-search>
+      </div>
 
-  <button mat-flat-button color="primary">
-    Upgrade
-  </button>
+      <!-- Auth Buttons -->
+      <app-navbar-auth></app-navbar-auth>
 
-</mat-toolbar>
+      <!-- Burger -->
+      <button
+        (click)="toggleMenu()"
+        class="lg:hidden flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-100"
+      >
+        <mat-icon>
+          {{ menuOpen() ? 'close' : 'menu' }}
+        </mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <app-mobile-menu
+  [class.hidden]="!menuOpen()"
+  (closeMenu)="closeMenu()"
+  class=" left-0 w-full z-[9999] bg-white shadow-md"
+/>
+</nav>

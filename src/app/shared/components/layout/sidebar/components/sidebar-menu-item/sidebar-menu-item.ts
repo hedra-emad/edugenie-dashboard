@@ -19,4 +19,15 @@ export class SidebarMenuItem {
   get showLabel(): boolean {
     return !this.isMobile || this.sidebarExpanded;
   }
+  get collapsed(): boolean {
+  return this.isMobile && !this.sidebarExpanded;
+}
+
+get mobile(): boolean {
+  return this.isMobile;
+}
+
+get desktop(): boolean {
+  return !this.isMobile;
+}
 }

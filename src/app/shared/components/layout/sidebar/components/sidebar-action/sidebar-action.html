@@ -1,16 +1,28 @@
 <div class="flex justify-center px-3 py-2">
 
   <button
-    class="sidebar-action__btn flex items-center justify-center gap-2
-           font-medium text-sm cursor-pointer
-           transition-all duration-300
-           focus:outline-none focus:ring-2"
-    [ngClass]="{
-      'sidebar-action__btn--circle': isMobile && !sidebarExpanded,
-      'sidebar-action__btn--full': !isMobile || sidebarExpanded,
-      'sidebar-action__btn--mobile': isMobile,
-      'sidebar-action__btn--desktop': !isMobile
-    }">
+  class="
+    flex items-center justify-center gap-2
+    text-sm font-medium
+    transition-all duration-300
+    border-none
+    hover:bg-[var(--color-primary-light)]
+    focus:outline-none focus:ring-2
+  "
+  [class.w-10]="collapsed"
+  [class.h-10]="collapsed"
+  [class.rounded-full]="collapsed"
+  [class.p-0]="collapsed"
+
+  [class.w-full]="!collapsed"
+  [class.px-4]="!collapsed"
+  [class.py-2]="!collapsed"
+  [class.rounded-lg]="!collapsed"
+
+  [class.bg-[var(--color-primary-dark)]]="isMobile"
+  [class.bg-[var(--color-primary)]]="!isMobile"
+  [class.text-white]="true"
+>
 
     <mat-icon class="text-[20px]">add</mat-icon>
 

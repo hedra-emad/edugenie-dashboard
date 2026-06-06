@@ -93,11 +93,18 @@ export class LoginPageComponent implements OnInit {
         next: (res: LoginResponse) => {
   this.isLoading.set(false);
 
-  this.userService.setUser(res.user);
+  // this.userService.setUser(res.user);
 
   localStorage.setItem('user', JSON.stringify(res.user));
 
-  this.router.navigate(['/dashboard']);
+  // if (rememberMe) {
+  //   localStorage.setItem('token', token);
+  // } else {
+  //   sessionStorage.setItem('token', token);
+  // }
+
+
+  this.router.navigate(['/settings']);
 },
 
           error: (err) => {
@@ -124,10 +131,10 @@ export class LoginPageComponent implements OnInit {
   }
 
   loginWithGoogle() {
-    console.log('Google login clicked');
+    // console.log('Google login clicked');
   }
 
   loginWithGithub() {
-    console.log('Github login clicked');
+    // console.log('Github login clicked');
   }
 }

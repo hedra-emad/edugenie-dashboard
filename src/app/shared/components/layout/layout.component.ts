@@ -1,15 +1,17 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { RouterOutlet } from '@angular/router';
+
 
 @Component({
   selector: 'app-layout',
   standalone: true,
   imports: [
-    RouterOutlet,
+
     NavbarComponent,
     SidebarComponent,
+    RouterOutlet
   ],
   templateUrl: './layout.component.html',
 })
