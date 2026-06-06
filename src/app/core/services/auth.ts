@@ -29,8 +29,8 @@ export class AuthService {
   // We can also use Signals if preferred, but BehaviorSubject is standard. Let's use signal as well for reactivity if needed.
   public currentUserSignal = signal<UserProfile | null>(null);
 
-  private apiUrl = 'http://localhost:3000/auth';
-  private usersApiUrl = 'http://localhost:3000/users';
+  private apiUrl = 'https://edugenie-api.vercel.app/auth';
+  private usersApiUrl = 'https://edugenie-api.vercel.app/users';
 
   login(data: any) {
     return this.http.post<LoginResponse>(

@@ -93,7 +93,7 @@ export class LoginPageComponent implements OnInit {
         next: (res: LoginResponse) => {
   this.isLoading.set(false);
 
-  this.userService.setUser(res.user);
+  // this.userService.setUser(res.user);
 
   localStorage.setItem('user', JSON.stringify(res.user));
 
