@@ -97,7 +97,14 @@ export class LoginPageComponent implements OnInit {
 
   localStorage.setItem('user', JSON.stringify(res.user));
 
-  this.router.navigate(['/dashboard']);
+  // if (rememberMe) {
+  //   localStorage.setItem('token', token);
+  // } else {
+  //   sessionStorage.setItem('token', token);
+  // }
+
+
+  this.router.navigate(['/settings']);
 },
 
           error: (err) => {
