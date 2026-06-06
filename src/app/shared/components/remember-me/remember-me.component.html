@@ -2,10 +2,12 @@
       <div class="flex items-center">
         <input
           id="remember-me"
-          type="checkbox"
-          [checked]="value"
-          (change)="toggle($event)"
-          class=" w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
+  type="checkbox"
+  [checked]="value"
+  (change)="toggle($event)"
+          class="w-4 border-primary accent-primary
+                focus:ring-primary
+                rounded cursor-pointer"
         />
         <label for="remember-me" class="ml-2 block text-sm text-text-primary cursor-pointer">
           Remember me

@@ -13,6 +13,8 @@ import { RememberMeComponent } from '../../../../shared/components/remember-me/r
 import { AuthButtonComponent } from '../../../../shared/components/auth-button/auth-button.component';
 import { AuthDividerComponent } from '../../../../shared/components/auth-divider/auth-divider.component';
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
+import { AuthService } from '../../../../core/services/auth';
+import {LoginResponse} from '../../../../core/services/auth'
 
 @Component({
   selector: 'app-login-page',
@@ -29,14 +31,16 @@ import { SocialLoginComponent } from '../../../../shared/components/social-login
     RememberMeComponent,
     AuthButtonComponent,
     AuthDividerComponent,
-    SocialLoginComponent
+    SocialLoginComponent,
   ],
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',
 })
 export class LoginPageComponent implements OnInit {
+  errorMessage = signal<string | null>(null);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
-  
+
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
   isWatchMode = signal(false);
@@ -52,32 +56,75 @@ export class LoginPageComponent implements OnInit {
 
   private router = inject(Router);
 
-  loginForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    rememberMe: [false]
-  });
+ loginForm: FormGroup = this.fb.group({
+  email: [
+    '',
+    [
+      Validators.required,
+      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+    ],
+  ],
+  password: ['', [Validators.required, Validators.minLength(6)]],
+  rememberMe: [false],
+});
 
   setTab(tab: 'signin' | 'signup') {
-  this.activeTab.set(tab);
+    this.activeTab.set(tab);
 
-  if (tab === 'signup') {
-    this.router.navigate(['/register']);
+    if (tab === 'signup') {
+      this.router.navigate(['/register']);
+    }
   }
-}
 
   onSubmit() {
+    this.errorMessage.set(null);
+    const { email, password, rememberMe } = this.loginForm.value;
     if (this.loginForm.valid) {
+      console.log(this.loginForm.value);
       this.isLoading.set(true);
-      
-      // Mock API call
-      setTimeout(() => {
-        console.log('Login Form Data:', this.loginForm.value);
-        this.isLoading.set(false);
-      }, 1500);
+
+      this.authService.login({
+  email,
+  password,
+})
+        .subscribe({
+         next: (res: LoginResponse) => {
+  this.isLoading.set(false);
+
+  const { rememberMe } = this.loginForm.value;
+
+
+  // if (rememberMe) {
+  //   localStorage.setItem('token', token);
+  // } else {
+  //   sessionStorage.setItem('token', token);
+  // }
+
+
+  this.router.navigate(['/settings']);
+},
+
+          error: (err) => {
+          console.error('Login error:', err);
+
+          this.isLoading.set(false);
+
+          const status = err?.status;
+
+          if (status === 401) {
+            this.errorMessage.set('Invalid email or password');
+          } else if (status === 0) {
+            this.errorMessage.set('Network error. Please check your connection');
+          } else {
+            this.errorMessage.set('Something went wrong. Please try again later');
+          }
+        }
+        });
     } else {
       this.loginForm.markAllAsTouched();
     }
+
+    
   }
 
   loginWithGoogle() {

@@ -35,4 +35,43 @@
 
   /* Shadows */
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-layout: 0 20px 50px rgba(0, 0, 0, 0.05);
+  --shadow-footer: 0 -1px 10px rgba(0, 0, 0, 0.05);
+  --shadow-interest-active: inset 0 -2px 4px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  /* Page & Sidebar Backgrounds */
+  --color-background-page: #eef2f6;
+  --color-sidebar-bg: #0b192c;
+
+  /* Scrollbar */
+  --color-scrollbar-thumb: rgba(0, 175, 254, 0.25);
+  --color-scrollbar-thumb-hover: rgba(0, 175, 254, 0.55);
+  --color-scrollbar-thumb-active: rgba(0, 175, 254, 0.75);
+  --color-scrollbar-thumb-ff: rgba(0, 175, 254, 0.3);
+
+  /* Layout Sizing */
+  --width-container: 900px;
+  --width-card: 440px;
+  --height-btn-back: 44px;
+
+  /* Panel Radius */
+  --radius-panel: 2rem;
+
+  /* Font Sizes (small/micro) */
+  --text-micro: 9px;
+  --text-2xs: 10px;
+  --text-xs-alt: 11px;
+  --text-xs-fixed: 12px;
+
+  /* Tracking (letter-spacing) */
+  --tracking-wide: 0.2em;
+  --tracking-wider: 0.3em;
+
+  /* Misc Spacing */
+  --spacing-error-min-h: 16px;
+  --spacing-sidebar-maxw: 260px;
+  --blur-glow: 50px;
+  --shadow-logo-glow: 0 0 15px rgba(59, 130, 246, 0.5);
 } 
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
