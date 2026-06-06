@@ -1,5 +1,6 @@
 import { ActivatedRoute, Routes } from '@angular/router';
 import { LayoutComponent } from './shared/components/layout/layout.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -17,7 +18,13 @@ export const routes: Routes = [
           import('./features/instructor-analytics/instructor-analytics.page')
             .then(m => m.InstructorAnalyticsPageComponent)
       },
-     
+     {
+        path: 'settings',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/settings/pages/account-settings/account-settings.page')
+              .then(m => m.AccountSettingsPageComponent)
+      }
     ]
   }
 ];

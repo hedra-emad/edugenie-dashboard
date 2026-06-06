@@ -1,41 +1,47 @@
-import { Component } from '@angular/core';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { RouterOutlet } from '@angular/router';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
-import { NgIf } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
 
 
 @Component({
   selector: 'app-layout',
   standalone: true,
   imports: [
-    RouterOutlet,
-    MatSidenavModule,
+
     NavbarComponent,
-    SidebarComponent, NgIf
+    SidebarComponent,
+    RouterOutlet
   ],
   templateUrl: './layout.component.html',
-
 })
-export class LayoutComponent {
-sidebarOpen = false;
-isMobile = false;
+export class LayoutComponent implements OnInit {
+  sidebarExpanded = true;
+  isMobile = false;
 
-ngOnInit() {
-  this.checkScreen();
-  window.addEventListener('resize', () => this.checkScreen());
-}
-
-checkScreen() {
-  this.isMobile = window.innerWidth < 1024;
-
-  if (!this.isMobile) {
-    this.sidebarOpen = true;
+  ngOnInit(): void {
+    this.checkScreen();
   }
-}
 
-toggleSidebar() {
-  this.sidebarOpen = !this.sidebarOpen;
-}
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkScreen();
+  }
+
+  private checkScreen(): void {
+    const wasMobile = this.isMobile;
+    this.isMobile = window.innerWidth < 768;
+
+    // Only reset sidebar state on breakpoint crossing, not every resize
+    if (this.isMobile !== wasMobile) {
+      this.sidebarExpanded = !this.isMobile;
+    }
+  }
+
+  toggleSidebar(): void {
+    if (this.isMobile) {
+      this.sidebarExpanded = !this.sidebarExpanded;
+    }
+    // Desktop sidebar is always expanded — do nothing
+  }
 }

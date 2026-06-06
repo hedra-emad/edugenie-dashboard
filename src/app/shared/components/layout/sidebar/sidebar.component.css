@@ -1,0 +1,38 @@
+/* ==============================================
+   Sidebar Component Styles
+   Uses CSS variables from styles.css exclusively.
+   ============================================== */
+
+/* --- Base --- */
+.sidebar {
+  transition: width var(--transition-sidebar),
+              background-color var(--transition-sidebar);
+}
+
+/* --- Desktop: always expanded, white surface, right border --- */
+.sidebar--desktop {
+  width: var(--sidebar-width);
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+}
+
+/* --- Mobile: primary background --- */
+.sidebar--mobile {
+  background-color: var(--color-primary);
+}
+
+/* Mobile collapsed: mini nav rail */
+.sidebar--collapsed {
+  width: var(--sidebar-width-mini);
+}
+
+/* Mobile expanded: full width overlay */
+.sidebar--expanded {
+  width: var(--sidebar-width);
+}
+
+/* --- Toggle button --- */
+.sidebar__toggle {
+  background: transparent;
+  border: none;
+}

@@ -1,0 +1,24 @@
+/* ==============================================
+   Sidebar Profile Styles
+   ============================================== */
+
+/* Avatar sizes — animate smoothly */
+.sidebar-profile__avatar--small {
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar-profile__avatar--large {
+  width: 80px;
+  height: 80px;
+}
+
+/* Desktop name color */
+.sidebar-profile__name--desktop {
+  color: var(--color-text-primary);
+}
+
+/* Desktop role color */
+.sidebar-profile__role--desktop {
+  color: var(--color-text-secondary);
+}
