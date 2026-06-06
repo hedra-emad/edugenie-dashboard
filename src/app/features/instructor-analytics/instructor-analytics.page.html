@@ -1,0 +1,41 @@
+<div class="min-h-screen bg-background-page font-sans antialiased overflow-x-hidden">
+    <div class="w-full max-w-[1000px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-7">
+
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="space-y-1">
+                <h1 class="text-[1.75rem] sm:text-[2.25rem] font-black text-primary tracking-tight leading-tight">
+                    Earnings Overview</h1>
+                <p class="text-text-secondary text-sm">Track your course performance and payouts.</p>
+            </div>
+            <button mat-button
+                class="!bg-white !text-[var(--color-text-primary)] !rounded-xl !px-5 !py-2.5 border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 group shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <mat-icon
+                        class="!text-[18px] opacity-55 group-hover:rotate-12 transition-transform">account_balance_wallet</mat-icon>
+                    <span class="font-bold text-[11px] uppercase tracking-[0.15em]">Withdraw Funds</span>
+                </div>
+            </button>
+        </header>
+
+        <!-- Stats Cards -->
+        <app-stats-cards></app-stats-cards>
+
+        <!-- Revenue Chart -->
+        <section
+            class="bg-white p-6 sm:p-8 rounded-[var(--radius-panel)] shadow-[var(--shadow-card)] border border-slate-100">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-6">
+                <h2 class="text-base sm:text-lg font-black text-primary tracking-tight">Revenue over last 30 days</h2>
+                <div
+                    class="bg-background-page px-3.5 py-1.5 rounded-xl border border-slate-200 text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary whitespace-nowrap">
+                    Last 30 Days
+                </div>
+            </div>
+            <app-revenue-chart></app-revenue-chart>
+        </section>
+
+        <!-- Sales Table -->
+        <app-sales-table></app-sales-table>
+
+    </div>
+</div>
