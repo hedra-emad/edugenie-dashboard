@@ -52,6 +52,8 @@ export class RegisterPageComponent implements OnInit {
   isSubmitting = false;
   isWatchMode = signal(false);
 
+  emailAlreadyExists = false;
+
   @ViewChild('levelSelect') levelSelectRef!: ElementRef;
 
   @HostListener('document:click', ['$event'])
@@ -210,6 +212,21 @@ export class RegisterPageComponent implements OnInit {
         this.profileSetup.markAsUntouched();
       }
     });
+    this.accountInfo.get('email')?.valueChanges.subscribe(() => {
+  this.emailAlreadyExists = false;
+
+  const control = this.accountInfo.get('email');
+
+  if (control?.hasError('emailExists')) {
+    const errors = { ...(control.errors || {}) };
+
+    delete errors['emailExists'];
+
+    control.setErrors(
+      Object.keys(errors).length ? errors : null
+    );
+  }
+});
   }
 
   //  Step Metadata
@@ -234,7 +251,7 @@ export class RegisterPageComponent implements OnInit {
       case 1:
         return this.roleSelection.invalid;
       case 2:
-        return this.accountInfo.invalid;
+  return this.accountInfo.invalid || this.emailAlreadyExists;
       case 3:
         return this.securityInfo.invalid;
       case 4:
@@ -323,17 +340,34 @@ export class RegisterPageComponent implements OnInit {
   private submitRegistration(payload: any): void {
     this.isSubmitting = true;
 
-    this.authService.register(payload).subscribe({
-      next: (res) => {
-        console.log('Register Success', res);
-        this.isSubmitting = false;
-        this.router.navigate(['/login']);
-      },
-      error: (err) => {
-        console.error('Register Error', err);
-        this.isSubmitting = false;
-      },
-    });
+this.authService.register(payload).subscribe({
+  next: (res) => {
+    console.log('Register Success', res);
+    this.isSubmitting = false;
+    this.router.navigate(['/login']);
+  },
+
+  error: (err) => {
+    this.isSubmitting = false;
+
+    if (err.status === 409) {
+      this.emailAlreadyExists = true;
+      this.currentStep = 2;
+
+      const emailControl = this.accountInfo.get('email');
+
+      emailControl?.setErrors({
+        emailExists: true,
+      });
+
+      emailControl?.markAsTouched();
+
+      return;
+    }
+
+    console.error('Register Error', err);
+  }
+});
   }
 
   //  Password Helpers ──

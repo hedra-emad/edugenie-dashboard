@@ -27,3 +27,4 @@ export class AuthService {
     return this.http.post(`https://edugenie-api.vercel.app/auth/register`, data);
   }
 }
+
