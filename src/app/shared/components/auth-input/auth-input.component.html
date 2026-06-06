@@ -5,7 +5,6 @@
 
   <!-- INPUT AREA ONLY -->
   <div class="relative w-full">
-    
     <!-- icon -->
     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
       <ng-content select="[icon]"></ng-content>
@@ -17,48 +16,35 @@
       [type]="type"
       [formControl]="formControl"
       [placeholder]="placeholder"
-     class="w-full bg-surface text-text-primary rounded-[var(--radius-md)] py-2 pl-11 pr-4
-border transition-all duration-200
-focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]
-placeholder:text-gray-400"
- [ngClass]="{
-  'border-[var(--color-error)]': control?.invalid && control?.touched,
+      class="w-full bg-surface text-text-primary rounded-[var(--radius-md)] py-2 pl-11 pr-4 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] placeholder:text-gray-400"
+      [ngClass]="{
+        'border-[var(--color-error)]': control?.invalid && control?.touched,
 
-  'border-[var(--color-primary)]': control?.valid && control?.touched,
+        'border-[var(--color-primary)]': control?.valid && control?.touched,
 
-  'border-gray-200': !control?.touched
-}"
+        'border-gray-200': !control?.touched
+      }"
     />
 
     <!-- success icon -->
     @if (showSuccessWhenValid && control?.valid && control?.touched) {
-      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-        <svg
-          class="w-5 h-5 text-green-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
+    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+      <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
     }
-
   </div>
 
   <!-- ERROR OUTSIDE input wrapper -->
   @if (control?.invalid && control?.touched) {
-    <div class="mt-1 text-xs text-error w-full min-h-error">
-      @for (errorKey of Object.keys(control?.errors || {}); track errorKey; let first = $first) {
-        @if (first) {
-          <span class="block">
-            {{ getErrorMessage(errorKey) }}
-          </span>
-        }
-      }
-    </div>
+  <div class="mt-1 text-xs text-error w-full min-h-error">
+    @for (errorKey of Object.keys(control?.errors || {}); track errorKey; let first = $first) { @if
+    (first) {
+    <span class="block">
+      {{ getErrorMessage(errorKey) }}
+    </span>
+    } }
+  </div>
   }
 </div>
