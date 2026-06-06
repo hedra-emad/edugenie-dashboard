@@ -122,34 +122,47 @@ export class AccountSettingsPageComponent implements OnInit {
   }
 
   onSaveChanges() {
-    if (this.profileForm.invalid) return;
+  if (this.profileForm.invalid) return;
 
-    this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+  this.isSaving = true;
+  this.errorMessage = '';
+  this.successMessage = '';
 
-    const updateData = {
-      firstName: this.profileForm.get('firstName')?.value,
-      lastName: this.profileForm.get('lastName')?.value,
-      avatar: this.avatarPreview || ''
-    };
+  const updateData: {
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  } = {
+    firstName: this.profileForm.get('firstName')?.value,
+    lastName: this.profileForm.get('lastName')?.value,
+  };
 
-    this.authService.updateProfile(updateData).subscribe({
-      next: (response) => {
-        this.isSaving = false;
-        this.successMessage = 'Profile updated successfully.';
-        if (response.data) {
-          this.populateForm(response.data);
-        }
-        setTimeout(() => this.successMessage = '', 3000);
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.errorMessage = err.error?.message || 'Failed to update profile. Please try again.';
-      }
-    });
+  if (
+    this.avatarPreview &&
+    this.avatarPreview.startsWith('http')
+  ) {
+    updateData.avatar = this.avatarPreview;
   }
 
+  console.log(updateData);
+
+  this.authService.updateProfile(updateData).subscribe({
+    next: (response) => {
+      this.isSaving = false;
+      this.successMessage = 'Profile updated successfully.';
+      if (response.data) {
+        this.populateForm(response.data);
+      }
+      setTimeout(() => (this.successMessage = ''), 3000);
+    },
+    error: (err) => {
+      this.isSaving = false;
+      this.errorMessage =
+        err.error?.message ||
+        'Failed to update profile. Please try again.';
+    },
+  });
+}
   toggleEmailNotifications() {
     this.emailNotifications = !this.emailNotifications;
   }
