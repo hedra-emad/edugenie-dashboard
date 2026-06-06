@@ -1,6 +1,35 @@
-<button
-  class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-light)] transition shadow-sm"
+<div class="flex justify-center px-3 py-2">
+
+  <button
+  class="
+    flex items-center justify-center gap-2
+    text-sm font-medium
+    transition-all duration-300
+    border-none
+    hover:bg-[var(--color-primary-light)]
+    focus:outline-none focus:ring-2
+  "
+  [class.w-10]="collapsed"
+  [class.h-10]="collapsed"
+  [class.rounded-full]="collapsed"
+  [class.p-0]="collapsed"
+
+  [class.w-full]="!collapsed"
+  [class.px-4]="!collapsed"
+  [class.py-2]="!collapsed"
+  [class.rounded-lg]="!collapsed"
+
+  [class.bg-[var(--color-primary-dark)]]="isMobile"
+  [class.bg-[var(--color-primary)]]="!isMobile"
+  [class.text-white]="true"
 >
-  <mat-icon class="text-white">add</mat-icon>
-  <span class="text-sm font-medium">Create New Course</span>
-</button>
+
+    <mat-icon class="text-[20px]">add</mat-icon>
+
+    <span *ngIf="showLabel" class="whitespace-nowrap">
+      Create New Course
+    </span>
+
+  </button>
+
+</div>

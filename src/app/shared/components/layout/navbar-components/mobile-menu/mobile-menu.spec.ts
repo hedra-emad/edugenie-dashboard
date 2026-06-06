@@ -1,19 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgIf } from '@angular/common';
 
-import { SidebarAction } from './sidebar-action';
+import { MobileMenu } from './mobile-menu';
 
-describe('SidebarAction', () => {
-  let component: SidebarAction;
-  let fixture: ComponentFixture<SidebarAction>;
+describe('MobileMenu', () => {
+  let component: MobileMenu;
+  let fixture: ComponentFixture<MobileMenu>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SidebarAction]
+      imports: [MobileMenu]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarAction);
+    fixture = TestBed.createComponent(MobileMenu);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

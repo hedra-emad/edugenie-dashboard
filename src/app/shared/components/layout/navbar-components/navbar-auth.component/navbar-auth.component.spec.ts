@@ -1,19 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgIf } from '@angular/common';
 
-import { SidebarAction } from './sidebar-action';
+import { NavbarAuthComponent } from './navbar-auth.component';
 
-describe('SidebarAction', () => {
-  let component: SidebarAction;
-  let fixture: ComponentFixture<SidebarAction>;
+describe('NavbarAuthComponent', () => {
+  let component: NavbarAuthComponent;
+  let fixture: ComponentFixture<NavbarAuthComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SidebarAction]
+      imports: [NavbarAuthComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarAction);
+    fixture = TestBed.createComponent(NavbarAuthComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

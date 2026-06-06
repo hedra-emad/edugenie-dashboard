@@ -1,19 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgIf } from '@angular/common';
 
-import { SidebarAction } from './sidebar-action';
+import { NavbarSearchComponent } from './navbar-search.component';
 
-describe('SidebarAction', () => {
-  let component: SidebarAction;
-  let fixture: ComponentFixture<SidebarAction>;
+describe('NavbarSearchComponent', () => {
+  let component: NavbarSearchComponent;
+  let fixture: ComponentFixture<NavbarSearchComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SidebarAction]
+      imports: [NavbarSearchComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarAction);
+    fixture = TestBed.createComponent(NavbarSearchComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

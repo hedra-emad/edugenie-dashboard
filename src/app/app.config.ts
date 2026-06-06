@@ -1,14 +1,18 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection
+  provideZoneChangeDetection,
+  APP_INITIALIZER
 } from '@angular/core';
 
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { firstValueFrom } from 'rxjs';
 
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+
+import UserService from './core/services/user';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +20,6 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
-    provideAnimations()
+    provideAnimations(),
   ]
 };

@@ -1,23 +1,23 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, Input, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { UserService } from '../../../../../../core/services/user';
 
-import { SidebarProfile } from './sidebar-profile';
+@Component({
+  selector: 'app-sidebar-profile',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './sidebar-profile.html',
+  styleUrl: './sidebar-profile.css',
+})
+export class SidebarProfile {
+  @Input() isMobile = false;
+  @Input() sidebarExpanded = false;
 
-describe('SidebarProfile', () => {
-  let component: SidebarProfile;
-  let fixture: ComponentFixture<SidebarProfile>;
+  userService = inject(UserService);
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [SidebarProfile]
-    })
-    .compileComponents();
+  defaultAvatar = 'assets/images/default-avatar.png';
 
-    fixture = TestBed.createComponent(SidebarProfile);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+  get showDetails(): boolean {
+    return !this.isMobile || this.sidebarExpanded;
+  }
+}

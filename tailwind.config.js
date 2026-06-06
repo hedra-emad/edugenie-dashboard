@@ -8,6 +8,7 @@ module.exports = {
       colors: {
         primary: 'var(--color-primary)',
         'primary-light': 'var(--color-primary-light)',
+        'primary-dark': 'var(--color-primary-dark)',
         secondary: 'var(--color-secondary)',
         tertiary: 'var(--color-tertiary)',
         background: 'var(--color-background)',
@@ -19,6 +20,9 @@ module.exports = {
         error: 'var(--color-error)',
         'background-page': 'var(--color-background-page)',
         'sidebar-bg': 'var(--color-sidebar-bg)',
+        border: 'var(--color-border)',
+        'sidebar-hover': 'var(--color-sidebar-hover)',
+        'sidebar-active': 'var(--color-sidebar-active)',
       },
       borderRadius: {
         sm: 'var(--radius-sm)',
@@ -38,6 +42,8 @@ module.exports = {
       },
       width: {
         card: 'var(--width-card)',
+        sidebar: 'var(--sidebar-width)',
+        'sidebar-mini': 'var(--sidebar-width-mini)',
       },
       height: {
         'btn-back': 'var(--height-btn-back)',
@@ -60,6 +66,9 @@ module.exports = {
       },
       dropShadow: {
         'logo-glow': 'var(--shadow-logo-glow)',
+      },
+      transitionDuration: {
+        sidebar: 'var(--transition-sidebar)',
       },
     },
   },
