@@ -47,7 +47,7 @@ export class AccountSettingsPageComponent implements OnInit {
     });
 
     this.securityForm = this.fb.group({
-      currentPassword: [{ value: '********', disabled: true }],
+      currentPassword: [{ value: '', disabled: true }],
       newPassword: [{ value: '', disabled: true }],
       confirmPassword: [{ value: '', disabled: true }]
     });

@@ -16,7 +16,7 @@
             <h2 class="text-xl font-semibold text-[#1a0b59]">Profile Information</h2>
           </div>
           
-          <div class="flex flex-col md:flex-row gap-10 items-start relative">
+          <div class="flex flex-col md:flex-col lg:flex-row gap-10 items-center relative">
             <!-- Avatar -->
             <div class="flex flex-col items-center shrink-0">
               <div class="relative">
@@ -70,7 +70,7 @@
           <form [formGroup]="securityForm" class="space-y-6">
             <div class="space-y-2 opacity-50">
               <label class="text-[13px] font-medium text-gray-700 block">Current Password</label>
-              <input type="password" formControlName="currentPassword" readonly class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1a0b59] focus:border-[#1a0b59] outline-none transition-all text-gray-500 tracking-[0.2em] font-bold text-lg leading-none h-[50px] bg-gray-50 cursor-not-allowed">
+              <input type="password" formControlName="currentPassword" readonly placeholder="Enter current password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1a0b59] focus:border-[#1a0b59] outline-none transition-all text-gray-800 h-[50px] placeholder:text-gray-400 placeholder:font-normal placeholder:tracking-normal bg-gray-50 cursor-not-allowed">
             </div>
             <div class="space-y-2 opacity-50">
               <label class="text-[13px] font-medium text-gray-700 block">New Password</label>
