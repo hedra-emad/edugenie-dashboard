@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserService } from '../../../../../../core/services/user';
+import { AuthService } from '../../.././../../../core/services/auth.js';
 
 @Component({
   selector: 'app-sidebar-profile',
@@ -13,11 +13,15 @@ export class SidebarProfile {
   @Input() isMobile = false;
   @Input() sidebarExpanded = false;
 
-  userService = inject(UserService);
+  authService = inject(AuthService);
 
   defaultAvatar = 'assets/images/default-avatar.png';
 
   get showDetails(): boolean {
     return !this.isMobile || this.sidebarExpanded;
+  }
+
+  get user() {
+    return this.authService.currentUserSignal();
   }
 }

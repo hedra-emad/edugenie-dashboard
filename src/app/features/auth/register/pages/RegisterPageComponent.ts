@@ -10,7 +10,6 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ViewChild, ElementRef } from '@angular/core';
-
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
 import { AuthTabsComponent } from '../../../../shared/components/auth-tabs/auth-tabs.component';
@@ -66,7 +65,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Validators
-
   passwordValidator = (control: AbstractControl): ValidationErrors | null => {
     const pwd: string = control.value || '';
     if (!pwd) return null;
@@ -95,7 +93,6 @@ export class RegisterPageComponent implements OnInit {
   };
 
   //  Form
-
   registerForm: FormGroup = this.fb.group({
     roleSelection: this.fb.group({
       role: ['student', Validators.required],
@@ -131,7 +128,6 @@ export class RegisterPageComponent implements OnInit {
   });
 
   //  Computed Properties
-
   get roleSelection(): FormGroup {
     return this.registerForm.get('roleSelection') as FormGroup;
   }
@@ -202,7 +198,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Lifecycle
-
   ngOnInit(): void {
     this.profileSetup.valueChanges.subscribe(() => {
       if (this.isProfilePartial) {
@@ -227,7 +222,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Step Metadata
-
   getStepTitle(): string {
     switch (this.currentStep) {
       case 1:
@@ -259,7 +253,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Navigation ──
-
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
@@ -281,6 +274,7 @@ export class RegisterPageComponent implements OnInit {
         this.accountInfo.markAllAsTouched();
         return;
       }
+    
       this.currentStep = 3;
       return;
     }
@@ -368,7 +362,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Password Helpers ──
-
   getPasswordStrength(): number {
     const pwd = this.securityInfo.get('password')?.value || '';
 
@@ -444,7 +437,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Interests
-
   availableInterests = ['AI & ML', 'Design', 'Business', 'Web Dev', 'Data Science'];
 
   toggleInterest(interest: string): void {
@@ -456,7 +448,6 @@ export class RegisterPageComponent implements OnInit {
   }
 
   //  Tab Handler ─
-
   handleTabChange(tab: 'signin' | 'signup'): void {
     if (tab === 'signin') {
       this.router.navigate(['/login']);
