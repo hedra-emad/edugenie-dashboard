@@ -1,10 +1,8 @@
-<nav class="flex flex-col gap-1 px-2 py-3">
-  <app-sidebar-menu-item
-    *ngFor="let item of items"
-    [icon]="item.icon"
-    [label]="item.label"
-    [active]="item.active ?? false"
-    [isMobile]="isMobile"
-    [sidebarExpanded]="sidebarExpanded">
-  </app-sidebar-menu-item>
-</nav>
+<app-sidebar-menu-item
+  *ngFor="let item of items"
+  [icon]="item.icon"
+  [label]="item.label"
+  [route]="item.route"
+  [isMobile]="isMobile"
+  [sidebarExpanded]="sidebarExpanded">
+</app-sidebar-menu-item>
