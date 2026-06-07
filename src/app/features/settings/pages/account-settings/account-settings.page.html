@@ -42,15 +42,14 @@
               <div *ngIf="showAvatarOptions"
                 class="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white shadow-xl rounded-lg border border-gray-100 py-1 w-36 z-20 overflow-hidden">
                 <button type="button" (click)="triggerFileInput()"
-                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Upload
+                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Change
                   Image</button>
                 <button type="button" (click)="promptAvatarUrl()"
                   class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Paste
                   URL</button>
               </div>
               <!-- Hidden file input -->
-              <input type="file" #fileInput class="hidden" accept="image/png, image/jpeg, image/gif"
-                (change)="onFileSelected($event)">
+              <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
             </div>
             <p class="text-[11px] text-gray-500 text-center mt-4 max-w-[120px] leading-tight">JPG, GIF or PNG. Max size
               of 800K</p>

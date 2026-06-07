@@ -5,6 +5,8 @@ import {
   APP_INITIALIZER
 } from '@angular/core';
 
+
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { firstValueFrom } from 'rxjs';
@@ -12,7 +14,6 @@ import { firstValueFrom } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
-import UserService from './core/services/user';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,5 +22,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideAnimations(),
+   provideCharts(withDefaultRegisterables())
   ]
 };

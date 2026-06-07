@@ -2,6 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../core/services/auth';
+import { CloudinaryService } from '../../../../core/services/cloudinary';
 
 @Component({
   selector: 'app-account-settings',
@@ -13,6 +14,8 @@ import { AuthService, UserProfile } from '../../../../core/services/auth';
 export class AccountSettingsPageComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private cloudinaryService = inject(CloudinaryService);
+  isUploadingAvatar = false;
 
   profileForm!: FormGroup;
   securityForm!: FormGroup;
@@ -110,15 +113,40 @@ export class AccountSettingsPageComponent implements OnInit {
   }
 
   onFileSelected(event: Event) {
+
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.avatarPreview = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+
+    if (!input.files?.length) {
+      return;
     }
+
+    const file = input.files[0];
+
+    this.isUploadingAvatar = true;
+    this.errorMessage = '';
+
+    this.cloudinaryService.uploadImage(file)
+      .subscribe({
+
+        next: (response: any) => {
+
+          this.avatarPreview = response.secure_url;
+
+          this.isUploadingAvatar = false;
+
+          console.log('Image Uploaded:', response.secure_url);
+
+        },
+
+        error: (error) => {
+
+          console.error(error);
+
+          this.isUploadingAvatar = false;
+
+          this.errorMessage = 'Failed to upload image.';
+        }
+      });
   }
 
   onSaveChanges() {
@@ -128,13 +156,9 @@ export class AccountSettingsPageComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const updateData: {
-      firstName: string;
-      lastName: string;
-      avatar?: string;
-    } = {
+    const updateData: any = {
       firstName: this.profileForm.get('firstName')?.value,
-      lastName: this.profileForm.get('lastName')?.value,
+      lastName: this.profileForm.get('lastName')?.value
     };
 
     if (
