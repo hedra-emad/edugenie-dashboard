@@ -1,0 +1,82 @@
+<mat-expansion-panel [expanded]="true" class="lesson-panel border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+  <mat-expansion-panel-header>
+    <mat-panel-title class="flex items-center justify-between w-full pr-4">
+      <div class="flex items-center gap-2 font-bold text-sm" [style.color]="'var(--color-primary)'">
+        <mat-icon class="text-slate-400">play_circle_outline</mat-icon>
+        <span>Lesson {{ index + 1 }}: {{ lessonForm.get('title')?.value || 'Untitled Lesson' }}</span>
+      </div>
+      <!-- Actions inside the header (preventing panel toggle) -->
+      <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1">
+
+  <!-- MOVE UP -->
+  <button
+    type="button"
+    [disabled]="isFirst"
+    (click)="onMoveUp($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+    aria-label="Move Up"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        arrow_upward
+      </mat-icon>
+    </span>
+  </button>
+
+  <!-- MOVE DOWN -->
+  <button
+    type="button"
+    [disabled]="isLast"
+    (click)="onMoveDown($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+    aria-label="Move Down"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        arrow_downward
+      </mat-icon>
+    </span>
+  </button>
+
+  <!-- DELETE -->
+  <button
+    type="button"
+    (click)="onDelete($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50"
+    aria-label="Delete Lesson"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        delete
+      </mat-icon>
+    </span>
+  </button>
+
+</div>
+      </div>
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <!-- Expanded content: full form -->
+  <div [formGroup]="lessonForm" class="pt-4 space-y-4">
+    <!-- Lesson Title -->
+    <div class="space-y-2">
+      <label class="text-xs font-bold uppercase tracking-wider block text-gray-700">
+        Lesson Title <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        formControlName="title"
+        placeholder="Enter lesson title..."
+        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800"
+      >
+      <span *ngIf="lessonForm.get('title')?.touched && lessonForm.get('title')?.invalid" class="text-xs font-semibold block mt-1" [style.color]="'var(--color-error)'">
+        Lesson title is required.
+      </span>
+    </div>
+
+    <!-- Video Upload Component -->
+    <app-video-upload [lessonForm]="lessonForm"></app-video-upload>
+  </div>
+</mat-expansion-panel>

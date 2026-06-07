@@ -1,0 +1,22 @@
+<div class="space-y-3">
+  <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+    Select Categories <span class="text-red-500">*</span>
+  </label>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+    <button
+      *ngFor="let cat of availableCategories"
+      type="button"
+      (click)="toggleCategory(cat.name)"
+      class="flex items-center gap-2.5 p-3 rounded-lg border text-left text-sm font-semibold transition-all duration-200 outline-none focus:ring-2 focus:ring-[var(--color-primary)] active:scale-95"
+      [ngClass]="isSelected(cat.name) ? 'category-btn--selected' : 'category-btn--unselected'"
+    >
+      <mat-icon class="category-icon text-[18px] w-[18px] h-[18px]" [ngClass]="isSelected(cat.name) ? 'text-white' : 'text-[var(--color-text-secondary)]'">
+        {{ cat.icon }}
+      </mat-icon>
+      <span class="truncate">{{ cat.name }}</span>
+    </button>
+  </div>
+  <div *ngIf="control.touched && control.invalid" class="text-xs font-semibold" [style.color]="'var(--color-error)'">
+    Please select at least one category.
+  </div>
+</div>

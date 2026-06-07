@@ -1,0 +1,11 @@
+.badge-draft {
+  background-color: #fdfaf2;
+  color: var(--color-warning);
+  border-color: #fcecd0;
+}
+
+.badge-published {
+  background-color: #f0fdf4;
+  color: var(--color-success);
+  border-color: #dcfce7;
+}

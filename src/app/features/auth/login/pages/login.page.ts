@@ -86,7 +86,6 @@ export class LoginPageComponent implements OnInit {
       this.authService.login({
   email,
   password,
-  rememberMe
 })
         .subscribe({
         next: (res: LoginResponse) => {

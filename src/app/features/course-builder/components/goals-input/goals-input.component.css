@@ -1,0 +1,4 @@
+/* Goals list styling rules */
+input:focus {
+  border-color: var(--color-primary-light);
+}

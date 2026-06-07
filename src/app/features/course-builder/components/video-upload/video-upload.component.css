@@ -1,0 +1,8 @@
+.sim-btn {
+  transition: all 0.15s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+.sim-btn:active {
+  transform: scale(0.95);
+}
