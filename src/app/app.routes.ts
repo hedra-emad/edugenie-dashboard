@@ -18,6 +18,12 @@ export const routes: Routes = [
           import('./features/instructor-analytics/instructor-analytics.page')
             .then(m => m.InstructorAnalyticsPageComponent)
       },
+      {
+        path: 'course-builder',
+        loadComponent: () =>
+          import('./features/course-builder/pages/create-course-page/create-course-page.component')
+            .then(m => m.CreateCoursePageComponent)
+      },
      {
         path: 'settings',
         canActivate: [authGuard],

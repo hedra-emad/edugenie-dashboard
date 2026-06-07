@@ -1,0 +1,77 @@
+<div class="space-y-4">
+  <label class="text-xs font-bold uppercase tracking-wider block text-gray-500">
+    Lesson Video File
+  </label>
+
+  <div
+    (click)="triggerFileInput()"
+    class="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors relative"
+    [style.border-color]="status === 'success' ? 'var(--color-success)' : (status === 'error' || status === 'videoTooLong' ? 'var(--color-error)' : 'var(--color-border)')"
+    [style.background]="status === 'success' ? 'rgba(34, 197, 94, 0.02)' : 'var(--color-background-page)'"
+  >
+    <input
+      #fileInput
+      type="file"
+      accept="video/*"
+      (change)="onFileSelected($event)"
+      class="hidden"
+    >
+
+    <div class="text-center space-y-2">
+      <mat-icon class="text-gray-400 text-[32px] w-8 h-8 mx-auto">movie</mat-icon>
+      <div class="text-xs font-bold" [style.color]="'var(--color-primary)'">Click to select video file</div>
+      <div class="text-[10px] text-gray-500">Supports MP4, MOV, WEBM (Max 100MB)</div>
+    </div>
+  </div>
+
+  <!-- Upload Status UI Component -->
+  <app-upload-status
+    [status]="status"
+    [progress]="progress"
+    [fileName]="fileName"
+  ></app-upload-status>
+
+  <!-- Simulators for testing -->
+  <div class="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-lg space-y-2">
+    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+      Simulated Upload Testing Controls:
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button
+        type="button"
+        (click)="startSimulatedUpload(); $event.stopPropagation()"
+        class="sim-btn text-[10px] px-2.5 py-1 rounded bg-[#00B0FF]/10 text-[#00B0FF] font-bold hover:bg-[#00B0FF]/20"
+      >
+        Upload (Progress)
+      </button>
+      <button
+        type="button"
+        (click)="setSuccessDirectly(); $event.stopPropagation()"
+        class="sim-btn text-[10px] px-2.5 py-1 rounded bg-green-100 text-green-700 font-bold hover:bg-green-200"
+      >
+        Success
+      </button>
+      <button
+        type="button"
+        (click)="setErrorState(); $event.stopPropagation()"
+        class="sim-btn text-[10px] px-2.5 py-1 rounded bg-red-100 text-red-700 font-bold hover:bg-red-200"
+      >
+        Error
+      </button>
+      <button
+        type="button"
+        (click)="setTooLongState(); $event.stopPropagation()"
+        class="sim-btn text-[10px] px-2.5 py-1 rounded bg-orange-100 text-orange-700 font-bold hover:bg-orange-200"
+      >
+        Too Long
+      </button>
+      <button
+        type="button"
+        (click)="setIdle(); $event.stopPropagation()"
+        class="sim-btn text-[10px] px-2.5 py-1 rounded bg-gray-200 text-gray-700 font-bold hover:bg-gray-300"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+</div>
