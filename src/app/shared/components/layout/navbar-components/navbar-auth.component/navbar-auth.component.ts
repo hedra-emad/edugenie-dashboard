@@ -1,5 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+
 import { AuthService } from '../../../../../core/services/auth';
 
 @Component({
@@ -10,12 +11,18 @@ import { AuthService } from '../../../../../core/services/auth';
   styleUrl: './navbar-auth.component.css',
 })
 export class NavbarAuthComponent {
-logout() {
-throw new Error('Method not implemented.');
-}
+  closeMenu: any;
   @Input() isMobile = false;
 
   authService = inject(AuthService);
+  router =  inject(Router);
+  logout() {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/']);
+      }
+    });
+  }
 
   get user() {
     return this.authService.currentUserSignal();
