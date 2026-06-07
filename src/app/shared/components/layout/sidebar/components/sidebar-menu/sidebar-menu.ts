@@ -20,19 +20,12 @@ export class SidebarMenu {
     {
       icon: 'analytics',
       label: 'Analytics',
-      active: true,
+      route: '/analytics',
     },
     {
-      icon: 'groups',
-      label: 'Students',
-    },
-    {
-      icon: 'folder',
-      label: 'Resources',
-    },
-    {
-      icon: 'video_call',
-      label: 'Live Sessions',
+      icon: 'settings',
+      label: 'Settings',
+      route: '/settings',
     },
   ];
 }

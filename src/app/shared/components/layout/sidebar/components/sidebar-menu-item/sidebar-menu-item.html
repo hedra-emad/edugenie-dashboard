@@ -1,21 +1,25 @@
-<button
-  class="menu-item flex items-center w-full text-sm cursor-pointer
-         transition-all duration-300 border-0 bg-transparent
-         focus:outline-none"
-  [ngClass]="{
-    'menu-item--mobile': isMobile,
-    'menu-item--desktop': !isMobile,
-    'menu-item--active-mobile': active && isMobile,
-    'menu-item--active-desktop': active && !isMobile,
-    'menu-item--collapsed': isMobile && !sidebarExpanded,
-    'menu-item--expanded': !isMobile || sidebarExpanded
-  }">
+<a
+  [routerLink]="route"
+  [routerLinkActiveOptions]="{ exact: true }"
+  class="flex items-center w-full h-11 rounded-md transition-all duration-300
+       text-[var(--color-text-secondary)]
+       hover:bg-[var(--color-sidebar-hover)]
+       hover:text-[var(--color-primary)]
+       min-w-0"
+[ngClass]="{
+  'justify-center px-0': isMobile && !sidebarExpanded,
+  'gap-3 px-3': !isMobile || sidebarExpanded
+}"
+  routerLinkActive="bg-[var(--color-sidebar-active)] text-[var(--color-primary)] font-medium"
+>
 
-  <mat-icon class="menu-item__icon shrink-0">{{ icon }}</mat-icon>
+<mat-icon class="menu-item__icon shrink-0 flex items-center justify-center w-5 h-5">
+  {{ icon }}
+</mat-icon>
 
   <span *ngIf="showLabel"
         class="menu-item__label whitespace-nowrap overflow-hidden transition-all duration-300">
     {{ label }}
   </span>
 
-</button>
+</a>

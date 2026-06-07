@@ -15,7 +15,6 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
 import { AuthService } from '../../../../core/services/auth';
 import {LoginResponse} from '../../../../core/services/auth'
-import UserService from '../../../../core/services/user';
 
 @Component({
   selector: 'app-login-page',
@@ -41,7 +40,6 @@ export class LoginPageComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
-  private userService = inject(UserService);
 
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
@@ -88,14 +86,11 @@ export class LoginPageComponent implements OnInit {
       this.authService.login({
   email,
   password,
+  rememberMe
 })
         .subscribe({
         next: (res: LoginResponse) => {
   this.isLoading.set(false);
-
-  // this.userService.setUser(res.user);
-
-  localStorage.setItem('user', JSON.stringify(res.user));
 
   // if (rememberMe) {
   //   localStorage.setItem('token', token);
@@ -131,10 +126,10 @@ export class LoginPageComponent implements OnInit {
   }
 
   loginWithGoogle() {
-    console.log('Google login clicked');
+    // console.log('Google login clicked');
   }
 
   loginWithGithub() {
-    console.log('Github login clicked');
+    // console.log('Github login clicked');
   }
 }

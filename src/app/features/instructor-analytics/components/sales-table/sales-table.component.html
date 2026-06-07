@@ -1,172 +1,190 @@
-<section
-    class="bg-white rounded-[var(--radius-panel)] border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+<section class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+
     <!-- Header -->
-    <div class="flex justify-between items-center px-5 sm:px-8 py-6 border-b border-slate-50">
-
-    <h2 class="text-[17px] font-bold text-[var(--color-text-primary)] tracking-tight">Recent Sales</h2>
-
-    <button mat-button class="
-            !text-[var(--color-text-primary)] 
-            !font-bold 
-            !text-[10px] 
-            !tracking-[0.2em] 
-            uppercase 
-            !p-0 
-            !min-w-0 
-            transition-colors 
-            duration-300 
-            hover:!text-[var(--color-secondary)] 
-            flex 
-            items-center 
-            gap-1.5 
-            group">
-        View All Records
-        <mat-icon
-            class="!text-[16px] !w-[16px] !h-[16px] transition-transform group-hover:translate-x-1">chevron_right</mat-icon>
-    </button>
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-50">
+        <h2 class="text-[14px] font-black text-[var(--color-text-primary)]">Recent Sales</h2>
+        <button mat-button
+            class="!text-[var(--color-text-secondary)] !font-bold !text-[11px] !tracking-[0.1em] uppercase !px-3 !py-1.5 !min-w-0 !rounded-lg border border-transparent hover:!border-slate-200 hover:!bg-slate-50 hover:!text-[var(--color-secondary)] transition-all duration-200">
+            View All
+        </button>
     </div>
-
+   
     <div class="hidden sm:block">
-        <table class="w-full border-collapse">
+        <table class="w-full">
             <thead>
-                <tr class="bg-slate-50/30 border-b border-slate-100">
-                    <th class="px-8 py-4 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">
-                        Course Name</th>
-                    <th class="px-4 py-4 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">
-                        Student</th>
-                    <th class="px-4 py-4 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Date
-                    </th>
-                    <th class="px-4 py-4 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Price
-                    </th>
-                    <th class="px-8 py-4 text-right text-[10px] font-black uppercase tracking-wider text-slate-400">Your
-                        Share (80%)</th>
+                <tr class="border-b border-slate-50">
+                    <th class="px-6 py-2.5 text-left text-[10px] font-medium text-text-secondary">Course Name</th>
+                    <th class="px-3 py-2.5 text-left text-[10px] font-medium text-text-secondary">Student</th>
+                    <th class="px-3 py-2.5 text-left text-[10px] font-medium text-text-secondary">Date</th>
+                    <th class="px-3 py-2.5 text-left text-[10px] font-medium text-text-secondary">Price</th>
+                    <th class="px-6 py-2.5 text-right text-[10px] font-medium text-text-secondary">Your Share (80%)</th>
                 </tr>
             </thead>
-            <tbody class="text-sm font-medium">
+            <tbody class="divide-y divide-slate-50">
 
-                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                    <td class="px-8 py-5">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-2xl bg-[#EDE9FF] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
-                                <mat-icon class="!text-[18px] text-[#7C3AED]">design_services</mat-icon>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#7C3AED"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </div>
-                            <span class="text-[13.5px] font-bold text-[var(--color-text-primary)]">Advanced UI/UX
+                            <span class="text-[13px] font-medium text-[var(--color-text-primary)]">Advanced UI/UX
                                 Principles</span>
                         </div>
                     </td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-400 font-medium">Fatma Mohamed</span></td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-400 tabular-nums">Oct 12, 2023</span></td>
-                    <td class="px-4 py-5"><span
-                            class="text-[13.5px] font-bold text-slate-400 tabular-nums">$100.00</span></td>
-                    <td class="px-8 py-5 text-right"><span
-                            class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight tabular-nums">$80.00</span>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Sarah Jenkins</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Oct 12, 2023</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-[var(--color-text-primary)]">$100.00</span>
                     </td>
+                    <td class="px-6 py-3.5 text-right"><span
+                            class="text-[13px] font-bold text-[var(--color-secondary)]">$80.00</span></td>
                 </tr>
 
-                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                    <td class="px-8 py-5">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-2xl bg-[#E0F7FF] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
-                                <mat-icon class="!text-[18px] text-[var(--color-secondary)]">code</mat-icon>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-[#E0F7FF] flex items-center justify-center shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <polyline points="16 18 22 12 16 6" stroke="#00B0FF" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                    <polyline points="8 6 2 12 8 18" stroke="#00B0FF" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </div>
-                            <span class="text-[13.5px] font-bold text-[var(--color-text-primary)]">React & Tailwind
+                            <span class="text-[13px] font-medium text-[var(--color-text-primary)]">React & Tailwind
                                 Masterclass</span>
                         </div>
                     </td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-500 font-medium">Aliaa Mohamed</span></td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-400 tabular-nums">Oct 11, 2023</span></td>
-                    <td class="px-4 py-5"><span
-                            class="text-[13.5px] font-bold text-slate-400 tabular-nums">$150.00</span></td>
-                    <td class="px-8 py-5 text-right"><span
-                            class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight tabular-nums">$120.00</span>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Michael Chen</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Oct 11, 2023</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-[var(--color-text-primary)]">$150.00</span>
                     </td>
+                    <td class="px-6 py-3.5 text-right"><span
+                            class="text-[13px] font-bold text-[var(--color-secondary)]">$120.00</span></td>
                 </tr>
 
-                <tr class="hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                    <td class="px-8 py-5">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-2xl bg-[#FFF3E0] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
-                                <mat-icon class="!text-[18px] text-[var(--color-warning)]">campaign</mat-icon>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-[#FFF3E0] flex items-center justify-center shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#F59E0B" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </div>
-                            <span class="text-[13.5px] font-bold text-[var(--color-text-primary)]">Digital Marketing
+                            <span class="text-[13px] font-medium text-[var(--color-text-primary)]">Digital Marketing
                                 101</span>
                         </div>
                     </td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-500 font-medium">Nada Mahmoud</span></td>
-                    <td class="px-4 py-5"><span class="text-[11px] text-slate-400 tabular-nums">Oct 10, 2023</span></td>
-                    <td class="px-4 py-5"><span
-                            class="text-[13.5px] font-bold text-slate-400 tabular-nums">$75.00</span></td>
-                    <td class="px-8 py-5 text-right"><span
-                            class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight tabular-nums">$60.00</span>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Emma Thompson</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Oct 10, 2023</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-[var(--color-text-primary)]">$75.00</span>
                     </td>
+                    <td class="px-6 py-3.5 text-right"><span
+                            class="text-[13px] font-bold text-[var(--color-secondary)]">$60.00</span></td>
+                </tr>
+
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#7C3AED"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <span class="text-[13px] font-medium text-[var(--color-text-primary)]">Advanced UI/UX
+                                Principles</span>
+                        </div>
+                    </td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">David Rodriguez</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-text-secondary">Oct 09, 2023</span></td>
+                    <td class="px-3 py-3.5"><span class="text-[12.5px] text-[var(--color-text-primary)]">$100.00</span>
+                    </td>
+                    <td class="px-6 py-3.5 text-right"><span
+                            class="text-[13px] font-bold text-[var(--color-secondary)]">$80.00</span></td>
                 </tr>
 
             </tbody>
         </table>
     </div>
 
-    <div class="sm:hidden divide-y divide-slate-100">
-
-        <div class="px-6 py-5 hover:bg-slate-50 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-11 h-11 rounded-2xl bg-[#EDE9FF] flex items-center justify-center shrink-0 shadow-sm">
-                        <mat-icon class="!text-[18px] text-[#7C3AED]">design_services</mat-icon>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-[13.5px] font-bold text-[var(--color-text-primary)] truncate">Advanced UI/UX
-                            Principles</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Fatma Mohamed · Oct 12</p>
-                    </div>
-                </div>
-                <div class="text-right shrink-0">
-                    <p class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight">$80.00</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">of $100</p>
-                </div>
+    <div class="sm:hidden divide-y divide-slate-50">
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#7C3AED" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">Advanced UI/UX Principles
+                </p>
+                <p class="text-[10.5px] text-text-secondary mt-0.5">Sarah Jenkins · Oct 12, 2023</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-[12.5px] font-bold text-[var(--color-secondary)]">$80.00</p>
+                <p class="text-[10px] text-text-secondary">of $100</p>
             </div>
         </div>
 
-        <div class="px-6 py-5 hover:bg-slate-50 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-11 h-11 rounded-2xl bg-[#E0F7FF] flex items-center justify-center shrink-0 shadow-sm">
-                        <mat-icon class="!text-[18px] text-[var(--color-secondary)]">code</mat-icon>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-[13.5px] font-bold text-[var(--color-text-primary)] truncate">React & Tailwind
-                            Masterclass</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Aliaa Mohamed · Oct 11</p>
-                    </div>
-                </div>
-                <div class="text-right shrink-0">
-                    <p class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight">$120.00</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">of $150</p>
-                </div>
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#E0F7FF] flex items-center justify-center shrink-0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <polyline points="16 18 22 12 16 6" stroke="#00B0FF" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <polyline points="8 6 2 12 8 18" stroke="#00B0FF" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">React & Tailwind
+                    Masterclass</p>
+                <p class="text-[10.5px] text-text-secondary mt-0.5">Michael Chen · Oct 11, 2023</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-[12.5px] font-bold text-[var(--color-secondary)]">$120.00</p>
+                <p class="text-[10px] text-text-secondary">of $150</p>
             </div>
         </div>
 
-        <div class="px-6 py-5 hover:bg-slate-50 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-11 h-11 rounded-2xl bg-[#FFF3E0] flex items-center justify-center shrink-0 shadow-sm">
-                        <mat-icon class="!text-[18px] text-[var(--color-warning)]">campaign</mat-icon>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-[13.5px] font-bold text-[var(--color-text-primary)] truncate">Digital Marketing
-                            101</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Nada Mhamoud · Oct 10</p>
-                    </div>
-                </div>
-                <div class="text-right shrink-0">
-                    <p class="text-[14.5px] font-black text-[var(--color-secondary)] tracking-tight">$60.00</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">of $75</p>
-                </div>
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#FFF3E0] flex items-center justify-center shrink-0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">Digital Marketing 101</p>
+                <p class="text-[10.5px] text-text-secondary mt-0.5">Emma Thompson · Oct 10, 2023</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-[12.5px] font-bold text-[var(--color-secondary)]">$60.00</p>
+                <p class="text-[10px] text-text-secondary">of $75</p>
             </div>
         </div>
 
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#7C3AED" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">Advanced UI/UX Principles
+                </p>
+                <p class="text-[10.5px] text-text-secondary mt-0.5">David Rodriguez · Oct 09, 2023</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-[12.5px] font-bold text-[var(--color-secondary)]">$80.00</p>
+                <p class="text-[10px] text-text-secondary">of $100</p>
+            </div>
+        </div>
     </div>
 
 </section>
