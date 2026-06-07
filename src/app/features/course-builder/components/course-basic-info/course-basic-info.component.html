@@ -1,0 +1,159 @@
+<div [formGroup]="parentForm" class="space-y-6">
+  <!-- Course Title & Description Card -->
+  <div class="p-6 sm:p-8 bg-white border border-slate-100 rounded-2xl shadow-[var(--shadow-card)] space-y-6">
+    <h3 class="text-lg font-bold text-[var(--color-primary)] flex items-center gap-2">
+      <mat-icon class="text-[20px] w-5 h-5">info</mat-icon>
+      Course Details
+    </h3>
+
+    <!-- Title -->
+    <div class="space-y-2">
+      <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+        Course Title <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <input
+          type="text"
+          formControlName="title"
+          placeholder="e.g. Master Angular Standalone Components"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800"
+        >
+        <span *ngIf="getControl('title').touched && getControl('title').invalid" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold" [style.color]="'var(--color-error)'">
+          Required
+        </span>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="space-y-2">
+      <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+        Description <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <textarea
+          formControlName="description"
+          rows="4"
+          placeholder="Write a compelling overview of what your course covers..."
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800 resize-none"
+        ></textarea>
+        <span *ngIf="getControl('description').touched && getControl('description').invalid" class="absolute right-3 bottom-3 text-xs font-semibold" [style.color]="'var(--color-error)'">
+          Required
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Selection Card -->
+  <div class="p-6 sm:p-8 bg-white border border-slate-100 rounded-2xl shadow-[var(--shadow-card)]">
+    <app-category-selector [control]="getControl('categories')"></app-category-selector>
+  </div>
+
+  <!-- Settings Grid (Level, Price, Thumbnail) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Level & Price -->
+    <div class="p-6 sm:p-8 bg-white border border-slate-100 rounded-2xl shadow-[var(--shadow-card)] space-y-6 flex flex-col justify-between">
+      <!-- Level -->
+      <div class="space-y-3">
+        <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+          Difficulty Level <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            *ngFor="let lvl of ['Beginner', 'Intermediate', 'Advanced']"
+            type="button"
+            (click)="getControl('level').setValue(lvl); getControl('level').markAsDirty()"
+            class="py-2.5 px-3 rounded-lg border text-center text-sm font-semibold transition-all duration-200 outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            [ngClass]="getControl('level').value === lvl ? 'level-btn--selected' : 'level-btn--unselected'"
+          >
+            {{ lvl }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="space-y-2">
+        <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+          Price (USD) <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">$</span>
+          <input
+            type="number"
+            formControlName="price"
+            min="0"
+            placeholder="0.00"
+            class="w-full pl-8 pr-12 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800"
+          >
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">USD</span>
+          <span *ngIf="getControl('price').touched && getControl('price').invalid" class="absolute right-12 top-1/2 -translate-y-1/2 text-xs font-semibold" [style.color]="'var(--color-error)'">
+            Invalid Price
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnail Upload -->
+    <div class="p-6 sm:p-8 bg-white border border-slate-100 rounded-2xl shadow-[var(--shadow-card)] space-y-3 flex flex-col justify-between">
+      <div>
+        <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
+          Course Thumbnail
+        </label>
+        <p class="text-xs text-[var(--color-text-secondary)] mb-4">
+          Upload a high-resolution banner image for your course.
+        </p>
+      </div>
+
+      <div
+        (click)="triggerThumbnailUpload()"
+        class="flex-1 min-h-[140px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer transition-colors relative group overflow-hidden"
+        [style.border-color]="thumbnailPreview() ? 'var(--color-primary-light)' : 'var(--color-border)'"
+        [style.background]="thumbnailPreview() ? 'rgba(59, 24, 146, 0.02)' : 'var(--color-background-page)'"
+      >
+        <input
+          #thumbnailInput
+          type="file"
+          accept="image/*"
+          (change)="onThumbnailSelected($event)"
+          class="hidden"
+        >
+
+        <!-- Preview State -->
+        <ng-container *ngIf="thumbnailPreview(); else uploadPlaceholder">
+          <img [src]="thumbnailPreview()" alt="Thumbnail preview" class="absolute inset-0 w-full h-full object-cover">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+            <button
+              type="button"
+              (click)="triggerThumbnailUpload(); $event.stopPropagation()"
+              class="w-10 h-10 rounded-full bg-white text-[var(--color-primary)] flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+            >
+              <mat-icon class="text-[18px]">edit</mat-icon>
+            </button>
+            <button
+              type="button"
+              (click)="removeThumbnail($event)"
+              class="w-10 h-10 rounded-full bg-white text-[var(--color-error)] flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+            >
+              <mat-icon class="text-[18px]">delete</mat-icon>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Upload Placeholder -->
+        <ng-template #uploadPlaceholder>
+          <div class="text-center space-y-2">
+            <mat-icon class="text-gray-400 text-[32px] w-8 h-8 mx-auto">image</mat-icon>
+            <div class="text-xs font-bold" [style.color]="'var(--color-primary)'">Click to upload banner</div>
+            <div class="text-[10px] text-gray-500">Supports PNG, JPG, JPEG (Max 1MB)</div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goals & Requirements Card -->
+  <div class="p-6 sm:p-8 bg-white border border-slate-100 rounded-2xl shadow-[var(--shadow-card)] space-y-6">
+    <app-goals-input [goalsArray]="goalsArray"></app-goals-input>
+    <hr class="border-gray-100 my-6">
+    <app-requirements-input [requirementsArray]="requirementsArray"></app-requirements-input>
+  </div>
+</div>

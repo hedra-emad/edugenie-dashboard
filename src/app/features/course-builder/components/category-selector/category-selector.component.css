@@ -1,0 +1,23 @@
+.category-btn--selected {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.2);
+}
+
+.category-btn--unselected {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.category-btn--unselected:hover {
+  background-color: var(--color-background-page);
+  border-color: var(--color-primary-light);
+}
+
+.category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

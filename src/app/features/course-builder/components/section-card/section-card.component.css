@@ -1,0 +1,15 @@
+::ng-deep .section-panel {
+  border-radius: var(--radius-lg) !important;
+  margin-bottom: 24px;
+  background-color: var(--color-surface) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+::ng-deep .section-panel .mat-expansion-panel-header {
+  padding: 0 20px !important;
+}
+
+::ng-deep .section-panel .mat-expansion-panel-body {
+  padding: 0 20px 20px 20px !important;
+  border-top: 1px solid var(--color-border);
+}

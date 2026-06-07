@@ -1,0 +1,17 @@
+.level-btn--selected {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.15);
+}
+
+.level-btn--unselected {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.level-btn--unselected:hover {
+  background-color: var(--color-background-page);
+  border-color: var(--color-primary-light);
+}
