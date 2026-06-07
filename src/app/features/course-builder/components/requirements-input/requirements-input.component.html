@@ -1,17 +1,23 @@
-<div class="space-y-3">
+<div class="space-y-3 mt-4">
   <div class="flex items-center justify-between">
-    <label class="text-[13px] font-bold uppercase tracking-wider" [style.color]="'var(--color-text-primary)'">
-      Course Requirements
-    </label>
+<label class="text-[11px] sm:text-[13px] font-bold uppercase tracking-wider"
+       [style.color]="'var(--color-text-primary)'">
+  Course Requirements
+</label>
     <button
-      type="button"
-      (click)="addRequirement()"
-      class="text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-all hover:opacity-80 active:scale-95"
-      [style.color]="'var(--color-secondary)'"
-    >
-      <mat-icon class="text-[16px] w-[16px] h-[16px] flex items-center justify-center">add</mat-icon>
-      Add Requirement
-    </button>
+  type="button"
+  (click)="addRequirement()"
+class="inline-flex items-center gap-1 whitespace-nowrap text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-[var(--color-secondary)] text-[var(--color-secondary)] transition-all duration-200
+hover:bg-[var(--color-secondary)] hover:text-white active:scale-95"
+>
+  <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block leading-none">
+    add
+  </mat-icon>
+
+  <span class="leading-none whitespace-nowrap">
+    Add Requirement
+  </span>
+</button>
   </div>
 
   <div class="space-y-2.5">
@@ -32,13 +38,15 @@
         </span>
       </div>
       <button
-        type="button"
-        (click)="removeRequirement(i)"
-        class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
-        aria-label="Remove requirement"
-      >
-        <mat-icon class="text-[18px]">delete_outline</mat-icon>
-      </button>
+  type="button"
+  (click)="removeRequirement(i)"
+  class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
+  aria-label="Remove goal"
+>
+  <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
+    delete_outline
+  </mat-icon>
+</button>
     </div>
   </div>
 </div>

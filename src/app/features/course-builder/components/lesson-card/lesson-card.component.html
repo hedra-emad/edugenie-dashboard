@@ -7,32 +7,53 @@
       </div>
       <!-- Actions inside the header (preventing panel toggle) -->
       <div class="flex items-center gap-1">
-        <button
-          type="button"
-          [disabled]="isFirst"
-          (click)="onMoveUp($event)"
-          class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Move Up"
-        >
-          <mat-icon class="text-[16px] w-4 h-4 flex items-center justify-center">arrow_upward</mat-icon>
-        </button>
-        <button
-          type="button"
-          [disabled]="isLast"
-          (click)="onMoveDown($event)"
-          class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Move Down"
-        >
-          <mat-icon class="text-[16px] w-4 h-4 flex items-center justify-center">arrow_downward</mat-icon>
-        </button>
-        <button
-          type="button"
-          (click)="onDelete($event)"
-          class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50"
-          aria-label="Delete Lesson"
-        >
-          <mat-icon class="text-[16px] w-4 h-4 flex items-center justify-center">delete</mat-icon>
-        </button>
+        <div class="flex items-center gap-1">
+
+  <!-- MOVE UP -->
+  <button
+    type="button"
+    [disabled]="isFirst"
+    (click)="onMoveUp($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+    aria-label="Move Up"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        arrow_upward
+      </mat-icon>
+    </span>
+  </button>
+
+  <!-- MOVE DOWN -->
+  <button
+    type="button"
+    [disabled]="isLast"
+    (click)="onMoveDown($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+    aria-label="Move Down"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        arrow_downward
+      </mat-icon>
+    </span>
+  </button>
+
+  <!-- DELETE -->
+  <button
+    type="button"
+    (click)="onDelete($event)"
+    class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50"
+    aria-label="Delete Lesson"
+  >
+    <span class="flex items-center justify-center w-full h-full">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block">
+        delete
+      </mat-icon>
+    </span>
+  </button>
+
+</div>
       </div>
     </mat-panel-title>
   </mat-expansion-panel-header>
