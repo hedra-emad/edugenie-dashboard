@@ -13,7 +13,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-
+import { provideToastr } from 'ngx-toastr';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,6 +22,10 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideAnimations(),
-   provideCharts(withDefaultRegisterables())
+    provideToastr({
+      positionClass: 'toast-bottom-left',
+      preventDuplicates: true,
+    }),
+    provideCharts(withDefaultRegisterables())
   ]
 };

@@ -23,10 +23,23 @@
           <div class="flex flex-col items-center shrink-0">
             <div class="relative">
               <div
-                class="w-32 h-32 rounded-full border-[6px] border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-4xl">
-                <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Profile Avatar"
-                  class="w-full h-full object-cover">
-                <span *ngIf="!avatarPreview">{{ getInitials() }}</span>
+                class="w-32 h-32 rounded-full border-[6px] border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-4xl relative">
+
+                <!-- Uploading Spinner overlay -->
+                <div *ngIf="isUploadingAvatar"
+                  class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                  <svg class="animate-spin h-8 w-8 text-[#00B0FF]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
+                </div>
+
+                <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Profile Avatar" class="w-full h-full object-cover"
+                  [class.opacity-50]="isUploadingAvatar">
+                <span *ngIf="!avatarPreview" [class.opacity-50]="isUploadingAvatar">{{ getInitials() }}</span>
               </div>
 
               <button type="button" (click)="toggleAvatarOptions()"
@@ -44,9 +57,9 @@
                 <button type="button" (click)="triggerFileInput()"
                   class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Change
                   Image</button>
-                <button type="button" (click)="promptAvatarUrl()"
-                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Paste
-                  URL</button>
+                <button *ngIf="avatarPreview" type="button" (click)="removePhoto()"
+                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors">Remove
+                  Image</button>
               </div>
               <!-- Hidden file input -->
               <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
@@ -172,16 +185,12 @@
 
     <!-- Footer Actions -->
     <div class="mt-16 flex justify-end gap-4 pb-8">
-      <span *ngIf="errorMessage" class="text-red-500 text-sm font-medium self-center mr-auto">{{ errorMessage }}</span>
-      <span *ngIf="successMessage" class="text-green-500 text-sm font-medium self-center mr-auto">{{ successMessage
-        }}</span>
-
       <button type="button"
         class="px-6 py-3 text-[14px] font-semibold text-gray-700 hover:text-gray-900 bg-transparent transition-colors rounded-lg disabled:opacity-50"
-        [disabled]="isSaving">
+        [disabled]="isSaving || isUploadingAvatar">
         Cancel
       </button>
-      <button type="button" (click)="onSaveChanges()" [disabled]="isSaving || profileForm.invalid"
+      <button type="button" (click)="onSaveChanges()" [disabled]="isSaving || profileForm.invalid || isUploadingAvatar"
         class="px-6 py-3 text-[14px] font-semibold text-white bg-[#00B0FF] hover:bg-blue-400 shadow-md shadow-blue-400/20 rounded-lg transition-colors flex items-center justify-center min-w-[140px] disabled:opacity-70 disabled:cursor-not-allowed">
         <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
           fill="none" viewBox="0 0 24 24">
@@ -191,6 +200,149 @@
           </path>
         </svg>
         {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AVATAR CROPPER MODAL  — custom canvas, fixed circular frame
+     ══════════════════════════════════════════════════════════════ -->
+<div *ngIf="isCropperOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+  role="dialog" aria-modal="true" aria-labelledby="cropper-title">
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[95vh] overflow-hidden">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
+      <h3 id="cropper-title" class="text-xl font-bold text-[#1a0b59]">Adjust Your Photo</h3>
+      <button (click)="cancelCrop()" aria-label="Close"
+        class="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#00B0FF]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="flex flex-col md:flex-row gap-0 overflow-y-auto flex-1">
+
+      <!-- ── LEFT: Crop Zone ── -->
+      <div class="flex flex-col items-center justify-center gap-5 p-6 flex-1 bg-gray-50">
+
+        <!-- Crop arena -->
+        <div class="cropper-arena"
+          (mousedown)="onCropPointerDown($event)"
+          (touchstart)="onCropPointerDown($event)"
+          (wheel)="onCropWheel($event)"
+          [class.cursor-grabbing]="_isDragging"
+          style="cursor: grab;">
+
+          <!-- The actual image (moved by CSS transform) -->
+          <img *ngIf="selectedImageSrc"
+            #cropImg
+            [src]="selectedImageSrc"
+            [ngStyle]="cropImageStyle"
+            alt="Image to crop"
+            draggable="false"
+            (load)="onCropImageLoaded($event)">
+
+          <!-- Semi-transparent overlay with circular hole (box-shadow trick) -->
+          <div class="cropper-overlay" aria-hidden="true"></div>
+
+          <!-- White circular border ring -->
+          <div class="cropper-ring" aria-hidden="true"></div>
+        </div>
+
+        <p class="text-xs text-gray-500">Drag to reposition · Scroll or use slider to zoom</p>
+
+        <!-- ── Controls ── -->
+        <div class="w-full max-w-[380px] bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+
+          <!-- Zoom -->
+          <div class="flex items-center gap-3">
+            <button (click)="zoomOut()" aria-label="Zoom out"
+              class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+              </svg>
+            </button>
+            <input type="range" min="0.1" max="5" step="0.05"
+              [value]="cropScale"
+              (input)="updateZoom($event)"
+              class="flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#00B0FF]"
+              aria-label="Zoom level">
+            <button (click)="zoomIn()" aria-label="Zoom in"
+              class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7m3-3v6"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Rotate + Reset -->
+          <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+            <div class="flex gap-2">
+              <button (click)="rotateLeft()" aria-label="Rotate left"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+                Left
+              </button>
+              <button (click)="rotateRight()" aria-label="Rotate right"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+                </svg>
+                Right
+              </button>
+            </div>
+            <button (click)="resetCropTransform()" aria-label="Reset"
+              class="px-3 py-1.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: Live Preview ── -->
+      <div class="flex flex-col items-center justify-center gap-5 p-6 md:w-56 shrink-0 bg-white border-t md:border-t-0 md:border-l border-gray-100">
+        <span class="text-xs font-semibold uppercase tracking-widest text-gray-400">Preview</span>
+
+        <!-- Circle preview -->
+        <div class="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-3xl">
+          <img *ngIf="livePreviewUrl" [src]="livePreviewUrl" class="w-full h-full object-cover" alt="Live preview">
+          <span *ngIf="!livePreviewUrl">{{ getInitials() }}</span>
+        </div>
+
+        <!-- Small badge preview -->
+        <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow bg-gray-100">
+          <img *ngIf="livePreviewUrl" [src]="livePreviewUrl" class="w-full h-full object-cover" alt="">
+        </div>
+
+        <p class="text-[12px] text-gray-400 text-center max-w-[140px] leading-relaxed">
+          Your avatar appears circular across the platform.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 px-6 py-5 border-t border-gray-100 bg-gray-50/50 shrink-0">
+      <button type="button" (click)="cancelCrop()"
+        class="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+        Cancel
+      </button>
+      <button type="button" (click)="confirmCrop()"
+        class="px-8 py-2.5 text-sm font-semibold text-white bg-[#00B0FF] rounded-lg hover:bg-blue-500 transition-colors shadow-md shadow-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-300">
+        Apply Crop
       </button>
     </div>
 

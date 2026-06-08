@@ -11,13 +11,13 @@ export class CloudinaryService {
   private cloudName = 'dxeoqi3kb';
   private uploadPreset = 'edugenie_avatar';
 
-  uploadImage(file: File) {
+  uploadImage(file: File | Blob) {
     const formData = new FormData();
 
     formData.append('file', file);
     formData.append('upload_preset', this.uploadPreset);
 
-    return this.http.post(
+    return this.http.post<{ secure_url: string; public_id: string }>(
       `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
       formData
     );
