@@ -21,11 +21,11 @@ export interface LoginResponse {
 })
 export class AuthService {
   private http = inject(HttpClient);
-  
+
   // Global User State
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  
+
   // We can also use Signals if preferred, but BehaviorSubject is standard. Let's use signal as well for reactivity if needed.
   public currentUserSignal = signal<UserProfile | null>(null);
 
@@ -52,8 +52,8 @@ export class AuthService {
 
   // Profile Methods
   getProfile(): Observable<any> {
-    return this.http.get<{success: boolean; message: string; data: UserProfile}>(
-      `${this.usersApiUrl}/profile`, 
+    return this.http.get<{ success: boolean; message: string; data: UserProfile }>(
+      `${this.usersApiUrl}/profile`,
       { withCredentials: true }
     ).pipe(
       tap((response) => {
@@ -65,7 +65,7 @@ export class AuthService {
   }
 
   updateProfile(data: { firstName?: string; lastName?: string; avatar?: string }): Observable<any> {
-    return this.http.patch<{success: boolean; message: string; data: UserProfile}>(
+    return this.http.patch<{ success: boolean; message: string; data: UserProfile }>(
       `${this.usersApiUrl}/profile`,
       data,
       { withCredentials: true }
