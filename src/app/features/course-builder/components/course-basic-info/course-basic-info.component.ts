@@ -1,11 +1,17 @@
-import { Component, Input, ViewChild, ElementRef, signal } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormArray, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CategorySelectorComponent } from '../category-selector/category-selector.component';
 import { GoalsInputComponent } from '../goals-input/goals-input.component';
 import { RequirementsInputComponent } from '../requirements-input/requirements-input.component';
+import { Output, EventEmitter } from '@angular/core'; 
+import { Router } from '@angular/router';
+import { CoursesService } from '../../../../core/services/courses';
+import { CourseStatus } from '../../../../core/enums/course-status';
+import { environment } from '../../../../../environments/environment';
 
+// import { CourseStatus } from 
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -18,13 +24,75 @@ import { RequirementsInputComponent } from '../requirements-input/requirements-i
     RequirementsInputComponent
   ],
   templateUrl: './course-basic-info.component.html',
-  styleUrl: './course-basic-info.component.css'
+  styleUrl: './course-basic-info.component.css',
+  // 
 })
-export class CourseBasicInfoComponent {
-  @Input({ required: true }) parentForm!: FormGroup;
-  @ViewChild('thumbnailInput') thumbnailInput!: ElementRef<HTMLInputElement>;
 
-  thumbnailPreview = signal<string | null>(null);
+
+export class CourseBasicInfoComponent {
+private coursesService = inject(CoursesService);
+private router = inject(Router);
+
+isSaving = signal(false);
+courseForm: any;
+
+isUploading = signal(false);
+
+  @Input({ required: true }) parentForm!: FormGroup;
+  thumbnailPreview = signal<string>('https://dummyimage.com/600x400');
+  openLevel = false;
+
+  
+
+uploadToCloudinary(file: File) {
+
+  this.isUploading.set(true);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', `${environment.cloudinary.uploadPreset}`);
+
+  fetch(`https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+
+      console.log('Cloudinary response:', data);
+
+      const url = data.secure_url;
+
+      this.parentForm.get('thumbnail')?.setValue(url);
+      this.thumbnailPreview.set(url);
+
+      this.isUploading.set(false);
+    })
+    .catch(err => {
+      console.error('Upload error:', err);
+      this.isUploading.set(false);
+    });
+}
+
+  onFileSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  // preview local
+  const reader = new FileReader();
+  reader.onload = () => {
+    this.thumbnailPreview.set(reader.result as string);
+  };
+  reader.readAsDataURL(file);
+
+  // upload to cloudinary
+  this.uploadToCloudinary(file);
+}
+
+selectLevel(level: string) {
+  this.getControl('level').setValue(level);
+  this.openLevel = false;
+}
 
   getControl(name: string): FormControl {
     return this.parentForm.get(name) as FormControl;
@@ -37,33 +105,47 @@ export class CourseBasicInfoComponent {
   get requirementsArray(): FormArray {
     return this.parentForm.get('requirements') as FormArray;
   }
+  
 
-  triggerThumbnailUpload() {
-    this.thumbnailInput.nativeElement.click();
+  createCourse() {
+  if (this.parentForm.invalid) {
+    this.parentForm.markAllAsTouched();
+    return;
   }
 
-  onThumbnailSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        this.thumbnailPreview.set(result);
-        this.getControl('thumbnail').setValue(result);
-        this.getControl('thumbnail').markAsDirty();
-      };
-      reader.readAsDataURL(file);
-    }
-  }
+  this.isSaving.set(true);
 
-  removeThumbnail(event: Event) {
-    event.stopPropagation();
-    this.thumbnailPreview.set(null);
-    this.getControl('thumbnail').setValue(null);
-    this.getControl('thumbnail').markAsDirty();
-    if (this.thumbnailInput) {
-      this.thumbnailInput.nativeElement.value = '';
-    }
-  }
+  const formValue = this.parentForm.value;
+
+  const payload = {
+    title: formValue.title,
+    description: formValue.description,
+    price: formValue.price,
+   thumbnail: formValue.thumbnail,
+    level: formValue.level,
+   categoryId: formValue.category,
+    goals: formValue.goals || [],
+    requirements: formValue.requirements || [],
+    courseStatus: CourseStatus.DRAFT
+  };
+  console.log('🚀 CREATE COURSE PAYLOAD:', payload);
+
+  this.coursesService.createCourse(payload).subscribe({
+    next: (course) => {
+      this.isSaving.set(false);
+
+      this.router.navigate(['/course-builder', course._id]);
+    },
+
+   error: (err) => {
+  this.isSaving.set(false);
+
+  console.log('FULL ERROR:', err);
+  console.log('STATUS:', err.status);
+
+  console.log('RAW ERROR BODY:', JSON.stringify(err.error, null, 2));
+  console.log('MESSAGE:', err.error?.message);
+}
+  });
+}
 }

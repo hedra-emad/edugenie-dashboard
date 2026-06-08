@@ -80,7 +80,7 @@ export class LoginPageComponent implements OnInit {
     this.errorMessage.set(null);
     const { email, password, rememberMe } = this.loginForm.value;
     if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
+      // console.log(this.loginForm.value);
       this.isLoading.set(true);
 
       this.authService.login({

@@ -16,8 +16,8 @@ export interface Section {
 export interface Course {
   title: string;
   description: string;
-  categories: string[];
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  category: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
   price: number | null;
   thumbnail: string | null;
   goals: string[];
