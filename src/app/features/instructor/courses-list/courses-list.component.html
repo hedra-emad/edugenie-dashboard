@@ -1,0 +1,108 @@
+<!-- ═══════════════════════════════════════ -->
+<!-- LOADING STATE                          -->
+<!-- ═══════════════════════════════════════ -->
+<div *ngIf="isLoading" class="loading-container">
+  <mat-spinner diameter="52" color="primary"></mat-spinner>
+  <p class="loading-text">Loading your courses…</p>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ERROR STATE                            -->
+<!-- ═══════════════════════════════════════ -->
+<div *ngIf="!isLoading && error" class="state-container">
+  <div class="error-box">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <p class="error-title">Failed to load courses.</p>
+    <p class="error-sub">Please try again later.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- EMPTY STATE                            -->
+<!-- ═══════════════════════════════════════ -->
+<div *ngIf="!isLoading && !error && courses.length === 0" class="state-container">
+  <div class="empty-box">
+    <mat-icon class="empty-icon">school</mat-icon>
+    <p class="empty-title">You haven't created any courses yet.</p>
+    <p class="empty-sub">Start building your first course and share your knowledge.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE HEADER                            -->
+<!-- ═══════════════════════════════════════ -->
+<div *ngIf="!isLoading && !error && courses.length > 0" class="page-wrapper">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My Courses</h1>
+      <p class="page-subtitle">Manage and track all your published and draft courses.</p>
+    </div>
+    <div class="header-badge">
+      <mat-icon>menu_book</mat-icon>
+      <span>{{ courses.length }} course{{ courses.length !== 1 ? 's' : '' }}</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- COURSE GRID                            -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="courses-grid">
+    <mat-card class="course-card" *ngFor="let course of courses">
+
+      <!-- Thumbnail -->
+      <div class="card-thumbnail-wrap">
+        <img
+          [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
+          [alt]="course.title"
+          class="card-thumbnail"
+        />
+
+        <!-- Status Badge -->
+        <mat-chip
+          [color]="course.courseStatus === 'published' ? 'primary' : 'warn'"
+          selected
+          class="status-chip"
+        >
+          <mat-icon matChipAvatar>
+            {{ course.courseStatus === 'published' ? 'check_circle' : 'edit_note' }}
+          </mat-icon>
+          {{ course.courseStatus === 'published' ? 'Published' : 'Draft' }}
+        </mat-chip>
+
+        <!-- Level pill -->
+        <span class="level-pill level-{{ course.level }}">{{ course.level }}</span>
+      </div>
+
+      <!-- Card Body -->
+      <mat-card-content class="card-body">
+        <h2 class="course-title">{{ course.title }}</h2>
+        <p class="course-description">{{ course.description }}</p>
+
+        <div class="price-row">
+          <span class="price" *ngIf="course.price > 0">${{ course.price | number:'1.2-2' }}</span>
+          <span class="price free" *ngIf="course.price === 0">Free</span>
+        </div>
+      </mat-card-content>
+
+      <!-- Divider -->
+      <div class="card-divider"></div>
+
+      <!-- Stats Footer -->
+      <mat-card-footer class="card-footer">
+        <div class="stat-item">
+          <mat-icon class="stat-icon">group</mat-icon>
+          <span>{{ course.totalEnrollments | number }} enrolled</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon class="stat-icon">menu_book</mat-icon>
+          <span>{{ course.totalLessons }} lessons</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon class="stat-icon">schedule</mat-icon>
+          <span>{{ course.totalHours }}h</span>
+        </div>
+      </mat-card-footer>
+
+    </mat-card>
+  </div>
+</div>

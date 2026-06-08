@@ -30,6 +30,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/pages/account-settings/account-settings.page')
               .then(m => m.AccountSettingsPageComponent)
+      },
+      {
+        path: 'my-courses',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/instructor/courses-list/courses-list.component')
+            .then(m => m.CoursesListComponent)
       }
     ]
   }
