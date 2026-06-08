@@ -2,6 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../core/services/auth';
+import { CloudinaryService } from '../../../../core/services/cloudinary';
 
 @Component({
   selector: 'app-account-settings',
@@ -13,10 +14,12 @@ import { AuthService, UserProfile } from '../../../../core/services/auth';
 export class AccountSettingsPageComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private cloudinaryService = inject(CloudinaryService);
+  isUploadingAvatar = false;
 
   profileForm!: FormGroup;
   securityForm!: FormGroup;
-  
+
   emailNotifications = true;
   publicProfile = false;
 
@@ -56,7 +59,7 @@ export class AccountSettingsPageComponent implements OnInit {
   loadProfile() {
     this.isLoadingProfile = true;
     this.errorMessage = '';
-    
+
     this.authService.getProfile().subscribe({
       next: (response) => {
         if (response.data) {
@@ -110,59 +113,80 @@ export class AccountSettingsPageComponent implements OnInit {
   }
 
   onFileSelected(event: Event) {
+
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.avatarPreview = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+
+    if (!input.files?.length) {
+      return;
     }
+
+    const file = input.files[0];
+
+    this.isUploadingAvatar = true;
+    this.errorMessage = '';
+
+    this.cloudinaryService.uploadImage(file)
+      .subscribe({
+
+        next: (response: any) => {
+
+          this.avatarPreview = response.secure_url;
+
+          this.isUploadingAvatar = false;
+
+          console.log('Image Uploaded:', response.secure_url);
+
+        },
+
+        error: (error) => {
+
+          console.error(error);
+
+          this.isUploadingAvatar = false;
+
+          this.errorMessage = 'Failed to upload image.';
+        }
+      });
   }
 
   onSaveChanges() {
-  if (this.profileForm.invalid) return;
+    if (this.profileForm.invalid) return;
 
-  this.isSaving = true;
-  this.errorMessage = '';
-  this.successMessage = '';
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-  const updateData: {
-    firstName: string;
-    lastName: string;
-    avatar?: string;
-  } = {
-    firstName: this.profileForm.get('firstName')?.value,
-    lastName: this.profileForm.get('lastName')?.value,
-  };
+    const updateData: any = {
+      firstName: this.profileForm.get('firstName')?.value,
+      lastName: this.profileForm.get('lastName')?.value
+    };
 
-  if (
-    this.avatarPreview &&
-    this.avatarPreview.startsWith('http')
-  ) {
-    updateData.avatar = this.avatarPreview;
+    if (
+      this.avatarPreview &&
+      this.avatarPreview.startsWith('http')
+    ) {
+      updateData.avatar = this.avatarPreview;
+    }
+
+    console.log(updateData);
+
+    this.authService.updateProfile(updateData).subscribe({
+      next: (response) => {
+        this.isSaving = false;
+        this.successMessage = 'Profile updated successfully.';
+        if (response.data) {
+          this.populateForm(response.data);
+        }
+        // setTimeout(() => (this.successMessage = ''), 3000);
+      },
+      error: (err) => {
+        this.isSaving = false;
+        this.errorMessage =
+          err.error?.message ||
+          'Failed to update profile. Please try again.';
+      },
+    });
   }
-
-  console.log(updateData);
-
-  this.authService.updateProfile(updateData).subscribe({
-    next: (response) => {
-      this.isSaving = false;
-      this.successMessage = 'Profile updated successfully.';
-      if (response.data) {
-        this.populateForm(response.data);
-      }
-      setTimeout(() => (this.successMessage = ''), 3000);
-    },
-    error: (err) => {
-      this.isSaving = false;
-      this.errorMessage =
-        err.error?.message ||
-        'Failed to update profile. Please try again.';
-    },
-  });
-}
   toggleEmailNotifications() {
     this.emailNotifications = !this.emailNotifications;
   }
