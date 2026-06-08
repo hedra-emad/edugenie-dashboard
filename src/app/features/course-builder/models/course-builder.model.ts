@@ -1,23 +1,11 @@
-export interface Lesson {
-  title: string;
-  videoFile: string | null;
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error' | 'videoTooLong';
-  uploadProgress: number;
-}
+import { CourseLevel } from "../../../core/enums/course-level.enum";
+import { Section } from "../../../core/models/section.model";
 
-export interface Section {
+export interface CourseBuilderModel {
   title: string;
   description: string;
-  isBasicSection: boolean;
-  expectedOutcomes: string[];
-  lessons: Lesson[];
-}
-
-export interface Course {
-  title: string;
-  description: string;
-  categories: string[];
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  category: string;
+  level: CourseLevel;
   price: number | null;
   thumbnail: string | null;
   goals: string[];
