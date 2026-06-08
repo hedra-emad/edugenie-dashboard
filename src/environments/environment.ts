@@ -2,7 +2,7 @@ export const environment = {
   production: false,
 
   cloudinary: {
-    cloudName: 'dxf3abcde',
+    cloudName: 'dxeoqi3kb',
     uploadPreset: 'course_thumbnails'
   }
 };

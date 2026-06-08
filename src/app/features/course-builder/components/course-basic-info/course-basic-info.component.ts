@@ -126,9 +126,10 @@ selectLevel(level: string) {
    categoryId: formValue.category,
     goals: formValue.goals || [],
     requirements: formValue.requirements || [],
-    courseStatus: CourseStatus.DRAFT
+    courseStatus: 'draft'
   };
   console.log('🚀 CREATE COURSE PAYLOAD:', payload);
+  console.log(payload);
 
   this.coursesService.createCourse(payload).subscribe({
     next: (course) => {
