@@ -11,6 +11,7 @@ import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
 import { environment } from '../../../../../environments/environment';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
+import { FormBuilder } from '@angular/forms';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -23,8 +24,7 @@ import { CloudinaryService } from '../../../../core/services/cloudinary';
     RequirementsInputComponent
   ],
   templateUrl: './course-basic-info.component.html',
-  styleUrl: './course-basic-info.component.css',
-  // 
+  styleUrl: './course-basic-info.component.css'
 })
 
 
@@ -34,14 +34,15 @@ export class CourseBasicInfoComponent {
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
 
+  private fb = inject(FormBuilder);
   isSaving = signal(false);
   courseCreated = signal(false);
-  courseId = signal<string | null>(null);
-  hasChanges = signal(false);
-  courseForm: any;
+  @Input() courseId: string | null = null;
 
   isUploading = signal(false);
   hasThumbnail = signal(false);
+  hasChanges = signal(false);
+  private initialized = false;
   // isDragging = signal(false);
 
   // imageError = '';
@@ -50,9 +51,48 @@ export class CourseBasicInfoComponent {
   imageError: string | null = null;
 
   @Input({ required: true }) parentForm!: FormGroup;
+  @Output() courseCreatedEvent = new EventEmitter<string>();
   thumbnailPreview = signal<string>('');
   openLevel = false;
+  mode = signal<'create' | 'update'>('create');
 
+  status = signal<'idle' | 'saving' | 'updating' | 'ready'>('idle');
+
+  initialValue: any = null;
+
+  ngOnChanges() {
+    if (this.courseId) {
+      this.mode.set('update');
+      this.status.set('ready');
+    }
+
+    if (this.parentForm && !this.initialValue) {
+      this.initialValue = this.parentForm.getRawValue();
+
+      this.parentForm.valueChanges.subscribe(() => {
+        const current = this.parentForm.getRawValue();
+
+        this.hasChanges.set(
+          JSON.stringify(current) !== JSON.stringify(this.initialValue)
+        );
+      });
+    }
+  }
+
+  initBaseline() {
+    this.initialValue = this.parentForm.getRawValue();
+    this.initialized = true;
+
+    this.parentForm.valueChanges.subscribe(() => {
+      if (!this.initialized) return;
+
+      const current = this.parentForm.getRawValue();
+
+      this.hasChanges.set(
+        JSON.stringify(current) !== JSON.stringify(this.initialValue)
+      );
+    });
+  }
 
   handleFile(file: File) {
 
@@ -143,59 +183,133 @@ export class CourseBasicInfoComponent {
     return this.parentForm.get('requirements') as FormArray;
   }
 
+
   getButtonIcon(): string {
 
-    if (this.isSaving()) {
-      return 'hourglass_top';
-    }
-
-    if (!this.courseId()) {
+    if (this.mode() === 'create') {
+      if (this.status() === 'saving') return 'hourglass_top';
       return 'add';
     }
 
-    if (this.hasChanges()) {
-      return 'save';
+    if (this.mode() === 'update') {
+      if (this.status() === 'updating') return 'sync';
+
+      if (this.hasChanges()) return 'save';
+
+      return 'arrow_forward';
     }
+
 
     return 'arrow_forward';
   }
 
-  getButtonLabel(): string {
+  isButtonDisabled(): boolean {
 
-    if (this.isSaving()) {
-      return 'Saving...';
+    if (this.mode() === 'create') {
+      return this.parentForm.invalid || this.status() === 'saving';
     }
 
-    if (!this.courseId()) {
+    // UPDATE MODE → NEVER DISABLED
+    return false;
+  }
+
+  getButtonLabel(): string {
+
+    if (this.mode() === 'update') {
+
+      if (this.status() === 'updating') return 'Updating...';
+
+      // ⭐ ALWAYS show Continue if no baseline change detected yet
+      if (!this.hasChanges()) return 'Continue';
+
+      return 'Update';
+    }
+
+    if (this.mode() === 'create') {
+      if (this.status() === 'saving') return 'Saving...';
       return 'Add Course';
     }
 
-    if (this.hasChanges()) {
-      return 'Save';
-    }
-
-    return 'Continue';
+    return '';
   }
 
   onMainAction() {
 
-    if (!this.courseId()) {
+    if (this.mode() === 'create') {
       this.createCourse();
       return;
     }
 
-    if (this.hasChanges()) {
-      console.log('Save Course');
+    if (this.mode() === 'update') {
+      if (!this.hasChanges()) {
+        console.log('Continue');
+        return;
+      }
+
+      this.updateCourse();
+    }
+  }
+
+  updateCourse() {
+    if (this.parentForm.invalid) {
+      this.parentForm.markAllAsTouched();
       return;
     }
 
-    console.log('Continue');
+    this.status.set('updating');
+
+    const formValue = this.parentForm.getRawValue();
+
+    const payload: any = {
+      title: formValue.title,
+      description: formValue.description,
+      price: formValue.price,
+      level: formValue.level,
+      categoryId: formValue.category,
+      goals: formValue.goals || [],
+      requirements: formValue.requirements || [],
+    };
+
+    const upload$ = this.selectedThumbnailFile
+      ? this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile)
+      : null;
+
+    if (upload$) {
+      upload$.subscribe({
+        next: (res) => {
+          payload.thumbnail = res.secure_url;
+          this.sendUpdate(payload);
+        },
+        error: (err) => {
+          this.status.set('ready');
+          console.error(err);
+        }
+      });
+    } else {
+      payload.thumbnail = formValue.thumbnail;
+      this.sendUpdate(payload);
+    }
+  }
+
+  sendUpdate(payload: any) {
+    this.coursesService.updateCourse(this.courseId!, payload).subscribe({
+      next: (res) => {
+        this.isSaving.set(false);
+        this.status.set('ready');   // ⭐ IMPORTANT
+        this.hasChanges.set(false);
+        this.initialValue = this.parentForm.getRawValue();
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.status.set('ready');
+      }
+    });
   }
 
   createCourse() {
 
-    if (!this.selectedThumbnailFile || this.imageError) {
-      this.imageError = this.imageError || 'Thumbnail is required';
+    if (!this.courseId && !this.selectedThumbnailFile) {
+      this.imageError = 'Thumbnail is required';
       return;
     }
     if (this.parentForm.invalid) {
@@ -211,7 +325,7 @@ export class CourseBasicInfoComponent {
     this.isSaving.set(true);
 
     this.cloudinaryService
-      .uploadImage(this.selectedThumbnailFile)
+      .uploadThumbnail(this.selectedThumbnailFile)
       .subscribe({
         next: (uploadRes) => {
 
@@ -232,11 +346,14 @@ export class CourseBasicInfoComponent {
           this.coursesService.createCourse(payload).subscribe({
             next: (course) => {
 
-              this.courseId.set(course._id);
+              this.courseCreatedEvent.emit(course._id);
+
+              this.courseCreatedEvent.emit(course._id);
 
               this.isSaving.set(false);
-
               console.log('Course created', course);
+              this.mode.set('update');
+              this.status.set('ready');
             },
 
             error: (err) => {
