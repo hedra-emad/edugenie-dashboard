@@ -21,8 +21,12 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class SectionBuilderComponent {
   private fb = inject(FormBuilder);
-  @Input({ required: true }) parentForm!: FormGroup;
+  // @Input({ required: true }) parentForm!: FormGroup;
   @Input({ required: true })
+
+  parentForm = this.fb.group({
+  sections: this.fb.array([]),
+});
 
   courseId!: string;
   private route = inject(ActivatedRoute);
@@ -45,39 +49,6 @@ export class SectionBuilderComponent {
         ),
         lessons: this.fb.array([])
       }));
-    });
-  }
-
-  loadCourse(course: any) {
-    this.parentForm.patchValue({
-      title: course.title,
-      description: course.description,
-      price: course.price,
-      thumbnail: course.thumbnail,
-      level: course.level,
-      category: course.categoryId,
-    });
-
-    this.setGoals(course.goals || []);
-    this.setRequirements(course.requirements || []);
-    this.setSections(course.sections || []);
-  }
-
-  setGoals(goals: string[]) {
-    const arr = this.parentForm.get('goals') as FormArray;
-    arr.clear();
-
-    goals.forEach(goal => {
-      arr.push(this.fb.control(goal));
-    });
-  }
-
-  setRequirements(reqs: string[]) {
-    const arr = this.parentForm.get('requirements') as FormArray;
-    arr.clear();
-
-    reqs.forEach(req => {
-      arr.push(this.fb.control(req));
     });
   }
 

@@ -125,7 +125,7 @@ export class CourseBuilderPageComponent implements OnInit {
       });
     }
 
-    
+
 
     this.courseForm.valueChanges.subscribe(() => {
       const current = this.courseForm.getRawValue();
@@ -161,6 +161,25 @@ export class CourseBuilderPageComponent implements OnInit {
       this.initialFormValue = this.courseForm.getRawValue();
     });
   }
+
+  setGoals(goals: string[]) {
+    const arr = this.courseForm.get('goals') as FormArray;
+    arr.clear();
+
+    goals.forEach(goal => {
+      arr.push(this.fb.control(goal));
+    });
+  }
+
+  setRequirements(reqs: string[]) {
+    const arr = this.courseForm.get('requirements') as FormArray;
+    arr.clear();
+
+    reqs.forEach(req => {
+      arr.push(this.fb.control(req));
+    });
+  }
+
 
   setArray(name: string, values: string[]) {
     const arr = this.courseForm.get(name) as FormArray;

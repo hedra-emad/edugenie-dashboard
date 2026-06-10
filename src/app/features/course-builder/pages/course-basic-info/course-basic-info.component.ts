@@ -241,11 +241,25 @@ export class CourseBasicInfoComponent {
     }
 
     if (this.mode() === 'update') {
+
+      // Continue button
       if (!this.hasChanges()) {
-        console.log('Continue');
+
+        if (!this.courseId) {
+          console.error('Course ID is missing');
+          return;
+        }
+
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'curriculum'
+        ]);
+
         return;
       }
 
+      // Update button
       this.updateCourse();
     }
   }
