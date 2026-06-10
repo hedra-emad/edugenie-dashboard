@@ -27,5 +27,10 @@ export class SidebarMenu {
       label: 'Settings',
       route: '/settings',
     },
+    {
+      icon: 'menu_book', 
+      label: 'My Courses',
+      route: '/my-courses'
+    }
   ];
 }

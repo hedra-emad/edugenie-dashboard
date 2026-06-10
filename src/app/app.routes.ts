@@ -13,6 +13,13 @@ export const routes: Routes = [
     component: LayoutComponent,
     children: [
       {
+        path: 'my-courses',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/instructor/courses-list/courses-list.component')
+            .then(m => m.CoursesListComponent)
+      },
+      {
         path: 'analytics',
         loadComponent: () =>
           import('./features/instructor-analytics/instructor-analytics.page')
@@ -21,23 +28,17 @@ export const routes: Routes = [
       {
         path: 'course-builder',
         loadComponent: () =>
-          import('./features/course-builder/pages/create-course-page/create-course-page.component')
-            .then(m => m.CreateCoursePageComponent)
+          import('./features/course-builder/pages/course-builder-page/course-builder-page.component')
+            .then(m => m.CourseBuilderPageComponent)
       },
-     {
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/settings/pages/account-settings/account-settings.page')
-              .then(m => m.AccountSettingsPageComponent)
+            .then(m => m.AccountSettingsPageComponent)
       },
-      {
-        path: 'my-courses',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/instructor/courses-list/courses-list.component')
-            .then(m => m.CoursesListComponent)
-      }
+
     ]
   }
 ];

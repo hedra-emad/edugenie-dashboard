@@ -8,5 +8,5 @@ export interface Course {
   thumbnail: string;
   level: CourseLevel;
   categoryId: string;
-  courseStatus: 'DRAFT' | 'PUBLISHED';
+  courseStatus: 'draft' | 'published';
 }

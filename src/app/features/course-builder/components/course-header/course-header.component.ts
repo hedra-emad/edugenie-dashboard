@@ -10,6 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './course-header.component.css'
 })
 export class CourseHeaderComponent {
-  @Input() draftStatus: 'Draft' | 'Published' = 'Draft';
+  @Input() draftStatus: 'draft' | 'published' = 'draft';
   @Input() hasUnsavedChanges = false;
 }
