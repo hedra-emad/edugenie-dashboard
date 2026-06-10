@@ -1,4 +1,4 @@
-<div [formGroup]="parentForm" class="space-y-4">
+<div [formGroup]="courseForm" class="space-y-4">
 
   <!-- Thumbnail -->
 
@@ -283,7 +283,7 @@
   <div class="flex justify-end">
 
 
-    <button type="button" (click)="onMainAction()" [disabled]="parentForm.invalid || isSaving()" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl
+    <button type="button" (click)="onMainAction()" [disabled]="courseForm.invalid || isSaving()" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl
          bg-[var(--color-primary)] text-white font-semibold
          disabled:opacity-50">
       <mat-icon>

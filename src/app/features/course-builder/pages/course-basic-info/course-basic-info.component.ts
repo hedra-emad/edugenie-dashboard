@@ -1,6 +1,6 @@
 import { Component, Input, ElementRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormArray, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CategorySelectorComponent } from '../../components/category-selector/category-selector.component';
 import { GoalsInputComponent } from '../../components/goals-input/goals-input.component';
@@ -12,6 +12,8 @@ import { CourseStatus } from '../../../../core/enums/course-status';
 import { environment } from '../../../../../environments/environment';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
+import { Course } from '../../../../core/models/course.model';
+import { CourseBuilderModel } from '../../models/course-builder.model';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -50,7 +52,7 @@ export class CourseBasicInfoComponent {
 
   imageError: string | null = null;
 
-  @Input({ required: true }) parentForm!: FormGroup;
+  // @Input({ required: true }) courseForm!: FormGroup;
   @Output() courseCreatedEvent = new EventEmitter<string>();
   thumbnailPreview = signal<string>('');
   openLevel = false;
@@ -60,17 +62,35 @@ export class CourseBasicInfoComponent {
 
   initialValue: any = null;
 
+
+  courseForm = this.fb.group({
+    title: ['', [Validators.required, Validators.minLength(5)]],
+    description: ['', [Validators.required, Validators.minLength(20)]],
+    price: [0, [Validators.required, Validators.min(0)]],
+    thumbnail: [''],
+    level: ['', Validators.required],
+    category: ['', Validators.required],
+    goals: this.fb.array([]),
+    requirements: this.fb.array([])
+  });
+
+  ngOnInit() {
+    if (this.courseId) {
+      this.loadCourse(this.courseId);
+    }
+  }
+
   ngOnChanges() {
     if (this.courseId) {
       this.mode.set('update');
       this.status.set('ready');
     }
 
-    if (this.parentForm && !this.initialValue) {
-      this.initialValue = this.parentForm.getRawValue();
+    if (this.courseForm && !this.initialValue) {
+      this.initialValue = this.courseForm.getRawValue();
 
-      this.parentForm.valueChanges.subscribe(() => {
-        const current = this.parentForm.getRawValue();
+      this.courseForm.valueChanges.subscribe(() => {
+        const current = this.courseForm.getRawValue();
 
         this.hasChanges.set(
           JSON.stringify(current) !== JSON.stringify(this.initialValue)
@@ -80,13 +100,13 @@ export class CourseBasicInfoComponent {
   }
 
   initBaseline() {
-    this.initialValue = this.parentForm.getRawValue();
+    this.initialValue = this.courseForm.getRawValue();
     this.initialized = true;
 
-    this.parentForm.valueChanges.subscribe(() => {
+    this.courseForm.valueChanges.subscribe(() => {
       if (!this.initialized) return;
 
-      const current = this.parentForm.getRawValue();
+      const current = this.courseForm.getRawValue();
 
       this.hasChanges.set(
         JSON.stringify(current) !== JSON.stringify(this.initialValue)
@@ -161,7 +181,7 @@ export class CourseBasicInfoComponent {
   }
 
   getControl(name: string): FormControl {
-    return this.parentForm.get(name) as FormControl;
+    return this.courseForm.get(name) as FormControl;
   }
 
   isInvalid(name: string) {
@@ -175,12 +195,65 @@ export class CourseBasicInfoComponent {
     return control.touched && control.valid;
   }
 
+  loadCourse(id: string) {
+    this.coursesService.getCourseById(id).subscribe(course => {
+
+      this.courseForm.patchValue({
+        title: course.title,
+        description: course.description,
+        price: course.price,
+        thumbnail: course.thumbnail,
+        level: course.level,
+        category: course.categoryId
+      });
+
+      this.setArray('goals', course.goals || []);
+      this.setArray('requirements', course.requirements || []);
+
+      if (course.thumbnail) {
+        this.thumbnailPreview.set(course.thumbnail);
+        this.hasThumbnail.set(true);
+      }
+
+    });
+  }
+
+  setGoals(goals: string[]) {
+    const arr = this.courseForm.get('goals') as FormArray;
+    arr.clear();
+
+    goals.forEach(goal => {
+      arr.push(this.fb.control(goal));
+    });
+  }
+
+  setRequirements(reqs: string[]) {
+    const arr = this.courseForm.get('requirements') as FormArray;
+    arr.clear();
+
+    reqs.forEach(req => {
+      arr.push(this.fb.control(req));
+    });
+  }
+
+
+
+  setArray(name: string, values: string[]) {
+    const arr = this.courseForm.get(name) as FormArray;
+    arr.clear();
+
+    values.forEach(v => {
+      arr.push(new FormControl(v));
+    });
+  }
+
+
   get goalsArray(): FormArray {
-    return this.parentForm.get('goals') as FormArray;
+    return this.courseForm.get('goals') as FormArray;
   }
 
   get requirementsArray(): FormArray {
-    return this.parentForm.get('requirements') as FormArray;
+    return this.courseForm.get('requirements') as FormArray;
   }
 
 
@@ -206,7 +279,7 @@ export class CourseBasicInfoComponent {
   isButtonDisabled(): boolean {
 
     if (this.mode() === 'create') {
-      return this.parentForm.invalid || this.status() === 'saving';
+      return this.courseForm.invalid || this.status() === 'saving';
     }
 
     // UPDATE MODE → NEVER DISABLED
@@ -265,21 +338,21 @@ export class CourseBasicInfoComponent {
   }
 
   updateCourse() {
-    if (this.parentForm.invalid) {
-      this.parentForm.markAllAsTouched();
+    if (this.courseForm.invalid) {
+      this.courseForm.markAllAsTouched();
       return;
     }
 
     this.status.set('updating');
 
-    const formValue = this.parentForm.getRawValue();
+    const formValue = this.courseForm.getRawValue();
 
     const payload: any = {
       title: formValue.title,
       description: formValue.description,
       price: formValue.price,
       level: formValue.level,
-      categoryId: formValue.category,
+      categoryId: formValue.category!,
       goals: formValue.goals || [],
       requirements: formValue.requirements || [],
     };
@@ -311,7 +384,7 @@ export class CourseBasicInfoComponent {
         this.isSaving.set(false);
         this.status.set('ready');   // ⭐ IMPORTANT
         this.hasChanges.set(false);
-        this.initialValue = this.parentForm.getRawValue();
+        this.initialValue = this.courseForm.getRawValue();
       },
       error: () => {
         this.isSaving.set(false);
@@ -321,71 +394,34 @@ export class CourseBasicInfoComponent {
   }
 
   createCourse() {
-
-    if (!this.courseId && !this.selectedThumbnailFile) {
-      this.imageError = 'Thumbnail is required';
-      return;
-    }
-    if (this.parentForm.invalid) {
-      this.parentForm.markAllAsTouched();
-      return;
-    }
-
-    if (!this.selectedThumbnailFile) {
-      alert('Please select a thumbnail');
+    if (this.courseForm.invalid) {
+      this.courseForm.markAllAsTouched();
       return;
     }
 
     this.isSaving.set(true);
 
-    this.cloudinaryService
-      .uploadThumbnail(this.selectedThumbnailFile)
-      .subscribe({
-        next: (uploadRes) => {
+    const form = this.courseForm.getRawValue();
 
-          const formValue = this.parentForm.value;
+    this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
+      .subscribe(upload => {
 
-          const payload = {
-            title: formValue.title,
-            description: formValue.description,
-            price: formValue.price,
-            thumbnail: uploadRes.secure_url,
-            level: formValue.level,
-            categoryId: formValue.category,
-            goals: formValue.goals || [],
-            requirements: formValue.requirements || [],
-            courseStatus: CourseStatus.DRAFT,
-          };
+        const payload: CourseBuilderModel = {
+          title: form.title!,
+          description: form.description!,
+          price: form.price!,
+          level: form.level as any,
+          categoryId: form.category!,
+          goals: form.goals as string[],
+          requirements: form.requirements as string[],
+          thumbnail: upload.secure_url,
+          courseStatus: CourseStatus.DRAFT
+        };
 
-          this.coursesService.createCourse(payload).subscribe({
-            next: (course) => {
-
-              this.courseCreatedEvent.emit(course._id);
-
-              this.courseCreatedEvent.emit(course._id);
-
-              this.isSaving.set(false);
-              console.log('Course created', course);
-              this.mode.set('update');
-              this.status.set('ready');
-            },
-
-            error: (err) => {
-              this.isSaving.set(false);
-
-              console.log('FULL ERROR', err);
-              console.log('STATUS', err.status);
-              console.log('ERROR BODY', err.error);
-              console.log('MESSAGE', err.error?.message);
-            }
-          });
-
-        },
-
-        error: (err) => {
+        this.coursesService.createCourse(payload).subscribe(course => {
+          this.courseCreatedEvent.emit(course._id);
           this.isSaving.set(false);
-          console.error('Cloudinary upload failed', err);
-        }
+        });
       });
   }
 }

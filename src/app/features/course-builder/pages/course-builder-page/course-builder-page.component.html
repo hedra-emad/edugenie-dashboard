@@ -3,15 +3,8 @@
 
 
     <!-- Course Header -->
-    <app-course-header [draftStatus]="draftStatus()" [hasUnsavedChanges]="hasUnsavedChanges()"></app-course-header>
+    <app-course-header></app-course-header>
 
-    <!-- Notification Alert Banner -->
-    <div *ngIf="notificationMessage() as msg"
-      class="p-4 rounded-xl text-white font-bold flex items-center gap-2 shadow-sm animate-fade-in"
-      [style.background]="msg.type === 'success' ? 'var(--color-success)' : 'var(--color-error)'">
-      <mat-icon>{{ msg.type === 'success' ? 'check_circle' : 'error' }}</mat-icon>
-      <span>{{ msg.text }}</span>
-    </div>
 
     <div class="flex items-center justify-center gap-4">
 
@@ -29,16 +22,16 @@
 
 
     <!-- Main Course Creation Form -->
-    <form [formGroup]="courseForm" class="space-y-8">
+    <app-course-basic-info *ngIf="currentStep() === 1" [courseId]="courseId()"
+      (courseCreatedEvent)="onCourseCreated($event)">
+    </app-course-basic-info>
 
-      <app-course-basic-info [parentForm]="courseForm" [courseId]="createdCourseId()"
-        (courseCreatedEvent)="onCourseCreated($event)">
-      </app-course-basic-info>
+    <app-section-builder *ngIf="currentStep() === 2" [courseId]="courseId()!">
+    </app-section-builder>
 
-      <app-section-builder *ngIf="currentStep() === 2 && createdCourseId()" [parentForm]="courseForm"
-        [courseId]="createdCourseId()!"></app-section-builder>
-
-    </form>
+    <!-- NAV -->
+    <button (click)="previousStep()" *ngIf="currentStep() > 1">Back</button>
+    <button (click)="nextStep()" *ngIf="currentStep() < 2">Continue</button>
 
 
     <div class="flex justify-between">
@@ -52,10 +45,6 @@
       </button>
 
     </div>
-    <!-- Sticky Bottom Publish Actions Bar -->
-    <app-publish-actions [draftStatus]="draftStatus()" [hasUnsavedChanges]="hasUnsavedChanges()"
-      [isValid]="courseForm.valid" [isSaving]="isSaving()" (saveDraft)="saveDraft()"
-      (publishCourse)="publishCourse()"></app-publish-actions>
 
   </div>
 </div>

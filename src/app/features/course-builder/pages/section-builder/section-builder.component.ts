@@ -21,22 +21,17 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class SectionBuilderComponent {
   private fb = inject(FormBuilder);
-  // @Input({ required: true }) parentForm!: FormGroup;
-  @Input({ required: true })
+  // @Input({ required: true }) sectionForm!: FormGroup;
 
-  parentForm = this.fb.group({
-  sections: this.fb.array([]),
-});
+  // @Input({ required: true }) sectionForm!: FormGroup;
+  sectionForm = this.fb.group({
+    sections: this.fb.array([])
+  });
 
-  courseId!: string;
-  private route = inject(ActivatedRoute);
-
-  ngOnInit() {
-    this.courseId = this.route.snapshot.paramMap.get('courseId')!;
-  }
+  @Input() courseId!: string;
 
   setSections(sections: any[]) {
-    const arr = this.parentForm.get('sections') as FormArray;
+    const arr = this.sectionForm.get('sections') as FormArray;
     arr.clear();
 
     sections.forEach(section => {
@@ -55,12 +50,13 @@ export class SectionBuilderComponent {
   // sectionsService = inject(SectionsService);
 
   get sectionsArray(): FormArray {
-    return this.parentForm.get('sections') as FormArray;
+    return this.sectionForm.get('sections') as FormArray;
   }
 
   get sections(): FormGroup[] {
     return this.sectionsArray.controls as FormGroup[];
   }
+
 
   addSection() {
     const section = this.fb.group({
