@@ -23,10 +23,10 @@
 
     <!-- Main Course Creation Form -->
     <app-course-basic-info *ngIf="currentStep() === 1" [courseId]="courseId()"
-      (courseCreatedEvent)="onCourseCreated($event)">
+      (courseCreatedEvent)="onCourseCreated($event)" (stepForward)="nextStep()">
     </app-course-basic-info>
 
-    <app-section-builder *ngIf="currentStep() === 2" [courseId]="courseId()!">
+    <app-section-builder *ngIf="courseId() && currentStep() === 2" [courseId]="courseId()">
     </app-section-builder>
 
     <!-- NAV -->

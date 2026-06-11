@@ -31,6 +31,13 @@ export class SectionCardComponent {
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
 
+  @Output() createSection = new EventEmitter<void>();
+
+  onCreateSection(event: Event) {
+    event.stopPropagation();
+    this.createSection.emit();
+  }
+
   get expectedOutcomesArray(): FormArray {
     return this.sectionForm.get('expectedOutcomes') as FormArray;
   }

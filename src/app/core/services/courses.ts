@@ -23,38 +23,45 @@ export class CoursesService {
   private baseUrl = 'https://edugenie-api.vercel.app/courses';
 
   createCourse(payload: CreateCoursePayload): Observable<Course> {
-      return this.http.post<Course>(
-        this.baseUrl,
-        payload,
-        { withCredentials: true }
-      );
-    }
+    return this.http.post<Course>(
+      this.baseUrl,
+      payload,
+      { withCredentials: true }
+    );
+  }
 
 
-getCourseById(id: string): Observable<Course> {
-  return this.http.get<Course>(`${this.baseUrl}/${id}`);
-}
+  getCourseById(id: string): Observable<Course> {
+    return this.http.get<Course>(`${this.baseUrl}/${id}`);
+  }
 
-getMyCourses(): Observable<Course[]> {
-  return this.http.get<Course[]>(
-    `${this.baseUrl}/my-courses`,
-    { withCredentials: true }
-  );
-}
+  getMyCourses(): Observable<Course[]> {
+    return this.http.get<Course[]>(
+      `${this.baseUrl}/my-courses`,
+      { withCredentials: true }
+    );
+  }
 
-updateCourse(id: string, payload: Partial<CreateCoursePayload>) {
-  return this.http.patch<Course>(
-    `${this.baseUrl}/${id}`,
-    payload,
-    { withCredentials: true }
-  );
-}
+  findOne(id: string) {
+    return this.http.get<any>(
+      `https://edugenie-api.vercel.app/courses/${id}`,
+      { withCredentials: true }
+    );
+  }
 
-deleteCourse(id: string) {
-  return this.http.delete(
-    `${this.baseUrl}/${id}`,
-    { withCredentials: true }
-  );
-} 
+  updateCourse(id: string, payload: Partial<CreateCoursePayload>) {
+    return this.http.patch<Course>(
+      `${this.baseUrl}/${id}`,
+      payload,
+      { withCredentials: true }
+    );
+  }
+
+  deleteCourse(id: string) {
+    return this.http.delete(
+      `${this.baseUrl}/${id}`,
+      { withCredentials: true }
+    );
+  }
 
 }

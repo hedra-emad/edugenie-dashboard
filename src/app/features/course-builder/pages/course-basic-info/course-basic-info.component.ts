@@ -31,6 +31,7 @@ import { CourseBuilderModel } from '../../models/course-builder.model';
 
 
 export class CourseBasicInfoComponent {
+
   private coursesService = inject(CoursesService);
   private router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
@@ -40,6 +41,7 @@ export class CourseBasicInfoComponent {
   isSaving = signal(false);
   courseCreated = signal(false);
   @Input() courseId: string | null = null;
+  @Output() stepForward = new EventEmitter<void>();
 
   isUploading = signal(false);
   hasThumbnail = signal(false);
@@ -307,6 +309,10 @@ export class CourseBasicInfoComponent {
   }
 
   onMainAction() {
+    if (!this.hasChanges()) {
+      this.stepForward.emit();
+      return;
+    }
 
     if (this.mode() === 'create') {
       this.createCourse();

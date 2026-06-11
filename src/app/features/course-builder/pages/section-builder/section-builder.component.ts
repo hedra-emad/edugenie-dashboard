@@ -1,10 +1,12 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, OnInit, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { SectionCardComponent } from '../../components/section-card/section-card.component';
 import { ActivatedRoute } from '@angular/router';
+import { SectionsService } from '../../../../core/services/sections';
+import { CoursesService } from '../../../../core/services/courses';
 
 @Component({
   selector: 'app-section-builder',
@@ -19,35 +21,17 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
 })
-export class SectionBuilderComponent {
+export class SectionBuilderComponent implements OnInit {
   private fb = inject(FormBuilder);
-  // @Input({ required: true }) sectionForm!: FormGroup;
+  private route = inject(ActivatedRoute);
+  private sectionsService = inject(SectionsService);
+  private coursesService = inject(CoursesService);
 
-  // @Input({ required: true }) sectionForm!: FormGroup;
+  @Input() courseId: string | null = null;
+
   sectionForm = this.fb.group({
     sections: this.fb.array([])
   });
-
-  @Input() courseId!: string;
-
-  setSections(sections: any[]) {
-    const arr = this.sectionForm.get('sections') as FormArray;
-    arr.clear();
-
-    sections.forEach(section => {
-      arr.push(this.fb.group({
-        title: section.title,
-        description: section.description,
-        isBasicSection: section.isBasicSection,
-        expectedOutcomes: this.fb.array(
-          (section.expectedOutcomes || []).map((x: any) => this.fb.control(x))
-        ),
-        lessons: this.fb.array([])
-      }));
-    });
-  }
-
-  // sectionsService = inject(SectionsService);
 
   get sectionsArray(): FormArray {
     return this.sectionForm.get('sections') as FormArray;
@@ -57,6 +41,38 @@ export class SectionBuilderComponent {
     return this.sectionsArray.controls as FormGroup[];
   }
 
+  ngOnInit() {
+    // 1. If the parent component passed it directly via template binding, we are good!
+    if (this.courseId) {
+      this.loadSections();
+      console.log('SectionBuilder initialized via Input binding:', this.courseId);
+      return;
+    }
+
+    // 2. Otherwise, scan the entire active route path tree for any parameter
+    let currentRoute: ActivatedRoute | null = this.route;
+    while (currentRoute) {
+      // Try scanning for 'id' first, then fallback to checking for 'courseId'
+      const idParam = currentRoute.snapshot.paramMap.get('id') ||
+        currentRoute.snapshot.paramMap.get('courseId');
+
+      if (idParam) {
+        this.courseId = idParam;
+        break;
+      }
+      // Move up to the parent route segment
+      currentRoute = currentRoute.parent;
+    }
+
+    if (this.courseId) {
+      console.log('SectionBuilder successfully located Course ID from route tree:', this.courseId);
+    } else {
+      console.error(
+        'SectionBuilder Routing Error: Looked through the entire URL path tree but could not find an ":id" or ":courseId" parameter.',
+        this.route.snapshot.params
+      );
+    }
+  }
 
   addSection() {
     const section = this.fb.group({
@@ -89,5 +105,55 @@ export class SectionBuilderComponent {
     this.sectionsArray.removeAt(index);
     this.sectionsArray.insert(index + 1, control);
     this.sectionsArray.markAsDirty();
+  }
+
+  createSection(index: number) {
+    if (!this.courseId) {
+      console.error('Cannot save section: courseId is missing.');
+      return;
+    }
+
+    const section = this.sectionsArray.at(index).value;
+    const payload = {
+      title: section.title,
+      description: section.description,
+      expectedOutcomes: section.expectedOutcomes || [],
+      isBasicSection: section.isBasicSection
+    };
+
+    this.sectionsService.addSection(this.courseId, payload)
+      .subscribe({
+        next: res => console.log('Section saved successfully:', res),
+        error: err => console.error('API Error saving section:', err)
+      });
+  }
+
+  loadSections() {
+    if (!this.courseId) return;
+
+    this.coursesService.findOne(this.courseId).subscribe({
+      next: (course: any) => {
+        const sections = course.sections || [];
+
+        this.sectionsArray.clear();
+
+        sections.forEach((section: any) => {
+          this.sectionsArray.push(
+            this.fb.group({
+              title: [section.title, Validators.required],
+              description: [section.description || ''],
+              isBasicSection: [section.isBasicSection || false],
+              expectedOutcomes: this.fb.array(section.expectedOutcomes || []),
+              lessons: this.fb.array(section.lessons || [])
+            })
+          );
+        });
+
+        console.log('Sections loaded from course:', sections);
+      },
+      error: (err) => {
+        console.error('Failed to load course sections:', err);
+      }
+    });
   }
 }
