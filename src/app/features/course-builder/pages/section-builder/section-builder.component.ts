@@ -57,59 +57,36 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   ngOnInit() {
-    // 1. If the parent component passed it directly via template binding, we are good!
-    if (this.courseId) {
-      this.loadSections();
-      console.log('SectionBuilder initialized via Input binding:', this.courseId);
+    const id =
+      this.route.snapshot.paramMap.get('courseId') ||
+      this.route.parent?.snapshot.paramMap.get('courseId');
+
+    if (!id) {
+      console.error('Course ID not found in route');
       return;
     }
 
-    // 2. Otherwise, scan the entire active route path tree for any parameter
-    let currentRoute: ActivatedRoute | null = this.route;
-    while (currentRoute) {
-      // Try scanning for 'id' first, then fallback to checking for 'courseId'
-      const idParam = currentRoute.snapshot.paramMap.get('id') ||
-        currentRoute.snapshot.paramMap.get('courseId');
+    this.courseId = id;
 
-      if (idParam) {
-        this.courseId = idParam;
-        break;
-      }
-      // Move up to the parent route segment
-      currentRoute = currentRoute.parent;
-    }
+    console.log('Course ID resolved:', this.courseId);
 
-    if (this.courseId) {
-      console.log('SectionBuilder successfully located Course ID from route tree:', this.courseId);
-    } else {
-      console.error(
-        'SectionBuilder Routing Error: Looked through the entire URL path tree but could not find an ":id" or ":courseId" parameter.',
-        this.route.snapshot.params
-      );
-    }
+    this.loadSections();
   }
 
   addSection() {
     const section = this.fb.group({
-      title: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3)
-        ]
-      ],
+      id: [null],
+      isSaving: [false],
+      isDeleting: [false],
 
-      description: [
-        '',
-        [
-          Validators.minLength(10)
-        ]
-      ],
+      title: ['', [Validators.required, Validators.minLength(3)]],
 
-      expectedOutcomes: this.fb.array([], [
-        maxArrayLength(20)
-      ]),
+      description: ['', [Validators.minLength(10)]],
+
+      expectedOutcomes: this.fb.array([], [maxArrayLength(20)]),
+
       isBasicSection: [false],
+
       lessons: this.fb.array([])
     });
     this.sectionsArray.push(section);
@@ -117,8 +94,38 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   deleteSection(index: number) {
-    this.sectionsArray.removeAt(index);
-    this.sectionsArray.markAsDirty();
+
+    const form = this.sectionsArray.at(index);
+
+    const sectionId = form.get('id')?.value;
+    form.get('isDeleting')?.setValue(true);
+
+    // Unsaved section
+    if (!sectionId) {
+      this.sectionsArray.removeAt(index);
+      this.sectionsArray.markAsDirty();
+      return;
+    }
+
+    // Existing section in DB
+    this.sectionsService
+      .deleteSection(this.courseId!, sectionId)
+      .subscribe({
+        next: () => {
+
+          this.sectionsArray.removeAt(index);
+          this.sectionsArray.markAsDirty();
+
+          console.log('Section deleted successfully');
+        },
+
+        error: (err) => {
+
+          form.get('isDeleting')?.setValue(false);
+
+          console.error('Failed to delete section', err);
+        }
+      });
   }
 
   moveSectionUp(index: number) {
@@ -138,28 +145,66 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   createSection(index: number) {
+
     if (!this.courseId) {
-      console.error('Cannot save section: courseId is missing.');
       return;
     }
 
-    const section = this.sectionsArray.at(index).value;
+    const form = this.sectionsArray.at(index);
+
     const payload = {
-      title: section.title,
-      description: section.description,
-      expectedOutcomes: section.expectedOutcomes || [],
-      isBasicSection: section.isBasicSection
+      title: form.get('title')?.value,
+      description: form.get('description')?.value,
+      expectedOutcomes: form.get('expectedOutcomes')?.value || [],
+      isBasicSection: form.get('isBasicSection')?.value
     };
 
-    this.sectionsService.addSection(this.courseId, payload)
-      .subscribe({
-        next: res => console.log('Section saved successfully:', res),
-        error: err => console.error('API Error saving section:', err)
-      });
+    const sectionId = form.get('id')?.value;
+
+    form.get('isSaving')?.setValue(true);
+
+    if (sectionId) {
+
+      this.sectionsService
+        .updateSection(this.courseId, sectionId, payload)
+        .subscribe({
+          next: (res) => {
+            form.get('isSaving')?.setValue(false);
+            console.log('Section updated', res);
+          },
+          error: (err) => {
+            form.get('isSaving')?.setValue(false);
+            console.error(err);
+          }
+        });
+
+    } else {
+
+      this.sectionsService
+        .addSection(this.courseId, payload)
+        .subscribe({
+          next: (res: any) => {
+
+            form.get('isSaving')?.setValue(false);
+
+            form.patchValue({
+              id: res._id
+            });
+
+            console.log('Section created', res);
+          },
+          error: (err) => {
+            form.get('isSaving')?.setValue(false);
+            console.error(err);
+          }
+        });
+
+    }
   }
 
   loadSections() {
     if (!this.courseId) return;
+
 
     this.coursesService.findOne(this.courseId).subscribe({
       next: (course: any) => {
@@ -167,14 +212,42 @@ export class SectionBuilderComponent implements OnInit {
 
         this.sectionsArray.clear();
 
+
+
         sections.forEach((section: any) => {
           this.sectionsArray.push(
             this.fb.group({
-              title: [section.title, Validators.required],
-              description: [section.description || ''],
-              isBasicSection: [section.isBasicSection || false],
-              expectedOutcomes: this.fb.array(section.expectedOutcomes || []),
-              lessons: this.fb.array(section.lessons || [])
+              title: [
+                section.title || '',
+                [
+                  Validators.required,
+                  Validators.minLength(3)
+                ]
+              ],
+
+              description: [
+                section.description || '',
+                [
+                  Validators.minLength(10)
+                ]
+              ],
+
+              isBasicSection: [
+                section.isBasicSection || false
+              ],
+
+              expectedOutcomes: this.fb.array(
+                (section.expectedOutcomes || []).map(
+                  (outcome: string) =>
+                    this.fb.control(outcome, Validators.required)
+                ),
+                [maxArrayLength(20)]
+              ),
+
+              lessons: this.fb.array(section.lessons || []),
+              id: [section._id],
+              isSaving: [false],
+              isDeleting: [false],
             })
           );
         });
@@ -186,4 +259,6 @@ export class SectionBuilderComponent implements OnInit {
       }
     });
   }
+
+
 }

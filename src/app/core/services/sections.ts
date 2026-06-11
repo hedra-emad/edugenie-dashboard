@@ -15,12 +15,16 @@ export class SectionsService {
     );
   }
 
-  
 
-  updateSection(courseId: string, sectionId: string, title: string) {
+
+  updateSection(
+    courseId: string,
+    sectionId: string,
+    data: any
+  ) {
     return this.http.patch(
       `${this.baseUrl}/${courseId}/sections/${sectionId}`,
-      { title },
+      data,
       { withCredentials: true }
     );
   }

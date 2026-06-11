@@ -2,6 +2,7 @@ import { ActivatedRoute, Routes } from '@angular/router';
 import { LayoutComponent } from './shared/components/layout/layout.component';
 import { authGuard } from './core/guards/auth.guard';
 import { LessonCardComponent } from './features/course-builder/components/lesson-card/lesson-card.component';
+import { CourseBuilderPageComponent } from './features/course-builder/pages/course-builder-page/course-builder-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -33,16 +34,27 @@ export const routes: Routes = [
             .then(m => m.CourseBuilderPageComponent)
       },
       {
-        path: 'course-builder/:id',
-        loadComponent: () =>
-          import('./features/course-builder/pages/course-builder-page/course-builder-page.component')
-            .then(m => m.CourseBuilderPageComponent)
-      },
-      {
-        path: 'course-builder/:courseId/curriculum',
-        loadComponent: () =>
-          import('./features/course-builder/pages/section-builder/section-builder.component')
-            .then(m => m.SectionBuilderComponent)
+        path: 'course-builder/:courseId',
+        component: CourseBuilderPageComponent,
+        children: [
+          {
+            path: 'basic-info',
+            loadComponent: () =>
+              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
+                .then(m => m.CourseBasicInfoComponent)
+          },
+          {
+            path: 'curriculum',
+            loadComponent: () =>
+              import('./features/course-builder/pages/section-builder/section-builder.component')
+                .then(m => m.SectionBuilderComponent)
+          },
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: 'basic-info'
+          }
+        ]
       },
       {
         path: 'settings',

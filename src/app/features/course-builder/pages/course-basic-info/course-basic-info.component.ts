@@ -6,7 +6,7 @@ import { CategorySelectorComponent } from '../../components/category-selector/ca
 import { GoalsInputComponent } from '../../components/goals-input/goals-input.component';
 import { RequirementsInputComponent } from '../../components/requirements-input/requirements-input.component';
 import { Output, EventEmitter } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
 import { environment } from '../../../../../environments/environment';
@@ -40,8 +40,8 @@ export class CourseBasicInfoComponent {
   private fb = inject(FormBuilder);
   isSaving = signal(false);
   courseCreated = signal(false);
-  @Input() courseId: string | null = null;
-  @Output() stepForward = new EventEmitter<void>();
+  // @Input() courseId: string | null = null;
+  // @Output() stepForward = new EventEmitter<void>();
 
   isUploading = signal(false);
   hasThumbnail = signal(false);
@@ -59,9 +59,11 @@ export class CourseBasicInfoComponent {
   thumbnailPreview = signal<string>('');
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
+  courseId: string | null = null;
 
   status = signal<'idle' | 'saving' | 'updating' | 'ready'>('idle');
 
+  private route = inject(ActivatedRoute);
   initialValue: any = null;
 
 
@@ -77,9 +79,19 @@ export class CourseBasicInfoComponent {
   });
 
   ngOnInit() {
-    if (this.courseId) {
-      this.loadCourse(this.courseId);
+    const id =
+      this.route.snapshot.paramMap.get('courseId') ||
+      this.route.parent?.snapshot.paramMap.get('courseId');
+
+    if (!id) {
+      console.warn('No courseId found → create mode');
+      return;
     }
+
+    this.courseId = id;
+    this.mode.set('update');
+
+    this.loadCourse(this.courseId);
   }
 
   ngOnChanges() {
@@ -200,6 +212,7 @@ export class CourseBasicInfoComponent {
   loadCourse(id: string) {
     this.coursesService.getCourseById(id).subscribe(course => {
 
+      // 1. Fill form first
       this.courseForm.patchValue({
         title: course.title,
         description: course.description,
@@ -216,6 +229,12 @@ export class CourseBasicInfoComponent {
         this.thumbnailPreview.set(course.thumbnail);
         this.hasThumbnail.set(true);
       }
+
+      // 2. IMPORTANT: reset baseline AFTER form is fully ready
+      setTimeout(() => {
+        this.initialValue = this.courseForm.getRawValue();
+        this.hasChanges.set(false);
+      });
 
     });
   }
@@ -309,25 +328,16 @@ export class CourseBasicInfoComponent {
   }
 
   onMainAction() {
-    if (!this.hasChanges()) {
-      this.stepForward.emit();
-      return;
-    }
 
-    if (this.mode() === 'create') {
-      this.createCourse();
-      return;
-    }
+    console.log('MODE:', this.mode());
+    console.log('HAS CHANGES:', this.hasChanges());
+    console.log('COURSE ID:', this.courseId);
 
     if (this.mode() === 'update') {
 
-      // Continue button
       if (!this.hasChanges()) {
 
-        if (!this.courseId) {
-          console.error('Course ID is missing');
-          return;
-        }
+        console.log('👉 NAVIGATING TO CURRICULUM');
 
         this.router.navigate([
           '/course-builder',
@@ -338,7 +348,7 @@ export class CourseBasicInfoComponent {
         return;
       }
 
-      // Update button
+      console.log('👉 UPDATING COURSE');
       this.updateCourse();
     }
   }
@@ -388,8 +398,9 @@ export class CourseBasicInfoComponent {
     this.coursesService.updateCourse(this.courseId!, payload).subscribe({
       next: (res) => {
         this.isSaving.set(false);
-        this.status.set('ready');   // ⭐ IMPORTANT
+        this.status.set('ready');   // IMPORTANT
         this.hasChanges.set(false);
+        this.initialValue = this.courseForm.getRawValue();
         this.initialValue = this.courseForm.getRawValue();
       },
       error: () => {

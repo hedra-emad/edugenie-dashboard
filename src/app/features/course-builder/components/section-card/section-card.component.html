@@ -1,4 +1,4 @@
-<mat-expansion-panel [expanded]="true"
+<mat-expansion-panel [expanded]="false"
   class="section-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md">
   <mat-expansion-panel-header>
     <mat-panel-title class="flex items-center justify-between w-full pr-4">
@@ -36,12 +36,16 @@
         </button>
 
         <!-- DELETE -->
-        <button type="button" (click)="onDelete($event)"
+        <button type="button" (click)="onDelete($event)" [disabled]="isDeleting"
           class="w-8 h-8 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50"
           aria-label="Delete Section">
           <span class="flex items-center justify-center w-full h-full">
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
+            <mat-icon *ngIf="!isDeleting" class="!text-[18px] !w-[18px] !h-[18px] block">
               delete
+            </mat-icon>
+
+            <mat-icon *ngIf="isDeleting" class="!text-[18px] !w-[18px] !h-[18px] block">
+              hourglass_top
             </mat-icon>
           </span>
         </button>
@@ -196,7 +200,7 @@
     <!-- Create Section Button -->
     <!-- Create Section Button -->
     <div class="pt-6 border-t border-slate-100 flex justify-end">
-      <button type="button" (click)="onCreateSection($event)" [disabled]="sectionForm.invalid" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
+      <button type="button" (click)="onCreateSection($event)" [disabled]="sectionForm.invalid || isSaving" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
          hover:bg-[var(--color-primary-light)] px-5 py-3 rounded-lg border
          text-white bg-[var(--color-primary)] shadow-md active:scale-95
          disabled:opacity-50 disabled:cursor-not-allowed">
@@ -204,7 +208,13 @@
           add
         </mat-icon>
 
-        Create Section
+        <span *ngIf="!isSaving">
+          {{ isExistingSection ? 'Update' : 'Create' }}
+        </span>
+
+        <span *ngIf="isSaving">
+          {{ isExistingSection ? 'Updating...' : 'Creating...' }}
+        </span>
       </button>
     </div>
   </div>

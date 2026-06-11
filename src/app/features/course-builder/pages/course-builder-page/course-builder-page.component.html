@@ -22,7 +22,7 @@
 
 
     <!-- Main Course Creation Form -->
-    <app-course-basic-info *ngIf="currentStep() === 1" [courseId]="courseId()"
+    <app-course-basic-info *ngIf="currentStep() === 1" 
       (courseCreatedEvent)="onCourseCreated($event)" (stepForward)="nextStep()">
     </app-course-basic-info>
 

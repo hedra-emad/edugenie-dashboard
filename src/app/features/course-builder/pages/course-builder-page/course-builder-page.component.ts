@@ -32,7 +32,7 @@ export class CourseBuilderPageComponent implements OnInit {
   // course-builder-page.component.ts
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
+    const id = this.route.snapshot.paramMap.get('courseId');
     if (id) {
       this.courseId.set(id);
 

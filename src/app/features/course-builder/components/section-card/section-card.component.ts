@@ -62,6 +62,8 @@ export class SectionCardComponent {
     return this.lessonsArray.controls as FormGroup[];
   }
 
+
+
   onDelete(event: Event) {
     event.stopPropagation();
     this.delete.emit();
@@ -89,11 +91,24 @@ export class SectionCardComponent {
     );
   }
 
+
+
   removeOutcome(index: number) {
     this.expectedOutcomesArray.removeAt(index);
     this.expectedOutcomesArray.markAsDirty();
   }
 
+  get isExistingSection(): boolean {
+    return !!this.sectionForm.get('id')?.value;
+  }
+
+  get isSaving(): boolean {
+    return this.sectionForm.get('isSaving')?.value ?? false;
+  }
+
+  get isDeleting(): boolean {
+    return this.sectionForm.get('isDeleting')?.value ?? false;
+  }
   // Lessons Management
   addLesson() {
     const lesson = this.fb.group({
