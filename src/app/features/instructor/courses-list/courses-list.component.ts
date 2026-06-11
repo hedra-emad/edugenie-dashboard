@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { InstructorCoursesService } from '../services/instructor-courses.service';
 import { InstructorCourse } from '../models/instructor-course.model';
@@ -27,6 +28,7 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class CoursesListComponent implements OnInit {
   private coursesService = inject(InstructorCoursesService);
+  private router = inject(Router);
 
   courses: InstructorCourse[] = [];
   isLoading = true;
@@ -44,5 +46,9 @@ export class CoursesListComponent implements OnInit {
           this.error = true;
         },
       });
+  }
+
+  editCourse(id: string) {
+    this.router.navigate(['/course-builder', id]);
   }
 }
