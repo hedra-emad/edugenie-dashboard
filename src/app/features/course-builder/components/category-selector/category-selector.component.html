@@ -1,22 +1,67 @@
-<div class="space-y-3">
-  <label class="text-[13px] font-bold uppercase tracking-wider block" [style.color]="'var(--color-text-primary)'">
-    Select Categories <span class="text-red-500">*</span>
+<div class="space-y-2">
+
+  <label
+    class="block text-sm font-semibold text-[var(--color-text-primary)]"
+  >
+    Category *
   </label>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+
+  <div class="relative">
+
     <button
-      *ngFor="let cat of availableCategories"
-      type="button"
-      (click)="toggleCategory(cat.name)"
-      class="flex items-center gap-2.5 p-3 rounded-lg border text-left text-sm font-semibold transition-all duration-200 outline-none focus:ring-2 focus:ring-[var(--color-primary)] active:scale-95"
-      [ngClass]="isSelected(cat.name) ? 'category-btn--selected' : 'category-btn--unselected'"
-    >
-      <mat-icon class="category-icon text-[18px] w-[18px] h-[18px]" [ngClass]="isSelected(cat.name) ? 'text-white' : 'text-[var(--color-text-secondary)]'">
-        {{ cat.icon }}
-      </mat-icon>
-      <span class="truncate">{{ cat.name }}</span>
+  type="button"
+  (click)="openCategory = !openCategory"
+  class="w-full bg-white border-2 py-3 px-4 text-sm shadow-sm
+         transition-all duration-200 text-left relative"
+  [ngClass]="{
+    'border-gray-300': !openCategory && !control.value,
+    'border-primary': openCategory,
+    'rounded-xl': !openCategory,
+    'rounded-t-xl rounded-b-none': openCategory
+  }"
+>
+      {{ selectedCategoryName || 'Select category' }}
+
+      <div
+        class="absolute inset-y-0 right-3 flex items-center"
+      >
+        <mat-icon
+          class="transition-transform duration-200"
+          [class.rotate-180]="openCategory"
+        >
+          expand_more
+        </mat-icon>
+      </div>
+
     </button>
+
+    <div
+      *ngIf="openCategory"
+      class="absolute top-full left-0 z-20 w-full bg-white
+             border-2 border-primary border-t-0
+             rounded-b-xl shadow-lg overflow-hidden"
+    >
+
+      <button
+        *ngFor="let cat of availableCategories"
+        type="button"
+        (click)="selectCategory(cat._id)"
+        class="w-full px-4 py-3 text-sm text-left
+               hover:bg-[var(--color-primary)]
+               hover:text-white transition-colors"
+      >
+        {{ cat.name }}
+      </button>
+
+    </div>
+
   </div>
-  <div *ngIf="control.touched && control.invalid" class="text-xs font-semibold" [style.color]="'var(--color-error)'">
-    Please select at least one category.
+
+  <div
+    *ngIf="control.touched && control.invalid"
+    class="text-xs text-red-500"
+  >
+    Category is required
   </div>
+
 </div>

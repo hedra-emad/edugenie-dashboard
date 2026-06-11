@@ -1,7 +1,7 @@
+@import "ngx-toastr/toastr";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* EduGenie Design Tokens */
 
 :root {
@@ -88,9 +88,24 @@
   --color-sidebar-active: #ede9fe;
 
   --transition-sidebar: 0.3s ease;
-} 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
