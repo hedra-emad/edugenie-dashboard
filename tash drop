@@ -1,0 +1,22 @@
+[1mdiff --git a/package-lock.json b/package-lock.json[m
+[1mindex b600f87..c7ff8b7 100644[m
+[1m--- a/package-lock.json[m
+[1m+++ b/package-lock.json[m
+[36m@@ -10441,4 +10441,4 @@[m
+       "license": "MIT"[m
+     }[m
+   }[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/package.json b/package.json[m
+[1mindex b60e88d..aa5ef2d 100644[m
+[1m--- a/package.json[m
+[1m+++ b/package.json[m
+[36m@@ -52,4 +52,4 @@[m
+     "tailwindcss": "^3.4.19",[m
+     "typescript": "~5.9.2"[m
+   }[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
