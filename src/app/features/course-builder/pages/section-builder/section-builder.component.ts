@@ -8,6 +8,7 @@ import { ActivatedRoute } from '@angular/router';
 import { SectionsService } from '../../../../core/services/sections';
 import { CoursesService } from '../../../../core/services/courses';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -28,6 +29,7 @@ export function maxArrayLength(max: number) {
     ReactiveFormsModule,
     MatIconModule,
     MatButtonModule,
+    BackButtonComponent, 
     SectionCardComponent
   ],
   templateUrl: './section-builder.component.html',

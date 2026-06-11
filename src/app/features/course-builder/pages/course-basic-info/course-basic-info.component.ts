@@ -14,6 +14,7 @@ import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
 import { Course } from '../../../../core/models/course.model';
 import { CourseBuilderModel } from '../../models/course-builder.model';
+import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -23,7 +24,8 @@ import { CourseBuilderModel } from '../../models/course-builder.model';
     MatIconModule,
     CategorySelectorComponent,
     GoalsInputComponent,
-    RequirementsInputComponent
+    RequirementsInputComponent,
+    ActionBarComponent
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -40,6 +42,7 @@ export class CourseBasicInfoComponent {
   private fb = inject(FormBuilder);
   isSaving = signal(false);
   courseCreated = signal(false);
+  @Output() continue = new EventEmitter<void>();
   // @Input() courseId: string | null = null;
   // @Output() stepForward = new EventEmitter<void>();
 
@@ -336,15 +339,7 @@ export class CourseBasicInfoComponent {
     if (this.mode() === 'update') {
 
       if (!this.hasChanges()) {
-
-        console.log('👉 NAVIGATING TO CURRICULUM');
-
-        this.router.navigate([
-          '/course-builder',
-          this.courseId,
-          'curriculum'
-        ]);
-
+        this.continue.emit();
         return;
       }
 

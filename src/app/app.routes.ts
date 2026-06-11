@@ -35,26 +35,9 @@ export const routes: Routes = [
       },
       {
         path: 'course-builder/:courseId',
-        component: CourseBuilderPageComponent,
-        children: [
-          {
-            path: 'basic-info',
-            loadComponent: () =>
-              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
-                .then(m => m.CourseBasicInfoComponent)
-          },
-          {
-            path: 'curriculum',
-            loadComponent: () =>
-              import('./features/course-builder/pages/section-builder/section-builder.component')
-                .then(m => m.SectionBuilderComponent)
-          },
-          {
-            path: '',
-            pathMatch: 'full',
-            redirectTo: 'basic-info'
-          }
-        ]
+        loadComponent: () =>
+          import('./features/course-builder/pages/course-builder-page/course-builder-page.component')
+            .then(m => m.CourseBuilderPageComponent)
       },
       {
         path: 'settings',

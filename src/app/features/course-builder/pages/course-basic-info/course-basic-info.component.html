@@ -283,15 +283,14 @@
   <div class="flex justify-end">
 
 
-    <button type="button" (click)="onMainAction()" [disabled]="courseForm.invalid || isSaving()" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl
-         bg-[var(--color-primary)] text-white font-semibold
-         disabled:opacity-50">
-      <mat-icon>
-        {{ getButtonIcon() }}
-      </mat-icon>
-
-      {{ getButtonLabel() }}
-    </button>
+<app-action-bar
+  [showBack]="false"
+  [actionLabel]="getButtonLabel()"
+  [actionIcon]="getButtonIcon()"
+  [loading]="status() === 'saving' || status() === 'updating'"
+  [disabled]="isButtonDisabled()"
+  (action)="onMainAction()"
+></app-action-bar>
 
   </div>
 

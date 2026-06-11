@@ -22,29 +22,12 @@
 
 
     <!-- Main Course Creation Form -->
-    <app-course-basic-info *ngIf="currentStep() === 1" 
-      (courseCreatedEvent)="onCourseCreated($event)" (stepForward)="nextStep()">
+    <app-course-basic-info *ngIf="currentStep() === 1" (courseCreatedEvent)="onCourseCreated($event)"
+      (continue)="nextStep()">
     </app-course-basic-info>
 
     <app-section-builder *ngIf="courseId() && currentStep() === 2" [courseId]="courseId()">
     </app-section-builder>
-
-    <!-- NAV -->
-    <button (click)="previousStep()" *ngIf="currentStep() > 1">Back</button>
-    <button (click)="nextStep()" *ngIf="currentStep() < 2">Continue</button>
-
-
-    <div class="flex justify-between">
-
-      <button type="button" *ngIf="currentStep() > 1" (click)="previousStep()">
-        Back
-      </button>
-
-      <button type="button" *ngIf="currentStep() < 2" (click)="nextStep()">
-        Continue
-      </button>
-
-    </div>
 
   </div>
 </div>
