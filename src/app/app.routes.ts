@@ -27,18 +27,30 @@ export const routes: Routes = [
           import('./features/instructor-analytics/instructor-analytics.page')
             .then(m => m.InstructorAnalyticsPageComponent)
       },
+
       {
-        path: 'course-builder',
-        loadComponent: () =>
-          import('./features/course-builder/pages/course-builder-page/course-builder-page.component')
-            .then(m => m.CourseBuilderPageComponent)
-      },
-      {
-        path: 'course-builder/:courseId',
-        loadComponent: () =>
-          import('./features/course-builder/pages/course-builder-page/course-builder-page.component')
-            .then(m => m.CourseBuilderPageComponent)
-      },
+  path: 'course-builder/:courseId',
+  component: CourseBuilderPageComponent,
+  children: [
+    {
+      path: 'basic',
+      loadComponent: () =>
+        import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
+          .then(m => m.CourseBasicInfoComponent)
+    },
+    {
+      path: 'curriculum',
+      loadComponent: () =>
+        import('./features/course-builder/pages/section-builder/section-builder.component')
+          .then(m => m.SectionBuilderComponent)
+    },
+    {
+      path: '',
+      redirectTo: 'basic',
+      pathMatch: 'full'
+    }
+  ]
+},
       {
         path: 'settings',
         canActivate: [authGuard],

@@ -43,21 +43,15 @@ export class CourseBasicInfoComponent {
   isSaving = signal(false);
   courseCreated = signal(false);
   @Output() continue = new EventEmitter<void>();
-  // @Input() courseId: string | null = null;
-  // @Output() stepForward = new EventEmitter<void>();
 
   isUploading = signal(false);
   hasThumbnail = signal(false);
   hasChanges = signal(false);
   private initialized = false;
-  // isDragging = signal(false);
-
-  // imageError = '';
   selectedThumbnailFile: File | null = null;
 
   imageError: string | null = null;
 
-  // @Input({ required: true }) courseForm!: FormGroup;
   @Output() courseCreatedEvent = new EventEmitter<string>();
   thumbnailPreview = signal<string>('');
   openLevel = false;
@@ -332,18 +326,17 @@ export class CourseBasicInfoComponent {
 
   onMainAction() {
 
-    console.log('MODE:', this.mode());
-    console.log('HAS CHANGES:', this.hasChanges());
-    console.log('COURSE ID:', this.courseId);
-
     if (this.mode() === 'update') {
 
       if (!this.hasChanges()) {
-        this.continue.emit();
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'curriculum'
+        ]);
         return;
       }
 
-      console.log('👉 UPDATING COURSE');
       this.updateCourse();
     }
   }

@@ -5,7 +5,7 @@ import { CourseHeaderComponent } from '../../components/course-header/course-hea
 import { CourseBasicInfoComponent } from '../course-basic-info/course-basic-info.component';
 import { SectionBuilderComponent } from '../../pages/section-builder/section-builder.component';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-create-course-page',
@@ -17,7 +17,8 @@ import { ActivatedRoute, Router } from '@angular/router';
     CourseHeaderComponent,
     CourseBasicInfoComponent,
     SectionBuilderComponent,
-  ],
+    RouterOutlet
+],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'
 })
@@ -25,8 +26,7 @@ export class CourseBuilderPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  
-  currentStep = signal(1);
+
   courseId = signal<string | null>(null);
 
   // course-builder-page.component.ts
@@ -38,17 +38,9 @@ export class CourseBuilderPageComponent implements OnInit {
 
       // Check if the URL contains 'curriculum' to decide the step
       const isCurriculum = this.router.url.includes('curriculum');
-      this.currentStep.set(isCurriculum ? 2 : 1);
     }
   }
 
-  nextStep() {
-    this.currentStep.update(s => s + 1);
-  }
-
-  previousStep() {
-    this.currentStep.update(s => s - 1);
-  }
 
   onCourseCreated(id: string) {
     this.courseId.set(id);

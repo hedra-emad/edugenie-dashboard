@@ -147,6 +147,8 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   createSection(index: number) {
+    console.log('-------------',this.courseId);
+
 
     if (!this.courseId) {
       return;

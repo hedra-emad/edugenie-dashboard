@@ -8,13 +8,13 @@
 
     <div class="flex items-center justify-center gap-4">
 
-      <div class="w-10 h-10 rounded-full flex items-center justify-center" [class.bg-primary]="currentStep() >= 1">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center" >
         1
       </div>
 
       <div class="w-20 h-1 bg-gray-300"></div>
 
-      <div class="w-10 h-10 rounded-full flex items-center justify-center" [class.bg-primary]="currentStep() >= 2">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center">
         2
       </div>
 
@@ -22,12 +22,7 @@
 
 
     <!-- Main Course Creation Form -->
-    <app-course-basic-info *ngIf="currentStep() === 1" (courseCreatedEvent)="onCourseCreated($event)"
-      (continue)="nextStep()">
-    </app-course-basic-info>
-
-    <app-section-builder *ngIf="courseId() && currentStep() === 2" [courseId]="courseId()">
-    </app-section-builder>
+    <router-outlet></router-outlet>
 
   </div>
 </div>
