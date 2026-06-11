@@ -46,6 +46,14 @@ export class SectionCardComponent {
     return this.expectedOutcomesArray.controls as FormControl[];
   }
 
+  get titleControl() {
+    return this.sectionForm.get('title');
+  }
+
+  get descriptionControl() {
+    return this.sectionForm.get('description');
+  }
+
   get lessonsArray(): FormArray {
     return this.sectionForm.get('lessons') as FormArray;
   }
@@ -71,8 +79,14 @@ export class SectionCardComponent {
 
   // Outcomes Management
   addOutcome() {
-    this.expectedOutcomesArray.push(this.fb.control('', Validators.required));
-    this.expectedOutcomesArray.markAsDirty();
+
+    if (this.outcomes.length >= 20) {
+      return;
+    }
+
+    this.expectedOutcomesArray.push(
+      this.fb.control('', Validators.required)
+    );
   }
 
   removeOutcome(index: number) {

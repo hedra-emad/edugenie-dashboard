@@ -7,7 +7,19 @@ import { SectionCardComponent } from '../../components/section-card/section-card
 import { ActivatedRoute } from '@angular/router';
 import { SectionsService } from '../../../../core/services/sections';
 import { CoursesService } from '../../../../core/services/courses';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 
+export function maxArrayLength(max: number) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+
+    if (Array.isArray(value) && value.length > max) {
+      return { maxArrayLength: true };
+    }
+
+    return null;
+  };
+}
 @Component({
   selector: 'app-section-builder',
   standalone: true,
@@ -21,6 +33,8 @@ import { CoursesService } from '../../../../core/services/courses';
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
 })
+
+
 export class SectionBuilderComponent implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -32,6 +46,7 @@ export class SectionBuilderComponent implements OnInit {
   sectionForm = this.fb.group({
     sections: this.fb.array([])
   });
+
 
   get sectionsArray(): FormArray {
     return this.sectionForm.get('sections') as FormArray;
@@ -76,10 +91,25 @@ export class SectionBuilderComponent implements OnInit {
 
   addSection() {
     const section = this.fb.group({
-      title: ['', Validators.required],
-      description: [''],
+      title: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3)
+        ]
+      ],
+
+      description: [
+        '',
+        [
+          Validators.minLength(10)
+        ]
+      ],
+
+      expectedOutcomes: this.fb.array([], [
+        maxArrayLength(20)
+      ]),
       isBasicSection: [false],
-      expectedOutcomes: this.fb.array([]),
       lessons: this.fb.array([])
     });
     this.sectionsArray.push(section);

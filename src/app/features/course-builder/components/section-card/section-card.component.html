@@ -60,11 +60,19 @@
           Section Title <span class="text-red-500">*</span>
         </label>
         <input type="text" formControlName="title" placeholder="e.g. Introduction to Angular Signals"
-          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800">
-        <span *ngIf="sectionForm.get('title')?.touched && sectionForm.get('title')?.invalid"
-          class="text-xs font-semibold block mt-1" [style.color]="'var(--color-error)'">
-          Section title is required.
-        </span>
+          class="w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800" [ngClass]="{
+    'border-red-500': titleControl?.invalid && titleControl?.touched,
+    'border-gray-300': !(titleControl?.invalid && titleControl?.touched)
+  }" />
+        <div *ngIf="titleControl?.touched && titleControl?.invalid" class="text-xs mt-1 text-red-500 font-semibold">
+          <div *ngIf="titleControl?.errors?.['required']">
+            Section title is required.
+          </div>
+
+          <div *ngIf="titleControl?.errors?.['minlength']">
+            Section title must contain at least 3 characters.
+          </div>
+        </div>
       </div>
 
       <!-- Basic Section Toggle -->
@@ -90,9 +98,16 @@
       <label class="text-xs font-bold uppercase tracking-wider block text-gray-700">
         Section Description
       </label>
-      <textarea formControlName="description" rows="2"
-        placeholder="Brief description of this section's core objectives..."
-        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-sm text-gray-800 resize-none"></textarea>
+      <textarea formControlName="description" rows="2" placeholder="Brief description..."
+        class="w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800 resize-none"
+        [ngClass]="{
+    'border-red-500': descriptionControl?.invalid && descriptionControl?.touched,
+    'border-gray-300': !(descriptionControl?.invalid && descriptionControl?.touched)
+  }"></textarea>
+      <div *ngIf="descriptionControl?.touched && descriptionControl?.invalid"
+        class="text-xs mt-1 text-red-500 font-semibold">
+        Description must contain at least 10 characters.
+      </div>
     </div>
 
     <!-- Expected Outcomes -->
@@ -179,13 +194,16 @@
     </div> -->
 
     <!-- Create Section Button -->
+    <!-- Create Section Button -->
     <div class="pt-6 border-t border-slate-100 flex justify-end">
-      <button type="button" (click)="onCreateSection($event)" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all 
-           hover:bg-[var(--color-primary-light)] px-5 py-3 rounded-lg border 
-           text-white bg-[var(--color-primary)] shadow-md active:scale-95">
+      <button type="button" (click)="onCreateSection($event)" [disabled]="sectionForm.invalid" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
+         hover:bg-[var(--color-primary-light)] px-5 py-3 rounded-lg border
+         text-white bg-[var(--color-primary)] shadow-md active:scale-95
+         disabled:opacity-50 disabled:cursor-not-allowed">
         <mat-icon class="text-[18px] w-[18px] h-[18px] flex items-center justify-center">
           add
         </mat-icon>
+
         Create Section
       </button>
     </div>
