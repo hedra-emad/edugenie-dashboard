@@ -24,12 +24,18 @@ export const routes: Routes = [
           import('./features/course-builder/pages/create-course-page/create-course-page.component')
             .then(m => m.CreateCoursePageComponent)
       },
-     {
+      {
+        path: 'course-builder/:id',
+        loadComponent: () =>
+          import('./features/course-builder/pages/create-course-page/create-course-page.component')
+            .then(m => m.CreateCoursePageComponent)
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/settings/pages/account-settings/account-settings.page')
-              .then(m => m.AccountSettingsPageComponent)
+            .then(m => m.AccountSettingsPageComponent)
       },
       {
         path: 'my-courses',

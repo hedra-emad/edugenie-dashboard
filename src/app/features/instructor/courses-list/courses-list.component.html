@@ -1,9 +1,16 @@
 <!-- ═══════════════════════════════════════ -->
 <!-- LOADING STATE                          -->
 <!-- ═══════════════════════════════════════ -->
-<div *ngIf="isLoading" class="loading-container">
-  <mat-spinner diameter="52" color="primary"></mat-spinner>
-  <p class="loading-text">Loading your courses…</p>
+<div *ngIf="isLoading" class="courses-grid skeleton-grid">
+  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+    <div class="skeleton-thumbnail"></div>
+    <div class="skeleton-body">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-desc"></div>
+      <div class="skeleton-desc short"></div>
+      <div class="skeleton-price"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
@@ -12,8 +19,11 @@
 <div *ngIf="!isLoading && error" class="state-container">
   <div class="error-box">
     <mat-icon class="error-icon">error_outline</mat-icon>
-    <p class="error-title">Failed to load courses.</p>
-    <p class="error-sub">Please try again later.</p>
+    <p class="error-title">Failed to load courses</p>
+    <p class="error-sub">We encountered an issue while loading your courses.</p>
+    <button mat-flat-button color="primary" class="retry-button" (click)="ngOnInit()">
+      <mat-icon>refresh</mat-icon> Retry
+    </button>
   </div>
 </div>
 
@@ -22,9 +32,11 @@
 <!-- ═══════════════════════════════════════ -->
 <div *ngIf="!isLoading && !error && courses.length === 0" class="state-container">
   <div class="empty-box">
-    <mat-icon class="empty-icon">school</mat-icon>
-    <p class="empty-title">You haven't created any courses yet.</p>
-    <p class="empty-sub">Start building your first course and share your knowledge.</p>
+    <div class="empty-illustration">
+      <mat-icon class="empty-icon">menu_book</mat-icon>
+    </div>
+    <p class="empty-title">No courses yet</p>
+    <p class="empty-sub">You haven't created any courses yet. Start building your first course and share your knowledge.</p>
   </div>
 </div>
 
@@ -47,40 +59,50 @@
   <!-- COURSE GRID                            -->
   <!-- ═══════════════════════════════════════ -->
   <div class="courses-grid">
-    <mat-card class="course-card" *ngFor="let course of courses">
-
-      <!-- Thumbnail -->
+    <mat-card class="course-card" [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'" *ngFor="let course of courses">
+      
+      <!-- Thumbnail with Gradient Overlay -->
       <div class="card-thumbnail-wrap">
         <img
           [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
           [alt]="course.title"
           class="card-thumbnail"
         />
+        <div class="thumbnail-overlay"></div>
+        
+        <!-- Hover Overlay -->
+        <div class="thumbnail-hover-overlay">
+          <mat-icon>visibility</mat-icon>
+          <span>View Course</span>
+        </div>
 
-        <!-- Status Badge -->
-        <mat-chip
-          [color]="course.courseStatus === 'published' ? 'primary' : 'warn'"
-          selected
-          class="status-chip"
-        >
-          <mat-icon matChipAvatar>
-            {{ course.courseStatus === 'published' ? 'check_circle' : 'edit_note' }}
-          </mat-icon>
-          {{ course.courseStatus === 'published' ? 'Published' : 'Draft' }}
-        </mat-chip>
-
-        <!-- Level pill -->
-        <span class="level-pill level-{{ course.level }}">{{ course.level }}</span>
+        <!-- Badges -->
+        <div class="badge-container top-right">
+          <span class="status-badge" [ngClass]="(course.courseStatus | lowercase) === 'published' ? 'status-published' : 'status-draft'">
+            <mat-icon class="status-icon">{{ (course.courseStatus | lowercase) === 'published' ? 'check_circle' : 'edit_note' }}</mat-icon>
+            {{ (course.courseStatus | lowercase) === 'published' ? 'Published' : 'Draft' }}
+          </span>
+        </div>
+        
+        <div class="badge-container bottom-left">
+          <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
+            {{ course.level }}
+          </span>
+        </div>
       </div>
 
       <!-- Card Body -->
       <mat-card-content class="card-body">
         <h2 class="course-title">{{ course.title }}</h2>
+        <span class="category-tag">{{ course.level }} Level</span>
         <p class="course-description">{{ course.description }}</p>
 
         <div class="price-row">
-          <span class="price" *ngIf="course.price > 0">${{ course.price | number:'1.2-2' }}</span>
-          <span class="price free" *ngIf="course.price === 0">Free</span>
+          <div>
+            <span class="price" *ngIf="course.price > 0">${{ course.price | number:'1.2-2' }}</span>
+            <span class="price free" *ngIf="course.price === 0">Free</span>
+          </div>
+          <button mat-flat-button color="primary" class="edit-btn" (click)="editCourse(course._id)">Edit</button>
         </div>
       </mat-card-content>
 
@@ -94,7 +116,7 @@
           <span>{{ course.totalEnrollments | number }} enrolled</span>
         </div>
         <div class="stat-item">
-          <mat-icon class="stat-icon">menu_book</mat-icon>
+          <mat-icon class="stat-icon">library_books</mat-icon>
           <span>{{ course.totalLessons }} lessons</span>
         </div>
         <div class="stat-item">
