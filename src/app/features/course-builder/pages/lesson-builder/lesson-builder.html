@@ -1,7 +1,7 @@
 <div class="space-y-6">
 
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between mb-3">
         <div>
             <h3 class="text-lg font-bold text-[var(--color-primary)]">
                 Lessons
@@ -26,5 +26,8 @@
     <app-lesson-card *ngFor="let lesson of lessons; let i = index" [lessonForm]="lesson" [courseId]="courseId"
         [sectionId]="sectionId" (deleted)="onDeleted(i)">
     </app-lesson-card>
+
+    <app-back-button label="Back" (back)="goBackToSections()">
+    </app-back-button>
 
 </div>

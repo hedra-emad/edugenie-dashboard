@@ -64,4 +64,16 @@ export class CoursesService {
     );
   }
 
+  submitForReview(courseId: string) {
+  return this.http.patch<{
+    success: boolean;
+    message: string;
+    status: string;
+  }>(
+    `${this.baseUrl}/${courseId}/submit-for-review`,
+    {},
+    { withCredentials: true }
+  );
+}
+
 }

@@ -26,6 +26,8 @@ export class SectionCardComponent {
   @Input() index = 0;
   @Input() isFirst = false;
   @Input() isLast = false;
+  @Input() highlight: boolean = false;
+  @Input() expanded = false;
 
   @Output() delete = new EventEmitter<void>();
   @Output() moveUp = new EventEmitter<void>();
@@ -37,6 +39,15 @@ export class SectionCardComponent {
   onCreateSection(event: Event) {
     event.stopPropagation();
     this.createSection.emit();
+  }
+
+  ngOnChanges() {
+    if (this.expanded) {
+      setTimeout(() => {
+        const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
+        panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
   }
 
   get expectedOutcomesArray(): FormArray {
@@ -115,19 +126,19 @@ export class SectionCardComponent {
   }
   // Lessons Management
   addLesson() {
-  const lessonGroup = this.fb.group({
-    id: [null],
-    title: ['', Validators.required],
+    const lessonGroup = this.fb.group({
+      id: [null],
+      title: ['', Validators.required],
 
-    videoUrl: [''],
-    videoPublicId: [''],
-    videoDuration: [0],
+      videoUrl: [''],
+      videoPublicId: [''],
+      videoDuration: [0],
 
-    uploadStatus: ['idle']
-  });
+      uploadStatus: ['idle']
+    });
 
-  this.lessonsArray.push(lessonGroup);
-}
+    this.lessonsArray.push(lessonGroup);
+  }
 
   deleteLesson(index: number) {
     this.lessonsArray.removeAt(index);

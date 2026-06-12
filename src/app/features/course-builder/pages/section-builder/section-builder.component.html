@@ -37,8 +37,12 @@
     <!-- Section list -->
     <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index" [sectionForm]="sectionGroup"
       [index]="sectionIdx" [isFirst]="sectionIdx === 0" [isLast]="sectionIdx === sections.length - 1"
-      (delete)="deleteSection(sectionIdx)" (moveUp)="moveSectionUp(sectionIdx)" (moveDown)="moveSectionDown(sectionIdx)"
-      (createSection)="createSection(sectionIdx)" (goToLessons)="goToLessons($event)"></app-section-card>
+      [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
+      [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (delete)="deleteSection(sectionIdx)"
+      (moveUp)="moveSectionUp(sectionIdx)" (moveDown)="moveSectionDown(sectionIdx)"
+      (createSection)="createSection(sectionIdx)" (goToLessons)="goToLessons($event)">
+    </app-section-card>
 
-    <app-back-button label="Back"></app-back-button>
+    <app-back-button label="Back" (back)="goToCourse()">
+    </app-back-button>
   </div>

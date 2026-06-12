@@ -1,12 +1,4 @@
-<div class="flex items-center justify-between border-t border-gray-200 bg-white">
-    <button *ngIf="showBack" type="button"
-        class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900" [disabled]="disabled"
-        (click)="back.emit()">
-
-        <span *ngIf="backLabel">{{ backLabel }}</span>
-        <span *ngIf="!backLabel">Back</span>
-
-    </button>
+<div class="flex w-full items-center justify-end border-t border-gray-200 bg-white">
 
     <button type="button"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
@@ -19,4 +11,5 @@
         <span>{{ actionLabel }}</span>
 
     </button>
+
 </div>

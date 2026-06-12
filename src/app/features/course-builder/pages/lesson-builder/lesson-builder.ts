@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { LessonCardComponent } from '../../components/lesson-card/lesson-card.component';
 import { SectionsService } from '../../../../core/services/sections';
 import { LessonsService } from '../../../../core/services/lessons';
+import { BackButtonComponent } from "../../components/shared/back-button/back-button";
+// import { LessonCardComponent_1 as LessonCardComponent } from "../components/lesson-card/lesson-card.component";
 
 @Component({
   selector: 'app-lessons-builder',
@@ -16,7 +18,8 @@ import { LessonsService } from '../../../../core/services/lessons';
     ReactiveFormsModule,
     MatIconModule,
     MatButtonModule,
-    LessonCardComponent
+    LessonCardComponent,
+    BackButtonComponent
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -26,7 +29,7 @@ export class LessonBuilder implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private sectionsService = inject(SectionsService);
-  private lessonsService = inject(LessonsService);
+  private router = inject(Router);
 
   courseId!: string;
   sectionId!: string;
@@ -71,37 +74,48 @@ export class LessonBuilder implements OnInit {
   }
 
   loadLessons() {
-  this.sectionsService.getCourse(this.courseId)
-    .subscribe({
-      next: (course: any) => {
+    this.sectionsService.getCourse(this.courseId)
+      .subscribe({
+        next: (course: any) => {
 
-        const section = course.sections.find(
-          (s: any) => s._id === this.sectionId
-        );
-
-        const lessons = section?.lessons || [];
-
-        this.lessonsArray.clear();
-
-        lessons.forEach((lesson: any) => {
-          this.lessonsArray.push(
-            this.fb.group({
-              id: [lesson._id],
-              title: [lesson.title, Validators.required],
-              videoUrl: [lesson.videoUrl || ''],
-              videoPublicId: [lesson.videoPublicId || ''],
-              videoDuration: [lesson.videoDuration || 0],
-              uploadStatus: ['idle']
-            })
+          const section = course.sections.find(
+            (s: any) => s._id === this.sectionId
           );
-        });
 
-      },
-      error: (err) => {
-        console.error('Failed to load course', err);
+          const lessons = section?.lessons || [];
+
+          this.lessonsArray.clear();
+
+          lessons.forEach((lesson: any) => {
+            this.lessonsArray.push(
+              this.fb.group({
+                id: [lesson._id],
+                title: [lesson.title, Validators.required],
+                videoUrl: [lesson.videoUrl || ''],
+                videoPublicId: [lesson.videoPublicId || ''],
+                videoDuration: [lesson.videoDuration || 0],
+                uploadStatus: ['idle']
+              })
+            );
+          });
+
+        },
+        error: (err) => {
+          console.error('Failed to load course', err);
+        }
+      });
+  }
+
+  goBackToSections() {
+    this.router.navigate(
+      ['/course-builder', this.courseId, 'curriculum'],
+      {
+        queryParams: {
+          highlight: this.sectionId
+        }
       }
-    });
-}
+    );
+  }
 
 
   moveUp(index: number) {

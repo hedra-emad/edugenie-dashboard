@@ -9,6 +9,7 @@ import { SectionsService } from '../../../../core/services/sections';
 import { CoursesService } from '../../../../core/services/courses';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
+import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -43,12 +44,21 @@ export class SectionBuilderComponent implements OnInit {
   private sectionsService = inject(SectionsService);
   private coursesService = inject(CoursesService);
   private router = inject(Router);
+  expandedSectionId: string | null = null;
+  highlightSectionId: string | null = null;
 
   @Input() courseId: string | null = null;
+  private cdr = inject(ChangeDetectorRef);
 
   sectionForm = this.fb.group({
     sections: this.fb.array([])
   });
+
+  goToCourse() {
+    this.router.navigate(['../'], {
+      relativeTo: this.route
+    });
+  }
 
 
   get sectionsArray(): FormArray {
@@ -68,6 +78,19 @@ export class SectionBuilderComponent implements OnInit {
       console.error('Course ID not found in route');
       return;
     }
+
+    this.route.queryParamMap.subscribe(params => {
+      const id = params.get('highlight');
+
+      if (id) {
+        this.expandedSectionId = id;
+        this.highlightSectionId = id;
+
+        setTimeout(() => {
+          this.highlightSectionId = null;
+        }, 5000);
+      }
+    });
 
     this.courseId = id;
 
@@ -257,6 +280,8 @@ export class SectionBuilderComponent implements OnInit {
           );
         });
 
+        this.cdr.detectChanges();
+
         console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
@@ -266,16 +291,16 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   goToLessons(sectionId: string) {
-  if (!sectionId || !this.courseId) return;
+    if (!sectionId || !this.courseId) return;
 
-  this.router.navigate([
-    '/course-builder',
-    this.courseId,
-    'sections',
-    sectionId,
-    'lessons'
-  ]);
-}
+    this.router.navigate([
+      '/course-builder',
+      this.courseId,
+      'sections',
+      sectionId,
+      'lessons'
+    ]);
+  }
 
 
 }

@@ -1,5 +1,6 @@
-<mat-expansion-panel [expanded]="false"
-  class="section-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md">
+<mat-expansion-panel [expanded]="expanded"
+  class="section-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md"
+  [ngClass]="{ 'highlight-border': highlight }">
   <mat-expansion-panel-header>
     <mat-panel-title class="flex items-center justify-between w-full pr-4">
       <div class="flex items-center gap-2 font-bold text-sm sm:text-base leading-snug min-w-0"
@@ -50,7 +51,7 @@
           </span>
         </button>
 
-        
+
 
       </div>
     </mat-panel-title>
@@ -199,7 +200,6 @@
       </div>
     </div> -->
 
-    <!-- Create Section Button -->
     <!-- Create Section Button -->
     <div class="pt-6 border-t border-slate-100 flex justify-end">
       <button type="button" (click)="onCreateSection($event)" [disabled]="sectionForm.invalid || isSaving" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all

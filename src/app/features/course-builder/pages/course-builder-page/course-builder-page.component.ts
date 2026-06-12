@@ -2,10 +2,9 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CourseHeaderComponent } from '../../components/course-header/course-header.component';
-import { CourseBasicInfoComponent } from '../course-basic-info/course-basic-info.component';
-import { SectionBuilderComponent } from '../../pages/section-builder/section-builder.component';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 
 @Component({
   selector: 'app-create-course-page',
@@ -15,9 +14,8 @@ import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
     ReactiveFormsModule,
     MatIconModule,
     CourseHeaderComponent,
-    CourseBasicInfoComponent,
-    SectionBuilderComponent,
-    RouterOutlet
+    RouterOutlet,
+    PublishCourseButtonComponent
 ],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'

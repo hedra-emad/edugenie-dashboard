@@ -1,15 +1,20 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { inject } from '@angular/core';
+
 import { LessonsService } from '../../../../core/services/lessons';
-import { ActivatedRoute } from '@angular/router';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ActionBarComponent } from "../shared/action-bar/action-bar.component";
-import { finalize } from 'rxjs/operators';
+
+type VideoState =
+  | 'empty'
+  | 'selected'
+  | 'uploading'
+  | 'uploaded'
+  | 'error';
 
 @Component({
   selector: 'app-lesson-card',
@@ -26,13 +31,13 @@ import { finalize } from 'rxjs/operators';
   styleUrl: './lesson-card.component.css'
 })
 export class LessonCardComponent {
+
   @Input({ required: true }) lessonForm!: FormGroup;
   @Input() index = 0;
   @Input() isFirst = false;
   @Input() isLast = false;
   @Input({ required: true }) courseId!: string;
   @Input({ required: true }) sectionId!: string;
-
 
   @Output() delete = new EventEmitter<void>();
   @Output() moveUp = new EventEmitter<void>();
@@ -43,73 +48,77 @@ export class LessonCardComponent {
 
   isSaving = false;
   isUploading = false;
+
   uploadError = false;
 
-  onVideoSelected(file: File) {
-    console.log('START onVideoSelected');
+  readonly MAX_DURATION = 10 * 60;
 
-    if (this.isUploading) return;
+  selectedVideoFile: File | null = null;
+  selectedVideoUrl: string | null = null;
 
-    this.isUploading = true;
+  videoErrorMessage = '';
+
+  videoState: VideoState = 'empty';
+
+  get isVideoValid(): boolean {
+    const hasExistingVideo = !!this.lessonForm.get('videoUrl')?.value;
+    return !!this.selectedVideoFile || hasExistingVideo;
+  }
+
+  // ---------------- FILE CHANGE ----------------
+  async onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+
+    this.videoErrorMessage = '';
     this.uploadError = false;
 
-    console.log('BEFORE uploadVideo');
+    // reset previous preview
+    if (this.selectedVideoUrl) {
+      URL.revokeObjectURL(this.selectedVideoUrl);
+    }
 
-    this.cloudinaryService.uploadVideo(file)
-      .pipe(
-        finalize(() => {
-          console.log('FINALIZE FIRED');
-          this.isUploading = false;
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          console.log('UPLOAD SUCCESS');
-          console.log(res);
+    this.selectedVideoUrl = URL.createObjectURL(file);
 
-          this.lessonForm.patchValue({
-            videoUrl: res.secure_url,
-            videoPublicId: res.public_id,
-            uploadStatus: 'idle'
-          });
+    try {
+      const duration = await this.getVideoDuration(file);
 
-          console.log('AFTER PATCH');
-          console.log(this.lessonForm.value);
-        },
-        error: (err) => {
-          console.log('UPLOAD ERROR');
-          console.error(err);
+      if (duration > this.MAX_DURATION) {
+        this.selectedVideoFile = null;
+        this.selectedVideoUrl = null;
+        this.lessonForm.patchValue({ videoDuration: 0 });
 
-          this.lessonForm.patchValue({
-            uploadStatus: 'error'
-          });
-        }
-      });
+        this.videoErrorMessage = 'Video must not exceed 10 seconds';
+        this.videoState = 'error';
 
-    console.log('AFTER uploadVideo');
+        input.value = '';
+        return;
+      }
 
-    this.getVideoDuration(file).then((duration) => {
-      console.log('Duration:', duration);
+      this.selectedVideoFile = file;
 
       this.lessonForm.patchValue({
         videoDuration: duration
       });
 
+      this.videoState = 'selected';
 
-    });
+    } catch (err) {
+      console.error(err);
+
+      this.selectedVideoFile = null;
+      this.selectedVideoUrl = null;
+
+      this.videoState = 'error';
+
+      input.value = '';
+    }
   }
 
-  onFileChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-
-    if (!input.files || !input.files[0]) return;
-
-    const file = input.files[0];
-
-    this.onVideoSelected(file);
-    console.log('file selected:', file);
-  }
-
+  // ---------------- GET DURATION ----------------
   getVideoDuration(file: File): Promise<number> {
     return new Promise((resolve) => {
       const video = document.createElement('video');
@@ -118,105 +127,142 @@ export class LessonCardComponent {
       video.src = URL.createObjectURL(file);
 
       video.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(video.src);
+        URL.revokeObjectURL(video.src);
+
         resolve(Math.round(video.duration || 0));
       };
+
+      video.onerror = () => resolve(0);
     });
   }
 
+  // ---------------- REMOVE ----------------
+  removeSelectedVideo() {
+  this.selectedVideoFile = null;
+
+  if (this.selectedVideoUrl) {
+    URL.revokeObjectURL(this.selectedVideoUrl);
+  }
+
+  this.selectedVideoUrl = null;
+
+  this.videoErrorMessage = '';
+
+  this.videoState = 'empty';
+}
+
+  // ---------------- SAVE ----------------
   saveLesson() {
 
-    if (this.lessonForm.invalid) {
-      this.lessonForm.markAllAsTouched();
+    if (this.isUploading || this.isSaving) return;
+
+    this.lessonForm.markAllAsTouched();
+
+    if (this.lessonForm.invalid) return;
+
+    if (!this.isVideoValid) {
+      this.videoErrorMessage = 'Video is required';
       return;
     }
 
-    if (this.isUploading) {
-      alert('Please wait until video upload finishes');
-      return;
+    if (this.videoErrorMessage) return;
+
+    this.uploadAndSave();
+  }
+
+  // ---------------- UPLOAD ----------------
+  private uploadAndSave() {
+
+    if (this.selectedVideoFile) {
+
+      this.getVideoDuration(this.selectedVideoFile).then(duration => {
+
+        if (duration > this.MAX_DURATION) {
+          this.videoErrorMessage = 'Video must not exceed limit';
+          this.selectedVideoFile = null;
+          return;
+        }
+
+        this.startUpload();
+      });
+
+    } else {
+      this.createOrUpdateLesson();
     }
+  }
 
-    const videoUrl = this.lessonForm.get('videoUrl')?.value;
-    const videoPublicId = this.lessonForm.get('videoPublicId')?.value;
-    const videoDuration = this.lessonForm.get('videoDuration')?.value;
+  private startUpload() {
+    this.isUploading = true;
+    this.videoState = 'uploading';
 
-    console.log('lesson form value', this.lessonForm.value);
+    this.cloudinaryService.uploadVideo(this.selectedVideoFile!)
+      .subscribe({
+        next: (res) => {
 
-    if (
-      !videoUrl ||
-      !videoPublicId ||
-      videoDuration === null ||
-      videoDuration === undefined
-    ) {
-      alert('Please upload a video first');
-      return;
-    }
+          this.isUploading = false;
 
-    this.isSaving = true;
+          this.lessonForm.patchValue({
+            videoUrl: res.secure_url,
+            videoPublicId: res.public_id
+          });
+
+          this.selectedVideoFile = null;
+          this.selectedVideoUrl = null;
+
+          this.videoState = 'uploaded';
+
+          this.createOrUpdateLesson();
+        },
+        error: (err) => {
+          console.error(err);
+          this.isUploading = false;
+          this.videoState = 'error';
+          this.uploadError = true;
+        }
+      });
+  }
+
+  // ---------------- CREATE / UPDATE ----------------
+  private createOrUpdateLesson() {
 
     const lessonId = this.lessonForm.get('id')?.value;
 
     const payload = {
       title: this.lessonForm.get('title')?.value,
-      videoUrl,
-      videoPublicId,
-      videoDuration
+      videoUrl: this.lessonForm.get('videoUrl')?.value,
+      videoPublicId: this.lessonForm.get('videoPublicId')?.value,
+      videoDuration: this.lessonForm.get('videoDuration')?.value
     };
 
-    console.log('Payload:', payload);
-    console.log('courseId:', this.courseId);
-    console.log('sectionId:', this.sectionId);
+    this.isSaving = true;
 
-    if (lessonId) {
+    const req = lessonId
+      ? this.lessonsService.updateLesson(this.courseId, this.sectionId, lessonId, payload)
+      : this.lessonsService.addLesson(this.courseId, this.sectionId, payload);
 
-      this.lessonsService.updateLesson(
-        this.courseId,
-        this.sectionId,
-        lessonId,
-        payload
-      ).subscribe({
-        next: (res) => {
-          console.log('Lesson updated successfully', res);
-          this.isSaving = false;
-        },
-        error: (err) => {
-          console.error('Update lesson error:', err);
-          this.isSaving = false;
+    req.subscribe({
+      next: (res: any) => {
+        this.isSaving = false;
+
+        if (!lessonId) {
+          this.lessonForm.patchValue({ id: res._id });
         }
-      });
 
-    } else {
-
-      this.lessonsService.addLesson(
-        this.courseId,
-        this.sectionId,
-        payload
-      ).subscribe({
-        next: (res: any) => {
-
-          console.log('Lesson created successfully', res);
-
-          this.lessonForm.patchValue({
-            id: res._id
-          });
-
-
-
-          this.isSaving = false;
-        },
-        error: (err) => {
-          console.error('Create lesson error:', err);
-          this.isSaving = false;
-        }
-      });
-
-    }
+        this.selectedVideoFile = null;
+        this.videoState = 'uploaded';
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSaving = false;
+      }
+    });
   }
 
+  // ---------------- DELETE ----------------
   deleteLesson() {
+
     const lessonId = this.lessonForm.get('id')?.value;
 
-    console.log('isUploading =', this.isUploading);
     if (!lessonId) {
       this.delete.emit();
       return;
@@ -231,13 +277,19 @@ export class LessonCardComponent {
     });
   }
 
-  onMoveUp(event: Event) {
-    event.stopPropagation();
+  onMoveUp(e: Event) {
+    e.stopPropagation();
     this.moveUp.emit();
   }
 
-  onMoveDown(event: Event) {
-    event.stopPropagation();
+  onMoveDown(e: Event) {
+    e.stopPropagation();
     this.moveDown.emit();
+  }
+
+  formatDuration(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 }
