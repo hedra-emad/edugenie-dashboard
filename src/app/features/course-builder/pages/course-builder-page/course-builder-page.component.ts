@@ -25,9 +25,8 @@ export class CourseBuilderPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   currentStep = signal(1);
+  courseId: string | null = null;
 
-
-  courseId = signal<string | null>(null);
 
   // course-builder-page.component.ts
 
@@ -38,12 +37,14 @@ export class CourseBuilderPageComponent implements OnInit {
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.updateStep(event.urlAfterRedirects);
+
+        const match = event.urlAfterRedirects.match(/course-builder\/([^\/]+)/);
+        this.courseId = match?.[1] ?? null;
       });
   }
 
 
   onCourseCreated(id: string) {
-    this.courseId.set(id);
     this.router.navigate(['/course-builder', id, 'sections']);
   }
 

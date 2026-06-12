@@ -35,13 +35,15 @@
     </div>
 
     <!-- Section list -->
-    <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index" [sectionForm]="sectionGroup"
-      [index]="sectionIdx" [isFirst]="sectionIdx === 0" [isLast]="sectionIdx === sections.length - 1"
-      [highlight]="sectionGroup.value.id === highlightSectionId"
-      [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (delete)="deleteSection(sectionIdx)"
-      (moveUp)="moveSectionUp(sectionIdx)" (moveDown)="moveSectionDown(sectionIdx)"
-      (createSection)="createSection(sectionIdx)" (goToLessons)="goToLessons($event)">
-    </app-section-card>
+    <div *ngIf="sections.length > 0">
+      <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection"
+        [sectionForm]="sectionGroup" [index]="sectionIdx" [isFirst]="sectionIdx === 0"
+        [isLast]="sectionIdx === sections.length - 1" [courseId]="courseId"
+        [highlight]="sectionGroup.value.id === highlightSectionId"
+        [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (delete)="sectionsArray.removeAt(sectionIdx)"
+        (moveUp)="moveSectionUp(sectionIdx)" (moveDown)="moveSectionDown(sectionIdx)">
+      </app-section-card>
+    </div>
 
     <app-back-button label="Back" (back)="goToCourse()">
     </app-back-button>

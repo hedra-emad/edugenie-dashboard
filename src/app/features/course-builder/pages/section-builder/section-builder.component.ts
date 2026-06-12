@@ -46,8 +46,7 @@ export class SectionBuilderComponent implements OnInit {
   private router = inject(Router);
   expandedSectionId: string | null = null;
   highlightSectionId: string | null = null;
-
-  @Input() courseId: string | null = null;
+  courseId!: string;
   private cdr = inject(ChangeDetectorRef);
 
   sectionForm = this.fb.group({
@@ -59,7 +58,6 @@ export class SectionBuilderComponent implements OnInit {
       relativeTo: this.route
     });
   }
-
 
   get sectionsArray(): FormArray {
     return this.sectionForm.get('sections') as FormArray;
@@ -75,26 +73,11 @@ export class SectionBuilderComponent implements OnInit {
       this.route.parent?.snapshot.paramMap.get('courseId');
 
     if (!id) {
-      console.error('Course ID not found in route');
+      console.error('Course ID not found');
       return;
     }
 
-    this.route.queryParamMap.subscribe(params => {
-      const id = params.get('highlight');
-
-      if (id) {
-        this.expandedSectionId = id;
-        this.highlightSectionId = id;
-
-        setTimeout(() => {
-          this.highlightSectionId = null;
-        }, 5000);
-      }
-    });
-
     this.courseId = id;
-
-    console.log('Course ID resolved:', this.courseId);
 
     this.loadSections();
   }
@@ -102,127 +85,48 @@ export class SectionBuilderComponent implements OnInit {
   addSection() {
     const section = this.fb.group({
       id: [null],
+      title: [''],
+      description: [''],
+      expectedOutcomes: this.fb.array([]),
+      isBasicSection: [false],
+      lessons: this.fb.array([]),
       isSaving: [false],
       isDeleting: [false],
-
-      title: ['', [Validators.required, Validators.minLength(3)]],
-
-      description: ['', [Validators.minLength(10)]],
-
-      expectedOutcomes: this.fb.array([], [maxArrayLength(20)]),
-
-      isBasicSection: [false],
-
-      lessons: this.fb.array([])
     });
+
     this.sectionsArray.push(section);
-    this.sectionsArray.markAsDirty();
-  }
-
-  deleteSection(index: number) {
-
-    const form = this.sectionsArray.at(index);
-
-    const sectionId = form.get('id')?.value;
-    form.get('isDeleting')?.setValue(true);
-
-    // Unsaved section
-    if (!sectionId) {
-      this.sectionsArray.removeAt(index);
-      this.sectionsArray.markAsDirty();
-      return;
-    }
-
-    // Existing section in DB
-    this.sectionsService
-      .deleteSection(this.courseId!, sectionId)
-      .subscribe({
-        next: () => {
-
-          this.sectionsArray.removeAt(index);
-          this.sectionsArray.markAsDirty();
-
-          console.log('Section deleted successfully');
-        },
-
-        error: (err) => {
-
-          form.get('isDeleting')?.setValue(false);
-
-          console.error('Failed to delete section', err);
-        }
-      });
   }
 
   moveSectionUp(index: number) {
     if (index === 0) return;
-    const control = this.sectionsArray.at(index);
-    this.sectionsArray.removeAt(index);
-    this.sectionsArray.insert(index - 1, control);
-    this.sectionsArray.markAsDirty();
+
+    const sections = this.sectionsArray;
+
+    const current = sections.at(index);
+    const above = sections.at(index - 1);
+
+    sections.setControl(index - 1, current);
+    sections.setControl(index, above);
+
+    sections.markAsDirty();
   }
 
   moveSectionDown(index: number) {
-    if (index === this.sectionsArray.length - 1) return;
-    const control = this.sectionsArray.at(index);
-    this.sectionsArray.removeAt(index);
-    this.sectionsArray.insert(index + 1, control);
-    this.sectionsArray.markAsDirty();
+    const sections = this.sectionsArray;
+
+    if (index === sections.length - 1) return;
+
+    const current = sections.at(index);
+    const below = sections.at(index + 1);
+
+    sections.setControl(index + 1, current);
+    sections.setControl(index, below);
+
+    sections.markAsDirty();
   }
 
-  createSection(index: number) {
-    if (!this.courseId) {
-      return;
-    }
-
-    const form = this.sectionsArray.at(index);
-
-    const payload = {
-      title: form.get('title')?.value,
-      description: form.get('description')?.value,
-      expectedOutcomes: form.get('expectedOutcomes')?.value || [],
-      isBasicSection: form.get('isBasicSection')?.value
-    };
-
-    const sectionId = form.get('id')?.value;
-
-    form.get('isSaving')?.setValue(true);
-
-    if (sectionId) {
-
-      this.sectionsService
-        .updateSection(this.courseId, sectionId, payload)
-        .subscribe({
-          next: (res) => {
-            form.get('isSaving')?.setValue(false);
-            console.log('Section updated', res);
-          },
-          error: (err) => {
-            form.get('isSaving')?.setValue(false);
-            console.error(err);
-          }
-        });
-
-    } else {
-
-      this.sectionsService
-        .updateSection(this.courseId, sectionId, payload)
-        .subscribe({
-          next: (res) => {
-            form.get('isSaving')?.setValue(false);
-
-            form.markAsPristine();
-            form.updateValueAndValidity();
-
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            form.get('isSaving')?.setValue(false);
-            console.error(err);
-          }
-        });
-
-    }
+  trackBySection(index: number, item: FormGroup) {
+    return item.get('id')?.value ?? index;
   }
 
   loadSections() {
@@ -260,11 +164,9 @@ export class SectionBuilderComponent implements OnInit {
               ],
 
               expectedOutcomes: this.fb.array(
-                (section.expectedOutcomes || []).map(
-                  (outcome: string) =>
-                    this.fb.control(outcome, Validators.required)
-                ),
-                [maxArrayLength(20)]
+                (section.expectedOutcomes || []).map((o: string) =>
+                  this.fb.control(o ?? '', Validators.required)
+                ) || []
               ),
 
               lessons: this.fb.array(section.lessons || []),
@@ -283,18 +185,6 @@ export class SectionBuilderComponent implements OnInit {
         console.error('Failed to load course sections:', err);
       }
     });
-  }
-
-  goToLessons(sectionId: string) {
-    if (!sectionId || !this.courseId) return;
-
-    this.router.navigate([
-      '/course-builder',
-      this.courseId,
-      'sections',
-      sectionId,
-      'lessons'
-    ]);
   }
 
 

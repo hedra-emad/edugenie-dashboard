@@ -1,11 +1,28 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormGroup,
+  FormArray,
+  FormBuilder,
+  FormControl,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+
 import { LessonCardComponent } from '../lesson-card/lesson-card.component';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+import { SectionsService } from '../../../../core/services/sections';
 
 @Component({
   selector: 'app-section-card',
@@ -16,36 +33,37 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
     MatExpansionModule,
     MatIconModule,
     MatButtonModule,
-    LessonCardComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css'
 })
 export class SectionCardComponent {
+
   private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private sectionsService = inject(SectionsService);
+
+  // ================= Inputs =================
   @Input({ required: true }) sectionForm!: FormGroup;
   @Input() index = 0;
   @Input() isFirst = false;
   @Input() isLast = false;
-  @Input() highlight: boolean = false;
+  @Input() highlight = false;
   @Input() expanded = false;
+  @Input() courseId!: string;
 
-  @Output() delete = new EventEmitter<void>();
+  // ================= Outputs =================
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
+  @Output() removed = new EventEmitter<string>();
+  @Output() delete = new EventEmitter<string>();
+  @Output() goToLessons = new EventEmitter<void>();
 
-  @Output() createSection = new EventEmitter<void>();
-  @Output() goToLessons = new EventEmitter<string>();
+  // ================= UI State =================
+  isSaving = false;
+  isDeleting = false;
 
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-
-
-  onCreateSection(event: Event) {
-    event.stopPropagation();
-    this.createSection.emit();
-  }
-
+  // ================= Lifecycle =================
   ngOnChanges() {
     if (this.expanded) {
       setTimeout(() => {
@@ -55,14 +73,107 @@ export class SectionCardComponent {
     }
   }
 
+  // ================= SAVE (CREATE / UPDATE) =================
+  saveSection() {
+    const form = this.sectionForm;
+
+    const sectionId = form.get('id')?.value;
+
+    const payload = {
+      title: form.get('title')?.value,
+      description: form.get('description')?.value,
+      expectedOutcomes: this.expectedOutcomesArray.value,
+      isBasicSection: form.get('isBasicSection')?.value
+    };
+
+
+    this.isSaving = true;
+
+    const request = sectionId
+      ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
+      : this.sectionsService.addSection(this.courseId, payload);
+
+    request.subscribe({
+      next: (res: any) => {
+        this.isSaving = false;
+
+        if (!sectionId) {
+          form.get('id')?.setValue(res._id);
+        }
+
+        form.markAsPristine();
+        form.updateValueAndValidity();
+      },
+
+      error: () => {
+        this.isSaving = false;
+      }
+    });
+  }
+
+  // ================= DELETE =================
+  deleteSection() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId) return;
+
+    this.isDeleting = true;
+
+    this.sectionsService.deleteSection(this.courseId, sectionId)
+      .subscribe({
+        next: () => {
+          this.isDeleting = false;
+
+          // parent removes from UI
+          this.removed.emit(sectionId);
+        },
+
+        error: () => {
+          this.isDeleting = false;
+        }
+      });
+  }
+
+  // ================= NAVIGATION =================
+  onGoToLessons(event: Event) {
+    event.stopPropagation();
+
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId || !this.courseId) return;
+
+    this.router.navigate([
+      '/course-builder',
+      this.courseId,
+      'sections',
+      sectionId,
+      'lessons'
+    ]);
+  }
+
+  // ================= OUTCOMES =================
   get expectedOutcomesArray(): FormArray {
-    return this.sectionForm.get('expectedOutcomes') as FormArray;
+    return this.sectionForm.get('expectedOutcomes') as FormArray ?? this.fb.array([]);
   }
 
   get outcomes(): FormControl[] {
     return this.expectedOutcomesArray.controls as FormControl[];
   }
 
+  addOutcome() {
+    console.log('ADD OUTCOME CLICKED');
+
+    this.expectedOutcomesArray.push(
+      this.fb.control('', Validators.required)
+    );
+
+    console.log(this.expectedOutcomesArray.value);
+  }
+
+  removeOutcome(index: number) {
+    this.expectedOutcomesArray.removeAt(index);
+    this.expectedOutcomesArray.markAsDirty();
+  }
+
+  // ================= GETTERS =================
   get titleControl() {
     return this.sectionForm.get('title');
   }
@@ -79,79 +190,18 @@ export class SectionCardComponent {
     return this.lessonsArray.controls as FormGroup[];
   }
 
-  onGoToLessons(event: Event) {
-    event.stopPropagation();
-
-    const courseId =
-      this.route.parent?.snapshot.paramMap.get('courseId') ||
-      this.route.snapshot.paramMap.get('courseId');
-
-    const sectionId = this.sectionForm.get('id')?.value;
-
-    if (!courseId || !sectionId) return;
-
-    this.router.navigate([
-      '/course-builder',
-      courseId,
-      'sections',
-      sectionId,
-      'lessons'
-    ]);
-  }
-
-  onDelete(event: Event) {
-    event.stopPropagation();
-    this.delete.emit();
-  }
-
-  onMoveUp(event: Event) {
-    event.stopPropagation();
-    this.moveUp.emit();
-  }
-
-  onMoveDown(event: Event) {
-    event.stopPropagation();
-    this.moveDown.emit();
-  }
-
-  // Outcomes Management
-  addOutcome() {
-
-    if (this.outcomes.length >= 20) {
-      return;
-    }
-
-    this.expectedOutcomesArray.push(
-      this.fb.control('', Validators.required)
-    );
-  }
-
-  removeOutcome(index: number) {
-    this.expectedOutcomesArray.removeAt(index);
-    this.expectedOutcomesArray.markAsDirty();
-  }
-
   get isExistingSection(): boolean {
     return !!this.sectionForm.get('id')?.value;
   }
 
-  get isSaving(): boolean {
-    return this.sectionForm.get('isSaving')?.value ?? false;
-  }
-
-  get isDeleting(): boolean {
-    return this.sectionForm.get('isDeleting')?.value ?? false;
-  }
-  // Lessons Management
+  // ================= LESSONS =================
   addLesson() {
     const lessonGroup = this.fb.group({
       id: [null],
       title: ['', Validators.required],
-
       videoUrl: [''],
       videoPublicId: [''],
       videoDuration: [0],
-
       uploadStatus: ['idle']
     });
 
@@ -165,19 +215,32 @@ export class SectionCardComponent {
 
   moveLessonUp(index: number) {
     if (index === 0) return;
+
     const control = this.lessonsArray.at(index);
     this.lessonsArray.removeAt(index);
     this.lessonsArray.insert(index - 1, control);
+
     this.lessonsArray.markAsDirty();
   }
 
   moveLessonDown(index: number) {
     if (index === this.lessonsArray.length - 1) return;
+
     const control = this.lessonsArray.at(index);
     this.lessonsArray.removeAt(index);
     this.lessonsArray.insert(index + 1, control);
+
     this.lessonsArray.markAsDirty();
   }
 
+  // ================= MOVES =================
+  onMoveUp(event: Event) {
+    event.stopPropagation();
+    this.moveUp.emit();
+  }
 
+  onMoveDown(event: Event) {
+    event.stopPropagation();
+    this.moveDown.emit();
+  }
 }
