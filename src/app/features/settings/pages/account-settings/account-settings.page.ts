@@ -4,7 +4,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService, UserProfile } from '../../../../core/services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
+import { UserProfile } from '../../../../core/models/user-profile.model';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ToastrService } from 'ngx-toastr';
 
