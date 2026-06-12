@@ -44,6 +44,12 @@ export const routes: Routes = [
         import('./features/course-builder/pages/section-builder/section-builder.component')
           .then(m => m.SectionBuilderComponent)
     },
+     {
+      path: 'sections/:sectionId/lessons',
+      loadComponent: () =>
+        import('./features/course-builder/pages/lesson-builder/lesson-builder')
+          .then(m => m.LessonBuilder)
+    },
     {
       path: '',
       redirectTo: 'basic',

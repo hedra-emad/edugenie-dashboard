@@ -1,0 +1,30 @@
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="text-lg font-bold text-[var(--color-primary)]">
+                Lessons
+            </h3>
+            <p class="text-xs text-gray-500">
+                Manage lessons inside this section
+            </p>
+        </div>
+
+        <button type="button" (click)="addLesson()"
+            class="text-xs font-bold uppercase px-4 py-2 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]">
+            Add Lesson
+        </button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="lessonsArray.length === 0" class="text-center py-10 border-2 border-dashed rounded-xl text-gray-500">
+        No lessons yet
+    </div>
+
+    <!-- Lesson cards -->
+    <app-lesson-card *ngFor="let lesson of lessons; let i = index" [lessonForm]="lesson" [courseId]="courseId"
+        [sectionId]="sectionId" (deleted)="onDeleted(i)">
+    </app-lesson-card>
+
+</div>

@@ -15,6 +15,7 @@ import { FormBuilder } from '@angular/forms';
 import { Course } from '../../../../core/models/course.model';
 import { CourseBuilderModel } from '../../models/course-builder.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
+import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -38,6 +39,7 @@ export class CourseBasicInfoComponent {
   private router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
+  private destroy$ = new Subject<void>();
 
   private fb = inject(FormBuilder);
   isSaving = signal(false);
@@ -91,39 +93,6 @@ export class CourseBasicInfoComponent {
     this.loadCourse(this.courseId);
   }
 
-  ngOnChanges() {
-    if (this.courseId) {
-      this.mode.set('update');
-      this.status.set('ready');
-    }
-
-    if (this.courseForm && !this.initialValue) {
-      this.initialValue = this.courseForm.getRawValue();
-
-      this.courseForm.valueChanges.subscribe(() => {
-        const current = this.courseForm.getRawValue();
-
-        this.hasChanges.set(
-          JSON.stringify(current) !== JSON.stringify(this.initialValue)
-        );
-      });
-    }
-  }
-
-  initBaseline() {
-    this.initialValue = this.courseForm.getRawValue();
-    this.initialized = true;
-
-    this.courseForm.valueChanges.subscribe(() => {
-      if (!this.initialized) return;
-
-      const current = this.courseForm.getRawValue();
-
-      this.hasChanges.set(
-        JSON.stringify(current) !== JSON.stringify(this.initialValue)
-      );
-    });
-  }
 
   handleFile(file: File) {
 
@@ -206,34 +175,58 @@ export class CourseBasicInfoComponent {
     return control.touched && control.valid;
   }
 
+  private setBaseline() {
+    this.initialValue = this.normalize(this.courseForm.getRawValue());
+    this.hasChanges.set(false);
+
+    this.courseForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const current = this.normalize(this.courseForm.getRawValue());
+
+        this.hasChanges.set(
+          JSON.stringify(current) !== JSON.stringify(this.initialValue)
+        );
+      });
+  }
+
+
+  private normalize(value: any) {
+    return {
+      ...value,
+      goals: [...(value.goals || [])],
+      requirements: [...(value.requirements || [])],
+    };
+  }
+
   loadCourse(id: string) {
-    this.coursesService.getCourseById(id).subscribe(course => {
+    this.coursesService.getCourseById(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(course => {
 
-      // 1. Fill form first
-      this.courseForm.patchValue({
-        title: course.title,
-        description: course.description,
-        price: course.price,
-        thumbnail: course.thumbnail,
-        level: course.level,
-        category: course.categoryId
+        this.courseForm.patchValue({
+          title: course.title,
+          description: course.description,
+          price: course.price,
+          thumbnail: course.thumbnail,
+          level: course.level,
+          category: course.categoryId
+        }, { emitEvent: false });
+
+        this.setArray('goals', course.goals || []);
+        this.setArray('requirements', course.requirements || []);
+
+        if (course.thumbnail) {
+          this.thumbnailPreview.set(course.thumbnail);
+          this.hasThumbnail.set(true);
+        }
+
+        // 🔥 baseline AFTER everything
+        setTimeout(() => {
+          this.setBaseline();
+        });
+
       });
-
-      this.setArray('goals', course.goals || []);
-      this.setArray('requirements', course.requirements || []);
-
-      if (course.thumbnail) {
-        this.thumbnailPreview.set(course.thumbnail);
-        this.hasThumbnail.set(true);
-      }
-
-      // 2. IMPORTANT: reset baseline AFTER form is fully ready
-      setTimeout(() => {
-        this.initialValue = this.courseForm.getRawValue();
-        this.hasChanges.set(false);
-      });
-
-    });
   }
 
   setGoals(goals: string[]) {
@@ -385,11 +378,12 @@ export class CourseBasicInfoComponent {
   sendUpdate(payload: any) {
     this.coursesService.updateCourse(this.courseId!, payload).subscribe({
       next: (res) => {
-        this.isSaving.set(false);
-        this.status.set('ready');   // IMPORTANT
+        this.status.set('ready');
         this.hasChanges.set(false);
-        this.initialValue = this.courseForm.getRawValue();
-        this.initialValue = this.courseForm.getRawValue();
+
+        this.initialValue = this.normalize(this.courseForm.getRawValue());
+
+        this.courseForm.markAsPristine();
       },
       error: () => {
         this.isSaving.set(false);

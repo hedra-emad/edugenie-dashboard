@@ -5,25 +5,26 @@ import { HttpClient } from '@angular/common/http';
 export class SectionsService {
   private http = inject(HttpClient);
 
-  private baseUrl = 'https://edugenie-api.vercel.app/courses';
+  private baseUrl = 'https://edugenie-api.vercel.app';
+
+  getCourse(courseId: string) {
+    return this.http.get(
+      `${this.baseUrl}/courses/${courseId}`,
+      { withCredentials: true }
+    );
+  }
 
   addSection(courseId: string, data: any) {
     return this.http.post(
-      `${this.baseUrl}/${courseId}/sections`,
+      `${this.baseUrl}/courses/${courseId}/sections`,
       data,
       { withCredentials: true }
     );
   }
 
-
-
-  updateSection(
-    courseId: string,
-    sectionId: string,
-    data: any
-  ) {
+  updateSection(courseId: string, sectionId: string, data: any) {
     return this.http.patch(
-      `${this.baseUrl}/${courseId}/sections/${sectionId}`,
+      `${this.baseUrl}/courses/${courseId}/sections/${sectionId}`,
       data,
       { withCredentials: true }
     );
@@ -31,7 +32,7 @@ export class SectionsService {
 
   deleteSection(courseId: string, sectionId: string) {
     return this.http.delete(
-      `${this.baseUrl}/${courseId}/sections/${sectionId}`,
+      `${this.baseUrl}/courses/${courseId}/sections/${sectionId}`,
       { withCredentials: true }
     );
   }

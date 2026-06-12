@@ -32,6 +32,7 @@ export class SectionCardComponent {
   @Output() moveDown = new EventEmitter<void>();
 
   @Output() createSection = new EventEmitter<void>();
+  @Output() goToLessons = new EventEmitter<string>();
 
   onCreateSection(event: Event) {
     event.stopPropagation();
@@ -62,7 +63,12 @@ export class SectionCardComponent {
     return this.lessonsArray.controls as FormGroup[];
   }
 
+  onGoToLessons(event: Event) {
+    event.stopPropagation();
 
+    const id = this.sectionForm.get('id')?.value;
+    this.goToLessons.emit(id);
+  }
 
   onDelete(event: Event) {
     event.stopPropagation();
@@ -91,8 +97,6 @@ export class SectionCardComponent {
     );
   }
 
-
-
   removeOutcome(index: number) {
     this.expectedOutcomesArray.removeAt(index);
     this.expectedOutcomesArray.markAsDirty();
@@ -111,15 +115,19 @@ export class SectionCardComponent {
   }
   // Lessons Management
   addLesson() {
-    const lesson = this.fb.group({
-      title: ['', Validators.required],
-      videoFile: [null as string | null],
-      uploadStatus: ['idle'],
-      uploadProgress: [0]
-    });
-    this.lessonsArray.push(lesson);
-    this.lessonsArray.markAsDirty();
-  }
+  const lessonGroup = this.fb.group({
+    id: [null],
+    title: ['', Validators.required],
+
+    videoUrl: [''],
+    videoPublicId: [''],
+    videoDuration: [0],
+
+    uploadStatus: ['idle']
+  });
+
+  this.lessonsArray.push(lessonGroup);
+}
 
   deleteLesson(index: number) {
     this.lessonsArray.removeAt(index);

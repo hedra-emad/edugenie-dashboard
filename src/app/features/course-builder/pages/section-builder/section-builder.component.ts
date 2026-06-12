@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } fr
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { SectionCardComponent } from '../../components/section-card/section-card.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SectionsService } from '../../../../core/services/sections';
 import { CoursesService } from '../../../../core/services/courses';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
@@ -29,7 +29,7 @@ export function maxArrayLength(max: number) {
     ReactiveFormsModule,
     MatIconModule,
     MatButtonModule,
-    BackButtonComponent, 
+    BackButtonComponent,
     SectionCardComponent
   ],
   templateUrl: './section-builder.component.html',
@@ -42,6 +42,7 @@ export class SectionBuilderComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private sectionsService = inject(SectionsService);
   private coursesService = inject(CoursesService);
+  private router = inject(Router);
 
   @Input() courseId: string | null = null;
 
@@ -147,7 +148,7 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   createSection(index: number) {
-    console.log('-------------',this.courseId);
+    console.log('-------------', this.courseId);
 
 
     if (!this.courseId) {
@@ -263,6 +264,18 @@ export class SectionBuilderComponent implements OnInit {
       }
     });
   }
+
+  goToLessons(sectionId: string) {
+  if (!sectionId || !this.courseId) return;
+
+  this.router.navigate([
+    '/course-builder',
+    this.courseId,
+    'sections',
+    sectionId,
+    'lessons'
+  ]);
+}
 
 
 }

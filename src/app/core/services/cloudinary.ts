@@ -26,17 +26,31 @@ export class CloudinaryService {
   }
 
   uploadThumbnail(file: File) {
-  const formData = new FormData();
+    const formData = new FormData();
 
-  formData.append('file', file);
+    formData.append('file', file);
 
-  // THIS MUST BE UPLOAD PRESET NAME
-  formData.append('upload_preset', environment.cloudinary.uploadPreset);
+    // THIS MUST BE UPLOAD PRESET NAME
+    formData.append('upload_preset', environment.thumbnailUploadPreset);
 
-  return this.http.post<{ secure_url: string; public_id: string }>(
-    `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`,
-    formData
-  );
-}
+    return this.http.post<{ secure_url: string; public_id: string }>(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
+      formData
+    );
+  }
+
+  uploadVideo(file: File) {
+    console.log('upload preset =', environment.lessonUploadPreset);
+
+    const formData = new FormData();
+
+    formData.append('file', file);
+    formData.append('upload_preset', environment.lessonUploadPreset);
+
+    return this.http.post<any>(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/video/upload`,
+      formData
+    );
+  }
 
 }
