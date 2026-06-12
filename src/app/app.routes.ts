@@ -29,34 +29,64 @@ export const routes: Routes = [
       },
 
       {
-  path: 'course-builder/:courseId',
-  component: CourseBuilderPageComponent,
-  children: [
-    {
-      path: 'basic',
-      loadComponent: () =>
-        import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
-          .then(m => m.CourseBasicInfoComponent)
-    },
-    {
-      path: 'curriculum',
-      loadComponent: () =>
-        import('./features/course-builder/pages/section-builder/section-builder.component')
-          .then(m => m.SectionBuilderComponent)
-    },
-     {
-      path: 'sections/:sectionId/lessons',
-      loadComponent: () =>
-        import('./features/course-builder/pages/lesson-builder/lesson-builder')
-          .then(m => m.LessonBuilder)
-    },
-    {
-      path: '',
-      redirectTo: 'basic',
-      pathMatch: 'full'
-    }
-  ]
-},
+        path: 'course-builder',
+        component: CourseBuilderPageComponent,
+        children: [
+          {
+            path: 'basic',
+            loadComponent: () =>
+              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
+                .then(m => m.CourseBasicInfoComponent)
+          },
+          {
+            path: 'sections',
+            loadComponent: () =>
+              import('./features/course-builder/pages/section-builder/section-builder.component')
+                .then(m => m.SectionBuilderComponent)
+          },
+          {
+            path: 'sections/:sectionId/lessons',
+            loadComponent: () =>
+              import('./features/course-builder/pages/lesson-builder/lesson-builder')
+                .then(m => m.LessonBuilder)
+          },
+          {
+            path: '',
+            redirectTo: 'basic',
+            pathMatch: 'full'
+          }
+        ]
+      },
+
+      {
+        path: 'course-builder/:courseId',
+        component: CourseBuilderPageComponent,
+        children: [
+          {
+            path: 'basic',
+            loadComponent: () =>
+              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
+                .then(m => m.CourseBasicInfoComponent)
+          },
+          {
+            path: 'sections',
+            loadComponent: () =>
+              import('./features/course-builder/pages/section-builder/section-builder.component')
+                .then(m => m.SectionBuilderComponent)
+          },
+          {
+            path: 'sections/:sectionId/lessons',
+            loadComponent: () =>
+              import('./features/course-builder/pages/lesson-builder/lesson-builder')
+                .then(m => m.LessonBuilder)
+          },
+          {
+            path: '',
+            redirectTo: 'basic',
+            pathMatch: 'full'
+          }
+        ]
+      },
       {
         path: 'settings',
         canActivate: [authGuard],

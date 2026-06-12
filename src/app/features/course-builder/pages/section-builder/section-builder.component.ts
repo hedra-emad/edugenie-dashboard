@@ -171,9 +171,6 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   createSection(index: number) {
-    console.log('-------------', this.courseId);
-
-
     if (!this.courseId) {
       return;
     }
@@ -209,17 +206,15 @@ export class SectionBuilderComponent implements OnInit {
     } else {
 
       this.sectionsService
-        .addSection(this.courseId, payload)
+        .updateSection(this.courseId, sectionId, payload)
         .subscribe({
-          next: (res: any) => {
-
+          next: (res) => {
             form.get('isSaving')?.setValue(false);
 
-            form.patchValue({
-              id: res._id
-            });
+            form.markAsPristine();
+            form.updateValueAndValidity();
 
-            console.log('Section created', res);
+            this.cdr.detectChanges();
           },
           error: (err) => {
             form.get('isSaving')?.setValue(false);

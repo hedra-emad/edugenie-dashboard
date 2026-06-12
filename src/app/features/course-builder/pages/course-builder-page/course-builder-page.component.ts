@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CourseHeaderComponent } from '../../components/course-header/course-header.component';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-create-course-page',
@@ -16,13 +17,14 @@ import { PublishCourseButtonComponent } from '../../components/publish-course-bu
     CourseHeaderComponent,
     RouterOutlet,
     PublishCourseButtonComponent
-],
+  ],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'
 })
 export class CourseBuilderPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  currentStep = signal(1);
 
 
   courseId = signal<string | null>(null);
@@ -30,18 +32,29 @@ export class CourseBuilderPageComponent implements OnInit {
   // course-builder-page.component.ts
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('courseId');
-    if (id) {
-      this.courseId.set(id);
+    this.updateStep(this.router.url);
 
-      // Check if the URL contains 'curriculum' to decide the step
-      const isCurriculum = this.router.url.includes('curriculum');
-    }
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.updateStep(event.urlAfterRedirects);
+      });
   }
 
 
   onCourseCreated(id: string) {
     this.courseId.set(id);
-    this.router.navigate(['/course-builder', id, 'curriculum']);
+    this.router.navigate(['/course-builder', id, 'sections']);
+  }
+
+
+  private updateStep(url: string) {
+    if (url.includes('lessons')) {
+      this.currentStep.set(3);
+    } else if (url.includes('sections')) {
+      this.currentStep.set(2);
+    } else {
+      this.currentStep.set(1);
+    }
   }
 }

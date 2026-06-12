@@ -108,7 +108,7 @@ export class LessonBuilder implements OnInit {
 
   goBackToSections() {
     this.router.navigate(
-      ['/course-builder', this.courseId, 'curriculum'],
+      ['/course-builder', this.courseId, 'sections'],
       {
         queryParams: {
           highlight: this.sectionId

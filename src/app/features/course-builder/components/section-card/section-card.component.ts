@@ -5,6 +5,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { LessonCardComponent } from '../lesson-card/lesson-card.component';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-section-card',
@@ -35,6 +36,10 @@ export class SectionCardComponent {
 
   @Output() createSection = new EventEmitter<void>();
   @Output() goToLessons = new EventEmitter<string>();
+
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
 
   onCreateSection(event: Event) {
     event.stopPropagation();
@@ -77,8 +82,21 @@ export class SectionCardComponent {
   onGoToLessons(event: Event) {
     event.stopPropagation();
 
-    const id = this.sectionForm.get('id')?.value;
-    this.goToLessons.emit(id);
+    const courseId =
+      this.route.parent?.snapshot.paramMap.get('courseId') ||
+      this.route.snapshot.paramMap.get('courseId');
+
+    const sectionId = this.sectionForm.get('id')?.value;
+
+    if (!courseId || !sectionId) return;
+
+    this.router.navigate([
+      '/course-builder',
+      courseId,
+      'sections',
+      sectionId,
+      'lessons'
+    ]);
   }
 
   onDelete(event: Event) {
@@ -160,4 +178,6 @@ export class SectionCardComponent {
     this.lessonsArray.insert(index + 1, control);
     this.lessonsArray.markAsDirty();
   }
+
+
 }

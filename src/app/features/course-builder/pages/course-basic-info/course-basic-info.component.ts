@@ -16,6 +16,7 @@ import { Course } from '../../../../core/models/course.model';
 import { CourseBuilderModel } from '../../models/course-builder.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 import { Subject, takeUntil } from 'rxjs';
+import { CourseLevel } from '../../../../core/enums/course-level.enum';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -64,14 +65,18 @@ export class CourseBasicInfoComponent {
 
   private route = inject(ActivatedRoute);
   initialValue: any = null;
+  CourseLevel = CourseLevel;
 
 
   courseForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(5)]],
     description: ['', [Validators.required, Validators.minLength(20)]],
     price: [0, [Validators.required, Validators.min(0)]],
-    thumbnail: [''],
-    level: ['', Validators.required],
+    thumbnail: ['', Validators.required],
+
+
+    level: [null as CourseLevel | null, Validators.required],
+
     category: ['', Validators.required],
     goals: this.fb.array([]),
     requirements: this.fb.array([])
@@ -100,10 +105,13 @@ export class CourseBasicInfoComponent {
 
     const maxSize = 2 * 1024 * 1024;
 
+    // 1) VALIDATION FIRST
     if (file.size > maxSize) {
       this.imageError = 'Image must be less than 2MB';
       this.selectedThumbnailFile = null;
       this.hasThumbnail.set(false);
+
+      this.courseForm.get('thumbnail')?.reset();
       return;
     }
 
@@ -111,18 +119,24 @@ export class CourseBasicInfoComponent {
       this.imageError = 'Please upload a valid image';
       this.selectedThumbnailFile = null;
       this.hasThumbnail.set(false);
+
+      this.courseForm.get('thumbnail')?.reset();
       return;
     }
 
+    // 2) ONLY IF VALID → SET STATE
     this.selectedThumbnailFile = file;
     this.hasThumbnail.set(true);
 
-    const reader = new FileReader();
+    this.courseForm.get('thumbnail')?.setValue(file.name);
+    this.courseForm.get('thumbnail')?.markAsDirty();
+    this.courseForm.get('thumbnail')?.updateValueAndValidity();
 
+    // 3) preview
+    const reader = new FileReader();
     reader.onload = () => {
       this.thumbnailPreview.set(reader.result as string);
     };
-
     reader.readAsDataURL(file);
   }
 
@@ -155,10 +169,11 @@ export class CourseBasicInfoComponent {
     this.handleFile(file);
   }
 
-  selectLevel(level: string) {
+  selectLevel(level: CourseLevel) {
     this.getControl('level').setValue(level);
     this.openLevel = false;
   }
+
 
   getControl(name: string): FormControl {
     return this.courseForm.get(name) as FormControl;
@@ -318,6 +333,10 @@ export class CourseBasicInfoComponent {
   }
 
   onMainAction() {
+    if (this.mode() === 'create') {
+      this.createCourse();
+      return;
+    }
 
     if (this.mode() === 'update') {
 
@@ -325,7 +344,7 @@ export class CourseBasicInfoComponent {
         this.router.navigate([
           '/course-builder',
           this.courseId,
-          'curriculum'
+          'sections'
         ]);
         return;
       }
@@ -393,34 +412,96 @@ export class CourseBasicInfoComponent {
   }
 
   createCourse() {
-    if (this.courseForm.invalid) {
+    // 1) validation
+    if (this.courseForm.invalid || !this.selectedThumbnailFile) {
       this.courseForm.markAllAsTouched();
+
+      if (!this.selectedThumbnailFile) {
+        this.imageError = 'Thumbnail is required';
+      }
+
       return;
     }
 
+    // 2) loading
+    this.status.set('saving');
     this.isSaving.set(true);
 
     const form = this.courseForm.getRawValue();
 
+    // 3) strict guard (important)
+    if (!form.title || !form.description || !form.level || !form.category) {
+      this.courseForm.markAllAsTouched();
+      this.status.set('idle');
+      this.isSaving.set(false);
+      return;
+    }
+
+    // 4) SAFE payload (NO TS ERRORS)
+    const payload: CourseBuilderModel = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      price: Number(form.price ?? 0),
+
+      // 🔥 FIXED TYPE (CourseLevel)
+      level: form.level,
+
+      categoryId: form.category,
+
+      goals: (form.goals || []).map((g: any) => g?.value ?? g),
+      requirements: (form.requirements || []).map((r: any) => r?.value ?? r),
+
+      thumbnail: '',
+      courseStatus: CourseStatus.DRAFT
+    };
+
+    // 5) upload image
     this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
-      .subscribe(upload => {
+      .subscribe({
+        next: (uploadRes) => {
 
-        const payload: CourseBuilderModel = {
-          title: form.title!,
-          description: form.description!,
-          price: form.price!,
-          level: form.level as any,
-          categoryId: form.category!,
-          goals: form.goals as string[],
-          requirements: form.requirements as string[],
-          thumbnail: upload.secure_url,
-          courseStatus: CourseStatus.DRAFT
-        };
+          payload.thumbnail = uploadRes.secure_url;
 
-        this.coursesService.createCourse(payload).subscribe(course => {
-          this.courseCreatedEvent.emit(course._id);
+          // 6) create course API
+          this.coursesService.createCourse(payload)
+            .subscribe({
+              next: (course) => {
+
+                this.status.set('ready');
+                this.isSaving.set(false);
+
+                // switch to update mode
+                this.courseId = course._id;
+                this.mode.set('update');
+
+                // reset baseline (fix Continue button)
+                this.initialValue = this.normalize(this.courseForm.getRawValue());
+                this.hasChanges.set(false);
+
+                this.setBaseline();
+
+                this.courseCreatedEvent.emit(course._id);
+              },
+
+              error: (err) => {
+                console.error('CREATE COURSE ERROR:', err);
+                this.status.set('ready');
+                this.isSaving.set(false);
+              }
+            });
+        },
+
+        error: (err) => {
+          console.error('UPLOAD ERROR:', err);
+          this.status.set('ready');
           this.isSaving.set(false);
-        });
+          this.imageError = 'Failed to upload image';
+        }
       });
+  }
+
+  formatLevel(level: string): string {
+    if (!level) return '';
+    return level.charAt(0).toUpperCase() + level.slice(1);
   }
 }
