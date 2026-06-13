@@ -50,6 +50,7 @@ export class SectionBuilderComponent implements OnInit {
   highlightSectionId: string | null = null;
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
+  
 
   sectionForm = this.fb.group({
     sections: this.fb.array([])
@@ -77,7 +78,7 @@ export class SectionBuilderComponent implements OnInit {
     if (!id) return;
 
     this.courseId = id;
-    
+
 
     const highlight = this.route.snapshot.queryParamMap.get('highlight');
     const expand = this.route.snapshot.queryParamMap.get('expand');
@@ -108,7 +109,7 @@ export class SectionBuilderComponent implements OnInit {
       description: [''],
       expectedOutcomes: this.fb.array([]),
       isBasicSection: [false],
-      lessons: this.fb.array([]),
+      lessons: this.fb.array([]), 
       isSaving: [false],
       isDeleting: [false],
     });
@@ -150,45 +151,37 @@ export class SectionBuilderComponent implements OnInit {
 
   loadSections() {
     if (!this.courseId) return;
-
-
     this.coursesService.findOne(this.courseId).subscribe({
       next: (course: any) => {
         const sections = course.sections || [];
-
         this.sectionsArray.clear();
-
-
 
         sections.forEach((section: any) => {
           this.sectionsArray.push(
             this.fb.group({
-              title: [
-                section.title || '',
-                [
-                  Validators.required,
-                  Validators.minLength(3)
-                ]
-              ],
-
-              description: [
-                section.description || '',
-                [
-                  Validators.minLength(10)
-                ]
-              ],
-
-              isBasicSection: [
-                section.isBasicSection || false
-              ],
-
+              title: [section.title || '', [Validators.required, Validators.minLength(3)]],
+              description: [section.description || '', [Validators.minLength(10)]],
+              isBasicSection: [section.isBasicSection || false],
               expectedOutcomes: this.fb.array(
                 (section.expectedOutcomes || []).map((o: string) =>
                   this.fb.control(o ?? '', Validators.required)
                 ) || []
               ),
 
-              lessons: this.fb.array(section.lessons || []),
+              // 👇 التعديل الجوهري هنا: تحويل كائنات الـ lessons إلى FormGroup منفصلة لكل درس
+              lessons: this.fb.array(
+                (section.lessons || []).map((lesson: any) =>
+                  this.fb.group({
+                    id: [lesson._id || lesson.id || null], // تأكيد وجود حقل الـ id مستقبلاً من السيرفر
+                    title: [lesson.title || '', Validators.required],
+                    videoUrl: [lesson.videoUrl || ''],
+                    videoPublicId: [lesson.videoPublicId || ''],
+                    videoDuration: [lesson.videoDuration || 0],
+                    expanded: [false] // حقل إضافي إذا كنت تستخدمه للتحكم بفتح وإغلاق العناصر
+                  })
+                )
+              ),
+
               id: [section._id],
               isSaving: [false],
               isDeleting: [false],
@@ -197,7 +190,6 @@ export class SectionBuilderComponent implements OnInit {
         });
 
         this.cdr.detectChanges();
-
         console.log('Sections loaded from course:', sections);
       },
       error: (err) => {

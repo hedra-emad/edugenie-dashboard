@@ -9,7 +9,7 @@ import { SectionsService } from '../../../../core/services/sections';
 import { LessonsService } from '../../../../core/services/lessons';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
 // import { LessonCardComponent_1 as LessonCardComponent } from "../components/lesson-card/lesson-card.component";
-
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-lessons-builder',
   standalone: true,
@@ -30,6 +30,7 @@ export class LessonBuilder implements OnInit {
   private route = inject(ActivatedRoute);
   private sectionsService = inject(SectionsService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   courseId!: string;
   sectionId!: string;
@@ -42,14 +43,24 @@ export class LessonBuilder implements OnInit {
     this.courseId = this.route.snapshot.parent?.paramMap.get('courseId')!;
     this.sectionId = this.route.snapshot.paramMap.get('sectionId')!;
 
-    console.log('courseId', this.courseId);
-    console.log('sectionId', this.sectionId);
 
     this.loadLessons();
   }
 
   get lessonsArray(): FormArray<FormGroup> {
     return this.lessonsForm.get('lessons') as FormArray<FormGroup>;
+  }
+
+  onLessonCreated(event: { index: number; id: string }) {
+
+    const lessonGroup =
+      this.lessonsArray.at(event.index) as FormGroup;
+
+    lessonGroup.patchValue({
+      id: event.id
+    });
+
+    this.cdr.detectChanges();
   }
 
   get lessons(): FormGroup[] {
@@ -149,7 +160,7 @@ export class LessonBuilder implements OnInit {
   }
 
   trackByLesson(index: number, item: FormGroup) {
-    return item;
+    return item.get('id')?.value || index;
   }
 
   get lessonsLength() {

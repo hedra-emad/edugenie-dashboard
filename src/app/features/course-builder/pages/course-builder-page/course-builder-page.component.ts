@@ -30,9 +30,6 @@ export class CourseBuilderPageComponent implements OnInit {
   courseTitle: string | null = null;
   coursesService = inject(CoursesService);
 
-
-  // course-builder-page.component.ts
-
   ngOnInit() {
     this.updateStep(this.router.url);
 

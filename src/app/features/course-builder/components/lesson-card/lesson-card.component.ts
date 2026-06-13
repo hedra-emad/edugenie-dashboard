@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { LessonsService } from '../../../../core/services/lessons';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ActionBarComponent } from "../shared/action-bar/action-bar.component";
+import { ToastrService } from 'ngx-toastr';
+import { finalize } from 'rxjs/operators';
 
 type VideoState =
   | 'empty'
@@ -43,12 +45,15 @@ export class LessonCardComponent {
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
   @Output() durationChanged = new EventEmitter<void>();
+  @Output() lessonCreated = new EventEmitter<{ index: number, id: string }>();
 
   private lessonsService = inject(LessonsService);
   private cloudinaryService = inject(CloudinaryService);
+  private cdr = inject(ChangeDetectorRef);
 
   isSaving = false;
   isUploading = false;
+  private saveLock = false;
 
   uploadError = false;
 
@@ -57,12 +62,17 @@ export class LessonCardComponent {
   selectedVideoFile: File | null = null;
   selectedVideoUrl: string | null = null;
 
+  private toastr = inject(ToastrService);
+
   videoErrorMessage = '';
 
   videoState: VideoState = 'empty';
 
   get isUpdateMode(): boolean {
-    return !!this.lessonForm.get('id')?.value;
+
+    const value = this.lessonForm.get('id')?.value;
+
+    return !!value;
   }
 
   get isVideoValid(): boolean {
@@ -158,19 +168,16 @@ export class LessonCardComponent {
 
   // ---------------- SAVE ----------------
   saveLesson() {
+    // الحماية من الضغط المتكرر أثناء الرفع أو الحفظ
+    if (this.saveLock || this.isUploading) return;
 
-    if (this.isUploading || this.isSaving) return;
-
+    this.saveLock = true;
     this.lessonForm.markAllAsTouched();
 
-    if (this.lessonForm.invalid) return;
-
-    if (!this.isVideoValid) {
-      this.videoErrorMessage = 'Video is required';
+    if (this.lessonForm.invalid || !this.isVideoValid) {
+      this.saveLock = false;
       return;
     }
-
-    if (this.videoErrorMessage) return;
 
     this.uploadAndSave();
   }
@@ -201,6 +208,12 @@ export class LessonCardComponent {
     this.videoState = 'uploading';
 
     this.cloudinaryService.uploadVideo(this.selectedVideoFile!)
+      .pipe(
+        finalize(() => {
+          this.isUploading = false;
+        })
+      )
+
       .subscribe({
         next: (res) => {
 
@@ -230,7 +243,6 @@ export class LessonCardComponent {
 
   // ---------------- CREATE / UPDATE ----------------
   private createOrUpdateLesson() {
-
     const lessonId = this.lessonForm.get('id')?.value;
 
     const payload = {
@@ -246,23 +258,57 @@ export class LessonCardComponent {
       ? this.lessonsService.updateLesson(this.courseId, this.sectionId, lessonId, payload)
       : this.lessonsService.addLesson(this.courseId, this.sectionId, payload);
 
-    req.subscribe({
+    req.pipe(
+      finalize(() => {
+        this.isSaving = false;
+        this.saveLock = false;
+      })
+    ).subscribe({
       next: (res: any) => {
-        console.log(res);
-
-        const lessons = res.lessons;
-
-        const createdLesson = lessons?.find(
-          (l: any) =>
-            !this.lessonForm.get('id')?.value &&
-            l.title === this.lessonForm.get('title')?.value
+        const currentSection = res.find(
+          (section: any) => section._id === this.sectionId
         );
 
-        if (createdLesson) {
+
+
+        const lessons = currentSection?.lessons || [];
+
+
+
+        const createdLesson = lessons[lessons.length - 1];
+
+
+
+        const incomingId = createdLesson?._id;
+
+
+
+        if (incomingId) {
+
           this.lessonForm.patchValue({
-            id: createdLesson._id
+            id: incomingId
+          });
+
+
+          this.lessonForm.get('id')?.updateValueAndValidity();
+
+          this.lessonCreated.emit({
+            index: this.index,
+            id: incomingId
           });
         }
+
+        this.toastr.success(
+          lessonId
+            ? 'Lesson updated successfully'
+            : 'Lesson created successfully'
+        );
+
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastr.error('Something went wrong');
       }
     });
   }
@@ -282,7 +328,9 @@ export class LessonCardComponent {
       this.sectionId,
       lessonId
     ).subscribe({
-      next: () => this.delete.emit()
+      next: () => {
+        this.delete.emit();
+      }
     });
   }
 
@@ -310,5 +358,5 @@ export class LessonCardComponent {
     this.lessonForm.get('expanded')?.setValue(value);
   }
 
-  
+
 }

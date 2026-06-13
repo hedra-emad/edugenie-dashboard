@@ -9,6 +9,7 @@ import {
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+
 import { firstValueFrom } from 'rxjs';
 
 import { provideHttpClient } from '@angular/common/http';

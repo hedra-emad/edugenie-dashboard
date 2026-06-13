@@ -2,21 +2,21 @@
   class="lesson-panel border border-slate-100 rounded-xl overflow-hidden shadow-sm">
 
   <!-- ================= HEADER ================= -->
-  <mat-expansion-panel-header class="lesson-header">
+  <mat-expansion-panel-header class="!flex !items-center !justify-between gap-2">
 
     <!-- TITLE -->
-    <mat-panel-title class="flex items-center gap-2 font-bold text-sm">
+    <mat-panel-title class="flex items-center gap-2 font-bold text-sm min-w-0 flex-1">
 
       <mat-icon class="text-slate-400">
         play_circle_outline
       </mat-icon>
 
-      <span class="truncate max-w-[400px]">
-        Lesson {{ index + 1 }}:
+      <span class="truncate block">
+        {{ index + 1 }}.
         {{ lessonForm.get('title')?.value || 'Untitled Lesson' }}
       </span>
 
-      <span class="text-xs text-slate-400 ml-2 shrink-0">
+      <span class="text-xs text-slate-400 ml-2 shrink-0 hidden sm:inline">
         ({{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min)
       </span>
 
@@ -24,7 +24,7 @@
 
 
     <!-- ACTIONS -->
-    <div class="flex items-center gap-2 pr-2">
+    <div class="flex items-center gap-2 shrink-0">
 
       <!-- MOVE UP -->
       <button type="button" [disabled]="isFirst" (click)="onMoveUp($event)"
@@ -48,7 +48,7 @@
       </button>
 
       <!-- DELETE -->
-      <button type="button" (click)="deleteLesson()"
+      <button type="button" type="button" (click)="$event.stopPropagation(); deleteLesson()"
         class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50">
 
         <span class="flex items-center justify-center w-full h-full">
@@ -65,7 +65,9 @@
   <!-- ================= CONTENT ================= -->
   <div [formGroup]="lessonForm" class="pt-4 space-y-5">
 
-
+    <div class="sm:hidden text-xs text-slate-500 mb-2">
+      Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min
+    </div>
     <!-- TITLE -->
     <div class="space-y-2">
       <label class="text-xs font-bold uppercase text-gray-700">
@@ -183,10 +185,11 @@
     <!-- FOOTER -->
     <div class="pt-4">
 
-      <app-action-bar [actionLabel]="isUpdateMode ? 'Update Lesson' : 'Create Lesson'" [actionIcon]="'save'"
-        [loading]="isSaving" [disabled]="lessonForm.invalid || isUploading || (!isUpdateMode && !isVideoValid)"
-        (action)="saveLesson()">
-      </app-action-bar>
+      <div class="pt-4">
+        <app-action-bar [actionLabel]="isUpdateMode ? 'Update Lesson' : 'Create Lesson'" [actionIcon]="'save'"
+          [loading]="isSaving" [disabled]="lessonForm.invalid || isUploading || isSaving" (action)="saveLesson()">
+        </app-action-bar>
+      </div>
 
 
     </div>

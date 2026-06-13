@@ -1,18 +1,19 @@
 <div class="space-y-6">
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-3">
-        <div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+        <div class="min-w-0">
             <h3 class="text-lg font-bold text-[var(--color-primary)]">
                 Lessons
             </h3>
-            <p class="text-xs text-gray-500">
+
+            <p class="text-xs text-gray-500 truncate sm:whitespace-normal">
                 Manage lessons inside this section
             </p>
         </div>
 
         <button type="button" (click)="addLesson()"
-            class="text-xs font-bold uppercase px-4 py-2 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]">
+            class="shrink-0 whitespace-nowrap text-xs font-bold uppercase px-4 py-2 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]">
             Add Lesson
         </button>
     </div>
@@ -25,9 +26,8 @@
     <!-- Lesson cards -->
     <app-lesson-card *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson"
         [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i" [isFirst]="i === 0"
-        [isLast]="i === lessonsArray.controls.length - 1" (deleted)="onDeleted(i)" (moveUp)="moveUp(i)"
-        (moveDown)="moveDown(i)">
-    </app-lesson-card>
+        [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)" (moveUp)="moveUp(i)"
+        (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)"> </app-lesson-card>
 
     <app-back-button label="Back" (back)="goBackToSections()">
     </app-back-button>
