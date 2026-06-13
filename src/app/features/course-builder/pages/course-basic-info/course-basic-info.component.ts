@@ -17,6 +17,7 @@ import { CourseBuilderModel } from '../../models/course-builder.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 import { Subject, takeUntil } from 'rxjs';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -66,6 +67,7 @@ export class CourseBasicInfoComponent {
   private route = inject(ActivatedRoute);
   initialValue: any = null;
   CourseLevel = CourseLevel;
+  private toastr = inject(ToastrService);
 
 
   courseForm = this.fb.group({
@@ -411,6 +413,8 @@ export class CourseBasicInfoComponent {
         this.initialValue = this.normalize(this.courseForm.getRawValue());
 
         this.courseForm.markAsPristine();
+        this.toastr.success('Course updated successfully');
+
       },
       error: () => {
         this.isSaving.set(false);
@@ -489,6 +493,7 @@ export class CourseBasicInfoComponent {
                 this.setBaseline();
 
                 this.courseCreatedEvent.emit(course._id);
+                this.toastr.success('Course created successfully');
               },
 
               error: (err) => {
