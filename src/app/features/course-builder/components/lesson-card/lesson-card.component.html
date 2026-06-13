@@ -1,4 +1,4 @@
-<mat-expansion-panel [expanded]="isFirst"
+<mat-expansion-panel [expanded]="isExpanded()" (opened)="setExpanded(true)" (closed)="setExpanded(false)"
   class="lesson-panel border border-slate-100 rounded-xl overflow-hidden shadow-sm">
 
   <!-- ================= HEADER ================= -->
@@ -93,9 +93,11 @@
     <div class="space-y-4">
 
       <!-- NO VIDEO -->
-      <div
+      <!-- NO VIDEO -->
+      <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile"
         class="p-8 border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer"
         (click)="fileInput.click()">
+
         <mat-icon class="text-5xl text-[var(--color-text-secondary)]">
           cloud_upload
         </mat-icon>
@@ -181,9 +183,11 @@
     <!-- FOOTER -->
     <div class="pt-4">
 
-      <app-action-bar [actionLabel]="lessonForm.get('id')?.value ? 'Update Lesson' : 'Create Lesson'" actionIcon="save"
-        [loading]="isSaving" [disabled]="lessonForm.invalid || isUploading || !isVideoValid" (action)="saveLesson()">
+      <app-action-bar [actionLabel]="isUpdateMode ? 'Update Lesson' : 'Create Lesson'" [actionIcon]="'save'"
+        [loading]="isSaving" [disabled]="lessonForm.invalid || isUploading || (!isUpdateMode && !isVideoValid)"
+        (action)="saveLesson()">
       </app-action-bar>
+
 
     </div>
 

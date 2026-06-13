@@ -64,7 +64,8 @@ export class LessonBuilder implements OnInit {
         videoUrl: [''],
         videoPublicId: [''],
         videoDuration: [0],
-        uploadStatus: ['idle']
+        uploadStatus: ['idle'],
+        expanded: [true]
       })
     );
   }
@@ -72,7 +73,6 @@ export class LessonBuilder implements OnInit {
   onDeleted(index: number) {
     this.lessonsArray.removeAt(index);
   }
-
   loadLessons() {
     this.sectionsService.getCourse(this.courseId)
       .subscribe({
@@ -94,7 +94,8 @@ export class LessonBuilder implements OnInit {
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],
                 videoDuration: [lesson.videoDuration || 0],
-                uploadStatus: ['idle']
+                uploadStatus: ['idle'],
+                expanded: [false]
               })
             );
           });
@@ -153,4 +154,6 @@ export class LessonBuilder implements OnInit {
   get lessonsLength() {
     return this.lessonsArray.length;
   }
+
+  
 }

@@ -60,7 +60,9 @@ export class LessonCardComponent {
 
   videoState: VideoState = 'empty';
 
-  
+  get isUpdateMode(): boolean {
+    return !!this.lessonForm.get('id')?.value;
+  }
 
   get isVideoValid(): boolean {
     const hasExistingVideo = !!this.lessonForm.get('videoUrl')?.value;
@@ -140,18 +142,18 @@ export class LessonCardComponent {
 
   // ---------------- REMOVE ----------------
   removeSelectedVideo() {
-  this.selectedVideoFile = null;
+    this.selectedVideoFile = null;
 
-  if (this.selectedVideoUrl) {
-    URL.revokeObjectURL(this.selectedVideoUrl);
+    if (this.selectedVideoUrl) {
+      URL.revokeObjectURL(this.selectedVideoUrl);
+    }
+
+    this.selectedVideoUrl = null;
+
+    this.videoErrorMessage = '';
+
+    this.videoState = 'empty';
   }
-
-  this.selectedVideoUrl = null;
-
-  this.videoErrorMessage = '';
-
-  this.videoState = 'empty';
-}
 
   // ---------------- SAVE ----------------
   saveLesson() {
@@ -244,18 +246,21 @@ export class LessonCardComponent {
 
     req.subscribe({
       next: (res: any) => {
-        this.isSaving = false;
+        console.log(res);
 
-        if (!lessonId) {
-          this.lessonForm.patchValue({ id: res._id });
+        const lessons = res.lessons;
+
+        const createdLesson = lessons?.find(
+          (l: any) =>
+            !this.lessonForm.get('id')?.value &&
+            l.title === this.lessonForm.get('title')?.value
+        );
+
+        if (createdLesson) {
+          this.lessonForm.patchValue({
+            id: createdLesson._id
+          });
         }
-
-        this.selectedVideoFile = null;
-        this.videoState = 'uploaded';
-      },
-      error: (err) => {
-        console.error(err);
-        this.isSaving = false;
       }
     });
   }
@@ -293,5 +298,13 @@ export class LessonCardComponent {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  isExpanded(): boolean {
+    return this.lessonForm.get('expanded')?.value;
+  }
+
+  setExpanded(value: boolean) {
+    this.lessonForm.get('expanded')?.setValue(value);
   }
 }

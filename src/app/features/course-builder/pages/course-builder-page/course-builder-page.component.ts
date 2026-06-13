@@ -33,6 +33,9 @@ export class CourseBuilderPageComponent implements OnInit {
   ngOnInit() {
     this.updateStep(this.router.url);
 
+    const match = this.router.url.match(/course-builder\/([^\/]+)/);
+    this.courseId = match?.[1] ?? null;
+
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
