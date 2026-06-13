@@ -96,6 +96,7 @@ export class CourseBasicInfoComponent {
     this.mode.set('update');
 
     this.loadCourse(this.courseId);
+    this.listenToArraysChanges();
   }
 
 
@@ -236,12 +237,28 @@ export class CourseBasicInfoComponent {
           this.hasThumbnail.set(true);
         }
 
-        // 🔥 baseline AFTER everything
+        //  baseline AFTER everything
         setTimeout(() => {
           this.setBaseline();
         });
 
       });
+  }
+
+  isButtonDisabled(): boolean {
+    if (this.status() === 'saving' || this.status() === 'updating') {
+      return true;
+    }
+
+    if (this.mode() === 'create') {
+      return this.courseForm.invalid || !this.selectedThumbnailFile;
+    }
+
+    if (this.mode() === 'update') {
+      return this.courseForm.invalid && !this.hasChanges();
+    }
+
+    return false;
   }
 
   setGoals(goals: string[]) {
@@ -302,15 +319,6 @@ export class CourseBasicInfoComponent {
     return 'arrow_forward';
   }
 
-  isButtonDisabled(): boolean {
-
-    if (this.mode() === 'create') {
-      return this.courseForm.invalid || this.status() === 'saving';
-    }
-
-    // UPDATE MODE → NEVER DISABLED
-    return false;
-  }
 
   getButtonLabel(): string {
 
@@ -443,7 +451,7 @@ export class CourseBasicInfoComponent {
       description: form.description.trim(),
       price: Number(form.price ?? 0),
 
-      // 🔥 FIXED TYPE (CourseLevel)
+      //  FIXED TYPE (CourseLevel)
       level: form.level,
 
       categoryId: form.category,
@@ -503,5 +511,48 @@ export class CourseBasicInfoComponent {
   formatLevel(level: string): string {
     if (!level) return '';
     return level.charAt(0).toUpperCase() + level.slice(1);
+  }
+
+  get goalsInvalid(): boolean {
+    return this.goalsArray.invalid;
+  }
+
+  get requirementsInvalid(): boolean {
+    return this.requirementsArray.invalid;
+  }
+
+  private listenToArraysChanges() {
+    this.goalsArray.statusChanges.subscribe(() => {
+      this.courseForm.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.requirementsArray.statusChanges.subscribe(() => {
+      this.courseForm.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  get isGoalsInvalid(): boolean {
+    return this.goalsArray.controls.some(c => c.invalid);
+  }
+
+  get isRequirementsInvalid(): boolean {
+    return this.requirementsArray.controls.some(c => c.invalid);
+  }
+
+  get isFormWithArraysInvalid(): boolean {
+    return (
+      this.courseForm.invalid ||
+      this.isGoalsInvalid ||
+      this.isRequirementsInvalid ||
+      !this.selectedThumbnailFile
+    );
+  }
+
+  get isSubmitDisabled(): boolean {
+    return (
+      this.courseForm.invalid ||
+      this.status() === 'saving' ||
+      this.status() === 'updating'
+    );
   }
 }

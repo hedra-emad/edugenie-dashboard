@@ -19,8 +19,7 @@ import {
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-
-import { LessonCardComponent } from '../lesson-card/lesson-card.component';
+import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { SectionsService } from '../../../../core/services/sections';
 
@@ -62,22 +61,27 @@ export class SectionCardComponent {
   // ================= UI State =================
   isSaving = false;
   isDeleting = false;
+  private toastr = inject(ToastrService);
 
   // ================= Lifecycle =================
- ngOnChanges() {
-  if (this.expanded) {
-    setTimeout(() => {
-      const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
-      panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
-  } else {
-    const panel = document.querySelector('.mat-expanded');
-    panel?.classList.remove('mat-expanded');
+  ngOnChanges() {
+    if (this.expanded) {
+      setTimeout(() => {
+        const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
+        panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    } else {
+      const panel = document.querySelector('.mat-expanded');
+      panel?.classList.remove('mat-expanded');
+    }
   }
-}
 
   // ================= SAVE (CREATE / UPDATE) =================
   saveSection() {
+    if (this.sectionForm.invalid) {
+      this.sectionForm.markAllAsTouched();
+      return;
+    }
     const form = this.sectionForm;
 
     const sectionId = form.get('id')?.value;
@@ -85,7 +89,10 @@ export class SectionCardComponent {
     const payload = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
-      expectedOutcomes: this.expectedOutcomesArray.value,
+
+      expectedOutcomes: this.expectedOutcomesArray.value
+        .filter((o: string) => o?.trim()),
+
       isBasicSection: form.get('isBasicSection')?.value
     };
 
@@ -100,14 +107,14 @@ export class SectionCardComponent {
       next: (res: any) => {
         this.isSaving = false;
 
-        if (!sectionId) {
+        const isNewSection = !sectionId;
 
+        if (isNewSection) {
           const createdSection = res[res.length - 1];
 
           const incomingId = createdSection?._id;
 
           if (incomingId) {
-
             if (!form.contains('id')) {
               form.addControl('id', new FormControl(incomingId));
             } else {
@@ -116,6 +123,10 @@ export class SectionCardComponent {
 
             form.get('id')?.updateValueAndValidity();
           }
+
+          this.toastr.success('Section created successfully');
+        } else {
+          this.toastr.success('Section updated successfully');
         }
 
         form.markAsPristine();
@@ -129,28 +140,28 @@ export class SectionCardComponent {
   }
 
   // ================= DELETE =================
- deleteSection() {
-  const sectionId = this.sectionForm.get('id')?.value;
-  if (!sectionId) return;
+  deleteSection() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId) return;
 
-  this.sectionForm.markAsPristine();
-  this.sectionForm.markAsUntouched();
+    this.sectionForm.markAsPristine();
+    this.sectionForm.markAsUntouched();
 
-  this.isDeleting = true;
+    this.isDeleting = true;
 
-  this.sectionsService.deleteSection(this.courseId, sectionId)
-    .subscribe({
-      next: () => {
-        this.isDeleting = false;
+    this.sectionsService.deleteSection(this.courseId, sectionId)
+      .subscribe({
+        next: () => {
+          this.isDeleting = false;
 
-        // important: remove from UI AFTER backend success
-        this.delete.emit(sectionId);
-      },
-      error: () => {
-        this.isDeleting = false;
-      }
-    });
-}
+          // important: remove from UI AFTER backend success
+          this.delete.emit(sectionId);
+        },
+        error: () => {
+          this.isDeleting = false;
+        }
+      });
+  }
 
   // ================= NAVIGATION =================
   onGoToLessons(event: Event) {
@@ -178,13 +189,9 @@ export class SectionCardComponent {
   }
 
   addOutcome() {
-    console.log('ADD OUTCOME CLICKED');
-
     this.expectedOutcomesArray.push(
       this.fb.control('', Validators.required)
     );
-
-    console.log(this.expectedOutcomesArray.value);
   }
 
   removeOutcome(index: number) {

@@ -50,6 +50,7 @@ export class SectionBuilderComponent implements OnInit {
   highlightSectionId: string | null = null;
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
+  newSectionIndex: number | null = null;
 
 
   sectionForm = this.fb.group({
@@ -88,6 +89,7 @@ export class SectionBuilderComponent implements OnInit {
 
     this.loadSections();
 
+
     this.router.navigate([], {
       queryParams: {},
       replaceUrl: true
@@ -105,11 +107,27 @@ export class SectionBuilderComponent implements OnInit {
   addSection() {
     const section = this.fb.group({
       id: [null],
-      title: [''],
-      description: [''],
+
+      title: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3)
+        ]
+      ],
+
+      description: [
+        '',
+        [
+          Validators.minLength(10)
+        ]
+      ],
+
       expectedOutcomes: this.fb.array([]),
+
       isBasicSection: [false],
       lessons: this.fb.array([]),
+
       isSaving: [false],
       isDeleting: [false],
     });
