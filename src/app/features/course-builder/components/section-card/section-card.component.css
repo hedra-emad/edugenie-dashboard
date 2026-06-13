@@ -38,3 +38,14 @@
     box-shadow: 0 0 0 0 rgba(0, 176, 255, 0);
   }
 }
+/* default = mobile */
+.duration-text {
+  display: none;
+}
+
+/* desktop */
+@media (min-width: 640px) {
+  .duration-text {
+    display: inline;
+  }
+}

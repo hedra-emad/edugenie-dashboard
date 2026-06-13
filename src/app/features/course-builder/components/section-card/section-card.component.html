@@ -10,7 +10,7 @@
         <span class="truncate block">
           {{ index + 1 }}: {{ sectionForm.get('title')?.value || 'Untitled Section' }}
         </span>
-        <span class="text-xs text-slate-400 ml-2 shrink-0">
+        <span class="text-xs text-slate-400 ml-2 shrink-0 duration-text">
           ({{ formatDuration(totalSectionDuration) }} min total)
         </span>
       </div>
@@ -68,7 +68,10 @@
   </mat-expansion-panel-header>
 
   <!-- Expanded content: full form -->
-  <div [formGroup]="sectionForm" class="pt-6 space-y-6">
+  <div [formGroup]="sectionForm" class=" space-y-6">
+    <span class="text-xs text-slate-400 ml-2 shrink-0 hidden sm:inline">
+      ({{ formatDuration(totalSectionDuration) }} min total)
+    </span>
     <!-- Title & Toggle -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
       <!-- Section Title -->
@@ -77,7 +80,8 @@
           Section Title <span class="text-red-500">*</span>
         </label>
         <input type="text" formControlName="title" placeholder="e.g. Introduction to Angular Signals"
-          class="w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800" [ngClass]="{
+          class="focus:ring-[var(--color-primary)]
+focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800" [ngClass]="{
     'border-red-500': titleControl?.invalid && titleControl?.touched,
     'border-gray-300': !(titleControl?.invalid && titleControl?.touched)
   }" />
@@ -116,8 +120,8 @@
         Section Description
       </label>
       <textarea formControlName="description" rows="2" placeholder="Brief description..."
-        class="w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800 resize-none"
-        [ngClass]="{
+        class="focus:ring-[var(--color-primary)]
+focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800 resize-none" [ngClass]="{
     'border-red-500': descriptionControl?.invalid && descriptionControl?.touched,
     'border-gray-300': !(descriptionControl?.invalid && descriptionControl?.touched)
   }"></textarea>
@@ -150,7 +154,8 @@
           <div class="flex-1 relative">
             <input type="text" [formControl]="outcomeCtrl"
               placeholder="e.g. Understand the difference between Signals and RxJS Observables"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-xs text-gray-800">
+              class="focus:ring-[var(--color-primary)]
+focus:border-[var(--color-primary)] w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] outline-none transition-all text-xs text-gray-800">
             <span *ngIf="outcomeCtrl.touched && outcomeCtrl.invalid"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold"
               [style.color]="'var(--color-error)'">
@@ -169,8 +174,9 @@
     </div>
 
     <!-- Create Section Button -->
-    <div class="pt-6 border-slate-100 flex justify-end">
-      <button type="button" (click)="saveSection()" [disabled]="sectionForm.invalid || isSaving" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
+    <div class=" border-slate-100 flex justify-end">
+      <button type="button" (click)="saveSection()" [disabled]="sectionForm.invalid || sectionForm.pristine || isSaving"
+        class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
          hover:bg-[var(--color-primary-light)] px-5 py-3 rounded-lg border
          text-white bg-[var(--color-primary)] shadow-md active:scale-95
          disabled:opacity-50 disabled:cursor-not-allowed">

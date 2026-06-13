@@ -55,23 +55,26 @@ export class SectionCardComponent {
   // ================= Outputs =================
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
-  @Output() removed = new EventEmitter<string>();
   @Output() delete = new EventEmitter<string>();
   @Output() goToLessons = new EventEmitter<void>();
+  @Output() sectionCreated = new EventEmitter<string>();
 
   // ================= UI State =================
   isSaving = false;
   isDeleting = false;
 
   // ================= Lifecycle =================
-  ngOnChanges() {
-    if (this.expanded) {
-      setTimeout(() => {
-        const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
-        panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
-    }
+ ngOnChanges() {
+  if (this.expanded) {
+    setTimeout(() => {
+      const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    const panel = document.querySelector('.mat-expanded');
+    panel?.classList.remove('mat-expanded');
   }
+}
 
   // ================= SAVE (CREATE / UPDATE) =================
   saveSection() {
@@ -98,7 +101,21 @@ export class SectionCardComponent {
         this.isSaving = false;
 
         if (!sectionId) {
-          form.get('id')?.setValue(res._id);
+
+          const createdSection = res[res.length - 1];
+
+          const incomingId = createdSection?._id;
+
+          if (incomingId) {
+
+            if (!form.contains('id')) {
+              form.addControl('id', new FormControl(incomingId));
+            } else {
+              form.get('id')?.setValue(incomingId);
+            }
+
+            form.get('id')?.updateValueAndValidity();
+          }
         }
 
         form.markAsPristine();
@@ -112,26 +129,28 @@ export class SectionCardComponent {
   }
 
   // ================= DELETE =================
-  deleteSection() {
-    const sectionId = this.sectionForm.get('id')?.value;
-    if (!sectionId) return;
+ deleteSection() {
+  const sectionId = this.sectionForm.get('id')?.value;
+  if (!sectionId) return;
 
-    this.isDeleting = true;
+  this.sectionForm.markAsPristine();
+  this.sectionForm.markAsUntouched();
 
-    this.sectionsService.deleteSection(this.courseId, sectionId)
-      .subscribe({
-        next: () => {
-          this.isDeleting = false;
+  this.isDeleting = true;
 
-          // parent removes from UI
-          this.removed.emit(sectionId);
-        },
+  this.sectionsService.deleteSection(this.courseId, sectionId)
+    .subscribe({
+      next: () => {
+        this.isDeleting = false;
 
-        error: () => {
-          this.isDeleting = false;
-        }
-      });
-  }
+        // important: remove from UI AFTER backend success
+        this.delete.emit(sectionId);
+      },
+      error: () => {
+        this.isDeleting = false;
+      }
+    });
+}
 
   // ================= NAVIGATION =================
   onGoToLessons(event: Event) {

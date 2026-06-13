@@ -74,10 +74,13 @@
         Lesson Title *
       </label>
 
-      <input type="text" formControlName="title" class="w-full px-4 py-2.5 rounded-lg border" [ngClass]="{
+      <input type="text" formControlName="title" class="w-full px-4 py-2.5 rounded-lg border
+         focus:outline-none
+         focus:ring-[var(--color-primary)]
+         focus:border-[var(--color-primary)]" [ngClass]="{
     'border-red-500': lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
     'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched)
-  }">
+  }" />
 
       <span *ngIf="lessonForm.get('title')?.hasError('required') && lessonForm.get('title')?.touched"
         class="text-xs text-red-500">

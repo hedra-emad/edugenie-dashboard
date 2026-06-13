@@ -1,4 +1,4 @@
-<div >
+<div>
   <div class="flex flex-col mt-3 mb-5 sm:flex-row justify-between items-start sm:items-center gap-3">
     <div>
       <h3 class="text-lg font-bold text-[var(--color-primary)] flex items-center gap-2">
@@ -11,7 +11,7 @@
       </p>
     </div>
     <button type="button" (click)="addSection()"
-      class="text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 leading-none transition-all hover:bg-[var(--color-primary)] hover:text-white px-4 py-2.5 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] shadow-sm active:scale-95">
+      class="text-xs w-full sm:w-fit font-bold uppercase tracking-wider inline-flex items-center gap-1 leading-none transition-all hover:bg-[var(--color-primary)] hover:text-white px-4 py-2.5 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] shadow-sm active:scale-95">
       <mat-icon class="!text-[16px] !w-4 !h-4 leading-none flex items-center justify-center">
         add
       </mat-icon>
@@ -39,9 +39,10 @@
       <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection"
         [sectionForm]="sectionGroup" [index]="sectionIdx" [isFirst]="sectionIdx === 0"
         [isLast]="sectionIdx === sections.length - 1" [courseId]="courseId"
-        [highlight]="sectionGroup.value.id === highlightSectionId"
-        [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (delete)="sectionsArray.removeAt(sectionIdx)"
-        (moveUp)="moveSectionUp(sectionIdx)" (moveDown)="moveSectionDown(sectionIdx)">
+        [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
+        [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (sectionCreated)="onSectionCreated($event)"
+        (delete)="onSectionDeleted(sectionIdx)" (moveUp)="moveSectionUp(sectionIdx)"
+        (moveDown)="moveSectionDown(sectionIdx)">
       </app-section-card>
     </div>
 

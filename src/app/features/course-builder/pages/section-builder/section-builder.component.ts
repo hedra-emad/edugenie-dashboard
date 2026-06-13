@@ -50,7 +50,7 @@ export class SectionBuilderComponent implements OnInit {
   highlightSectionId: string | null = null;
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
-  
+
 
   sectionForm = this.fb.group({
     sections: this.fb.array([])
@@ -109,12 +109,27 @@ export class SectionBuilderComponent implements OnInit {
       description: [''],
       expectedOutcomes: this.fb.array([]),
       isBasicSection: [false],
-      lessons: this.fb.array([]), 
+      lessons: this.fb.array([]),
       isSaving: [false],
       isDeleting: [false],
     });
 
     this.sectionsArray.push(section);
+
+
+    this.expandedSectionId = null;
+  }
+
+  onSectionDeleted(index: number) {
+    this.expandedSectionId = null;
+
+    setTimeout(() => {
+      this.sectionsArray.removeAt(index);
+    }, 150);
+  }
+
+  onSectionCreated(sectionId: string) {
+    this.expandedSectionId = sectionId;
   }
 
   moveSectionUp(index: number) {
@@ -146,7 +161,7 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   trackBySection(index: number, item: FormGroup) {
-    return item.get('id')?.value ?? index;
+    return item.get('id')?.value;
   }
 
   loadSections() {
