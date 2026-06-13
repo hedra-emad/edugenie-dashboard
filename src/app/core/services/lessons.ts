@@ -16,8 +16,6 @@ export class LessonsService {
     );
   }
 
-
-
   updateLesson(courseId: string, sectionId: string, lessonId: string, body: any) {
     return this.http.patch(
       `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`,

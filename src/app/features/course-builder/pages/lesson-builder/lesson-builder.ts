@@ -121,16 +121,36 @@ export class LessonBuilder implements OnInit {
   moveUp(index: number) {
     if (index === 0) return;
 
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index - 1, control);
+    const arr = this.lessonsArray;
+
+    const current = arr.at(index);
+    const above = arr.at(index - 1);
+
+    arr.setControl(index - 1, current);
+    arr.setControl(index, above);
+
+    arr.updateValueAndValidity(); // 👈 مهم
   }
 
   moveDown(index: number) {
-    if (index === this.lessonsArray.length - 1) return;
+    const arr = this.lessonsArray;
 
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index + 1, control);
+    if (index === arr.length - 1) return;
+
+    const current = arr.at(index);
+    const below = arr.at(index + 1);
+
+    arr.setControl(index + 1, current);
+    arr.setControl(index, below);
+
+    arr.updateValueAndValidity();
+  }
+
+  trackByLesson(index: number, item: FormGroup) {
+    return item;
+  }
+
+  get lessonsLength() {
+    return this.lessonsArray.length;
   }
 }

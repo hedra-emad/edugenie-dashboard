@@ -60,6 +60,8 @@ export class LessonCardComponent {
 
   videoState: VideoState = 'empty';
 
+  
+
   get isVideoValid(): boolean {
     const hasExistingVideo = !!this.lessonForm.get('videoUrl')?.value;
     return !!this.selectedVideoFile || hasExistingVideo;

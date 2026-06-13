@@ -23,8 +23,10 @@
     </div>
 
     <!-- Lesson cards -->
-    <app-lesson-card *ngFor="let lesson of lessons; let i = index" [lessonForm]="lesson" [courseId]="courseId"
-        [sectionId]="sectionId" (deleted)="onDeleted(i)">
+    <app-lesson-card *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson"
+        [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i" [isFirst]="i === 0"
+        [isLast]="i === lessonsArray.controls.length - 1" (deleted)="onDeleted(i)" (moveUp)="moveUp(i)"
+        (moveDown)="moveDown(i)">
     </app-lesson-card>
 
     <app-back-button label="Back" (back)="goBackToSections()">
