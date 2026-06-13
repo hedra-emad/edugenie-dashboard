@@ -42,6 +42,7 @@ export class LessonCardComponent {
   @Output() delete = new EventEmitter<void>();
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
+  @Output() durationChanged = new EventEmitter<void>();
 
   private lessonsService = inject(LessonsService);
   private cloudinaryService = inject(CloudinaryService);
@@ -209,6 +210,7 @@ export class LessonCardComponent {
             videoUrl: res.secure_url,
             videoPublicId: res.public_id
           });
+          this.durationChanged.emit();
 
           this.selectedVideoFile = null;
           this.selectedVideoUrl = null;
@@ -307,4 +309,6 @@ export class LessonCardComponent {
   setExpanded(value: boolean) {
     this.lessonForm.get('expanded')?.setValue(value);
   }
+
+  
 }

@@ -10,6 +10,9 @@
         <span class="truncate block">
           {{ index + 1 }}: {{ sectionForm.get('title')?.value || 'Untitled Section' }}
         </span>
+        <span class="text-xs text-slate-400 ml-2 shrink-0">
+          ({{ formatDuration(totalSectionDuration) }} min total)
+        </span>
       </div>
       <!-- Actions inside the header (preventing panel toggle) -->
       <div class="flex items-center gap-1.5">

@@ -243,4 +243,18 @@ export class SectionCardComponent {
     event.stopPropagation();
     this.moveDown.emit();
   }
+
+  get totalSectionDuration(): number {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+
+    return lessons.reduce((sum: number, lesson: any) => {
+      return sum + Number(lesson.videoDuration || 0);
+    }, 0);
+  }
+
+  formatDuration(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 }

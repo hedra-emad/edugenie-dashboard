@@ -12,4 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 export class CourseHeaderComponent {
   @Input() draftStatus: 'draft' | 'published' = 'draft';
   @Input() hasUnsavedChanges = false;
+  @Input() courseTitle: string | null = null;
+
 }

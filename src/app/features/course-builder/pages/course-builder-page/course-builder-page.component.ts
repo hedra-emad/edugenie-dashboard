@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { filter } from 'rxjs';
+import { CoursesService } from '../../../../core/services/courses';
 
 @Component({
   selector: 'app-create-course-page',
@@ -26,6 +27,8 @@ export class CourseBuilderPageComponent implements OnInit {
   private router = inject(Router);
   currentStep = signal(1);
   courseId: string | null = null;
+  courseTitle: string | null = null;
+  coursesService = inject(CoursesService);
 
 
   // course-builder-page.component.ts
@@ -35,6 +38,11 @@ export class CourseBuilderPageComponent implements OnInit {
 
     const match = this.router.url.match(/course-builder\/([^\/]+)/);
     this.courseId = match?.[1] ?? null;
+    if (this.courseId) {
+      this.coursesService.getCourseById(this.courseId).subscribe(course => {
+        this.courseTitle = course.title;
+      });
+    }
 
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))

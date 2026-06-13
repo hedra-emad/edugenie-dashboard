@@ -112,7 +112,8 @@ export class LessonBuilder implements OnInit {
       ['/course-builder', this.courseId, 'sections'],
       {
         queryParams: {
-          highlight: this.sectionId
+          highlight: this.sectionId,
+          expand: this.sectionId
         }
       }
     );
@@ -155,5 +156,5 @@ export class LessonBuilder implements OnInit {
     return this.lessonsArray.length;
   }
 
-  
+
 }

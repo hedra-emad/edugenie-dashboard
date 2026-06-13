@@ -10,6 +10,7 @@ import { CoursesService } from '../../../../core/services/courses';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { take } from 'rxjs';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -39,6 +40,7 @@ export function maxArrayLength(max: number) {
 
 
 export class SectionBuilderComponent implements OnInit {
+  courseTitle: string | null = null;
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private sectionsService = inject(SectionsService);
@@ -72,14 +74,31 @@ export class SectionBuilderComponent implements OnInit {
       this.route.snapshot.paramMap.get('courseId') ||
       this.route.parent?.snapshot.paramMap.get('courseId');
 
-    if (!id) {
-      console.error('Course ID not found');
-      return;
-    }
+    if (!id) return;
 
     this.courseId = id;
+    
+
+    const highlight = this.route.snapshot.queryParamMap.get('highlight');
+    const expand = this.route.snapshot.queryParamMap.get('expand');
+
+    this.highlightSectionId = highlight;
+    this.expandedSectionId = expand;
 
     this.loadSections();
+
+    this.router.navigate([], {
+      queryParams: {},
+      replaceUrl: true
+    });
+  }
+
+  ngAfterViewInit() {
+    if (this.highlightSectionId) {
+      setTimeout(() => {
+        this.highlightSectionId = null;
+      }, 5000);
+    }
   }
 
   addSection() {
