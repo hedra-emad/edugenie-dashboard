@@ -1,137 +1,61 @@
-<!-- Desktop: 3 cards in one sleek container with dividers -->
-<div
-    class="hidden sm:grid grid-cols-3 bg-white rounded-[var(--radius-panel)] border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-
+<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- 1. Total Earnings -->
-    <div class="p-8 flex flex-col gap-6 border-r border-slate-50 transition-all hover:bg-slate-50/30 group">
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
-            <div
-                class="w-12 h-12 rounded-2xl bg-[#EDE9FF] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="9" stroke="#3B1892" stroke-width="1.8" />
-                    <path
-                        d="M12 7.5v1M12 15.5v1M10 10.5c0-.8.9-1.5 2-1.5s2 .7 2 1.5-.9 1.4-2 1.5c-1.1.1-2 .8-2 1.5 0 .8.9 1.5 2 1.5s2-.7 2-1.5"
-                        stroke="#3B1892" stroke-width="1.7" stroke-linecap="round" />
-                </svg>
+            <div class="w-10 h-10 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
+                <mat-icon class="text-[var(--color-primary)]">payments</mat-icon>
             </div>
-            <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Total Earnings</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Earnings</span>
         </div>
-        <div class="flex flex-col gap-1">
-            <h3 class="text-3xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none tabular-nums">
-                $12,450.00</h3>
-            <div class="flex items-center gap-1.5 mt-2">
-                <div class="flex items-center bg-emerald-50 px-2 py-0.5 rounded-md">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" class="mr-1">
-                        <path d="M3 17l5-5 4 4 9-10" stroke="#22C55E" stroke-width="3" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    <span class="text-[10px] font-black text-[#22C55E] uppercase">+14%</span>
-                </div>
-                <span class="text-[10px] font-bold text-slate-400 lowercase opacity-60">from last month</span>
+        <div>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.totalEarnings | number:'1.2-2' }}</h3>
+            <div class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 uppercase mt-2">
+                +14%
             </div>
         </div>
     </div>
 
-    <!-- 2. Pending Payouts -->
-    <div class="p-8 flex flex-col gap-6 border-r border-slate-50 transition-all hover:bg-slate-50/30 group">
+    <!-- 2. Total Students -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
-            <div
-                class="w-12 h-12 rounded-2xl bg-[#E0F7FF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="5" width="20" height="14" rx="3" stroke="#00B0FF" stroke-width="1.8" />
-                    <path d="M2 9h20" stroke="#00B0FF" stroke-width="1.8" />
-                    <rect x="5" y="13" width="5" height="2" rx="1" fill="#00B0FF" />
-                </svg>
+            <div class="w-10 h-10 rounded-xl bg-[#F3E8FF] flex items-center justify-center shrink-0">
+                <mat-icon class="text-purple-600">groups</mat-icon>
             </div>
-            <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Pending Payouts</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Students</span>
         </div>
-        <div class="flex flex-col gap-1">
-            <h3 class="text-3xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none tabular-nums">
-                $1,200.00</h3>
-            <div class="mt-2">
-                <span
-                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md">Release:
-                    Oct 15</span>
+        <div>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents | number }}</h3>
+            <div class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
+                +52 New
             </div>
         </div>
     </div>
 
-    <!-- 3. Total Students -->
-    <div class="p-8 flex flex-col gap-6 transition-all hover:bg-slate-50/30 group">
+    <!-- 3. Pending Payouts -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
-            <div
-                class="w-12 h-12 rounded-2xl bg-[#EDE9FF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle cx="8" cy="7" r="3" stroke="#3B1892" stroke-width="1.8" />
-                    <path d="M2 21c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#3B1892" stroke-width="1.8"
-                        stroke-linecap="round" />
-                    <circle cx="17" cy="8" r="2.5" stroke="#3B1892" stroke-width="1.6" />
-                    <path d="M22 21c0-2.8-1.8-5.2-4.5-5.9" stroke="#3B1892" stroke-width="1.6" stroke-linecap="round" />
-                </svg>
+            <div class="w-10 h-10 rounded-xl bg-[#E0F7FF] flex items-center justify-center shrink-0">
+                <mat-icon class="text-[var(--color-secondary)]">pending_actions</mat-icon>
             </div>
-            <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Total Students</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pending Payouts</span>
         </div>
-        <div class="flex flex-col gap-1">
-            <h3 class="text-3xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none tabular-nums">
-                1,420</h3>
-            <div
-                class="flex items-center gap-1 mt-2 text-[var(--color-secondary)] font-black text-[10px] uppercase tracking-wider">
-                <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">person_add</mat-icon>
-                +52 new this week
-            </div>
+        <div>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.pendingPayouts | number:'1.2-2' }}</h3>
+            <div class="mt-2 h-[18px]"></div>
         </div>
     </div>
 
-</div>
-
-
-<div class="sm:hidden flex flex-col gap-4">
-
-   
-    <div
-        class="bg-white rounded-[1.5rem] p-5 border border-slate-50 shadow-[var(--shadow-card)] flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#EDE9FF] flex items-center justify-center shrink-0 shadow-inner">
-                <mat-icon class="text-[var(--color-primary)] !text-[24px]">payments</mat-icon>
+    <!-- 4. Next Payout Date -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                <mat-icon class="text-amber-500">event</mat-icon>
             </div>
-            <div class="flex flex-col">
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">Total Earnings</p>
-                <p class="text-xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none">$12,450.00
-                </p>
-            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Next Payout</span>
         </div>
-        <div class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md uppercase">+14%</div>
-    </div>
-
-   
-    <div
-        class="bg-white rounded-[1.5rem] p-5 border border-slate-50 shadow-[var(--shadow-card)] flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#E0F7FF] flex items-center justify-center shrink-0">
-                <mat-icon class="text-[var(--color-secondary)] !text-[24px]">pending_actions</mat-icon>
-            </div>
-            <div class="flex flex-col">
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">Pending</p>
-                <p class="text-xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none">$1,200.00
-                </p>
-            </div>
+        <div>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.nextPayoutDate | date:'mediumDate' }}</h3>
+            <div class="mt-2 h-[18px]"></div>
         </div>
-        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest opacity-60">Oct 15</span>
     </div>
-
-   
-    <div
-        class="bg-white rounded-[1.5rem] p-5 border border-slate-50 shadow-[var(--shadow-card)] flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center shrink-0 shadow-inner">
-                <mat-icon class="text-purple-600 !text-[24px]">groups</mat-icon>
-            </div>
-            <div class="flex flex-col">
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">Students</p>
-                <p class="text-xl font-black text-[var(--color-text-primary)] tracking-tighter leading-none">1,420</p>
-            </div>
-        </div>
-        <div class="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md uppercase">+52 New</div>
-    </div>
-
 </div>

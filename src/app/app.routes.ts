@@ -1,22 +1,52 @@
-import { ActivatedRoute, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { LayoutComponent } from './shared/components/layout/layout.component';
 import { authGuard } from './core/guards/auth.guard';
-import { LessonCardComponent } from './features/course-builder/components/lesson-card/lesson-card.component';
+import { guestGuard } from './core/guards/guest.guard';
+import { roleGuard } from './core/guards/role.guard';
 import { CourseBuilderPageComponent } from './features/course-builder/pages/course-builder-page/course-builder-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', loadComponent: () => import('./features/auth/login/pages/login.page').then(m => m.LoginPageComponent) },
-  { path: 'register', loadComponent: () => import('./features/auth/register/pages/register.page').then(m => m.RegisterPageComponent) },
-  { path: 'forgot-password', loadComponent: () => import('./features/auth/forgot-password/pages/forgot-password.page').then(m => m.ForgotPasswordPageComponent) },
-  { path: 'reset-password', loadComponent: () => import('./features/auth/reset-password/pages/reset-password.page').then(m => m.ResetPasswordPageComponent) },
+
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/login/pages/login.page').then(
+        (m) => m.LoginPageComponent,
+      ),
+  },
+  {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/register/pages/register.page').then(
+        (m) => m.RegisterPageComponent,
+      ),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/pages/forgot-password.page').then(
+        (m) => m.ForgotPasswordPageComponent,
+      ),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/pages/reset-password.page').then(
+        (m) => m.ResetPasswordPageComponent,
+      ),
+  },
+
   {
     path: '',
     component: LayoutComponent,
     children: [
       {
         path: 'my-courses',
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor', 'admin'] },
         loadComponent: () =>
           import('./features/instructor/courses-list/courses-list.component')
             .then(m => m.CoursesListComponent)

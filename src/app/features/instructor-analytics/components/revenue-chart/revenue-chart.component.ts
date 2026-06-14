@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, TooltipItem } from 'chart.js';
@@ -10,31 +10,33 @@ import { ChartConfiguration, TooltipItem } from 'chart.js';
   templateUrl: './revenue-chart.component.html',
   styleUrl: './revenue-chart.component.css',
 })
-export class RevenueChartComponent {
+export class RevenueChartComponent implements OnChanges {
+  @Input() revenueChart: { labels: string[]; data: number[] } | undefined;
 
   chartData: ChartConfiguration<'line'>['data'] = {
-    labels: ['Sep 15', 'Sep 22', 'Sep 29', 'Oct 06', 'Oct 13', 'Today'],
+    labels: [],
     datasets: [
       {
-        data: [30, 110, 165, 265, 210, 480],
-        borderColor: '#00B0FF',
-        borderWidth: 2.5,
-        pointBackgroundColor: 'white',
-        pointBorderColor: '#00B0FF',
-        pointBorderWidth: 2.5,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        tension: 0.45,
-        fill: true,
-        backgroundColor: (context: { chart: any }) => {
+        data: [],
+        borderColor: '#4F46E5',
+        backgroundColor: (context: any) => {
           const chart = context.chart;
           const { ctx, chartArea } = chart;
-          if (!chartArea) return 'transparent';
+          if (!chartArea) {
+            return 'rgba(79, 70, 229, 0.1)';
+          }
           const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(0, 176, 255, 0.18)');
-          gradient.addColorStop(1, 'rgba(0, 176, 255, 0.01)');
+          gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+          gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
           return gradient;
         },
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#FFFFFF',
+        pointBorderColor: '#4F46E5',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
     ],
   };
@@ -42,6 +44,10 @@ export class RevenueChartComponent {
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart',
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -63,22 +69,50 @@ export class RevenueChartComponent {
         ticks: {
           color: '#94A3B8',
           font: { size: 10 },
-          maxRotation: 30,
-          minRotation: 0,
         },
       },
       y: {
         min: 0,
-        max: 500,
         grid: { color: '#F1F5F9' },
         border: { display: false },
         ticks: {
           color: '#94A3B8',
           font: { size: 10 },
-          stepSize: 250,
           callback: (value: number | string) => '$' + value,
         },
       },
     },
   };
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['revenueChart'] && this.revenueChart) {
+      this.chartData = {
+        labels: this.revenueChart.labels,
+        datasets: [
+          {
+            data: this.revenueChart.data,
+            borderColor: '#4F46E5',
+            backgroundColor: (context: any) => {
+              const chart = context.chart;
+              const { ctx, chartArea } = chart;
+              if (!chartArea) {
+                return 'rgba(79, 70, 229, 0.1)';
+              }
+              const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+              gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+              gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+              return gradient;
+            },
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#FFFFFF',
+            pointBorderColor: '#4F46E5',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          }
+        ]
+      };
+    }
+  }
 }
