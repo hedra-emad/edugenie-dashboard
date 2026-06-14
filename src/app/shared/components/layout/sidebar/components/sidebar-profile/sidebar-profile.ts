@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../../../../core/services/auth';
+import { AuthService } from '../../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sidebar-profile',

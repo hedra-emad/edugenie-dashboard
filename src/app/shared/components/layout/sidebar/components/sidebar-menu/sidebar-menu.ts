@@ -18,6 +18,11 @@ export class SidebarMenu {
 
   items = [
     {
+      icon: 'menu_book',
+      label: 'My Courses',
+      route: '/my-courses',
+    },
+    {
       icon: 'analytics',
       label: 'Analytics',
       route: '/analytics',

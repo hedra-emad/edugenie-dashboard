@@ -1,5 +1,5 @@
-<div style="position: relative; width: 100%; height: 200px;">
-    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" role="img"
+<div class="relative w-full h-[200px] lg:h-[300px]">
+    <canvas *ngIf="revenueChart" baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" role="img"
         aria-label="Line chart showing revenue growth over the last 30 days">
     </canvas>
 </div>

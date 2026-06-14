@@ -1,7 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
-import { AuthService } from '../../../../../core/services/auth';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-navbar-auth',
@@ -15,13 +15,9 @@ export class NavbarAuthComponent {
   @Input() isMobile = false;
 
   authService = inject(AuthService);
-  router =  inject(Router);
+
   logout() {
-    this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/']);
-      }
-    });
+    this.authService.logout().subscribe();
   }
 
   get user() {

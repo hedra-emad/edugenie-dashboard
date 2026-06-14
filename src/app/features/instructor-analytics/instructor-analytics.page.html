@@ -1,5 +1,5 @@
 <div class="bg-[var(--color-background-page)] font-sans antialiased overflow-x-hidden">
-    <div class="max-w-[1000px] mx-auto w-full px-4 sm:px-8 py-4 sm:py-8 flex flex-col gap-4 sm:gap-8">
+    <div class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-4 lg:gap-8">
 
         <!-- Header -->
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -22,23 +22,34 @@
             </button>
         </header>
 
-       
-        <app-stats-cards></app-stats-cards>
+        <!-- Loading / Error states -->
+        <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
 
-       
-        <section
-            class="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 overflow-hidden relative">
-            <div class="flex justify-between items-center mb-5">
-                <h2 class="text-[11px] sm:text-lg font-black text-[var(--color-primary)] uppercase tracking-wider">
-                    Revenue Flow</h2>
-                <div
-                    class="bg-[var(--color-background)] px-2.5 py-1 rounded-lg border border-slate-100 text-[8px] font-black uppercase text-[var(--color-text-secondary)] whitespace-nowrap">
-                    Last 30 Days
+        <div *ngIf="!isLoading && error" class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+            <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>
+            <p class="font-bold">Failed to load analytics data.</p>
+            <p class="text-sm opacity-80 mt-1">Please try again later.</p>
+        </div>
+
+        <ng-container *ngIf="!isLoading && !error && analyticsData">
+            <app-stats-cards [stats]="analyticsData.stats"></app-stats-cards>
+
+            <section
+                class="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 overflow-hidden relative">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-[11px] sm:text-lg font-black text-[var(--color-primary)] uppercase tracking-wider">
+                        Revenue Flow</h2>
+                    <div
+                        class="bg-[var(--color-background)] px-2.5 py-1 rounded-lg border border-slate-100 text-[8px] font-black uppercase text-[var(--color-text-secondary)] whitespace-nowrap">
+                        Last 30 Days
+                    </div>
                 </div>
-            </div>
-            <app-revenue-chart></app-revenue-chart>
-        </section>
+                <app-revenue-chart [revenueChart]="analyticsData.revenueChart"></app-revenue-chart>
+            </section>
 
-        <app-sales-table></app-sales-table>
+            <app-sales-table [recentSales]="analyticsData.recentSales"></app-sales-table>
+        </ng-container>
     </div>
 </div>

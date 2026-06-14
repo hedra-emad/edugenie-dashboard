@@ -20,7 +20,7 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { RoleSelectorComponent } from '../../../../shared/components/role-selector/role-selector.component';
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
-import { AuthService } from '../../../../core/services/auth';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register-page',
