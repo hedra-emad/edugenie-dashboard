@@ -1,14 +1,15 @@
 import { CourseLevel } from "../../../core/enums/course-level.enum";
+import { CourseStatus } from "../../../core/enums/course-status";
 import { Section } from "../../../core/models/section.model";
 
 export interface CourseBuilderModel {
   title: string;
   description: string;
-  category: string;
+  price: number;
+  thumbnail: string;
   level: CourseLevel;
-  price: number | null;
-  thumbnail: string | null;
+  categoryId: string;
   goals: string[];
   requirements: string[];
-  sections: Section[];
+  courseStatus: CourseStatus;
 }
