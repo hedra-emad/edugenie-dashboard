@@ -48,19 +48,26 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard],
         data: { roles: ['instructor', 'admin'] },
         loadComponent: () =>
-          import('./features/instructor/courses-list/courses-list.component')
-            .then(m => m.CoursesListComponent)
+          import('./features/instructor/courses-list/courses-list.component').then(
+            (m) => m.CoursesListComponent,
+          ),
       },
       {
         path: 'analytics',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor', 'admin'] },
         loadComponent: () =>
-          import('./features/instructor-analytics/instructor-analytics.page')
-            .then(m => m.InstructorAnalyticsPageComponent)
+          import('./features/instructor-analytics/instructor-analytics.page').then(
+            (m) => m.InstructorAnalyticsPageComponent,
+          ),
       },
 
+      // -- YOUR COURSE BUILDER ROUTES MERGED WITH MAIN'S GUARDS --
       {
         path: 'course-builder',
         component: CourseBuilderPageComponent,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor', 'admin'] },
         children: [
           {
             path: 'basic',
@@ -87,10 +94,11 @@ export const routes: Routes = [
           }
         ]
       },
-
       {
         path: 'course-builder/:courseId',
         component: CourseBuilderPageComponent,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor', 'admin'] },
         children: [
           {
             path: 'basic',
