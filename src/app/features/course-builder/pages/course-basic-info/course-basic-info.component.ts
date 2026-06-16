@@ -1,6 +1,6 @@
 import { Component, Input, ElementRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CategorySelectorComponent } from '../../components/category-selector/category-selector.component';
 import { GoalsInputComponent } from '../../components/goals-input/goals-input.component';
@@ -12,12 +12,12 @@ import { CourseStatus } from '../../../../core/enums/course-status';
 import { environment } from '../../../../../environments/environment';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
-import { Course } from '../../../../core/models/course.model';
 import { CourseBuilderModel } from '../../models/course-builder.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 import { Subject, takeUntil } from 'rxjs';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -28,17 +28,17 @@ import { ToastrService } from 'ngx-toastr';
     CategorySelectorComponent,
     GoalsInputComponent,
     RequirementsInputComponent,
-    ActionBarComponent
+    ActionBarComponent,
+    AppLoader
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
 })
 
-
 export class CourseBasicInfoComponent {
 
   private coursesService = inject(CoursesService);
-  private router = inject(Router);
+  router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
   private destroy$ = new Subject<void>();
@@ -46,12 +46,13 @@ export class CourseBasicInfoComponent {
   private fb = inject(FormBuilder);
   isSaving = signal(false);
   courseCreated = signal(false);
+  isLoadingCourse = signal(false);
+  courseNotFound = signal(false);
   @Output() continue = new EventEmitter<void>();
 
   isUploading = signal(false);
   hasThumbnail = signal(false);
   hasChanges = signal(false);
-  private initialized = false;
   selectedThumbnailFile: File | null = null;
 
   imageError: string | null = null;
@@ -79,7 +80,7 @@ export class CourseBasicInfoComponent {
 
     level: [null as CourseLevel | null, Validators.required],
 
-    category: ['', Validators.required],
+    category: new FormControl<string | null>(null, Validators.required),
     goals: this.fb.array([]),
     requirements: this.fb.array([])
   });
@@ -100,7 +101,6 @@ export class CourseBasicInfoComponent {
     this.loadCourse(this.courseId);
     this.listenToArraysChanges();
   }
-
 
   handleFile(file: File) {
 
@@ -177,7 +177,6 @@ export class CourseBasicInfoComponent {
     this.openLevel = false;
   }
 
-
   getControl(name: string): FormControl {
     return this.courseForm.get(name) as FormControl;
   }
@@ -208,7 +207,6 @@ export class CourseBasicInfoComponent {
       });
   }
 
-
   private normalize(value: any) {
     return {
       ...value,
@@ -218,32 +216,54 @@ export class CourseBasicInfoComponent {
   }
 
   loadCourse(id: string) {
+    this.isLoadingCourse.set(true);
+    this.courseNotFound.set(false);
+
     this.coursesService.getCourseById(id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(course => {
+      .subscribe({
+        next: (course) => {
 
-        this.courseForm.patchValue({
-          title: course.title,
-          description: course.description,
-          price: course.price,
-          thumbnail: course.thumbnail,
-          level: course.level,
-          category: course.categoryId
-        }, { emitEvent: false });
+          if (!course) {
+            this.courseNotFound.set(true);
+            this.isLoadingCourse.set(false);
+            return;
+          }
 
-        this.setArray('goals', course.goals || []);
-        this.setArray('requirements', course.requirements || []);
+          this.courseForm.patchValue({
+            title: course.title,
+            description: course.description,
+            price: course.price,
+            thumbnail: course.thumbnail,
+            level: course.level,
+            category: course.categoryId
+          }, { emitEvent: false });
 
-        if (course.thumbnail) {
-          this.thumbnailPreview.set(course.thumbnail);
-          this.hasThumbnail.set(true);
+          this.setArray('goals', course.goals || []);
+          this.setArray('requirements', course.requirements || []);
+
+          if (course.thumbnail) {
+            this.thumbnailPreview.set(course.thumbnail);
+            this.hasThumbnail.set(true);
+          }
+
+          setTimeout(() => {
+            this.setBaseline();
+          });
+
+          this.isLoadingCourse.set(false);
+        },
+
+        error: (err) => {
+
+          this.isLoadingCourse.set(false);
+
+          if (err.status === 404) {
+            this.courseNotFound.set(true);
+          } else {
+            this.toastr.error('Failed to load course');
+          }
         }
-
-        //  baseline AFTER everything
-        setTimeout(() => {
-          this.setBaseline();
-        });
-
       });
   }
 
@@ -280,8 +300,6 @@ export class CourseBasicInfoComponent {
       arr.push(this.fb.control(req));
     });
   }
-
-
 
   setArray(name: string, values: string[]) {
     const arr = this.courseForm.get(name) as FormArray;
@@ -451,17 +469,21 @@ export class CourseBasicInfoComponent {
 
     // 4) SAFE payload (NO TS ERRORS)
     const payload: CourseBuilderModel = {
-      title: form.title.trim(),
-      description: form.description.trim(),
+      title: form.title?.trim(),
+      description: form.description?.trim(),
       price: Number(form.price ?? 0),
 
-      //  FIXED TYPE (CourseLevel)
-      level: form.level,
+      level: form.level as CourseLevel,
 
-      categoryId: form.category,
+      categoryId: form.category as string,
 
-      goals: (form.goals || []).map((g: any) => g?.value ?? g),
-      requirements: (form.requirements || []).map((r: any) => r?.value ?? r),
+      goals: (form.goals || []).map((g: any) =>
+        typeof g === 'string' ? g : g?.value
+      ),
+
+      requirements: (form.requirements || []).map((r: any) =>
+        typeof r === 'string' ? r : r?.value
+      ),
 
       thumbnail: '',
       courseStatus: CourseStatus.DRAFT

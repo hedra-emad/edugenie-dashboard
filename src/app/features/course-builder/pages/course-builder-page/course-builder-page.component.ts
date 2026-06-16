@@ -7,6 +7,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/ro
 import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { filter } from 'rxjs';
 import { CoursesService } from '../../../../core/services/courses';
+import { CourseStatus } from '../../../../core/enums/course-status';
 
 @Component({
   selector: 'app-create-course-page',
@@ -23,23 +24,42 @@ import { CoursesService } from '../../../../core/services/courses';
   styleUrl: './course-builder-page.component.css'
 })
 export class CourseBuilderPageComponent implements OnInit {
-  private route = inject(ActivatedRoute);
   private router = inject(Router);
   currentStep = signal(1);
   courseId: string | null = null;
   courseTitle: string | null = null;
+  courseStatus: CourseStatus = CourseStatus.DRAFT;
   coursesService = inject(CoursesService);
 
   ngOnInit() {
     this.updateStep(this.router.url);
 
-    const match = this.router.url.match(/course-builder\/([^\/]+)/);
-    this.courseId = match?.[1] ?? null;
-    if (this.courseId) {
-      this.coursesService.getCourseById(this.courseId).subscribe(course => {
-        this.courseTitle = course.title;
-      });
+    const urlParts = this.router.url.split('/');
+
+    const possibleId = urlParts[2];
+
+    const isRealId =
+      possibleId &&
+      possibleId !== 'basic' &&
+      possibleId !== 'sections' &&
+      possibleId !== 'lessons';
+
+    this.courseId = isRealId ? possibleId : null;
+
+    if (!this.courseId || this.courseId === 'null' || this.courseId === 'undefined') {
+      console.warn('No valid courseId in URL');
+      return;
     }
+
+    this.coursesService.getCourseById(this.courseId).subscribe({
+      next: (course) => {
+        this.courseTitle = course.title;
+        this.courseStatus = this.mapCourseStatus(course.courseStatus);
+      },
+      error: (err) => {
+        console.error('getCourseById failed:', err);
+      }
+    });
 
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -51,11 +71,9 @@ export class CourseBuilderPageComponent implements OnInit {
       });
   }
 
-
   onCourseCreated(id: string) {
     this.router.navigate(['/course-builder', id, 'sections']);
   }
-
 
   private updateStep(url: string) {
     if (url.includes('lessons')) {
@@ -64,6 +82,22 @@ export class CourseBuilderPageComponent implements OnInit {
       this.currentStep.set(2);
     } else {
       this.currentStep.set(1);
+    }
+  }
+
+  private mapCourseStatus(status: string): CourseStatus {
+    const normalized = (status || '').toLowerCase().replace(/-/g, '_');
+    switch (normalized) {
+      case 'under_review':
+        return CourseStatus.UNDER_REVIEW;
+      case 'rejected':
+        return CourseStatus.REJECTED;
+      case 'published':
+        return CourseStatus.PUBLISHED;
+      case 'archived':
+        return CourseStatus.ARCHIVED;
+      default:
+        return CourseStatus.DRAFT;
     }
   }
 }
