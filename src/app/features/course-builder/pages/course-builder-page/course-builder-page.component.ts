@@ -29,6 +29,7 @@ export class CourseBuilderPageComponent implements OnInit {
   courseId: string | null = null;
   courseTitle: string | null = null;
   courseStatus: CourseStatus = CourseStatus.DRAFT;
+  courseDuration: number = 0;
   coursesService = inject(CoursesService);
 
   ngOnInit() {
@@ -48,18 +49,9 @@ export class CourseBuilderPageComponent implements OnInit {
 
     if (!this.courseId || this.courseId === 'null' || this.courseId === 'undefined') {
       console.warn('No valid courseId in URL');
-      return;
+    } else {
+      this.fetchCourseData();
     }
-
-    this.coursesService.getCourseById(this.courseId).subscribe({
-      next: (course) => {
-        this.courseTitle = course.title;
-        this.courseStatus = this.mapCourseStatus(course.courseStatus);
-      },
-      error: (err) => {
-        console.error('getCourseById failed:', err);
-      }
-    });
 
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -67,8 +59,45 @@ export class CourseBuilderPageComponent implements OnInit {
         this.updateStep(event.urlAfterRedirects);
 
         const match = event.urlAfterRedirects.match(/course-builder\/([^\/]+)/);
-        this.courseId = match?.[1] ?? null;
+        const possibleId = match?.[1] ?? null;
+        
+        const isRealId =
+          possibleId &&
+          possibleId !== 'basic' &&
+          possibleId !== 'sections' &&
+          possibleId !== 'lessons' &&
+          possibleId !== 'null' &&
+          possibleId !== 'undefined';
+          
+        this.courseId = isRealId ? possibleId : null;
+        
+        if (this.courseId) {
+          this.fetchCourseData();
+        }
       });
+  }
+
+  private fetchCourseData() {
+    if (!this.courseId) return;
+    
+    this.courseDuration = 0;
+    this.coursesService.getCourseById(this.courseId).subscribe({
+      next: (course) => {
+        this.courseTitle = course.title;
+        this.courseStatus = this.mapCourseStatus(course.courseStatus);
+        
+        const totalSeconds = (course.sections || []).reduce((sectionTotal: number, section: any) => {
+          return sectionTotal + (section.lessons || []).reduce((lessonTotal: number, lesson: any) => {
+            return lessonTotal + (lesson.videoDuration || 0);
+          }, 0);
+        }, 0);
+        
+        this.courseDuration = totalSeconds;
+      },
+      error: (err) => {
+        console.error('getCourseById failed:', err);
+      }
+    });
   }
 
   onCourseCreated(id: string) {

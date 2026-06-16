@@ -17,5 +17,15 @@
         </span>
       </div>
     </div>
+    
+    <p 
+      *ngIf="courseDuration > 0"
+      class="text-xs font-medium flex items-center gap-1"
+      style="color: var(--color-text-secondary);">
+      <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">
+        schedule
+      </mat-icon>
+      {{ formatDuration(courseDuration) }}
+    </p>
   </div>
 </header>

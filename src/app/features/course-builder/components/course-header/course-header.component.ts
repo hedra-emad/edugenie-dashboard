@@ -15,4 +15,21 @@ export class CourseHeaderComponent {
   @Input() hasUnsavedChanges = false;
   @Input() courseTitle: string | null = null;
   @Input() courseId: string | null = null;
+  @Input() courseDuration: number = 0;
+
+  formatDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) return '';
+
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+
+    if (h > 0) {
+      return `${h}h ${m}m total length`;
+    } else if (m > 0) {
+      return `${m}m ${s}s total length`;
+    } else {
+      return `${s}s total length`;
+    }
+  }
 }
