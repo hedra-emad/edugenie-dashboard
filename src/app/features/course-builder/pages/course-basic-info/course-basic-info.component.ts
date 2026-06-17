@@ -8,11 +8,9 @@ import { RequirementsInputComponent } from '../../components/requirements-input/
 import { Output, EventEmitter } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CoursesService } from '../../../../core/services/courses';
-import { CourseStatus } from '../../../../core/enums/course-status';
-import { environment } from '../../../../../environments/environment';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
-import { CourseBuilderModel } from '../../models/course-builder.model';
+import { CreateCoursePayload } from '../../../../core/models/course.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 import { Subject, takeUntil } from 'rxjs';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
@@ -29,7 +27,7 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     GoalsInputComponent,
     RequirementsInputComponent,
     ActionBarComponent,
-    AppLoader
+    AppLoader,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -41,7 +39,9 @@ export class CourseBasicInfoComponent {
   router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
+
   private destroy$ = new Subject<void>();
+  existingThumbnailPublicId: string | null = null;
 
   private fb = inject(FormBuilder);
   isSaving = signal(false);
@@ -74,7 +74,6 @@ export class CourseBasicInfoComponent {
   courseForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(5)]],
     description: ['', [Validators.required, Validators.minLength(20)]],
-    price: [0, [Validators.required, Validators.min(0)]],
     thumbnail: ['', Validators.required],
 
 
@@ -230,21 +229,29 @@ export class CourseBasicInfoComponent {
             return;
           }
 
+          if (course.thumbnail) {
+            this.thumbnailPreview.set(course.thumbnail);
+            this.hasThumbnail.set(true);
+            this.existingThumbnailPublicId = course.thumbnailPublicId ?? null; // ← ADD
+          }
+
+
           this.courseForm.patchValue({
             title: course.title,
             description: course.description,
-            price: course.price,
             thumbnail: course.thumbnail,
             level: course.level,
-            category: course.categoryId
+            category: typeof course.categoryId === 'string' ? course.categoryId : (course.categoryId as any)?._id
           }, { emitEvent: false });
 
           this.setArray('goals', course.goals || []);
           this.setArray('requirements', course.requirements || []);
 
+
           if (course.thumbnail) {
             this.thumbnailPreview.set(course.thumbnail);
             this.hasThumbnail.set(true);
+            this.existingThumbnailPublicId = course.thumbnailPublicId ?? null;
           }
 
           setTimeout(() => {
@@ -389,26 +396,43 @@ export class CourseBasicInfoComponent {
 
     this.status.set('updating');
 
-    const formValue = this.courseForm.getRawValue();
+    const formValue = this.courseForm.getRawValue() as {
+      title: string;
+      description: string;
+      thumbnail: string;
+      level: CourseLevel;
+      category: string | { _id: string };
+      goals: string[];
+      requirements: string[];
+    };
+    const categoryId =
+      typeof formValue.category === 'string'
+        ? formValue.category
+        : (formValue.category as any)?._id;
 
     const payload: any = {
       title: formValue.title,
       description: formValue.description,
-      price: formValue.price,
       level: formValue.level,
-      categoryId: formValue.category!,
+      categoryId: categoryId,
       goals: formValue.goals || [],
       requirements: formValue.requirements || [],
     };
 
     const upload$ = this.selectedThumbnailFile
-      ? this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile)
+      ? this.cloudinaryService.uploadThumbnail(
+        this.selectedThumbnailFile,
+        this.existingThumbnailPublicId,
+      )
       : null;
+
 
     if (upload$) {
       upload$.subscribe({
         next: (res) => {
           payload.thumbnail = res.secure_url;
+          payload.thumbnailPublicId = res.public_id;
+          this.existingThumbnailPublicId = res.public_id;
           this.sendUpdate(payload);
         },
         error: (err) => {
@@ -468,10 +492,9 @@ export class CourseBasicInfoComponent {
     }
 
     // 4) SAFE payload (NO TS ERRORS)
-    const payload: CourseBuilderModel = {
+    const payload: CreateCoursePayload = {
       title: form.title?.trim(),
       description: form.description?.trim(),
-      price: Number(form.price ?? 0),
 
       level: form.level as CourseLevel,
 
@@ -486,16 +509,16 @@ export class CourseBasicInfoComponent {
       ),
 
       thumbnail: '',
-      courseStatus: CourseStatus.DRAFT
     };
 
     // 5) upload image
     this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
       .subscribe({
         next: (uploadRes) => {
-
           payload.thumbnail = uploadRes.secure_url;
-
+          payload.thumbnailPublicId = uploadRes.public_id;
+          this.existingThumbnailPublicId = uploadRes.public_id;
+          this.existingThumbnailPublicId = uploadRes.public_id;
           // 6) create course API
           this.coursesService.createCourse(payload)
             .subscribe({

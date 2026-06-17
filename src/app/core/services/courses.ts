@@ -1,21 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CourseLevel } from '../enums/course-level.enum';
-import { Course } from '../models/course.model';
-import { CourseStatus } from '../enums/course-status';
+import { Course, UpdateCoursePayload } from '../models/course.model';
+import { CreateCoursePayload } from '../models/course.model';
 
-export interface CreateCoursePayload {
-  title: string;
-  description: string;
-  price: number;
-  thumbnail: string;
-  level: CourseLevel;
-  categoryId: string;
-  goals?: string[];
-  requirements?: string[];
-  courseStatus: CourseStatus;
-}
 
 @Injectable({ providedIn: 'root' })
 export class CoursesService {
@@ -49,7 +37,7 @@ export class CoursesService {
     );
   }
 
-  updateCourse(id: string, payload: Partial<CreateCoursePayload>) {
+  updateCourse(id: string, payload: UpdateCoursePayload) {
     return this.http.patch<Course>(
       `${this.baseUrl}/${id}`,
       payload,

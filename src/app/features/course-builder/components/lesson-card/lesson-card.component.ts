@@ -207,7 +207,14 @@ export class LessonCardComponent {
     this.isUploading = true;
     this.videoState = 'uploading';
 
-    this.cloudinaryService.uploadVideo(this.selectedVideoFile!)
+    const lessonId = this.lessonForm.get('id')?.value ?? 'new';
+
+    this.cloudinaryService.uploadVideo(
+      this.selectedVideoFile!,
+      this.courseId,
+      this.sectionId,
+      lessonId, 
+    )
       .pipe(
         finalize(() => {
           this.isUploading = false;

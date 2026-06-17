@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  lessonUploadPreset: 'lessons',
-  thumbnailUploadPreset: 'course_thumbnails'
+  lessonUploadPreset: 'videos',
+  thumbnailUploadPreset: 'thumbnails',
+  apiUrl: 'https://edugenie-api.vercel.app',
 };
 
