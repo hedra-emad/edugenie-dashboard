@@ -10,7 +10,7 @@ import { SalesTableComponent } from './components/sales-table/sales-table.compon
 import { RevenueChartComponent } from './components/revenue-chart/revenue-chart.component';
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-instructor-analytics',
