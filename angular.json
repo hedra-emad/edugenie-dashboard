@@ -64,8 +64,7 @@
               "buildTarget": "edugenie-dashboard:build:production"
             },
             "development": {
-              "buildTarget": "edugenie-dashboard:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "buildTarget": "edugenie-dashboard:build:development"
             }
           },
           "defaultConfiguration": "development"
