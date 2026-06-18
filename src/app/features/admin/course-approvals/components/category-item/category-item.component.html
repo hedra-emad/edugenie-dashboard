@@ -1,0 +1,46 @@
+<div class="category-item">
+  <!-- Left section: drag handle and text -->
+  <div class="item-left">
+    <div class="drag-handle">
+      <mat-icon class="scale-90">drag_indicator</mat-icon>
+    </div>
+
+    <!-- Edit mode name input -->
+    <input *ngIf="isEditing; else displayName"
+           type="text"
+           [(ngModel)]="editedName"
+           (keydown)="onKeyDown($event)"
+           class="edit-input"
+           focus
+           aria-label="Edit category name" />
+
+    <!-- View mode display -->
+    <ng-template #displayName>
+      <div class="category-name-wrapper">
+        <span class="category-name" [title]="category.name">{{ category.name }}</span>
+        <span class="course-count" title="Number of courses in this category">{{ category.courseCount }} courses</span>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Right section: action controls -->
+  <div class="item-right">
+    <ng-container *ngIf="isEditing; else viewActions">
+      <button (click)="saveEdit()" class="action-btn save-btn" title="Save changes">
+        <mat-icon class="scale-90">check</mat-icon>
+      </button>
+      <button (click)="cancelEdit()" class="action-btn" title="Cancel edit">
+        <mat-icon class="scale-90">close</mat-icon>
+      </button>
+    </ng-container>
+
+    <ng-template #viewActions>
+      <button (click)="startEdit()" class="action-btn" title="Rename category">
+        <mat-icon class="scale-75">edit</mat-icon>
+      </button>
+      <button (click)="delete.emit(category.id)" class="action-btn delete-btn" title="Delete category">
+        <mat-icon class="scale-75">delete_outline</mat-icon>
+      </button>
+    </ng-template>
+  </div>
+</div>

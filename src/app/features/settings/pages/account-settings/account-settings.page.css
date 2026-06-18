@@ -1,1 +1,57 @@
 /* account-settings.page.css */
+
+/* ─── Cropper Arena ───────────────────────────────────────────────── */
+
+.cropper-arena {
+  position: relative;
+  width: 380px;
+  height: 380px;
+  max-width: min(380px, 90vw);
+  max-height: min(380px, 50vh);
+  overflow: hidden;
+  background-color: #111;
+  /* Checkerboard so transparency is obvious */
+  background-image:
+    linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+    linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  flex-shrink: 0;
+}
+
+.cropper-arena.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Dark overlay with a transparent circular hole */
+.cropper-overlay {
+  position: absolute;
+  inset: 0;
+  /* The hole must match CROP_RADIUS * 2 = 310px (= 380px - 35px padding each side) */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  width: 310px;
+  height: 310px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* White border ring on top of overlay */
+.cropper-ring {
+  position: absolute;
+  width: 310px;
+  height: 310px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}

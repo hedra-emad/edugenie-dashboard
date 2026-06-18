@@ -1,0 +1,47 @@
+<div class="categories-card">
+  <h3 class="card-title">Manage Categories</h3>
+
+  <!-- Add Category Input -->
+  <div class="add-category-form">
+    <input
+      type="text"
+      class="add-input"
+      [(ngModel)]="newCategoryName"
+      placeholder="New category name..."
+      (keyup.enter)="onAddCategory()"
+      aria-label="New category name"
+    />
+    <button
+      (click)="onAddCategory()"
+      [disabled]="!newCategoryName.trim()"
+      class="add-btn"
+      aria-label="Add category"
+    >
+      <mat-icon class="scale-90">add</mat-icon>
+      Add
+    </button>
+  </div>
+
+  <!-- Drag-Drop Categories List -->
+  <div class="categories-list-container">
+    <div
+      cdkDropList
+      [cdkDropListData]="categories"
+      (cdkDropListDropped)="drop($event)"
+    >
+      <div *ngFor="let category of categories; trackBy: trackById" cdkDrag>
+        <app-category-item
+          [category]="category"
+          (update)="update.emit($event)"
+          (delete)="delete.emit($event)">
+        </app-category-item>
+        <!-- Placeholder shown while dragging -->
+        <div *cdkDragPlaceholder class="drag-placeholder"></div>
+      </div>
+    </div>
+
+    <p *ngIf="categories.length === 0" class="empty-categories">
+      No categories yet. Add one above.
+    </p>
+  </div>
+</div>

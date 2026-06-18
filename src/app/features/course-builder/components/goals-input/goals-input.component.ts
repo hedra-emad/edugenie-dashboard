@@ -20,7 +20,13 @@ export class GoalsInputComponent {
   }
 
   addGoal() {
-    this.goalsArray.push(this.fb.control('', Validators.required));
+    this.goalsArray.push(
+      this.fb.control('', [
+        Validators.required,
+        Validators.pattern(/.*\S.*/)
+      ])
+    );
+
     this.goalsArray.markAsDirty();
   }
 

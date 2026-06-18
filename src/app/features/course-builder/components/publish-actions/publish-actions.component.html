@@ -4,9 +4,9 @@
     <!-- Draft status badge -->
     <div
       class="px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border"
-      [ngClass]="draftStatus === 'Draft' ? 'badge-draft' : 'badge-published'"
+      [ngClass]="draftStatus === 'draft' ? 'badge-draft' : 'badge-published'"
     >
-      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="draftStatus === 'Draft' ? 'bg-[var(--color-warning)]' : 'bg-[var(--color-success)]'"></span>
+      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="draftStatus === 'draft' ? 'bg-[var(--color-warning)]' : 'bg-[var(--color-success)]'"></span>
       <span>{{ draftStatus }}</span>
     </div>
 

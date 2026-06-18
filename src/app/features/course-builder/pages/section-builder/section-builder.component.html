@@ -1,0 +1,51 @@
+<div>
+  <div class="flex flex-col mt-3 mb-5 sm:flex-row justify-between items-start sm:items-center gap-3">
+    <div>
+      <h3 class="text-lg font-bold text-[var(--color-primary)] flex items-center gap-2">
+        <mat-icon class="text-[20px] w-5 h-5">list_alt</mat-icon>
+        Course Curriculum
+      </h3>
+
+      <p class="text-xs text-[var(--color-text-secondary)] mt-0.5">
+        Organize your course into sections, lessons, and video content.
+      </p>
+    </div>
+    <button type="button" (click)="addSection()"
+      class="text-xs w-full sm:w-fit font-bold uppercase tracking-wider inline-flex items-center gap-1 leading-none transition-all hover:bg-[var(--color-primary)] hover:text-white px-4 py-2.5 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] shadow-sm active:scale-95">
+      <mat-icon class="!text-[16px] !w-4 !h-4 leading-none flex items-center justify-center">
+        add
+      </mat-icon>
+
+      <span class="leading-none">Add Section</span>
+    </button>
+  </div>
+
+  <div class="space-y-4">
+    <div *ngIf="sections.length === 0"
+      class="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-white shadow-sm">
+      <mat-icon class="text-slate-300 text-[48px] w-12 h-12 mx-auto mb-2">layers</mat-icon>
+      <p class="text-sm font-bold text-gray-700">Your curriculum is empty</p>
+      <p class="text-xs text-[var(--color-text-secondary)] mt-1 max-w-[280px] mx-auto">
+        Add sections to structure your lectures, quizzes, and project uploads.
+      </p>
+      <button type="button" (click)="addSection()"
+        class="mt-4 text-xs font-extrabold text-[var(--color-primary)] uppercase tracking-wider px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100">
+        Create First Section
+      </button>
+    </div>
+
+    <!-- Section list -->
+    <div *ngIf="sections.length > 0">
+      <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection"
+        [sectionForm]="sectionGroup" [index]="sectionIdx" [isFirst]="sectionIdx === 0"
+        [isLast]="sectionIdx === sections.length - 1" [courseId]="courseId"
+        [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
+        [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (sectionCreated)="onSectionCreated($event)"
+        (delete)="onSectionDeleted(sectionIdx)" (moveUp)="moveSectionUp(sectionIdx)"
+        (moveDown)="moveSectionDown(sectionIdx)">
+      </app-section-card>
+    </div>
+
+    <app-back-button label="Back" (back)="goToCourse()">
+    </app-back-button>
+  </div>

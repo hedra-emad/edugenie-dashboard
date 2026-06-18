@@ -13,8 +13,8 @@ import { RememberMeComponent } from '../../../../shared/components/remember-me/r
 import { AuthButtonComponent } from '../../../../shared/components/auth-button/auth-button.component';
 import { AuthDividerComponent } from '../../../../shared/components/auth-divider/auth-divider.component';
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
-import { AuthService } from '../../../../core/services/auth';
-import {LoginResponse} from '../../../../core/services/auth'
+import { AuthService } from '../../../../core/services/auth.service';
+import { LoginResponse } from '../../../../core/models/user-profile.model';
 
 @Component({
   selector: 'app-login-page',
@@ -80,7 +80,7 @@ export class LoginPageComponent implements OnInit {
     this.errorMessage.set(null);
     const { email, password, rememberMe } = this.loginForm.value;
     if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
+      // console.log(this.loginForm.value);
       this.isLoading.set(true);
 
       this.authService.login({
@@ -89,17 +89,10 @@ export class LoginPageComponent implements OnInit {
 })
         .subscribe({
         next: (res: LoginResponse) => {
-  this.isLoading.set(false);
-
-  // if (rememberMe) {
-  //   localStorage.setItem('token', token);
-  // } else {
-  //   sessionStorage.setItem('token', token);
-  // }
-
-
-  this.router.navigate(['/settings']);
-},
+          this.isLoading.set(false);
+          const homeRoute = this.authService.getHomeRouteForRole(res.user.role);
+          this.router.navigate([homeRoute]);
+        },
 
           error: (err) => {
           console.error('Login error:', err);

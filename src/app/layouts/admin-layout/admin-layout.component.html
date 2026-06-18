@@ -1,0 +1,27 @@
+<div class="admin-layout-wrapper">
+  <!-- Sidebar -->
+  <app-admin-sidebar
+    [isMobile]="isMobile"
+    [isTablet]="isTablet"
+    [sidebarExpanded]="sidebarExpanded"
+    (toggle)="toggleSidebar()">
+  </app-admin-sidebar>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div
+    class="sidebar-backdrop"
+    *ngIf="isMobile && sidebarExpanded"
+    (click)="closeMobileSidebar()">
+  </div>
+
+  <!-- Main Area -->
+  <div class="main-container" [class.sidebar-collapsed]="isTablet || (!isMobile && !sidebarExpanded)">
+    <!-- Header -->
+    <app-admin-header (toggleSidebar)="toggleSidebar()"></app-admin-header>
+
+    <!-- Page Content -->
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

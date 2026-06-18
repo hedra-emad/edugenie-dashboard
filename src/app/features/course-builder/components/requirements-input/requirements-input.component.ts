@@ -20,7 +20,13 @@ export class RequirementsInputComponent {
   }
 
   addRequirement() {
-    this.requirementsArray.push(this.fb.control('', Validators.required));
+    this.requirementsArray.push(
+      this.fb.control('', [
+        Validators.required,
+        Validators.pattern(/.*\S.*/)
+      ])
+    );
+
     this.requirementsArray.markAsDirty();
   }
 
