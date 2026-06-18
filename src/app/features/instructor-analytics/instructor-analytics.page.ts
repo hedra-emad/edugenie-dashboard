@@ -10,8 +10,9 @@ import { RevenueChartComponent } from './components/revenue-chart/revenue-chart.
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { OnInit, inject } from '@angular/core';
+import { OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-instructor-analytics',
@@ -31,19 +32,27 @@ import { finalize } from 'rxjs';
 export class InstructorAnalyticsPageComponent implements OnInit {
   private analyticsService = inject(InstructorAnalyticsService);
 
-  analyticsData: InstructorAnalyticsResponse | null = null;
-  isLoading = true;
-  error = false;
+  analyticsData = signal<InstructorAnalyticsResponse | null>(null);
+  isLoading = signal(true);
+  hasError = signal(false);
+  errorMsg = signal('');
+
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
+    this.isLoading.set(true);
     this.analyticsService.getStats()
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false))
+      )
       .subscribe({
         next: (data) => {
-          this.analyticsData = data;
+          this.analyticsData.set(data);
         },
-        error: () => {
-          this.error = true;
+        error: (err) => {
+          this.hasError.set(true);
+          this.errorMsg.set(err?.error?.message ?? 'Failed to load data');
         }
       });
   }

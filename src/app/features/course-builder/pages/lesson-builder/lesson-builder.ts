@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,10 @@ import { LessonsService } from '../../../../core/services/lessons';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
 // import { LessonCardComponent_1 as LessonCardComponent } from "../components/lesson-card/lesson-card.component";
 import { ChangeDetectorRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Course } from '../../../../core/models/course.model';
+import { Section } from '../../../../core/models/section.model';
+import { Lesson } from '../../../../core/models/lesson.model';
 @Component({
   selector: 'app-lessons-builder',
   standalone: true,
@@ -31,6 +35,7 @@ export class LessonBuilder implements OnInit {
   private sectionsService = inject(SectionsService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   courseId!: string;
   sectionId!: string;
@@ -86,21 +91,22 @@ export class LessonBuilder implements OnInit {
   }
   loadLessons() {
     this.sectionsService.getCourse(this.courseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (course: any) => {
+        next: (course: Course) => {
 
           const section = course.sections.find(
-            (s: any) => s._id === this.sectionId
+            (s: Section) => s.id === this.sectionId
           );
 
           const lessons = section?.lessons || [];
 
           this.lessonsArray.clear();
 
-          lessons.forEach((lesson: any) => {
+          lessons.forEach((lesson: Lesson) => {
             this.lessonsArray.push(
               this.fb.group({
-                id: [lesson._id],
+                id: [lesson.id],
                 title: [lesson.title, Validators.required],
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],

@@ -3,7 +3,8 @@ import {
   Input,
   Output,
   EventEmitter,
-  inject
+  inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -34,7 +35,8 @@ import { SectionsService } from '../../../../core/services/sections';
     MatButtonModule,
   ],
   templateUrl: './section-card.component.html',
-  styleUrl: './section-card.component.css'
+  styleUrl: './section-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SectionCardComponent {
 
@@ -92,8 +94,8 @@ export class SectionCardComponent {
 
       expectedOutcomes: this.expectedOutcomesArray.value
         .filter((o: string) => o?.trim()),
-
-      isBasicSection: form.get('isBasicSection')?.value
+      isBasicSection: form.get('isBasicSection')?.value,
+      order: this.index
     };
 
 

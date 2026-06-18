@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,8 @@ import { FormBuilder } from '@angular/forms';
 import { Course } from '../../../../core/models/course.model';
 import { CourseBuilderModel } from '../../models/course-builder.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
 @Component({
@@ -41,7 +42,7 @@ export class CourseBasicInfoComponent {
   private router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
 
   private fb = inject(FormBuilder);
   isSaving = signal(false);
@@ -198,7 +199,7 @@ export class CourseBasicInfoComponent {
     this.hasChanges.set(false);
 
     this.courseForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         const current = this.normalize(this.courseForm.getRawValue());
 
@@ -219,7 +220,7 @@ export class CourseBasicInfoComponent {
 
   loadCourse(id: string) {
     this.coursesService.getCourseById(id)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(course => {
 
         this.courseForm.patchValue({
@@ -227,7 +228,7 @@ export class CourseBasicInfoComponent {
           description: course.description,
           price: course.price,
           thumbnail: course.thumbnail,
-          level: course.level,
+          level: course.level as CourseLevel,
           category: course.categoryId
         }, { emitEvent: false });
 
@@ -388,7 +389,7 @@ export class CourseBasicInfoComponent {
       : null;
 
     if (upload$) {
-      upload$.subscribe({
+      upload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           payload.thumbnail = res.secure_url;
           this.sendUpdate(payload);
@@ -405,7 +406,7 @@ export class CourseBasicInfoComponent {
   }
 
   sendUpdate(payload: any) {
-    this.coursesService.updateCourse(this.courseId!, payload).subscribe({
+    this.coursesService.updateCourse(this.courseId!, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.status.set('ready');
         this.hasChanges.set(false);
@@ -469,6 +470,7 @@ export class CourseBasicInfoComponent {
 
     // 5) upload image
     this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (uploadRes) => {
 
@@ -476,6 +478,7 @@ export class CourseBasicInfoComponent {
 
           // 6) create course API
           this.coursesService.createCourse(payload)
+            .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
               next: (course) => {
 
@@ -483,7 +486,7 @@ export class CourseBasicInfoComponent {
                 this.isSaving.set(false);
 
                 // switch to update mode
-                this.courseId = course._id;
+                this.courseId = course.id;
                 this.mode.set('update');
 
                 // reset baseline (fix Continue button)
@@ -492,7 +495,7 @@ export class CourseBasicInfoComponent {
 
                 this.setBaseline();
 
-                this.courseCreatedEvent.emit(course._id);
+                this.courseCreatedEvent.emit(course.id);
                 this.toastr.success('Course created successfully');
               },
 

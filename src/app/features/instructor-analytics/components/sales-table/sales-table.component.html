@@ -29,31 +29,37 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                <tr *ngFor="let sale of recentSales" class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-4 sm:px-6 py-4">
-                        <span class="text-[11px] sm:text-[13px] font-medium text-[var(--color-text-primary)]">{{
-                            sale.studentName }}</span>
+                @for (sale of recentSales; track sale.course) {
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs uppercase">
+                                {{ sale.student.charAt(0) }}
+                            </div>
+                            <span class="text-xs font-semibold text-slate-800">{{ sale.student }}</span>
+                        </div>
                     </td>
-                    <td class="hidden sm:table-cell px-4 sm:px-6 py-4">
-                        <span class="text-[11px] sm:text-[13px] text-slate-500">{{ sale.courseTitle }}</span>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-xs font-medium text-slate-600">{{ sale.course }}</span>
                     </td>
-                    <td class="px-4 sm:px-6 py-4">
-                        <span class="text-[11px] sm:text-[13px] text-slate-500">{{ sale.date | date:'mediumDate'
-                            }}</span>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-xs text-slate-500">{{ sale.date | date:'MMM d, y' }}</span>
                     </td>
-                    <td class="px-4 sm:px-6 py-4">
-                        <span class="text-[11px] sm:text-[13px] font-bold text-[var(--color-secondary)]">${{ sale.price
-                            | number:'1.2-2' }}</span>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-xs font-bold text-slate-800">{{ sale.amount | currency }}</span>
                     </td>
-                    <td class="px-4 sm:px-6 py-4">
-                        <mat-chip-set>
-                            <mat-chip *ngIf="sale.status === 'COMPLETED'"
-                                class="!bg-green-100 !text-green-800 !font-bold !text-[8px] sm:!text-[10px] !min-h-0 !h-5 sm:!h-6">COMPLETED</mat-chip>
-                            <mat-chip *ngIf="sale.status === 'REFUNDED'"
-                                class="!bg-red-100 !text-red-800 !font-bold !text-[8px] sm:!text-[10px] !min-h-0 !h-5 sm:!h-6">REFUNDED</mat-chip>
-                        </mat-chip-set>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <mat-chip class="!min-h-[24px] !text-[10px] !font-bold !px-2 uppercase"
+                            [class.!bg-emerald-50]="sale.status === 'COMPLETED'"
+                            [class.!text-emerald-700]="sale.status === 'COMPLETED'"
+                            [class.!bg-slate-100]="sale.status === 'REFUNDED'"
+                            [class.!text-slate-600]="sale.status === 'REFUNDED'">
+                            {{ sale.status }}
+                        </mat-chip>
                     </td>
                 </tr>
+                }
                 <tr *ngIf="!recentSales || recentSales.length === 0">
                     <td colspan="5" class="px-4 sm:px-6 py-8 text-center text-sm text-slate-400">
                         No recent sales found.

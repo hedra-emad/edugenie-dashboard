@@ -1,5 +1,7 @@
-<div *ngIf="isLoading" class="courses-grid skeleton-grid">
-  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+@if (isLoading()) {
+<div class="courses-grid skeleton-grid">
+  @for (i of [1,2,3,4,5,6]; track i) {
+  <div class="skeleton-card">
     <div class="skeleton-thumbnail"></div>
     <div class="skeleton-body">
       <div class="skeleton-title"></div>
@@ -8,10 +10,12 @@
       <div class="skeleton-price"></div>
     </div>
   </div>
+  }
 </div>
 
 
-<div *ngIf="!isLoading && error" class="state-container">
+} @else if (hasError()) {
+<div class="state-container">
   <div class="error-box">
     <mat-icon class="error-icon">error_outline</mat-icon>
     <p class="error-title">Failed to load courses</p>
@@ -23,7 +27,8 @@
 </div>
 
 
-<div *ngIf="!isLoading && !error && courses.length === 0" class="state-container">
+} @else if (courses().length === 0) {
+<div class="state-container">
   <div class="empty-box">
     <mat-icon class="empty-icon">menu_book</mat-icon>
     <p class="empty-title">No courses yet</p>
@@ -33,7 +38,8 @@
 </div>
 
 
-<div *ngIf="!isLoading && !error && courses.length > 0" class="page-wrapper" id="page-top">
+} @else {
+<div class="page-wrapper" id="page-top">
 
 
   <div class="page-header">
@@ -44,15 +50,15 @@
 
     <div class="header-badge">
       <mat-icon>menu_book</mat-icon>
-      <span>{{ courses.length }} courses</span>
+      <span>{{ courses().length }} courses</span>
     </div>
   </div>
 
 
   <div class="courses-grid">
+    @for (course of pagedCourses; track course._id) {
     <mat-card class="course-card"
-      [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'"
-      *ngFor="let course of courses">
+      [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
 
       <!-- Thumbnail with Gradient Overlay -->
       <div class="card-thumbnail-wrap">
@@ -107,6 +113,7 @@
       </mat-card-footer>
 
     </mat-card>
+    }
 
   </div>
 
@@ -120,13 +127,15 @@
     </button>
 
 
-    <button *ngFor="let p of getPages()" (click)="loadPage(p)"
+    @for (p of getPages(); track p) {
+    <button (click)="loadPage(p)"
       class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition" [ngClass]="currentPage === p
       ? 'bg-[#6366f1] text-white shadow-md scale-110'
       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
 
       {{ p }}
     </button>
+    }
 
 
     <button
@@ -136,3 +145,5 @@
     </button>
 
   </nav>
+</div>
+}

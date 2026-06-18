@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,10 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Course } from '../../../../core/models/course.model';
+import { Section } from '../../../../core/models/section.model';
+import { Lesson } from '../../../../core/models/lesson.model';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -51,6 +55,7 @@ export class SectionBuilderComponent implements OnInit {
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
   newSectionIndex: number | null = null;
+  private destroyRef = inject(DestroyRef);
 
 
   sectionForm = this.fb.group({
@@ -184,12 +189,12 @@ export class SectionBuilderComponent implements OnInit {
 
   loadSections() {
     if (!this.courseId) return;
-    this.coursesService.findOne(this.courseId).subscribe({
-      next: (course: any) => {
+    this.coursesService.findOne(this.courseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (course: Course) => {
         const sections = course.sections || [];
         this.sectionsArray.clear();
 
-        sections.forEach((section: any) => {
+        sections.forEach((section: Section) => {
           this.sectionsArray.push(
             this.fb.group({
               title: [section.title || '', [Validators.required, Validators.minLength(3)]],
@@ -203,9 +208,9 @@ export class SectionBuilderComponent implements OnInit {
 
               // 👇 التعديل الجوهري هنا: تحويل كائنات الـ lessons إلى FormGroup منفصلة لكل درس
               lessons: this.fb.array(
-                (section.lessons || []).map((lesson: any) =>
+                (section.lessons || []).map((lesson: Lesson) =>
                   this.fb.group({
-                    id: [lesson._id || lesson.id || null], // تأكيد وجود حقل الـ id مستقبلاً من السيرفر
+                    id: [lesson.id || null], // تأكيد وجود حقل الـ id مستقبلاً من السيرفر
                     title: [lesson.title || '', Validators.required],
                     videoUrl: [lesson.videoUrl || ''],
                     videoPublicId: [lesson.videoPublicId || ''],
@@ -215,7 +220,7 @@ export class SectionBuilderComponent implements OnInit {
                 )
               ),
 
-              id: [section._id],
+              id: [section.id],
               isSaving: [false],
               isDeleting: [false],
             })

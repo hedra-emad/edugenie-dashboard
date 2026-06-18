@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { CourseLevel } from '../enums/course-level.enum';
 import { Course } from '../models/course.model';
 import { CourseStatus } from '../enums/course-status';
@@ -20,47 +20,42 @@ export interface CreateCoursePayload {
 @Injectable({ providedIn: 'root' })
 export class CoursesService {
   private http = inject(HttpClient);
-  private baseUrl = 'https://edugenie-api.vercel.app/courses';
+  private baseUrl = '/courses';
 
   createCourse(payload: CreateCoursePayload): Observable<Course> {
-    return this.http.post<Course>(
-      this.baseUrl,
-      payload,
-      { withCredentials: true }
-    );
+    return this.http
+      .post<{ success: boolean; data: Course }>(this.baseUrl, payload)
+      .pipe(map((res) => res.data));
   }
 
 
   getCourseById(id: string): Observable<Course> {
-    return this.http.get<Course>(`${this.baseUrl}/${id}`);
+    return this.http
+      .get<{ success: boolean; data: Course }>(`${this.baseUrl}/${id}`)
+      .pipe(map((res) => res.data));
   }
 
   getMyCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(
-      `${this.baseUrl}/my-courses`,
-      { withCredentials: true }
-    );
+    return this.http
+      .get<{ success: boolean; data: Course[] }>(`${this.baseUrl}/my-courses`)
+      .pipe(map((res) => res.data));
   }
 
-  findOne(id: string) {
-    return this.http.get<any>(
-      `https://edugenie-api.vercel.app/courses/${id}`,
-      { withCredentials: true }
-    );
+  findOne(id: string): Observable<Course> {
+    return this.http
+      .get<{ success: boolean; data: Course }>(`${this.baseUrl}/${id}`)
+      .pipe(map((res) => res.data));
   }
 
   updateCourse(id: string, payload: Partial<CreateCoursePayload>) {
-    return this.http.patch<Course>(
-      `${this.baseUrl}/${id}`,
-      payload,
-      { withCredentials: true }
-    );
+    return this.http
+      .patch<{ success: boolean; data: Course }>(`${this.baseUrl}/${id}`, payload)
+      .pipe(map((res) => res.data));
   }
 
   deleteCourse(id: string) {
     return this.http.delete(
-      `${this.baseUrl}/${id}`,
-      { withCredentials: true }
+      `${this.baseUrl}/${id}`
     );
   }
 
@@ -71,8 +66,7 @@ export class CoursesService {
     status: string;
   }>(
     `${this.baseUrl}/${courseId}/submit-for-review`,
-    {},
-    { withCredentials: true }
+    {}
   );
 }
 
