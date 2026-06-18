@@ -1,5 +1,198 @@
 <div class="bg-[var(--color-background-page)] font-sans antialiased overflow-x-hidden">
-    <div class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-4 lg:gap-8">
+    <div *ngIf="isAdmin" class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-4 lg:gap-8">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div class="space-y-0.5">
+                <h1 class="text-xl md:text-3xl font-black text-[var(--color-primary)] tracking-tight leading-tight">
+                    Platform Overview
+                </h1>
+                <p class="text-[var(--color-text-secondary)] text-[11px] md:text-sm font-medium opacity-70 italic">
+                    Monitor system health and key metrics across EduGenie.
+                </p>
+            </div>
+
+            <button mat-button
+                class="!bg-[var(--color-primary)] !text-white !rounded-xl !px-4 !py-2.5 shadow-sm active:scale-95 group shrink-0 w-fit">
+                <div class="flex items-center gap-2">
+                    <mat-icon class="!text-[18px]">download</mat-icon>
+                    <span class="font-bold text-[9px] uppercase tracking-widest hidden md:inline">Export Report</span>
+                    <span class="font-bold text-[9px] uppercase tracking-widest md:hidden">Export</span>
+                </div>
+            </button>
+        </header>
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            <!-- Card 1 -->
+            <div
+                class="bg-white p-6 rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 flex flex-col gap-4 relative">
+                <div class="flex justify-between items-start">
+                    <div class="bg-slate-100 p-3 rounded-2xl">
+                        <mat-icon class="!text-[24px] text-[var(--color-primary)]">storage</mat-icon>
+                    </div>
+                    <div
+                        class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
+                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">trending_up</mat-icon>
+                        Stable
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-500 mb-1">Server Uptime</div>
+                    <div class="text-4xl font-black text-gray-900">99.98%</div>
+                    <div class="text-xs text-gray-400 mt-2 font-medium">Last 30 days</div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div
+                class="bg-white p-6 rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 flex flex-col gap-4 relative">
+                <div class="flex justify-between items-start">
+                    <div class="bg-slate-100 p-3 rounded-2xl">
+                        <mat-icon class="!text-[24px] text-[var(--color-primary)]">group</mat-icon>
+                    </div>
+                    <div
+                        class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
+                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">trending_up</mat-icon>
+                        +5.2%
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-500 mb-1">Active Users Today</div>
+                    <div class="text-4xl font-black text-gray-900">12,450</div>
+                    <div class="text-xs text-gray-400 mt-2 font-medium">Peak: 14k at 10:00 AM</div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div
+                class="bg-white p-6 rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 flex flex-col gap-4 relative border-l-4 border-l-blue-500">
+                <div class="flex justify-between items-start">
+                    <div class="bg-slate-100 p-3 rounded-2xl">
+                        <mat-icon class="!text-[24px] text-[var(--color-primary)]">warning</mat-icon>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-500 mb-1">Active Alerts</div>
+                    <div class="text-4xl font-black text-gray-900">3</div>
+                    <div class="text-xs text-gray-400 mt-2 font-medium whitespace-normal">Minor performance degradation
+                        in EU-West.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flagged Content Section -->
+        <section class="bg-white p-2 sm:p-6 rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 mt-4">
+            <div class="flex justify-between items-center mb-4 sm:mb-6">
+                <h2 class="text-sm sm:text-lg font-black text-gray-900 tracking-tight">Flagged Content</h2>
+                <a href="#" *ngIf="(flaggedContent?.length ?? 0) >5"
+                    class="text-xs sm:text-sm font-bold text-[var(--color-primary)] hover:underline">View All</a>
+            </div>
+
+            <div class="overflow-x-auto w-full">
+                <table class="min-w-[600px] w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="text-[8px] sm:text-xs font-bold text-gray-500 border-b border-gray-100">
+                            <th class="py-2 px-1 sm:py-3 sm:px-4">Content Name</th>
+                            <th class="py-2 px-1 sm:py-3 sm:px-4">Type</th>
+                            <th class="py-2 px-1 sm:py-3 sm:px-4">Flag Reason</th>
+                            <th class="py-2 px-1 sm:py-3 sm:px-4">Reporter</th>
+                            <th class="py-2 px-1 sm:py-3 sm:px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[8px] sm:text-sm font-medium">
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-900 font-bold">Advanced Physics Lecture 4
+                            </td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4">
+                                <span
+                                    class="bg-slate-100 text-slate-600 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-[7px] sm:text-xs inline-flex items-center gap-1">
+                                    <mat-icon
+                                        class="!text-[10px] sm:!text-[14px] !w-[10px] !h-[10px] sm:!w-[14px] sm:!h-[14px]">play_circle</mat-icon>
+                                    Video
+                                </span>
+                            </td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-red-500">Copyright Violation</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-500">Inst_Admin_A</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-right space-x-1 sm:space-x-2">
+                                <button mat-icon-button class="text-gray-400 hover:text-gray-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">visibility</mat-icon></button>
+                                <button mat-icon-button class="text-blue-500 hover:text-blue-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">check_circle</mat-icon></button>
+                                <button mat-icon-button class="text-red-500 hover:text-red-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">delete</mat-icon></button>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-900 font-bold">User comment on "Intro to Bio"
+                            </td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4">
+                                <span
+                                    class="bg-slate-100 text-slate-600 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-[7px] sm:text-xs inline-flex items-center gap-1">
+                                    <mat-icon
+                                        class="!text-[10px] sm:!text-[14px] !w-[10px] !h-[10px] sm:!w-[14px] sm:!h-[14px]">chat_bubble</mat-icon>
+                                    Comment
+                                </span>
+                            </td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-red-500">Inappropriate Language</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-500">Student_User_99</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-right space-x-1 sm:space-x-2">
+                                <button mat-icon-button class="text-gray-400 hover:text-gray-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">visibility</mat-icon></button>
+                                <button mat-icon-button class="text-blue-500 hover:text-blue-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">check_circle</mat-icon></button>
+                                <button mat-icon-button class="text-red-500 hover:text-red-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">delete</mat-icon></button>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-900 font-bold">Data Structures 101</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4">
+                                <span
+                                    class="bg-slate-100 text-slate-600 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-[7px] sm:text-xs inline-flex items-center gap-1">
+                                    <mat-icon
+                                        class="!text-[10px] sm:!text-[14px] !w-[10px] !h-[10px] sm:!w-[14px] sm:!h-[14px]">menu_book</mat-icon>
+                                    Course
+                                </span>
+                            </td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-red-500">Spam/Misleading</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-gray-500">System_Auto_Flag</td>
+                            <td class="py-3 px-1 sm:py-4 sm:px-4 text-right space-x-1 sm:space-x-2">
+                                <button mat-icon-button class="text-gray-400 hover:text-gray-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">visibility</mat-icon></button>
+                                <button mat-icon-button class="text-blue-500 hover:text-blue-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">check_circle</mat-icon></button>
+                                <button mat-icon-button class="text-red-500 hover:text-red-600"><mat-icon
+                                        class="!text-[18px] sm:!text-[24px]">delete</mat-icon></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav class="flex items-center justify-center gap-1 mt-6">
+                <!-- Prev Arrow -->
+                <button disabled
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl border-none bg-transparent text-[var(--color-primary)] opacity-35 cursor-not-allowed transition-all">
+                    <mat-icon>chevron_left</mat-icon>
+                </button>
+
+                <!-- Page 1 (active) -->
+                <button
+                    class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-xl border-none bg-[var(--color-primary)] text-white text-sm font-bold shadow-[0_4px_14px_rgba(59,24,146,0.35)] -translate-y-px cursor-default pointer-events-none transition-all">
+                    1
+                </button>
+
+                <!-- Next Arrow -->
+                <button
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl border-none bg-transparent text-[var(--color-primary)] hover:bg-[rgba(59,24,146,0.07)] transition-all -translate-y-px">
+                    <mat-icon>chevron_right</mat-icon>
+                </button>
+            </nav>
+        </section>
+    </div>
+
+    <div *ngIf="!isAdmin" class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-4 lg:gap-8">
 
         <!-- Header -->
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -22,12 +215,13 @@
             </button>
         </header>
 
-        <!-- Loading / Error states -->
+
         <div *ngIf="isLoading" class="flex justify-center items-center py-20">
             <mat-spinner diameter="40"></mat-spinner>
         </div>
 
-        <div *ngIf="!isLoading && error" class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+        <div *ngIf="!isLoading && error"
+            class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
             <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>
             <p class="font-bold">Failed to load analytics data.</p>
             <p class="text-sm opacity-80 mt-1">Please try again later.</p>

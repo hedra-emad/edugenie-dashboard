@@ -1,0 +1,67 @@
+<div class="approvals-card">
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="header-title-section">
+      <h3>Pending Review</h3>
+      <span class="pending-badge" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
+    </div>
+
+    <!-- Filtering -->
+    <div class="filter-wrapper">
+      <button (click)="toggleFilterDropdown()" class="filter-btn" [class.active]="currentFilter !== 'pending'" aria-haspopup="true">
+        <mat-icon class="scale-90">filter_list</mat-icon>
+        <span>Show: {{ currentFilter | titlecase }}</span>
+        <mat-icon class="scale-75">keyboard_arrow_down</mat-icon>
+      </button>
+
+      <div class="filter-dropdown" *ngIf="showFilterDropdown">
+        <button (click)="setFilter('pending')" class="filter-option" [class.selected]="currentFilter === 'pending'">
+          <span>Pending Only</span>
+          <mat-icon *ngIf="currentFilter === 'pending'" class="scale-75">check</mat-icon>
+        </button>
+        <button (click)="setFilter('approved')" class="filter-option" [class.selected]="currentFilter === 'approved'">
+          <span>Approved Only</span>
+          <mat-icon *ngIf="currentFilter === 'approved'" class="scale-75">check</mat-icon>
+        </button>
+        <button (click)="setFilter('rejected')" class="filter-option" [class.selected]="currentFilter === 'rejected'">
+          <span>Rejected Only</span>
+          <mat-icon *ngIf="currentFilter === 'rejected'" class="scale-75">check</mat-icon>
+        </button>
+        <button (click)="setFilter('all')" class="filter-option" [class.selected]="currentFilter === 'all'">
+          <span>Show All</span>
+          <mat-icon *ngIf="currentFilter === 'all'" class="scale-75">check</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div class="table-container">
+    <table *ngIf="filteredCourses.length > 0; else noData">
+      <thead>
+        <tr>
+          <th>Course Title & Category</th>
+          <th>Instructor</th>
+          <th>Video Length</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr app-approval-row 
+            *ngFor="let course of filteredCourses; trackBy: trackByCourseId"
+            [course]="course"
+            [actionLoading]="!!actionLoading[course.id]"
+            (approve)="approve.emit($event)"
+            (reject)="reject.emit($event)">
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #noData>
+      <div class="empty-state">
+        <mat-icon class="empty-icon">inbox</mat-icon>
+        <p class="empty-text">No courses found matching "{{ currentFilter }}" status</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
