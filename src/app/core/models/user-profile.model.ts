@@ -1,7 +1,7 @@
 export type UserRole = 'student' | 'instructor' | 'admin';
 
 export interface UserProfile {
-  _id: string;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -15,8 +15,11 @@ export interface ProfileApiResponse {
 }
 
 export interface LoginResponse {
-  message: string;
-  user: UserProfile;
+  success: boolean;
+  data: {
+    message: string;
+    user: UserProfile;
+  };
 }
 
 export interface LoginCredentials {

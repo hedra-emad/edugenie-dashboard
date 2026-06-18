@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { filter, take, finalize, Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { StatsCardsComponent } from './components/stats-cards/stats-cards.component';
 import { SalesTableComponent } from './components/sales-table/sales-table.component';
@@ -31,12 +32,15 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   private analyticsService = inject(InstructorAnalyticsService);
   private authService = inject(AuthService);
 
-  analyticsData: InstructorAnalyticsResponse | null = null;
-  isLoading = true;
-  error = false;
+  analyticsData = signal<InstructorAnalyticsResponse | null>(null);
+  isLoading = signal(true);
+  hasError = signal(false);
+  errorMsg = signal('');
+
   isAdmin = false;
 
   private userSub?: Subscription;
+  private destroyRef = inject(DestroyRef);
 
   flaggedContent = [
     { contentName: 'Advanced Physics Lecture 4', type: 'Video', flagReason: 'Copyright Violation', reporter: 'Inst_Admin_A' },
@@ -45,9 +49,6 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    // Subscribe to currentUser$ and wait for the first non-null value.
-    // This fixes the "first load" issue where getCurrentUser() returns null
-    // because the BehaviorSubject hasn't been populated yet.
     this.userSub = this.authService.currentUser$
       .pipe(
         filter(user => user !== null),
@@ -57,16 +58,21 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
         this.isAdmin = user?.role === 'admin';
 
         if (this.isAdmin) {
-          this.isLoading = false;
+          this.isLoading.set(false);
         } else {
+          this.isLoading.set(true);
           this.analyticsService.getStats()
-            .pipe(finalize(() => this.isLoading = false))
+            .pipe(
+              takeUntilDestroyed(this.destroyRef),
+              finalize(() => this.isLoading.set(false))
+            )
             .subscribe({
               next: (data) => {
-                this.analyticsData = data;
+                this.analyticsData.set(data);
               },
-              error: () => {
-                this.error = true;
+              error: (err) => {
+                this.hasError.set(true);
+                this.errorMsg.set(err?.error?.message ?? 'Failed to load data');
               }
             });
         }

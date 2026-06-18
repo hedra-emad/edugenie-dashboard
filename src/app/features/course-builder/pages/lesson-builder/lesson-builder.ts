@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +11,10 @@ import { BackButtonComponent } from "../../components/shared/back-button/back-bu
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChangeDetectorRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Course } from '../../../../core/models/course.model';
+import { Section } from '../../../../core/models/section.model';
+import { Lesson } from '../../../../core/models/lesson.model';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 @Component({
   selector: 'app-lessons-builder',
@@ -36,6 +40,7 @@ export class LessonBuilder implements OnInit {
   private sectionsService = inject(SectionsService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
   private lessonsService = inject(LessonsService);
 
   courseId!: string;
@@ -95,21 +100,22 @@ export class LessonBuilder implements OnInit {
   loadLessons() {
     this.isLoading = true;
     this.sectionsService.getCourse(this.courseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (course: any) => {
+        next: (course: Course) => {
 
           const section = course.sections.find(
-            (s: any) => s._id === this.sectionId
+            (s: Section) => s.id === this.sectionId
           );
 
           const lessons = section?.lessons || [];
 
           this.lessonsArray.clear();
 
-          lessons.forEach((lesson: any) => {
+          lessons.forEach((lesson: Lesson) => {
             this.lessonsArray.push(
               this.fb.group({
-                id: [lesson._id],
+                id: [lesson.id],
                 title: [lesson.title, Validators.required],
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],
@@ -119,7 +125,7 @@ export class LessonBuilder implements OnInit {
               })
             );
           });
-          
+
           this.isLoading = false;
           this.cdr.detectChanges();
 
@@ -186,7 +192,7 @@ export class LessonBuilder implements OnInit {
     if (ids.length < 2) return; // nothing to reorder
 
     this.lessonsService.reorderLessons(this.courseId, this.sectionId, ids)
-      .subscribe({ error: err => console.error('Reorder failed', err) });
+      .subscribe({ error: (err: any) => console.error('Reorder failed', err) });
   }
 
   trackByLesson(index: number, item: FormGroup) {

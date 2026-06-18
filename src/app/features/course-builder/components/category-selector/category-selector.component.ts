@@ -53,7 +53,7 @@ export class CategorySelectorComponent implements OnInit {
   get selectedCategoryName(): string {
     return (
       this.availableCategories.find(
-        c => c._id === this.control.value
+        c => (c.id || c._id) === this.control.value
       )?.name || ''
     );
   }
