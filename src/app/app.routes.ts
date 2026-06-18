@@ -46,7 +46,7 @@ export const routes: Routes = [
       {
         path: 'my-courses',
         canActivate: [authGuard, roleGuard],
-        data: { roles: ['instructor', 'admin'] },
+        data: { roles: ['instructor'] },
         loadComponent: () =>
           import('./features/instructor/courses-list/courses-list.component').then(
             (m) => m.CoursesListComponent,
@@ -55,7 +55,7 @@ export const routes: Routes = [
       {
         path: 'analytics',
         canActivate: [authGuard, roleGuard],
-        data: { roles: ['instructor', 'admin'] },
+        data: { roles: ['instructor'] },
         loadComponent: () =>
           import('./features/instructor-analytics/instructor-analytics.page').then(
             (m) => m.InstructorAnalyticsPageComponent,
