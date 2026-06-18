@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CourseHeaderComponent } from '../../components/course-header/course-header.component';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { filter } from 'rxjs';
 import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 @Component({
   selector: 'app-create-course-page',
@@ -18,7 +19,8 @@ import { CourseStatus } from '../../../../core/enums/course-status';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    PublishCourseButtonComponent
+    PublishCourseButtonComponent,
+    AppLoader
   ],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'
@@ -26,10 +28,15 @@ import { CourseStatus } from '../../../../core/enums/course-status';
 export class CourseBuilderPageComponent implements OnInit {
   private router = inject(Router);
   currentStep = signal(1);
-  courseId: string | null = null;
-  courseTitle: string | null = null;
-  courseStatus: CourseStatus = CourseStatus.DRAFT;
-  courseDuration: number = 0;
+  courseId = signal<string | null>(null);
+  courseTitle = signal<string | null>(null);
+  courseStatus = signal<CourseStatus>(CourseStatus.DRAFT);
+  courseDuration = signal<number>(0);
+  loadingCourse = signal<boolean>(false);
+  courseData = signal<any>(null);
+
+  canPublish = computed(() => !!this.courseId() && this.courseStatus() === CourseStatus.DRAFT);
+
   coursesService = inject(CoursesService);
 
   ngOnInit() {
@@ -45,9 +52,10 @@ export class CourseBuilderPageComponent implements OnInit {
       possibleId !== 'sections' &&
       possibleId !== 'lessons';
 
-    this.courseId = isRealId ? possibleId : null;
+    this.courseId.set(isRealId ? possibleId : null);
 
-    if (!this.courseId || this.courseId === 'null' || this.courseId === 'undefined') {
+    const currentId = this.courseId();
+    if (!currentId || currentId === 'null' || currentId === 'undefined') {
       console.warn('No valid courseId in URL');
     } else {
       this.fetchCourseData();
@@ -60,7 +68,7 @@ export class CourseBuilderPageComponent implements OnInit {
 
         const match = event.urlAfterRedirects.match(/course-builder\/([^\/]+)/);
         const possibleId = match?.[1] ?? null;
-        
+
         const isRealId =
           possibleId &&
           possibleId !== 'basic' &&
@@ -68,34 +76,39 @@ export class CourseBuilderPageComponent implements OnInit {
           possibleId !== 'lessons' &&
           possibleId !== 'null' &&
           possibleId !== 'undefined';
-          
-        this.courseId = isRealId ? possibleId : null;
-        
-        if (this.courseId) {
+
+        this.courseId.set(isRealId ? possibleId : null);
+
+        if (this.courseId()) {
           this.fetchCourseData();
         }
       });
   }
 
   private fetchCourseData() {
-    if (!this.courseId) return;
-    
-    this.courseDuration = 0;
-    this.coursesService.getCourseById(this.courseId).subscribe({
+    const id = this.courseId();
+    if (!id) return;
+
+    this.loadingCourse.set(true);
+    this.courseDuration.set(0);
+    this.coursesService.getCourseById(id).subscribe({
       next: (course) => {
-        this.courseTitle = course.title;
-        this.courseStatus = this.mapCourseStatus(course.courseStatus);
-        
+        this.courseData.set(course);
+        this.courseTitle.set(course.title);
+        this.courseStatus.set(this.mapCourseStatus(course.courseStatus));
+
         const totalSeconds = (course.sections || []).reduce((sectionTotal: number, section: any) => {
           return sectionTotal + (section.lessons || []).reduce((lessonTotal: number, lesson: any) => {
             return lessonTotal + (lesson.videoDuration || 0);
           }, 0);
         }, 0);
-        
-        this.courseDuration = totalSeconds;
+
+        this.courseDuration.set(totalSeconds);
+        this.loadingCourse.set(false);
       },
       error: (err) => {
         console.error('getCourseById failed:', err);
+        this.loadingCourse.set(false);
       }
     });
   }

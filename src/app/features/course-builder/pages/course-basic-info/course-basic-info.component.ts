@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,8 @@ import { ActionBarComponent } from "../../components/shared/action-bar/action-ba
 import { Subject, takeUntil } from 'rxjs';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
+
 @Component({
   selector: 'app-course-basic-info',
   standalone: true,
@@ -27,7 +28,6 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     GoalsInputComponent,
     RequirementsInputComponent,
     ActionBarComponent,
-    AppLoader,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -46,8 +46,6 @@ export class CourseBasicInfoComponent {
   private fb = inject(FormBuilder);
   isSaving = signal(false);
   courseCreated = signal(false);
-  isLoadingCourse = signal(false);
-  courseNotFound = signal(false);
   @Output() continue = new EventEmitter<void>();
 
   isUploading = signal(false);
@@ -69,7 +67,16 @@ export class CourseBasicInfoComponent {
   initialValue: any = null;
   CourseLevel = CourseLevel;
   private toastr = inject(ToastrService);
+  parent = inject(CourseBuilderPageComponent, { optional: true });
 
+  constructor() {
+    effect(() => {
+      const course = this.parent?.courseData();
+      if (course && this.mode() === 'update') {
+        this.populateForm(course);
+      }
+    });
+  }
 
   courseForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(5)]],
@@ -97,7 +104,6 @@ export class CourseBasicInfoComponent {
     this.courseId = id;
     this.mode.set('update');
 
-    this.loadCourse(this.courseId);
     this.listenToArraysChanges();
   }
 
@@ -214,64 +220,27 @@ export class CourseBasicInfoComponent {
     };
   }
 
-  loadCourse(id: string) {
-    this.isLoadingCourse.set(true);
-    this.courseNotFound.set(false);
+  populateForm(course: any) {
+    if (course.thumbnail) {
+      this.thumbnailPreview.set(course.thumbnail);
+      this.hasThumbnail.set(true);
+      this.existingThumbnailPublicId = course.thumbnailPublicId ?? null;
+    }
 
-    this.coursesService.getCourseById(id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (course) => {
+    this.courseForm.patchValue({
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnail,
+      level: course.level,
+      category: typeof course.categoryId === 'string' ? course.categoryId : (course.categoryId as any)?._id
+    }, { emitEvent: false });
 
-          if (!course) {
-            this.courseNotFound.set(true);
-            this.isLoadingCourse.set(false);
-            return;
-          }
+    this.setArray('goals', course.goals || []);
+    this.setArray('requirements', course.requirements || []);
 
-          if (course.thumbnail) {
-            this.thumbnailPreview.set(course.thumbnail);
-            this.hasThumbnail.set(true);
-            this.existingThumbnailPublicId = course.thumbnailPublicId ?? null; // ← ADD
-          }
-
-
-          this.courseForm.patchValue({
-            title: course.title,
-            description: course.description,
-            thumbnail: course.thumbnail,
-            level: course.level,
-            category: typeof course.categoryId === 'string' ? course.categoryId : (course.categoryId as any)?._id
-          }, { emitEvent: false });
-
-          this.setArray('goals', course.goals || []);
-          this.setArray('requirements', course.requirements || []);
-
-
-          if (course.thumbnail) {
-            this.thumbnailPreview.set(course.thumbnail);
-            this.hasThumbnail.set(true);
-            this.existingThumbnailPublicId = course.thumbnailPublicId ?? null;
-          }
-
-          setTimeout(() => {
-            this.setBaseline();
-          });
-
-          this.isLoadingCourse.set(false);
-        },
-
-        error: (err) => {
-
-          this.isLoadingCourse.set(false);
-
-          if (err.status === 404) {
-            this.courseNotFound.set(true);
-          } else {
-            this.toastr.error('Failed to load course');
-          }
-        }
-      });
+    setTimeout(() => {
+      this.setBaseline();
+    });
   }
 
   isButtonDisabled(): boolean {

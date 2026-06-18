@@ -31,6 +31,7 @@ export class LessonBuilder implements OnInit {
   private sectionsService = inject(SectionsService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private lessonsService = inject(LessonsService);
 
   courseId!: string;
   sectionId!: string;
@@ -84,6 +85,7 @@ export class LessonBuilder implements OnInit {
   onDeleted(index: number) {
     this.lessonsArray.removeAt(index);
   }
+
   loadLessons() {
     this.sectionsService.getCourse(this.courseId)
       .subscribe({
@@ -133,30 +135,35 @@ export class LessonBuilder implements OnInit {
 
   moveUp(index: number) {
     if (index === 0) return;
-
     const arr = this.lessonsArray;
-
     const current = arr.at(index);
     const above = arr.at(index - 1);
-
     arr.setControl(index - 1, current);
     arr.setControl(index, above);
-
-    arr.updateValueAndValidity(); // 👈 مهم
+    arr.updateValueAndValidity();
+    this.saveOrder(); // fire after swap
   }
 
   moveDown(index: number) {
     const arr = this.lessonsArray;
-
     if (index === arr.length - 1) return;
-
     const current = arr.at(index);
     const below = arr.at(index + 1);
-
     arr.setControl(index + 1, current);
     arr.setControl(index, below);
-
     arr.updateValueAndValidity();
+    this.saveOrder();
+  }
+
+  private saveOrder() {
+    const ids = this.lessonsArray.controls
+      .map(c => c.get('id')?.value)
+      .filter(Boolean); // skip unsaved lessons (no id yet)
+
+    if (ids.length < 2) return; // nothing to reorder
+
+    this.lessonsService.reorderLessons(this.courseId, this.sectionId, ids)
+      .subscribe({ error: err => console.error('Reorder failed', err) });
   }
 
   trackByLesson(index: number, item: FormGroup) {

@@ -4,4 +4,3 @@ export const environment = {
   thumbnailUploadPreset: 'thumbnails',
   apiUrl: 'https://edugenie-api.vercel.app',
 };
-

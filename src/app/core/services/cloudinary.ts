@@ -86,11 +86,20 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend
   // ─────────────────────────────────────────────────────────────
-  private getSignature(folder: string): Observable<SignatureResponse> {
+  private getSignature(
+    folder: string,
+    context?: string
+  ): Observable<SignatureResponse> {
+
     return this.http.post<SignatureResponse>(
       `${this.apiBase}/cloudinary/sign`,
-      { folder },
-      { withCredentials: true }
+      {
+        folder,
+        context
+      },
+      {
+        withCredentials: true
+      }
     );
   }
 
@@ -137,7 +146,7 @@ export class CloudinaryService {
     file: File,
     oldPublicId?: string | null,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = 'thumbnails';
+    const folder = 'edugenie/courses/thumbnails';
 
     return this.getSignature(folder).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName }) => {
@@ -179,22 +188,25 @@ export class CloudinaryService {
     sectionId: string,
     lessonId: string,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = `courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`;
+    const folder = 'edugenie/courses/videos';
 
-    return this.getSignature(folder).pipe(
+    const context =
+      `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`;
+
+    return this.getSignature(folder, context).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
-        formData.append('resource_type', 'video');
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
 
+        formData.append('context', `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`);
+
         return this.http.post<CloudinaryUploadResponse>(
           `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
           formData,
-          { withCredentials: true }
         );
       }),
     );

@@ -36,4 +36,6 @@ export class SectionsService {
       { withCredentials: true }
     );
   }
+
+  
 }

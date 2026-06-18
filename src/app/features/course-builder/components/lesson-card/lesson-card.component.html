@@ -1,66 +1,10 @@
-<mat-expansion-panel [expanded]="isExpanded()" (opened)="setExpanded(true)" (closed)="setExpanded(false)"
-  class="lesson-panel border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-
-  <!-- ================= HEADER ================= -->
-  <mat-expansion-panel-header class="!flex !items-center !justify-between gap-2">
-
-    <!-- TITLE -->
-    <mat-panel-title class="flex items-center gap-2 font-bold text-sm min-w-0 flex-1">
-
-      <mat-icon class="text-slate-400">
-        play_circle_outline
-      </mat-icon>
-
-      <span class="truncate block">
-        {{ index + 1 }}.
-        {{ lessonForm.get('title')?.value || 'Untitled Lesson' }}
-      </span>
-
-      <span class="text-xs text-slate-400 ml-2 shrink-0 hidden sm:inline">
-        ({{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min)
-      </span>
-
-    </mat-panel-title>
-
-
-    <!-- ACTIONS -->
-    <div class="flex items-center gap-2 shrink-0">
-
-      <!-- MOVE UP -->
-      <button type="button" [disabled]="isFirst" (click)="onMoveUp($event)"
-        class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100">
-
-        <span class="flex items-center justify-center w-full h-full">
-          <mat-icon class="!text-[16px]">arrow_upward</mat-icon>
-        </span>
-
-      </button>
-
-
-      <!-- MOVE DOWN -->
-      <button type="button" [disabled]="isLast" (click)="onMoveDown($event)"
-        class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100">
-
-        <span class="flex items-center justify-center w-full h-full">
-          <mat-icon class="!text-[16px]">arrow_downward</mat-icon>
-        </span>
-
-      </button>
-
-      <!-- DELETE -->
-      <button type="button" type="button" (click)="$event.stopPropagation(); deleteLesson()"
-        class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50">
-
-        <span class="flex items-center justify-center w-full h-full">
-          <mat-icon class="!text-[16px]">delete</mat-icon>
-        </span>
-
-      </button>
-
-    </div>
-
-  </mat-expansion-panel-header>
-
+<app-expansion-panel [expanded]="isExpanded()" (expandedChange)="setExpanded($event)"
+  [title]="lessonForm.get('title')?.value || 'Untitled Lesson'"
+  [subtitle]="'(' + formatDuration(lessonForm.get('videoDuration')?.value || 0) + ' min)'" icon="play_circle_outline"
+  [index]="index" panelClass="lesson-panel" [showDragHandle]="false" [showMoveButtons]="true" [isFirst]="isFirst"
+  [isLast]="isLast" [showDeleteButton]="true" [showLessonsButton]="false" [showMobileMenu]="false"
+  [hideMobileExpansionIndicator]="false" (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()"
+  (moveDownClicked)="moveDown.emit()">
 
   <!-- ================= CONTENT ================= -->
   <div [formGroup]="lessonForm" class="pt-4 space-y-5">
@@ -108,7 +52,7 @@
         </mat-icon>
 
         <div class="text-sm mt-3 text-[var(--color-text-secondary)]">
-          Drag & drop or click to upload lesson video
+          Drag &amp; drop or click to upload lesson video
         </div>
 
         <div class="mt-3 text-sm text-[var(--color-primary)] font-medium">
@@ -171,11 +115,10 @@
 
 
       <!-- UPLOADING -->
-      <div *ngIf="isUploading" class="flex items-center gap-2 text-blue-600 text-sm">
-        <mat-icon class="animate-spin">autorenew</mat-icon>
-        Uploading...
-      </div>
+      <div class="mt-3">
 
+        <app-loading *ngIf="isUploading" [size]="24" color="#2563eb" text="Uploading..."></app-loading>
+      </div>
 
       <!-- ERROR -->
       <div *ngIf="uploadError" class="text-xs text-red-500 text-center">
@@ -199,4 +142,4 @@
 
   </div>
 
-</mat-expansion-panel>
+</app-expansion-panel>

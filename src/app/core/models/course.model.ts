@@ -34,5 +34,10 @@ export interface Lesson {
 }
 
 export interface Section {
+  _id?: string;
+  title: string;
+  description?: string;
+  expectedOutcomes?: string[];
+  price: number;
   lessons: Lesson[];
 } 

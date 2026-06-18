@@ -4,12 +4,17 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { LessonsService } from '../../../../core/services/lessons';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ActionBarComponent } from "../shared/action-bar/action-bar.component";
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs/operators';
+import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 type VideoState =
   | 'empty'
@@ -27,8 +32,12 @@ type VideoState =
     MatExpansionModule,
     MatIconModule,
     MatButtonModule,
-    ActionBarComponent
-  ],
+    MatDialogModule,
+    ActionBarComponent,
+    ExpansionPanelComponent,
+    ConfirmDialogComponent,
+    AppLoader
+],
   templateUrl: './lesson-card.component.html',
   styleUrl: './lesson-card.component.css'
 })
@@ -50,6 +59,7 @@ export class LessonCardComponent {
   private lessonsService = inject(LessonsService);
   private cloudinaryService = inject(CloudinaryService);
   private cdr = inject(ChangeDetectorRef);
+  private dialog = inject(MatDialog);
 
   isSaving = false;
   isUploading = false;
@@ -168,7 +178,7 @@ export class LessonCardComponent {
 
   // ---------------- SAVE ----------------
   saveLesson() {
-    // الحماية من الضغط المتكرر أثناء الرفع أو الحفظ
+    // Protection against repeated clicks during upload or save
     if (this.saveLock || this.isUploading) return;
 
     this.saveLock = true;
@@ -213,7 +223,7 @@ export class LessonCardComponent {
       this.selectedVideoFile!,
       this.courseId,
       this.sectionId,
-      lessonId, 
+      lessonId,
     )
       .pipe(
         finalize(() => {
@@ -322,7 +332,6 @@ export class LessonCardComponent {
 
   // ---------------- DELETE ----------------
   deleteLesson() {
-
     const lessonId = this.lessonForm.get('id')?.value;
 
     if (!lessonId) {
@@ -330,14 +339,14 @@ export class LessonCardComponent {
       return;
     }
 
-    this.lessonsService.deleteLesson(
-      this.courseId,
-      this.sectionId,
-      lessonId
-    ).subscribe({
-      next: () => {
-        this.delete.emit();
-      }
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete Lesson?', message: 'This cannot be undone.' }
+    });
+
+    ref.afterClosed().subscribe(result => {
+      if (result !== 'confirm') return;
+      this.lessonsService.deleteLesson(this.courseId, this.sectionId, lessonId)
+        .subscribe({ next: () => this.delete.emit() });
     });
   }
 

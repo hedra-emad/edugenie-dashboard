@@ -1,291 +1,257 @@
-<ng-container *ngIf="!isLoadingCourse(); else loadingTpl">
+<div [formGroup]="courseForm" class="space-y-4">
 
-  <ng-container *ngIf="!courseNotFound(); else notFoundTpl">
+  <!-- Thumbnail -->
 
+  <!-- Thumbnail Upload -->
 
-    <div [formGroup]="courseForm" class="space-y-4">
-
-      <!-- Thumbnail -->
-
-      <!-- Thumbnail Upload -->
-
-      <div class="relative rounded-xl border-2 transition-all duration-200 cursor-pointer p-4"
-        (click)="fileInput.click()" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
-        (drop)="onDrop($event)" [ngClass]="{
+  <div class="relative rounded-xl border-2 transition-all duration-200 cursor-pointer p-4" (click)="fileInput.click()"
+    (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [ngClass]="{
   'border-red-500 bg-red-50': imageError,
   'border-primary bg-blue-50': isDragging() && !imageError,
   'border-gray-300 hover:border-primary': !hasThumbnail() && !imageError && !isDragging()
 }">
 
-        <!-- Header -->
-        <div class="mb-3">
-          <h3 class="text-base font-bold text-[var(--color-primary)]">
-            Course Thumbnail
-          </h3>
+    <!-- Header -->
+    <div class="mb-3">
+      <h3 class="text-base font-bold text-[var(--color-primary)]">
+        Course Thumbnail
+      </h3>
 
-          <p class="text-xs text-[var(--color-text-secondary)]">
-            Upload a banner image for your course
-          </p>
-        </div>
+      <p class="text-xs text-[var(--color-text-secondary)]">
+        Upload a banner image for your course
+      </p>
+    </div>
 
-        <!-- Hidden Input -->
+    <!-- Hidden Input -->
 
-        <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" hidden #fileInput
-          (change)="onFileSelected($event)" aria-label="Upload course thumbnail" />
+    <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" hidden #fileInput
+      (change)="onFileSelected($event)" aria-label="Upload course thumbnail" />
 
-        <!-- Empty State -->
+    <!-- Empty State -->
 
-        <div *ngIf="!hasThumbnail()"
-          class="h-80 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 text-center transition-all"
-          [ngClass]="{
+    <div *ngIf="!hasThumbnail()"
+      class="h-80 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 text-center transition-all"
+      [ngClass]="{
       'border-primary bg-blue-50': isDragging(),
       'border-gray-300': !isDragging()
     }">
 
-          <mat-icon class="!text-5xl text-gray-400">
-            cloud_upload
-          </mat-icon>
+      <mat-icon class="!text-5xl text-gray-400">
+        cloud_upload
+      </mat-icon>
 
-          <div>
-            <p class="font-semibold text-gray-700">
-              Drag & Drop image here
-            </p>
+      <div>
+        <p class="font-semibold text-gray-700">
+          Drag & Drop image here
+        </p>
 
-            <p class="text-sm text-gray-500">
-              or click to browse
-            </p>
-          </div>
-
-          <div class="text-xs text-gray-400">
-            JPG, PNG, WEBP
-            <br>
-            Maximum size: 2MB
-          </div>
-
-        </div>
-     
-        <!-- Preview State -->
-
-        <div *ngIf="hasThumbnail()" class="relative h-80 rounded-xl overflow-hidden border">
-
-          <img [src]="thumbnailPreview()" alt="Course Thumbnail" class="w-full h-full object-cover" />
-
-          <!-- Overlay -->
-
-          <div
-            class="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all flex items-center justify-center opacity-0 hover:opacity-100">
-
-            <div class="bg-white text-gray-700 px-4 py-2 rounded-lg font-medium shadow">
-              Change Image
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Success Message -->
-
-
-
-        <!-- Error Message -->
-
-        <div *ngIf="imageError" class="flex items-center gap-2 mt-3 text-red-500 text-sm font-medium">
-          <mat-icon>error</mat-icon>
-          {{ imageError }}
-        </div>
-
+        <p class="text-sm text-gray-500">
+          or click to browse
+        </p>
       </div>
 
-      <!-- Course Details -->
+      <div class="text-xs text-gray-400">
+        JPG, PNG, WEBP
+        <br>
+        Maximum size: 2MB
+      </div>
 
-      <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4 space-y-4">
+    </div>
 
-        <h3 class="text-base font-bold text-[var(--color-primary)] flex items-center gap-2">
-          <mat-icon>info</mat-icon>
-          Course Details
-        </h3>
+    <!-- Preview State -->
 
-        <div class="relative">
-          <label class="block text-xs font-bold mb-2">
-            Course Title *
-          </label>
+    <div *ngIf="hasThumbnail()" class="relative h-80 rounded-xl overflow-hidden border">
 
-          <div class="relative">
-            <input type="text" formControlName="title" placeholder="Master Angular Standalone Components"
-              class="w-full px-4 py-3 rounded-lg border outline-none pr-10" [ngClass]="{
+      <img [src]="thumbnailPreview()" alt="Course Thumbnail" class="w-full h-full object-cover" />
+
+      <!-- Overlay -->
+
+      <div
+        class="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all flex items-center justify-center opacity-0 hover:opacity-100">
+
+        <div class="bg-white text-gray-700 px-4 py-2 rounded-lg font-medium shadow">
+          Change Image
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Success Message -->
+
+
+
+    <!-- Error Message -->
+
+    <div *ngIf="imageError" class="flex items-center gap-2 mt-3 text-red-500 text-sm font-medium">
+      <mat-icon>error</mat-icon>
+      {{ imageError }}
+    </div>
+
+  </div>
+
+  <!-- Course Details -->
+
+  <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4 space-y-4">
+
+    <h3 class="text-base font-bold text-[var(--color-primary)] flex items-center gap-2">
+      <mat-icon>info</mat-icon>
+      Course Details
+    </h3>
+
+    <div class="relative">
+      <label class="block text-xs font-bold mb-2">
+        Course Title *
+      </label>
+
+      <div class="relative">
+        <input type="text" formControlName="title" placeholder="Master Angular Standalone Components"
+          class="w-full px-4 py-3 rounded-lg border outline-none pr-10" [ngClass]="{
         'border-gray-300': !isInvalid('title') && !isValid('title'),
         'border-red-500': isInvalid('title'),
         'border-green-500': isValid('title')
       }" />
 
-            <!-- VALID ICON -->
-            <mat-icon *ngIf="isValid('title')" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
-              check_circle
-            </mat-icon>
+        <!-- VALID ICON -->
+        <mat-icon *ngIf="isValid('title')" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
+          check_circle
+        </mat-icon>
 
-            <!-- INVALID ICON -->
-            <mat-icon *ngIf="isInvalid('title')" class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
-              error
-            </mat-icon>
-          </div>
+        <!-- INVALID ICON -->
+        <mat-icon *ngIf="isInvalid('title')" class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+          error
+        </mat-icon>
+      </div>
 
-          <!-- ERROR MESSAGE -->
-          <p *ngIf="isInvalid('title')" class="text-xs text-red-500 mt-1">
-            Title must be at least 5 characters
-          </p>
-        </div>
+      <!-- ERROR MESSAGE -->
+      <p *ngIf="isInvalid('title')" class="text-xs text-red-500 mt-1">
+        Title must be at least 5 characters
+      </p>
+    </div>
 
-        <div class="relative">
-          <label class="block text-xs font-bold mb-2">
-            Description *
-          </label>
+    <div class="relative">
+      <label class="block text-xs font-bold mb-2">
+        Description *
+      </label>
 
-          <div class="relative">
-            <textarea formControlName="description" rows="4"
-              class="w-full px-4 py-3 rounded-lg border outline-none pr-10 resize-none" [ngClass]="{
+      <div class="relative">
+        <textarea formControlName="description" rows="4"
+          class="w-full px-4 py-3 rounded-lg border outline-none pr-10 resize-none" [ngClass]="{
         'border-gray-300': !isInvalid('description') && !isValid('description'),
         'border-red-500': isInvalid('description'),
         'border-green-500': isValid('description')
       }"></textarea>
 
-            <mat-icon *ngIf="isValid('description')" class="absolute right-3 top-4 text-green-600">
-              check_circle
-            </mat-icon>
+        <mat-icon *ngIf="isValid('description')" class="absolute right-3 top-4 text-green-600">
+          check_circle
+        </mat-icon>
 
-            <mat-icon *ngIf="isInvalid('description')" class="absolute right-3 top-4 text-red-500">
-              error
-            </mat-icon>
-          </div>
-
-          <p *ngIf="isInvalid('description')" class="text-xs text-red-500 mt-1">
-            Description must be at least 20 characters
-          </p>
-        </div>
-
+        <mat-icon *ngIf="isInvalid('description')" class="absolute right-3 top-4 text-red-500">
+          error
+        </mat-icon>
       </div>
 
+      <p *ngIf="isInvalid('description')" class="text-xs text-red-500 mt-1">
+        Description must be at least 20 characters
+      </p>
+    </div>
 
-      <!-- Level  + Category -->
+  </div>
 
-      <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4">
 
-        <h3 class="text-base font-bold text-[var(--color-primary)] flex items-center gap-2 mb-4">
-          <mat-icon>tune</mat-icon>
-          Course Settings
-        </h3>
+  <!-- Level  + Category -->
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4">
 
-          <!-- Level -->
-          <div>
+    <h3 class="text-base font-bold text-[var(--color-primary)] flex items-center gap-2 mb-4">
+      <mat-icon>tune</mat-icon>
+      Course Settings
+    </h3>
 
-            <label class="block text-sm font-medium mb-2">
-              Level *
-            </label>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <div class="relative" [style.z-index]="openLevel ? 999 : 'auto'">
+      <!-- Level -->
+      <div>
 
-              <button type="button" (click)="openLevel = !openLevel" class="w-full bg-white border-2 py-3 px-4 text-sm shadow-sm
+        <label class="block text-sm font-medium mb-2">
+          Level *
+        </label>
+
+        <div class="relative" [style.z-index]="openLevel ? 999 : 'auto'">
+
+          <button type="button" (click)="openLevel = !openLevel" class="w-full bg-white border-2 py-3 px-4 text-sm shadow-sm
          transition-all duration-200 text-left relative" [ngClass]="{
     'border-gray-300': !openLevel,
     'border-primary': openLevel,
     'rounded-xl': !openLevel,
     'rounded-t-xl rounded-b-none': openLevel
   }">
-                {{ formatLevel(getControl('level').value) || 'Select level' }}
+            {{ formatLevel(getControl('level').value) || 'Select level' }}
 
-                <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2
+            <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2
          transition-transform duration-200" [class.rotate-180]="openLevel">
-                  expand_more
-                </mat-icon>
-              </button>
+              expand_more
+            </mat-icon>
+          </button>
 
-              <div *ngIf="openLevel" class="absolute top-full left-0 z-20 w-full bg-white
+          <div *ngIf="openLevel" class="absolute top-full left-0 z-20 w-full bg-white
          border-2 border-primary border-t-0
          rounded-b-xl shadow-lg overflow-hidden">
 
-                <button type="button" (click)="selectLevel(CourseLevel.BEGINNER)" class="w-full px-4 py-3 text-sm text-left
+            <button type="button" (click)="selectLevel(CourseLevel.BEGINNER)" class="w-full px-4 py-3 text-sm text-left
                hover:bg-[var(--color-primary)]
                hover:text-white transition-colors">
-                  Beginner
-                </button>
+              Beginner
+            </button>
 
-                <button type="button" (click)="selectLevel(CourseLevel.INTERMEDIATE)" class="w-full px-4 py-3 text-sm text-left
+            <button type="button" (click)="selectLevel(CourseLevel.INTERMEDIATE)" class="w-full px-4 py-3 text-sm text-left
                hover:bg-[var(--color-primary)]
                hover:text-white transition-colors">
-                  Intermediate
-                </button>
+              Intermediate
+            </button>
 
-                <button type="button" (click)="selectLevel(CourseLevel.ADVANCED)" class="w-full px-4 py-3 text-sm text-left
+            <button type="button" (click)="selectLevel(CourseLevel.ADVANCED)" class="w-full px-4 py-3 text-sm text-left
                hover:bg-[var(--color-primary)]
                hover:text-white transition-colors">
-                  Advanced
-                </button>
+              Advanced
+            </button>
 
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- Category -->
-          <div>
-            <app-category-selector [control]="getControl('category')"></app-category-selector>
           </div>
 
         </div>
 
       </div>
 
-      <!-- Goals & Requirements -->
 
-      <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4 space-y-4">
-
-        <app-goals-input [goalsArray]="goalsArray"></app-goals-input>
-
-        <hr>
-
-        <app-requirements-input [requirementsArray]="requirementsArray"></app-requirements-input>
-
-      </div>
-
-      <!-- Continue -->
-
-      <div class="flex justify-end">
-
-
-        <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
-          [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isSubmitDisabled"
-          (action)="onMainAction()"></app-action-bar>
-
+      <!-- Category -->
+      <div>
+        <app-category-selector [control]="getControl('category')"></app-category-selector>
       </div>
 
     </div>
 
-  </ng-container>
+  </div>
 
-</ng-container>
+  <!-- Goals & Requirements -->
 
-<ng-template #loadingTpl>
-  <app-loading [size]="45" color="#00B0FF" [fullScreen]="true" text="Loading course..." />
-</ng-template>
+  <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4 space-y-4">
 
-<ng-template #notFoundTpl>
-  <div class="flex flex-col items-center justify-center min-h-[400px] text-center">
+    <app-goals-input [goalsArray]="goalsArray"></app-goals-input>
 
-    <mat-icon class="text-6xl text-gray-300">search_off</mat-icon>
+    <hr>
 
-    <h2 class="text-xl font-bold text-gray-700 mt-4">
-      Course not found
-    </h2>
-
-    <p class="text-gray-500 text-sm mt-2">
-      The course you're looking for doesn't exist or was removed.
-    </p>
-
-    <button class="mt-6 px-5 py-2 bg-[#00B0FF] text-white rounded-lg" (click)="router.navigate(['/courses'])">
-      Back to Courses
-    </button>
+    <app-requirements-input [requirementsArray]="requirementsArray"></app-requirements-input>
 
   </div>
-</ng-template>
+
+  <!-- Continue -->
+
+  <div class="flex justify-end">
+
+
+    <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
+      [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isSubmitDisabled"
+      (action)="onMainAction()"></app-action-bar>
+
+  </div>
+
+</div>

@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +12,7 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { take } from 'rxjs';
+import { AppLoader } from "../../../../shared/components/add-loader/app-loader";
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -32,7 +34,9 @@ export function maxArrayLength(max: number) {
     MatIconModule,
     MatButtonModule,
     BackButtonComponent,
-    SectionCardComponent
+    SectionCardComponent,
+    AppLoader,
+    DragDropModule
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -46,6 +50,7 @@ export class SectionBuilderComponent implements OnInit {
   private sectionsService = inject(SectionsService);
   private coursesService = inject(CoursesService);
   private router = inject(Router);
+  courseNotFound = signal(false);
   expandedSectionId: string | null = null;
   highlightSectionId: string | null = null;
   courseId!: string;
@@ -125,7 +130,7 @@ export class SectionBuilderComponent implements OnInit {
 
       expectedOutcomes: this.fb.array([]),
 
-      isBasicSection: [false],
+      price: [0, [Validators.required, Validators.min(0)]],
       lessons: this.fb.array([]),
 
       isSaving: [false],
@@ -150,32 +155,14 @@ export class SectionBuilderComponent implements OnInit {
     this.expandedSectionId = sectionId;
   }
 
-  moveSectionUp(index: number) {
-    if (index === 0) return;
-
-    const sections = this.sectionsArray;
-
-    const current = sections.at(index);
-    const above = sections.at(index - 1);
-
-    sections.setControl(index - 1, current);
-    sections.setControl(index, above);
-
-    sections.markAsDirty();
-  }
-
-  moveSectionDown(index: number) {
-    const sections = this.sectionsArray;
-
-    if (index === sections.length - 1) return;
-
-    const current = sections.at(index);
-    const below = sections.at(index + 1);
-
-    sections.setControl(index + 1, current);
-    sections.setControl(index, below);
-
-    sections.markAsDirty();
+  onSectionDropped(event: CdkDragDrop<FormGroup[]>) {
+    moveItemInArray(
+      this.sectionsArray.controls,
+      event.previousIndex,
+      event.currentIndex
+    );
+    this.sectionsArray.updateValueAndValidity();
+    this.sectionsArray.markAsDirty();
   }
 
   trackBySection(index: number, item: FormGroup) {
@@ -194,7 +181,7 @@ export class SectionBuilderComponent implements OnInit {
             this.fb.group({
               title: [section.title || '', [Validators.required, Validators.minLength(3)]],
               description: [section.description || '', [Validators.minLength(10)]],
-              isBasicSection: [section.isBasicSection || false],
+              price: [section.price ?? 0, [Validators.required, Validators.min(0)]],
               expectedOutcomes: this.fb.array(
                 (section.expectedOutcomes || []).map((o: string) =>
                   this.fb.control(o ?? '', Validators.required)
