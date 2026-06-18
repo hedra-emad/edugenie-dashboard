@@ -1,55 +1,47 @@
 <div class="space-y-2">
 
-  <label
-    class="block text-sm font-semibold text-[var(--color-text-primary)]"
-  >
+  <label class="block text-sm font-semibold text-[var(--color-text-primary)]">
     Category *
   </label>
 
   <div class="relative">
 
-    <button
-  type="button"
-  (click)="openCategory = !openCategory"
-  class="w-full bg-white border-2 py-3 px-4 text-sm shadow-sm
-         transition-all duration-200 text-left relative"
-  [ngClass]="{
+    <button type="button" (click)="openCategory = !openCategory" class="w-full bg-white border-2 py-3 px-4 text-sm shadow-sm
+         transition-all duration-200 text-left relative" [ngClass]="{
     'border-gray-300': !openCategory && !control.value,
     'border-primary': openCategory,
     'rounded-xl': !openCategory,
     'rounded-t-xl rounded-b-none': openCategory
-  }"
->
+  }">
       {{ selectedCategoryName || 'Select category' }}
 
-      <div
-        class="absolute inset-y-0 right-3 flex items-center"
-      >
-        <mat-icon
-          class="transition-transform duration-200"
-          [class.rotate-180]="openCategory"
-        >
+      <div class="absolute inset-y-0 right-3 flex items-center">
+        <mat-icon class="transition-transform duration-200" [class.rotate-180]="openCategory">
           expand_more
         </mat-icon>
       </div>
 
     </button>
 
-    <div
-      *ngIf="openCategory"
-      class="absolute top-full left-0 z-20 w-full bg-white
-             border-2 border-primary border-t-0
-             rounded-b-xl shadow-lg overflow-hidden"
-    >
+    <div *ngIf="openCategory" class="absolute top-full left-0 z-20 w-full bg-white
+         border-2 border-primary border-t-0
+         rounded-b-xl shadow-lg
+         max-h-60 overflow-y-auto scroll-smooth overscroll-contain
 
-      <button
-        *ngFor="let cat of availableCategories"
-        type="button"
-        (click)="selectCategory(cat._id)"
-        class="w-full px-4 py-3 text-sm text-left
+         [&::-webkit-scrollbar]:w-1
+         [&::-webkit-scrollbar]:h-1
+
+         [&::-webkit-scrollbar-track]:bg-transparent
+
+         [&::-webkit-scrollbar-thumb]:bg-[var(--color-primary)]
+         [&::-webkit-scrollbar-thumb]:rounded-full
+
+         [&::-webkit-scrollbar-thumb:hover]:bg-[var(--color-primary-dark)]
+  ">
+
+      <button *ngFor="let cat of availableCategories" type="button" (click)="selectCategory(cat.id || cat._id)" class="w-full px-4 py-3 text-sm text-left
                hover:bg-[var(--color-primary)]
-               hover:text-white transition-colors"
-      >
+               hover:text-white transition-colors">
         {{ cat.name }}
       </button>
 
@@ -57,10 +49,7 @@
 
   </div>
 
-  <div
-    *ngIf="control.touched && control.invalid"
-    class="text-xs text-red-500"
-  >
+  <div *ngIf="control.touched && control.invalid" class="text-xs text-red-500">
     Category is required
   </div>
 

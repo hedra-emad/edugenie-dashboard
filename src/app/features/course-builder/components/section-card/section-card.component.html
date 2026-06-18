@@ -1,155 +1,116 @@
-<mat-expansion-panel [expanded]="expanded"
-  class="section-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md"
-  [ngClass]="{ 'highlight-border': highlight }">
-  <mat-expansion-panel-header>
-    <mat-panel-title class="flex items-center justify-between w-full pr-4">
-      <div class="flex items-center gap-2 font-bold text-sm sm:text-base leading-snug min-w-0"
-        [style.color]="'var(--color-primary)'">
-        <mat-icon class="text-slate-400 flex-shrink-0">folder_open</mat-icon>
-
-        <span class="truncate block">
-          {{ index + 1 }}: {{ sectionForm.get('title')?.value || 'Untitled Section' }}
-        </span>
-        <span class="text-xs text-slate-400 ml-2 shrink-0 duration-text">
-          ({{ formatDuration(totalSectionDuration) }} min total)
-        </span>
-      </div>
-      <!-- Actions inside the header (preventing panel toggle) -->
-      <div class="flex items-center gap-1.5">
-
-        <!-- MOVE UP -->
-        <button type="button" [disabled]="isFirst" (click)="onMoveUp($event)"
-          class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Move Section Up">
-          <span class="flex items-center justify-center w-full h-full">
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
-              arrow_upward
-            </mat-icon>
-          </span>
-        </button>
-
-        <!-- MOVE DOWN -->
-        <button type="button" [disabled]="isLast" (click)="onMoveDown($event)"
-          class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Move Section Down">
-          <span class="flex items-center justify-center w-full h-full">
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
-              arrow_downward
-            </mat-icon>
-          </span>
-        </button>
-
-        <!-- DELETE -->
-        <button type="button" (click)="deleteSection()" [disabled]="isDeleting"
-          class="w-8 h-8 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50"
-          aria-label="Delete Section">
-          <span class="flex items-center justify-center w-full h-full">
-            <mat-icon *ngIf="!isDeleting" class="!text-[18px] !w-[18px] !h-[18px] block">
-              delete
-            </mat-icon>
-
-            <mat-icon *ngIf="isDeleting" class="!text-[18px] !w-[18px] !h-[18px] block">
-              hourglass_top
-            </mat-icon>
-          </span>
-        </button>
-
-        <!-- GO TO LESSONS -->
-        <button type="button" (click)="onGoToLessons($event)" [disabled]="!isExistingSection"
-          class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Go to Lessons">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
-            arrow_forward
-          </mat-icon>
-        </button>
-
-      </div>
-    </mat-panel-title>
-  </mat-expansion-panel-header>
+<app-expansion-panel [expanded]="expanded" (expandedChange)="expanded = $event"
+  [title]="sectionForm.get('title')?.value || 'Untitled Section'"
+  [subtitle]="totalLessonsCount + ' lessons · ' + formatDuration(totalSectionDuration)" icon="folder_open" [index]="index"
+  [highlight]="highlight" panelClass="section-panel" [showDragHandle]="true" [showDeleteButton]="true"
+  [isDeleting]="isDeleting" [showLessonsButton]="true" [lessonsButtonDisabled]="!isExistingSection"
+  [showMobileMenu]="true" [hideMobileExpansionIndicator]="true" (deleteClicked)="requestDelete()"
+  [showQuizButton]="isExistingSection" [quizButtonDisabled]="totalLessonsCount === 0"
+  (lessonsClicked)="onGoToLessons()" (quizClicked)="onGoToQuiz()">
 
   <!-- Expanded content: full form -->
-  <div [formGroup]="sectionForm" class=" space-y-6">
-    <span class="text-xs text-slate-400 ml-2 shrink-0 hidden sm:inline">
-      ({{ formatDuration(totalSectionDuration) }} min total)
-    </span>
+  <div [formGroup]="sectionForm" class=" space-y-5 pt-5 ">
+    <!-- Mobile section stats (matches desktop subtitle style) -->
+    <div class="sm:hidden flex items-center gap-3 mb-3 text-xs font-normal text-[var(--color-text-secondary)]">
+      <span class="flex items-center gap-1">
+        <mat-icon class="!text-[13px] !w-[13px] !h-[13px] block">menu_book</mat-icon>
+        {{ totalLessonsCount }} lessons
+      </span>
+      <span class="opacity-40">·</span>
+      <span class="flex items-center gap-1">
+        <mat-icon class="!text-[13px] !w-[13px] !h-[13px] block">schedule</mat-icon>
+        {{ formatDuration(totalSectionDuration) }}
+      </span>
+    </div>
+
     <!-- Title & Toggle -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-      <!-- Section Title -->
-      <div class="md:col-span-2 space-y-2">
-        <label class="text-xs font-bold uppercase tracking-wider block text-gray-700">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+
+      <!-- Section Title — 2/3 width on desktop -->
+      <div class="md:col-span-2 space-y-1.5">
+        <label class="text-[11px] font-bold uppercase tracking-wider block text-[var(--color-text-secondary)]">
           Section Title <span class="text-red-500">*</span>
         </label>
         <input type="text" formControlName="title" placeholder="e.g. Introduction to Angular Signals"
-          class="focus:ring-[var(--color-primary)]
-focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800" [ngClass]="{
-    'border-red-500': titleControl?.invalid && titleControl?.touched,
-    'border-gray-300': !(titleControl?.invalid && titleControl?.touched)
-  }" />
+          class="focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] w-full px-3 py-2 rounded-lg border outline-none transition-all text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)]"
+          [ngClass]="{
+            'border-red-500': titleControl?.invalid && titleControl?.touched,
+            'border-[var(--color-border)]': !(titleControl?.invalid && titleControl?.touched)
+          }" />
         <div *ngIf="titleControl?.touched && titleControl?.invalid" class="text-xs mt-1 text-red-500 font-semibold">
-          <div *ngIf="titleControl?.errors?.['required']">
-            Section title is required.
-          </div>
-
-          <div *ngIf="titleControl?.errors?.['minlength']">
-            Section title must contain at least 3 characters.
-          </div>
+          <div *ngIf="titleControl?.errors?.['required']">Section title is required.</div>
+          <div *ngIf="titleControl?.errors?.['minlength']">Section title must contain at least 3 characters.</div>
         </div>
+        <p *ngIf="!(titleControl?.touched && titleControl?.invalid)" class="text-xs text-[var(--color-text-secondary)] mt-1">
+          Section title must contain at least 3 characters.
+        </p>
       </div>
 
-      <!-- Basic Section Toggle -->
-      <div class="flex items-center justify-between p-3.5 rounded-lg border border-gray-200 bg-slate-50">
-        <div>
-          <span class="text-xs font-bold text-gray-700 block">Basic Section</span>
-          <span class="text-[10px] text-gray-500">Free preview for students</span>
-        </div>
-        <button type="button"
-          (click)="sectionForm.get('isBasicSection')?.setValue(!sectionForm.get('isBasicSection')?.value); sectionForm.get('isBasicSection')?.markAsDirty()"
-          class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#00B0FF]"
-          [ngClass]="sectionForm.get('isBasicSection')?.value ? 'bg-[#00B0FF]' : 'bg-gray-200'" role="switch"
-          [attr.aria-checked]="sectionForm.get('isBasicSection')?.value">
+      <!-- Section Price — 1/3 width on desktop -->
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold uppercase tracking-wider block text-[var(--color-text-secondary)]">
+          Price <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
           <span
-            class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-            [ngClass]="sectionForm.get('isBasicSection')?.value ? 'translate-x-4' : 'translate-x-0'"></span>
-        </button>
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] text-sm font-semibold select-none">$</span>
+          <input type="number" formControlName="price" min="0" placeholder="0" (wheel)="preventScrollChange($event)"
+            class="focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] w-full pl-7 pr-3 py-2 rounded-lg border outline-none transition-all text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)]"
+            [ngClass]="{
+              'border-red-500': sectionForm.get('price')?.invalid && sectionForm.get('price')?.touched,
+              'border-[var(--color-border)]': !(sectionForm.get('price')?.invalid && sectionForm.get('price')?.touched)
+            }" />
+        </div>
+        <div *ngIf="sectionForm.get('price')?.touched && sectionForm.get('price')?.invalid"
+          class="text-xs mt-1 text-red-500 font-semibold">
+          <div *ngIf="sectionForm.get('price')?.errors?.['required']">Price is required.</div>
+          <div *ngIf="sectionForm.get('price')?.errors?.['min']">Price cannot be negative.</div>
+        </div>
+        <p *ngIf="!(sectionForm.get('price')?.touched && sectionForm.get('price')?.invalid)" class="text-xs text-[var(--color-text-secondary)] mt-1">
+          Price cannot be negative.
+        </p>
       </div>
+
     </div>
 
     <!-- Description -->
-    <div class="space-y-2">
-      <label class="text-xs font-bold uppercase tracking-wider block text-gray-700">
+    <div class="space-y-1.5">
+      <label class="text-[11px] font-bold uppercase tracking-wider block text-[var(--color-text-secondary)]">
         Section Description
       </label>
       <textarea formControlName="description" rows="2" placeholder="Brief description..."
-        class="focus:ring-[var(--color-primary)]
-focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline-none transition-all text-sm text-gray-800 resize-none" [ngClass]="{
+        class="focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] w-full px-3 py-2 rounded-lg border outline-none transition-all text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)] resize-none"
+        [ngClass]="{
     'border-red-500': descriptionControl?.invalid && descriptionControl?.touched,
-    'border-gray-300': !(descriptionControl?.invalid && descriptionControl?.touched)
+    'border-[var(--color-border)]': !(descriptionControl?.invalid && descriptionControl?.touched)
   }"></textarea>
       <div *ngIf="descriptionControl?.touched && descriptionControl?.invalid"
         class="text-xs mt-1 text-red-500 font-semibold">
         Description must contain at least 10 characters.
       </div>
+      <p *ngIf="!(descriptionControl?.touched && descriptionControl?.invalid)" class="text-xs text-[var(--color-text-secondary)] mt-1">
+        Description must contain at least 10 characters.
+      </p>
     </div>
 
     <!-- Expected Outcomes -->
-    <div class="space-y-3 p-4 bg-slate-50/50 border border-slate-100 rounded-xl">
+    <div class="space-y-3 p-4 bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl">
       <div class="flex items-center justify-between">
-        <label class="text-xs font-bold uppercase tracking-wider block text-gray-700">
+        <label class="text-[11px] font-bold uppercase tracking-wider block text-[var(--color-text-primary)]">
           Expected Section Outcomes
         </label>
 
         <button type="button" (click)="addOutcome()"
-          class="text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-all hover:opacity-80 active:scale-95 px-3 py-1.5 rounded-lg border border-[var(--color-secondary)]"
+          class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all hover:opacity-80 active:scale-95 px-2.5 py-1.5 rounded-lg border border-[var(--color-secondary)] bg-[var(--color-surface)] shadow-sm"
           [style.color]="'var(--color-secondary)'">
-          <mat-icon class="!text-[16px] !w-4 !h-4 leading-none flex items-center justify-center">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px] leading-none flex items-center justify-center">
             add
           </mat-icon>
-          Add Outcome
+          <span class="hidden sm:inline">Add Outcome</span>
         </button>
       </div>
 
-      <div class="space-y-3">
-        <div *ngIf="outcomes.length === 0" class="text-xs italic text-gray-500 py-1">
+      <div class="space-y-2">
+        <div *ngIf="outcomes.length === 0" class="text-xs italic text-[var(--color-text-secondary)] py-1">
           No outcomes added yet. List what skills students get from this section.
         </div>
 
@@ -158,10 +119,10 @@ focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline
           <div class="flex-1">
             <input type="text" [formControl]="outcomeCtrl"
               placeholder="e.g. Understand the difference between Signals and RxJS Observables"
-              class="w-full px-3 py-2 rounded-lg border outline-none transition-all text-xs text-gray-800 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
+              class="w-full px-3 py-2 rounded-lg border outline-none transition-all text-xs text-[var(--color-text-primary)] bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
               [ngClass]="{
             'border-red-500': outcomeCtrl.invalid && outcomeCtrl.touched,
-            'border-gray-300': !(outcomeCtrl.invalid && outcomeCtrl.touched)
+            'border-[var(--color-border)]': !(outcomeCtrl.invalid && outcomeCtrl.touched)
           }">
 
             <div *ngIf="outcomeCtrl.touched && outcomeCtrl.errors?.['required']"
@@ -171,10 +132,10 @@ focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline
           </div>
 
           <button type="button" (click)="removeOutcome(outcomeIdx)"
-            class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
+            class="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)] hover:border-red-200 text-[var(--color-text-secondary)]"
             aria-label="Remove goal">
 
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
+            <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block">
               delete_outline
             </mat-icon>
 
@@ -183,26 +144,40 @@ focus:border-[var(--color-primary)] w-full px-4 py-2.5 rounded-lg border outline
       </div>
     </div>
 
-    <!-- Create Section Button -->
-    <div class=" border-slate-100 flex justify-end">
-      <button type="button" (click)="saveSection()" [disabled]="sectionForm.invalid || sectionForm.pristine || isSaving"
-        class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
-         hover:bg-[var(--color-primary-light)] px-5 py-3 rounded-lg border
-         text-white bg-[var(--color-primary)] shadow-md active:scale-95
-         disabled:opacity-50 disabled:cursor-not-allowed">
+    <!-- Action Buttons -->
+    <div class="pt-1 flex justify-between items-center gap-2">
 
-        <mat-icon class="text-[18px] w-[18px] h-[18px] flex items-center justify-center">
-          add
-        </mat-icon>
-
-        <span *ngIf="!isSaving">
-          {{ isExistingSection ? 'Update' : 'Create' }}
-        </span>
-
-        <span *ngIf="isSaving">
-          {{ isExistingSection ? 'Updating...' : 'Creating...' }}
-        </span>
+      <!-- Mobile: Lessons is the primary next step -->
+      <button *ngIf="isExistingSection" type="button" (click)="onGoToLessons()"
+        class="sm:hidden text-[10px] font-bold uppercase tracking-wider transition-all
+         hover:bg-[var(--color-primary)] hover:text-white px-3 py-1.5
+         rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]
+         shadow-sm active:scale-95 leading-none">
+        Lessons →
       </button>
+
+      <!-- Desktop: Generate Quiz (secondary action) -->
+      <button *ngIf="isExistingSection" type="button" (click)="onGoToQuiz()"
+        [disabled]="totalLessonsCount === 0"
+        class="hidden sm:block text-[10px] font-bold uppercase tracking-wider transition-all
+         hover:bg-[var(--color-primary)] hover:text-white px-3 py-1.5
+         rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]
+         shadow-sm active:scale-95 leading-none
+         disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-primary)]">
+        Generate Quiz
+      </button>
+
+      <!-- Update / Create (always visible) -->
+      <button type="button" (click)="saveSection()" [disabled]="sectionForm.invalid || sectionForm.pristine || isSaving"
+        class="text-[10px] font-bold uppercase tracking-wider transition-all
+         hover:bg-[var(--color-primary-light)] px-3 py-1.5 rounded-lg border
+         text-white bg-[var(--color-primary)] shadow-md active:scale-95
+         disabled:opacity-50 disabled:cursor-not-allowed leading-none ml-auto">
+        <span *ngIf="!isSaving">{{ isExistingSection ? 'Update' : 'Create' }}</span>
+        <span *ngIf="isSaving">{{ isExistingSection ? 'Updating...' : 'Creating...' }}</span>
+      </button>
+
     </div>
   </div>
-</mat-expansion-panel>
+
+</app-expansion-panel>

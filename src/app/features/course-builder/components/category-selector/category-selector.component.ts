@@ -28,6 +28,9 @@ export class CategorySelectorComponent implements OnInit {
     this.categoriesService.getCategories().subscribe({
       next: (cats) => {
         this.availableCategories = cats;
+      },
+      error: (err) => {
+        console.error('Categories error:', err);
       }
     });
 
@@ -50,7 +53,7 @@ export class CategorySelectorComponent implements OnInit {
   get selectedCategoryName(): string {
     return (
       this.availableCategories.find(
-        c => c._id === this.control.value
+        c => (c.id || c._id) === this.control.value
       )?.name || ''
     );
   }

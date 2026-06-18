@@ -1,10 +1,8 @@
-<div class="flex justify-center pt-2 mt-5" >
-    <button type="button" (click)="goBack()"
-        class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all hover:bg-[var(--color-primary-light)] hover:border-[var(--color-primary-light)] px-5 py-3 rounded-lg border text-white bg-[var(--color-primary)] shadow-md">
-        <mat-icon class="text-[18px] w-[18px] h-[18px] flex items-center justify-center">
-            arrow_back
-        </mat-icon>
+<button type="button" (click)="goBack()"
+    class="text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all hover:bg-[var(--color-primary-light)] hover:border-[var(--color-primary-light)] px-4 py-2 rounded-md border text-white bg-[var(--color-primary)] shadow-md">
+    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] !leading-none">
+        arrow_back
+    </mat-icon>
 
-        {{ label }}
-    </button>
-</div>
+    <span>{{ label }}</span>
+</button>

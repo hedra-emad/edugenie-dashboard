@@ -1,4 +1,9 @@
-<div [formGroup]="courseForm" class="space-y-4">
+<div *ngIf="isLoading()" class="flex justify-center py-16">
+  <app-loading [size]="40" color="var(--color-primary)"></app-loading>
+</div>
+
+<ng-container *ngIf="!isLoading()">
+  <div [formGroup]="courseForm" class="space-y-4">
 
   <!-- Thumbnail -->
 
@@ -6,14 +11,12 @@
 
   <div class="relative rounded-xl border-2 transition-all duration-200 cursor-pointer p-4" (click)="fileInput.click()"
     (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [ngClass]="{
-    'border-red-500 bg-red-50': imageError,
-    'border-primary bg-blue-50': isDragging() && !imageError,
-    'border-green-500': hasThumbnail() && !imageError && !isDragging(),
-    'border-gray-300 hover:border-primary': !hasThumbnail() && !imageError && !isDragging()
-  }">
+  'border-red-500 bg-red-50': imageError,
+  'border-primary bg-blue-50': isDragging() && !imageError,
+  'border-gray-300 hover:border-primary': !hasThumbnail() && !imageError && !isDragging()
+}">
 
     <!-- Header -->
-
     <div class="mb-3">
       <h3 class="text-base font-bold text-[var(--color-primary)]">
         Course Thumbnail
@@ -74,17 +77,13 @@
         <div class="bg-white text-gray-700 px-4 py-2 rounded-lg font-medium shadow">
           Change Image
         </div>
-
       </div>
 
     </div>
 
     <!-- Success Message -->
 
-    <div *ngIf="hasThumbnail() && !imageError" class="flex items-center gap-2 mt-3 text-green-600 text-sm font-medium">
-      <mat-icon>check_circle</mat-icon>
-      Thumbnail uploaded successfully
-    </div>
+
 
     <!-- Error Message -->
 
@@ -132,6 +131,9 @@
       <p *ngIf="isInvalid('title')" class="text-xs text-red-500 mt-1">
         Title must be at least 5 characters
       </p>
+      <p *ngIf="!isInvalid('title')" class="text-xs text-[var(--color-text-secondary)] mt-1">
+        Title must be at least 5 characters.
+      </p>
     </div>
 
     <div class="relative">
@@ -159,12 +161,15 @@
       <p *ngIf="isInvalid('description')" class="text-xs text-red-500 mt-1">
         Description must be at least 20 characters
       </p>
+      <p *ngIf="!isInvalid('description')" class="text-xs text-[var(--color-text-secondary)] mt-1">
+        Description must be at least 20 characters.
+      </p>
     </div>
 
   </div>
 
 
-  <!-- Level + Price + Category -->
+  <!-- Level  + Category -->
 
   <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4">
 
@@ -173,7 +178,7 @@
       Course Settings
     </h3>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Level -->
       <div>
@@ -227,27 +232,6 @@
 
       </div>
 
-      <!-- Price -->
-      <div>
-        <label class="block text-sm font-medium mb-2">
-          Price *
-        </label>
-
-        <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-
-          <input type="number" formControlName="price" class="w-full h-[48px] py-3 pl-8 pr-4 text-sm shadow-sm
-         transition-all duration-200 border-2 rounded-xl outline-none" [ngClass]="{
-    'border-gray-300': !isInvalid('price') && !isValid('price'),
-    'border-red-500': isInvalid('price'),
-  }" />
-
-        </div>
-
-        <p *ngIf="isInvalid('price')" class="text-xs text-red-500 mt-1">
-          Price must be 0 or higher
-        </p>
-      </div>
 
       <!-- Category -->
       <div>
@@ -276,8 +260,9 @@
 
 
     <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
-      [loading]="status() === 'saving' || status() === 'updating'"  [disabled]="isSubmitDisabled" (action)="onMainAction()"></app-action-bar>
+      [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isButtonDisabled()"
+      (action)="onMainAction()"></app-action-bar>
 
   </div>
-
 </div>
+</ng-container>

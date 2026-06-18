@@ -34,4 +34,13 @@ export class SectionsService {
       `${this.baseUrl}/courses/${courseId}/sections/${sectionId}`
     );
   }
+
+  reorderSections(courseId: string, sectionIds: string[]): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/courses/${courseId}/sections/reorder`,
+      { sectionIds }
+    );
+  }
+
+
 }

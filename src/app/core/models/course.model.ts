@@ -10,7 +10,6 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  price: number;
   thumbnail: string;
   level: string;
   courseStatus: string;
@@ -28,4 +27,15 @@ export interface Course {
   instructorId?: InstructorDetails;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateCoursePayload {
+  title: string;
+  description: string;
+  thumbnail: string;
+  thumbnailPublicId?: string;
+  level: string;
+  categoryId: string;
+  goals?: string[];
+  requirements?: string[];
 }

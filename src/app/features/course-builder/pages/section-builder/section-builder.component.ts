@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, Input, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, Input, DestroyRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Course } from '../../../../core/models/course.model';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -36,7 +38,9 @@ export function maxArrayLength(max: number) {
     MatIconModule,
     MatButtonModule,
     BackButtonComponent,
-    SectionCardComponent
+    SectionCardComponent,
+    AppLoader,
+    DragDropModule
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -50,12 +54,14 @@ export class SectionBuilderComponent implements OnInit {
   private sectionsService = inject(SectionsService);
   private coursesService = inject(CoursesService);
   private router = inject(Router);
+  courseNotFound = signal(false);
   expandedSectionId: string | null = null;
   highlightSectionId: string | null = null;
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
   newSectionIndex: number | null = null;
   private destroyRef = inject(DestroyRef);
+  isLoading = true;
 
 
   sectionForm = this.fb.group({
@@ -130,7 +136,7 @@ export class SectionBuilderComponent implements OnInit {
 
       expectedOutcomes: this.fb.array([]),
 
-      isBasicSection: [false],
+      price: [0, [Validators.required, Validators.min(0)]],
       lessons: this.fb.array([]),
 
       isSaving: [false],
@@ -155,32 +161,15 @@ export class SectionBuilderComponent implements OnInit {
     this.expandedSectionId = sectionId;
   }
 
-  moveSectionUp(index: number) {
-    if (index === 0) return;
-
-    const sections = this.sectionsArray;
-
-    const current = sections.at(index);
-    const above = sections.at(index - 1);
-
-    sections.setControl(index - 1, current);
-    sections.setControl(index, above);
-
-    sections.markAsDirty();
-  }
-
-  moveSectionDown(index: number) {
-    const sections = this.sectionsArray;
-
-    if (index === sections.length - 1) return;
-
-    const current = sections.at(index);
-    const below = sections.at(index + 1);
-
-    sections.setControl(index + 1, current);
-    sections.setControl(index, below);
-
-    sections.markAsDirty();
+  onSectionDropped(event: CdkDragDrop<FormGroup[]>) {
+    moveItemInArray(
+      this.sectionsArray.controls,
+      event.previousIndex,
+      event.currentIndex
+    );
+    this.sectionsArray.updateValueAndValidity();
+    this.sectionsArray.markAsDirty();
+    this.saveSectionOrder();
   }
 
   trackBySection(index: number, item: FormGroup) {
@@ -199,7 +188,7 @@ export class SectionBuilderComponent implements OnInit {
             this.fb.group({
               title: [section.title || '', [Validators.required, Validators.minLength(3)]],
               description: [section.description || '', [Validators.minLength(10)]],
-              isBasicSection: [section.isBasicSection || false],
+              price: [section.price ?? 0, [Validators.required, Validators.min(0)]],
               expectedOutcomes: this.fb.array(
                 (section.expectedOutcomes || []).map((o: string) =>
                   this.fb.control(o ?? '', Validators.required)
@@ -227,14 +216,73 @@ export class SectionBuilderComponent implements OnInit {
           );
         });
 
+        this.isLoading = false;
         this.cdr.detectChanges();
         console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
         console.error('Failed to load course sections:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
+  moveSectionUp(index: number) {
+    if (index === 0) return;
+    const arr = this.sectionsArray;
+    const current = arr.at(index);
+    const above = arr.at(index - 1);
+    arr.setControl(index - 1, current);
+    arr.setControl(index, above);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  moveSectionDown(index: number) {
+    const arr = this.sectionsArray;
+    if (index === arr.length - 1) return;
+    const current = arr.at(index);
+    const below = arr.at(index + 1);
+    arr.setControl(index + 1, current);
+    arr.setControl(index, below);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  private saveSectionOrder() {
+    const ids = this.sectionsArray.controls
+      .map(c => c.get('id')?.value)
+      .filter(Boolean);
+
+    if (ids.length < 2) return;
+
+    this.sectionsService.reorderSections(this.courseId, ids)
+      .subscribe({ error: err => console.error('Reorder failed', err) });
+  }
+
+  get totalCourseDuration(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.reduce((sum: number, lesson: any) => sum + Number(lesson.videoDuration || 0), 0);
+    }, 0);
+  }
+
+  get totalCourseLessons(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.length;
+    }, 0);
+  }
+
+  formatCourseDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
 
 }

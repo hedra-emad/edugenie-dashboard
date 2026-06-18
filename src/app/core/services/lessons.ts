@@ -11,21 +11,28 @@ export class LessonsService {
 
   private baseUrl = '';
 
-  addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<Lesson> {
+  addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
     return this.http
-      .post<{ success: boolean; data: Lesson }>(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
-      .pipe(map((res) => res.data));
+      .post<{ success: boolean; data: any }>(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
+      .pipe(map((res) => res.data || res));
   }
 
-  updateLesson(courseId: string, sectionId: string, lessonId: string, body: Partial<CreateLessonDto>): Observable<Lesson> {
+  updateLesson(courseId: string, sectionId: string, lessonId: string, body: Partial<CreateLessonDto>): Observable<any> {
     return this.http
-      .patch<{ success: boolean; data: Lesson }>(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`, body)
-      .pipe(map((res) => res.data));
+      .patch<{ success: boolean; data: any }>(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`, body)
+      .pipe(map((res) => res.data || res));
   }
 
   deleteLesson(courseId: string, sectionId: string, lessonId: string): Observable<void> {
     return this.http.delete<void>(
       `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`
+    );
+  }
+
+  reorderLessons(courseId: string, sectionId: string, lessonIds: string[]): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/reorder`,
+      { lessonIds }
     );
   }
 }

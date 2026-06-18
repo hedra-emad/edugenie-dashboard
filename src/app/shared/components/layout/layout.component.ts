@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { NavbarComponent } from './navbar/navbar.component';
+
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { RouterOutlet } from '@angular/router';
 
@@ -8,8 +8,6 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-layout',
   standalone: true,
   imports: [
-
-    NavbarComponent,
     SidebarComponent,
     RouterOutlet
   ],

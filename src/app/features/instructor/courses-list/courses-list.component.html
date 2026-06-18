@@ -72,7 +72,22 @@
           <span>View Course</span>
         </div>
 
-        <div class="thumbnail-overlay"></div>
+        <!-- Badges -->
+        <div class="badge-container top-right">
+          <span class="status-badge"
+            [ngClass]="(course.courseStatus | lowercase) === 'published' ? 'status-published' : (course.courseStatus | lowercase) === 'draft' ? 'status-draft' : 'status-under-review'">
+            <mat-icon class="status-icon">{{ (course.courseStatus | lowercase) === 'published' ? 'check_circle' :
+              'edit_note' }}</mat-icon>
+            {{ (course.courseStatus | lowercase) === 'published' ? 'Published' : (course.courseStatus | lowercase) ===
+            'draft' ? 'Draft' : 'Under Review' }}
+          </span>
+        </div>
+
+        <div class="badge-container bottom-left">
+          <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
+            {{ course.level }}
+          </span>
+        </div>
       </div>
 
       <mat-card-content class="card-body">

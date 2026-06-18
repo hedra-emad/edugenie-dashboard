@@ -10,42 +10,80 @@
         Organize your course into sections, lessons, and video content.
       </p>
     </div>
-    <button type="button" (click)="addSection()"
-      class="text-xs w-full sm:w-fit font-bold uppercase tracking-wider inline-flex items-center gap-1 leading-none transition-all hover:bg-[var(--color-primary)] hover:text-white px-4 py-2.5 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] shadow-sm active:scale-95">
-      <mat-icon class="!text-[16px] !w-4 !h-4 leading-none flex items-center justify-center">
+    <button type="button" (click)="addSection()" class="text-xs w-full sm:w-fit font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1
+         leading-none transition-all hover:bg-[var(--color-primary)] hover:text-white px-4 py-2.5
+         rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] shadow-sm active:scale-95">
+
+      <mat-icon class="!text-[16px] !w-4 !h-4 flex items-center justify-center leading-none">
         add
       </mat-icon>
 
-      <span class="leading-none">Add Section</span>
+      <span class="leading-none flex items-center">Add Section</span>
     </button>
   </div>
 
-  <div class="space-y-4">
-    <div *ngIf="sections.length === 0"
-      class="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-white shadow-sm">
-      <mat-icon class="text-slate-300 text-[48px] w-12 h-12 mx-auto mb-2">layers</mat-icon>
-      <p class="text-sm font-bold text-gray-700">Your curriculum is empty</p>
-      <p class="text-xs text-[var(--color-text-secondary)] mt-1 max-w-[280px] mx-auto">
-        Add sections to structure your lectures, quizzes, and project uploads.
-      </p>
-      <button type="button" (click)="addSection()"
-        class="mt-4 text-xs font-extrabold text-[var(--color-primary)] uppercase tracking-wider px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100">
-        Create First Section
-      </button>
+  <!-- Course-level stats summary bar -->
+  <div *ngIf="!isLoading && sections.length > 0"
+    class="mb-4 flex items-center justify-center sm:justify-start gap-2 sm:gap-3 flex-wrap px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm">
+
+    <div class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-text-secondary)]">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block text-[var(--color-primary)]">layers</mat-icon>
+      <span class="text-[var(--color-text-primary)]">{{ sections.length }}</span>&nbsp;sections
     </div>
 
-    <!-- Section list -->
-    <div *ngIf="sections.length > 0">
-      <app-section-card *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection"
-        [sectionForm]="sectionGroup" [index]="sectionIdx" [isFirst]="sectionIdx === 0"
-        [isLast]="sectionIdx === sections.length - 1" [courseId]="courseId"
-        [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
-        [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (sectionCreated)="onSectionCreated($event)"
-        (delete)="onSectionDeleted(sectionIdx)" (moveUp)="moveSectionUp(sectionIdx)"
-        (moveDown)="moveSectionDown(sectionIdx)">
-      </app-section-card>
+    <span class="w-px h-3.5 bg-[var(--color-border)] block"></span>
+
+    <div class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-text-secondary)]">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block text-[var(--color-primary)]">menu_book</mat-icon>
+      <span class="text-[var(--color-text-primary)]">{{ totalCourseLessons }}</span>&nbsp;lessons total
     </div>
 
-    <app-back-button label="Back" (back)="goToCourse()">
-    </app-back-button>
+    <ng-container *ngIf="totalCourseDuration > 0">
+      <span class="w-px h-3.5 bg-[var(--color-border)] block"></span>
+      <div class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-text-secondary)]">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block text-[var(--color-primary)]">schedule</mat-icon>
+        <span class="text-[var(--color-text-primary)]">{{ formatCourseDuration(totalCourseDuration) }}</span>&nbsp;total length
+      </div>
+    </ng-container>
+
   </div>
+
+  <div class="space-y-4">
+
+    <div *ngIf="isLoading" class="flex justify-center py-16">
+      <app-loading [size]="40" color="var(--color-primary)"></app-loading>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+      <div *ngIf="sections.length === 0"
+        class="text-center py-16 border-2 border-dashed border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] shadow-sm">
+        <mat-icon
+          class="text-[var(--color-text-secondary)] opacity-50 text-[48px] w-12 h-12 mx-auto mb-2">layers</mat-icon>
+        <p class="text-sm font-bold text-[var(--color-text-primary)]">Your curriculum is empty</p>
+        <p class="text-xs text-[var(--color-text-secondary)] mt-1 max-w-[280px] mx-auto">
+          Add sections to structure your lectures, quizzes, and project uploads.
+        </p>
+        <button type="button" (click)="addSection()"
+          class="mt-4 text-xs font-extrabold text-[var(--color-primary)] uppercase tracking-wider px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-background)] transition-colors">
+          Create First Section
+        </button>
+      </div>
+
+      <!-- Section list -->
+      <div *ngIf="sections.length > 0" cdkDropList (cdkDropListDropped)="onSectionDropped($event)" class="space-y-3">
+        <div cdkDrag *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection">
+          <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
+          <app-section-card [sectionForm]="sectionGroup" [index]="sectionIdx" [courseId]="courseId"
+            [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
+            [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (sectionCreated)="onSectionCreated($event)"
+            (delete)="onSectionDeleted(sectionIdx)">
+          </app-section-card>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="mt-6 flex justify-start">
+      <app-back-button label="Back" (back)="goToCourse()"></app-back-button>
+    </div>
+  </div>
+</div>
