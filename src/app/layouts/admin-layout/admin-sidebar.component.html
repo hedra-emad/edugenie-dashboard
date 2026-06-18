@@ -1,0 +1,118 @@
+<div class="admin-sidebar transition-all duration-300" 
+     [class.sidebar--desktop]="!isMobile"
+     [class.sidebar--mobile]="isMobile"
+     [class.sidebar--expanded]="isMobile && sidebarExpanded"
+     [class.sidebar--collapsed]="isCollapsed">
+  
+  <!-- Mobile toggle button -->
+  <div *ngIf="isMobile" class="flex justify-center py-3 shrink-0">
+    <button
+      (click)="toggle.emit()"
+      class="sidebar__toggle w-10 h-10 flex items-center justify-center rounded-full
+             cursor-pointer transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+      [style.color]="'var(--color-surface)'"
+      aria-label="Toggle sidebar">
+      <mat-icon>{{ sidebarExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Admin Profile Section -->
+  <div class="sidebar-profile flex flex-col items-center text-center py-4 transition-all duration-300">
+    <div *ngIf="user?.avatar; else noAvatar">
+      <img
+        class="rounded-full object-cover transition-all duration-300"
+        [ngClass]="{
+          'sidebar-profile__avatar--small': isCollapsed,
+          'sidebar-profile__avatar--large': !isCollapsed
+        }"
+        [src]="user?.avatar"
+        alt="User avatar"
+      />
+    </div>
+    <ng-template #noAvatar>
+       <div 
+        class="rounded-full transition-all duration-300 flex items-center justify-center bg-gray-200 text-gray-600 font-bold"
+        [ngClass]="{
+          'sidebar-profile__avatar--small': isCollapsed,
+          'sidebar-profile__avatar--large': !isCollapsed,
+          'text-xs': isCollapsed,
+          'text-2xl': !isCollapsed
+        }">
+          {{ userInitials }}
+       </div>
+    </ng-template>
+
+    <h3 *ngIf="!isCollapsed"
+        class="sidebar-profile__name mt-2 text-sm font-semibold truncate transition-all duration-300"
+        [ngClass]="{
+          'text-white': isMobile,
+          'sidebar-profile__name--desktop': !isMobile
+        }">
+      {{ user?.firstName }} {{ user?.lastName }}
+    </h3>
+    <p *ngIf="!isCollapsed"
+       class="sidebar-profile__role text-xs truncate transition-all duration-300 uppercase"
+       [ngClass]="{
+         'text-white/70': isMobile,
+         'sidebar-profile__role--desktop': !isMobile
+       }">
+     {{ user?.role }}
+    </p>
+  </div>
+
+  <!-- Divider -->
+  <div class="sidebar-divider"></div>
+
+  <!-- Navigation Menu Items -->
+  <nav class="nav-menu flex-1 overflow-y-auto overflow-x-hidden">
+    <ul class="nav-list px-3 py-2 flex flex-col gap-1">
+      <li *ngFor="let item of menuItems">
+        <a [routerLink]="item.route"
+           routerLinkActive="active-item"
+           [routerLinkActiveOptions]="{ exact: false }"
+           (click)="isMobile && toggle.emit()"
+           class="nav-link flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-primary)] min-w-0"
+           [ngClass]="{
+             'justify-center px-0': isCollapsed,
+             'gap-3 px-3': !isCollapsed
+           }"
+           [title]="item.label">
+          <mat-icon class="nav-icon shrink-0 flex items-center justify-center w-5 h-5">{{ item.icon }}</mat-icon>
+          <span class="nav-label whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Bottom Section Menu Items -->
+  <div class="bottom-section">
+    <div class="sidebar-divider"></div>
+    <ul class="nav-list px-3 py-2 flex flex-col gap-1">
+      <li *ngFor="let item of bottomItems">
+        <a [routerLink]="item.route"
+           routerLinkActive="active-item"
+           (click)="isMobile && toggle.emit()"
+           class="nav-link flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-primary)] min-w-0"
+           [ngClass]="{
+             'justify-center px-0': isCollapsed,
+             'gap-3 px-3': !isCollapsed
+           }"
+           [title]="item.label">
+          <mat-icon class="nav-icon shrink-0 flex items-center justify-center w-5 h-5">{{ item.icon }}</mat-icon>
+          <span class="nav-label whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">{{ item.label }}</span>
+        </a>
+      </li>
+      <li>
+        <button (click)="onLogout()" class="nav-link logout-btn flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] min-w-0" 
+           [ngClass]="{
+             'justify-center px-0': isCollapsed,
+             'gap-3 px-3': !isCollapsed
+           }"
+           title="Logout">
+          <mat-icon class="nav-icon text-red-400 shrink-0 flex items-center justify-center w-5 h-5">logout</mat-icon>
+          <span class="nav-label text-red-400 whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">Logout</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>

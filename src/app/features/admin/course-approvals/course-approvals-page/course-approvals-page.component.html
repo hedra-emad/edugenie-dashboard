@@ -1,0 +1,80 @@
+<div class="approvals-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1 class="page-title">Course Approvals</h1>
+      <p class="page-subtitle">Review and manage pending course uploads before they go live.</p>
+    </div>
+    <div class="page-header-meta">
+      <div class="stat-pill" *ngIf="pendingCount > 0">
+        <span class="stat-dot"></span>
+        <span>{{ pendingCount }} Awaiting Review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-area" *ngIf="successMessage || errorMessage">
+    <div class="toast toast-success" *ngIf="successMessage">
+      <mat-icon class="toast-icon">check_circle</mat-icon>
+      <span>{{ successMessage }}</span>
+      <button (click)="dismissSuccess()" class="toast-dismiss" aria-label="Dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="toast toast-error" *ngIf="errorMessage">
+      <mat-icon class="toast-icon">error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+      <button (click)="dismissError()" class="toast-dismiss" aria-label="Dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Skeleton -->
+  <div class="skeleton-layout" *ngIf="loading; else mainContent">
+    <div class="skeleton-card skeleton-table">
+      <div class="skeleton-line skeleton-title"></div>
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4]">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-lines">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-short"></div>
+        </div>
+      </div>
+    </div>
+    <div class="skeleton-card skeleton-panel">
+      <div class="skeleton-line skeleton-title"></div>
+      <div class="skeleton-input"></div>
+      <div class="skeleton-line" *ngFor="let i of [1,2,3]"></div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <ng-template #mainContent>
+    <div class="content-grid">
+      <!-- LEFT: Approvals Table -->
+      <div class="table-col">
+        <app-approvals-table
+          [courses]="courses"
+          [actionLoading]="actionLoading"
+          (approve)="onApprove($event)"
+          (reject)="onReject($event)">
+        </app-approvals-table>
+      </div>
+
+      <!-- RIGHT: Categories Panel -->
+      <div class="panel-col">
+        <app-categories-panel
+          [categories]="categories"
+          (add)="onAddCategory($event)"
+          (update)="onUpdateCategory($event)"
+          (delete)="onDeleteCategory($event)"
+          (reorder)="onReorderCategories($event)">
+        </app-categories-panel>
+      </div>
+    </div>
+  </ng-template>
+
+</div>
