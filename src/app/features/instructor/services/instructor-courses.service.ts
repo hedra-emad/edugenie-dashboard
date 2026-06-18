@@ -9,7 +9,7 @@ import { InstructorCourse } from '../models/instructor-course.model';
 export class InstructorCoursesService {
   private http = inject(HttpClient);
 
-  // 🔴 Change this to localhost while developing!
+  //  Change this to localhost while developing!
   // (Change it back to vercel.app only when you are ready to deploy to production)
   private apiUrl = 'https://edugenie-api.vercel.app';
 

@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { SidebarProfile } from './components/sidebar-profile/sidebar-profile';
 import { SidebarAction } from './components/sidebar-action/sidebar-action';
 import { SidebarMenu } from './components/sidebar-menu/sidebar-menu';
+import { NavbarAuthComponent } from '../navbar-components/navbar-auth.component/navbar-auth.component';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,6 +15,7 @@ import { SidebarMenu } from './components/sidebar-menu/sidebar-menu';
     SidebarProfile,
     SidebarAction,
     SidebarMenu,
+    NavbarAuthComponent,
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],

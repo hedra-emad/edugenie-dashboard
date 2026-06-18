@@ -36,4 +36,14 @@ export class SectionsService {
       { withCredentials: true }
     );
   }
+
+  reorderSections(courseId: string, sectionIds: string[]) {
+    return this.http.patch(
+      `${this.baseUrl}/courses/${courseId}/sections/reorder`,
+      { sectionIds },
+      { withCredentials: true }
+    );
+  }
+
+
 }

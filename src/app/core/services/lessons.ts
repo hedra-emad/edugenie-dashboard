@@ -30,4 +30,12 @@ export class LessonsService {
       { withCredentials: true }
     );
   }
+
+  reorderLessons(courseId: string, sectionId: string, lessonIds: string[]) {
+    return this.http.patch(
+      `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/reorder`,
+      { lessonIds },
+      { withCredentials: true }
+    );
+  }
 }

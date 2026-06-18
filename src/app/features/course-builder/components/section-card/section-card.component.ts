@@ -15,13 +15,23 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
-import { MatExpansionModule } from '@angular/material/expansion';
+import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { SectionsService } from '../../../../core/services/sections';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
+
+import { ViewChild } from '@angular/core';
+import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
+import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 
 @Component({
   selector: 'app-section-card',
@@ -32,6 +42,13 @@ import { SectionsService } from '../../../../core/services/sections';
     MatExpansionModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
+    DragDropModule,
+    MatDialogModule,
+    ExpansionPanelComponent,
+    ConfirmDialogComponent,
+    SubButtonComponent,
+    MainButtonComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css'
@@ -45,23 +62,31 @@ export class SectionCardComponent {
   // ================= Inputs =================
   @Input({ required: true }) sectionForm!: FormGroup;
   @Input() index = 0;
-  @Input() isFirst = false;
-  @Input() isLast = false;
   @Input() highlight = false;
   @Input() expanded = false;
   @Input() courseId!: string;
 
   // ================= Outputs =================
-  @Output() moveUp = new EventEmitter<void>();
-  @Output() moveDown = new EventEmitter<void>();
-  @Output() delete = new EventEmitter<string>();
+  @Output() delete = new EventEmitter<number>();
   @Output() goToLessons = new EventEmitter<void>();
   @Output() sectionCreated = new EventEmitter<string>();
+
 
   // ================= UI State =================
   isSaving = false;
   isDeleting = false;
+  showDeleteConfirm = false;
   private toastr = inject(ToastrService);
+  private dialog = inject(MatDialog);
+
+  @ViewChild('panel') panel!: MatExpansionPanel;
+
+
+
+
+  preventScrollChange(event: Event) {
+    (event.target as HTMLElement).blur();
+  }
 
   // ================= Lifecycle =================
   ngOnChanges() {
@@ -70,9 +95,6 @@ export class SectionCardComponent {
         const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
         panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
-    } else {
-      const panel = document.querySelector('.mat-expanded');
-      panel?.classList.remove('mat-expanded');
     }
   }
 
@@ -89,11 +111,9 @@ export class SectionCardComponent {
     const payload = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
-
       expectedOutcomes: this.expectedOutcomesArray.value
         .filter((o: string) => o?.trim()),
-
-      isBasicSection: form.get('isBasicSection')?.value
+      price: Number(form.get('price')?.value ?? 0)
     };
 
 
@@ -140,12 +160,25 @@ export class SectionCardComponent {
   }
 
   // ================= DELETE =================
-  deleteSection() {
-    const sectionId = this.sectionForm.get('id')?.value;
-    if (!sectionId) return;
+  requestDelete() {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete Section?', message: 'This cannot be undone.' }
+    });
 
-    this.sectionForm.markAsPristine();
-    this.sectionForm.markAsUntouched();
+    ref.afterClosed().subscribe(result => {
+      if (result === 'confirm') {
+        this.confirmDelete();
+      }
+    });
+  }
+
+  confirmDelete() {
+    const sectionId = this.sectionForm.get('id')?.value;
+
+    if (!sectionId) {
+      this.delete.emit(this.index);
+      return;
+    }
 
     this.isDeleting = true;
 
@@ -153,20 +186,23 @@ export class SectionCardComponent {
       .subscribe({
         next: () => {
           this.isDeleting = false;
-
-          // important: remove from UI AFTER backend success
-          this.delete.emit(sectionId);
+          this.delete.emit(this.index);
         },
         error: () => {
           this.isDeleting = false;
+          this.toastr.error('Delete failed');
         }
       });
   }
 
-  // ================= NAVIGATION =================
-  onGoToLessons(event: Event) {
-    event.stopPropagation();
 
+  cancelDelete(event: Event) {
+    event.stopPropagation();
+    this.showDeleteConfirm = false;
+  }
+
+  // ================= NAVIGATION =================
+  onGoToLessons() {
     const sectionId = this.sectionForm.get('id')?.value;
     if (!sectionId || !this.courseId) return;
 
@@ -176,6 +212,19 @@ export class SectionCardComponent {
       'sections',
       sectionId,
       'lessons'
+    ]);
+  }
+
+  onGoToQuiz() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId || !this.courseId) return;
+
+    this.router.navigate([
+      '/course-builder',
+      this.courseId,
+      'sections',
+      sectionId,
+      'quiz-config'
     ]);
   }
 
@@ -220,67 +269,29 @@ export class SectionCardComponent {
     return !!this.sectionForm.get('id')?.value;
   }
 
-  // ================= LESSONS =================
-  addLesson() {
-    const lessonGroup = this.fb.group({
-      id: [null],
-      title: ['', Validators.required],
-      videoUrl: [''],
-      videoPublicId: [''],
-      videoDuration: [0],
-      uploadStatus: ['idle']
-    });
 
-    this.lessonsArray.push(lessonGroup);
-  }
 
-  deleteLesson(index: number) {
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.markAsDirty();
-  }
 
-  moveLessonUp(index: number) {
-    if (index === 0) return;
-
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index - 1, control);
-
-    this.lessonsArray.markAsDirty();
-  }
-
-  moveLessonDown(index: number) {
-    if (index === this.lessonsArray.length - 1) return;
-
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index + 1, control);
-
-    this.lessonsArray.markAsDirty();
-  }
-
-  // ================= MOVES =================
-  onMoveUp(event: Event) {
-    event.stopPropagation();
-    this.moveUp.emit();
-  }
-
-  onMoveDown(event: Event) {
-    event.stopPropagation();
-    this.moveDown.emit();
-  }
 
   get totalSectionDuration(): number {
     const lessons = this.sectionForm.get('lessons')?.value || [];
-
     return lessons.reduce((sum: number, lesson: any) => {
       return sum + Number(lesson.videoDuration || 0);
     }, 0);
   }
 
+  get totalLessonsCount(): number {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    return lessons.length;
+  }
+
   formatDuration(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    if (!seconds || seconds <= 0) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
   }
 }

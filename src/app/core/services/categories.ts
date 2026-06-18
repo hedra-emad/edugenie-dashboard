@@ -6,7 +6,10 @@ export class CategoriesService {
   private http = inject(HttpClient);
 
   getCategories() {
-    return this.http.get<any[]>('https://edugenie-api.vercel.app/categories');
+    return this.http.get<any[]>(
+      'https://edugenie-api.vercel.app/categories',
+      { withCredentials: true }
+    );
   }
 }
 
