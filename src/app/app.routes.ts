@@ -148,9 +148,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'course-approvals', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: 'analytics',
         loadComponent: () =>
-          import('./features/admin/placeholders').then((m) => m.AdminDashboardComponent)
+          import('./features/instructor-analytics/instructor-analytics.page').then(
+            (m) => m.InstructorAnalyticsPageComponent
+          )
       },
       {
         path: 'course-approvals',

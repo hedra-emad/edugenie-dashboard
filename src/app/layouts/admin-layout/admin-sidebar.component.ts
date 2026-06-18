@@ -27,7 +27,7 @@ export class AdminSidebarComponent {
   @Output() toggle = new EventEmitter<void>();
 
   menuItems: SidebarMenuItem[] = [
-    { icon: 'grid_view', label: 'Overview', route: '/admin/dashboard' },
+    { icon: 'analytics', label: 'Analytics', route: '/admin/analytics' },
     { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
     { icon: 'group', label: 'Users', route: '/admin/users' },
     { icon: 'category', label: 'Categories', route: '/admin/categories' },
