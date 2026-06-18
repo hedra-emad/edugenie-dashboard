@@ -29,8 +29,8 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  private readonly authApiUrl = 'https://edugenie-api.vercel.app/auth';
-  private readonly usersApiUrl = 'https://edugenie-api.vercel.app/users';
+  private readonly authApiUrl = '/auth';
+  private readonly usersApiUrl = '/users';
 
   private readonly currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   readonly currentUser$ = this.currentUserSubject.asObservable();
@@ -45,9 +45,7 @@ export class AuthService {
   initializeAuth(): Observable<void> {
     if (!this.initialization$) {
       this.initialization$ = this.http
-        .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`, {
-          withCredentials: true,
-        })
+        .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`)
         .pipe(
           tap((response) => {
             if (response.success && response.data) {
@@ -83,13 +81,11 @@ export class AuthService {
 
   login(credentials: LoginCredentials): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${this.authApiUrl}/login`, credentials, {
-        withCredentials: true,
-      })
+      .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
       .pipe(
         tap((response) => {
-          if (response.user) {
-            this.setCurrentUser(response.user);
+          if (response.data && response.data.user) {
+            this.setCurrentUser(response.data.user);
           }
         }),
       );
@@ -101,9 +97,7 @@ export class AuthService {
 
   getProfile(): Observable<ProfileApiResponse> {
     return this.http
-      .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`, {
-        withCredentials: true,
-      })
+      .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`)
       .pipe(
         tap((response) => {
           if (response.success && response.data) {
@@ -120,12 +114,11 @@ export class AuthService {
   updateProfile(data: {
     firstName?: string;
     lastName?: string;
-    avatar?: string;
+    avatar?: string | null;
+    avatarPublicId?: string | null;
   }): Observable<ProfileApiResponse> {
     return this.http
-      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, data, {
-        withCredentials: true,
-      })
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, data)
       .pipe(
         tap((response) => {
           if (response.success && response.data) {
@@ -137,7 +130,7 @@ export class AuthService {
 
   logout(): Observable<void> {
     return this.http
-      .post(`${this.authApiUrl}/logout`, {}, { withCredentials: true })
+      .post(`${this.authApiUrl}/logout`, {})
       .pipe(
         tap(() => {
           this.clearCurrentUser();

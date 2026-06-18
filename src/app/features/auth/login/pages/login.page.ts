@@ -90,7 +90,7 @@ export class LoginPageComponent implements OnInit {
         .subscribe({
         next: (res: LoginResponse) => {
           this.isLoading.set(false);
-          const homeRoute = this.authService.getHomeRouteForRole(res.user.role);
+          const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
           this.router.navigate([homeRoute]);
         },
 
@@ -103,6 +103,8 @@ export class LoginPageComponent implements OnInit {
 
           if (status === 401) {
             this.errorMessage.set('Invalid email or password');
+          } else if (status === 429) {
+            this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
           } else if (status === 0) {
             this.errorMessage.set('Network error. Please check your connection');
           } else {

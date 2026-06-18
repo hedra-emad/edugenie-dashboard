@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { InstructorCoursesService } from '../services/instructor-courses.service';
 import { InstructorCourse } from '../models/instructor-course.model';
 
@@ -30,20 +31,23 @@ export class CoursesListComponent implements OnInit {
   private coursesService = inject(InstructorCoursesService);
   private router = inject(Router);
 
-  courses: InstructorCourse[] = [];
-  isLoading = true;
-  error = false;
+  courses = signal<InstructorCourse[]>([]);
+  isLoading = signal(true);
+  hasError = signal(false);
+  errorMsg = signal('');
+
+  private destroyRef = inject(DestroyRef);
 
   readonly pageSize = 6;
   currentPage = 1;
 
   get totalPages(): number {
-    return Math.ceil(this.courses.length / this.pageSize);
+    return Math.ceil(this.courses().length / this.pageSize);
   }
 
   get pagedCourses(): InstructorCourse[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.courses.slice(start, start + this.pageSize);
+    return this.courses().slice(start, start + this.pageSize);
   }
 
   getPages(): number[] {
@@ -62,16 +66,21 @@ export class CoursesListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isLoading.set(true);
     this.coursesService
       .getMyCourses()
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false))
+      )
       .subscribe({
         next: (data) => {
-          this.courses = data;
+          this.courses.set(data);
           this.currentPage = 1;
         },
-        error: () => {
-          this.error = true;
+        error: (err) => {
+          this.hasError.set(true);
+          this.errorMsg.set(err?.error?.message ?? 'Failed to load data');
         },
       });
   }

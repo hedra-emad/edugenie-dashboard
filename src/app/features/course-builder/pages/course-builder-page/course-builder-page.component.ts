@@ -19,7 +19,6 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    PublishCourseButtonComponent,
     AppLoader
   ],
   templateUrl: './course-builder-page.component.html',

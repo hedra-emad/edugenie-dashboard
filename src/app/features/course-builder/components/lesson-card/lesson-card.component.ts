@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -36,12 +36,12 @@ type VideoState =
     MatDialogModule,
     ActionBarComponent,
     ExpansionPanelComponent,
-    ConfirmDialogComponent,
     AppLoader,
     SubButtonComponent
   ],
   templateUrl: './lesson-card.component.html',
-  styleUrl: './lesson-card.component.css'
+  styleUrl: './lesson-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LessonCardComponent {
 
@@ -270,7 +270,8 @@ export class LessonCardComponent {
       title: this.lessonForm.get('title')?.value,
       videoUrl: this.lessonForm.get('videoUrl')?.value,
       videoPublicId: this.lessonForm.get('videoPublicId')?.value,
-      videoDuration: this.lessonForm.get('videoDuration')?.value
+      videoDuration: this.lessonForm.get('videoDuration')?.value,
+      order: this.index
     };
 
     this.isSaving = true;
@@ -296,27 +297,22 @@ export class LessonCardComponent {
 
 
 
-        const createdLesson = lessons[lessons.length - 1];
+        if (!lessonId) {
+          const createdLesson = lessons[lessons.length - 1];
+          const incomingId = createdLesson?._id;
 
+          if (incomingId) {
+            this.lessonForm.patchValue({
+              id: incomingId
+            });
 
+            this.lessonForm.get('id')?.updateValueAndValidity();
 
-        const incomingId = createdLesson?._id;
-
-
-
-        if (incomingId) {
-
-          this.lessonForm.patchValue({
-            id: incomingId
-          });
-
-
-          this.lessonForm.get('id')?.updateValueAndValidity();
-
-          this.lessonCreated.emit({
-            index: this.index,
-            id: incomingId
-          });
+            this.lessonCreated.emit({
+              index: this.index,
+              id: incomingId
+            });
+          }
         }
 
         this.toastr.success(

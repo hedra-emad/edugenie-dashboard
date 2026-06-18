@@ -1,17 +1,32 @@
-import { CourseLevel } from "../enums/course-level.enum";
-import { CourseStatus } from "../enums/course-status";
+import { Section } from "./section.model";
+
+export interface InstructorDetails {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface Course {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   thumbnail: string;
-  thumbnailPublicId?: string,
-  level: CourseLevel;
-  categoryId: string;
+  level: string;
+  courseStatus: string;
   goals: string[];
   requirements: string[];
-  sections?: Section[];
-  courseStatus: CourseStatus;
+  ratingAverage: number;
+  totalEnrollments: number;
+  totalLessons: number;
+  totalHours: number;
+  thumbnailPublicId: string;
+  categoryId: string | null;
+  totalVideos: number;
+  sections: Section[];
+  instructor?: any;
+  instructorId?: InstructorDetails;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCoursePayload {
@@ -19,25 +34,8 @@ export interface CreateCoursePayload {
   description: string;
   thumbnail: string;
   thumbnailPublicId?: string;
-  level: CourseLevel;
-  categoryId: string | { _id: string; name?: string; slug?: string };
+  level: string;
+  categoryId: string;
   goals?: string[];
   requirements?: string[];
 }
-
-export type UpdateCoursePayload =
-  Partial<CreateCoursePayload>;
-
-
-export interface Lesson {
-  videoDuration: number;
-}
-
-export interface Section {
-  _id?: string;
-  title: string;
-  description?: string;
-  expectedOutcomes?: string[];
-  price: number;
-  lessons: Lesson[];
-} 

@@ -3,7 +3,8 @@ import {
   Input,
   Output,
   EventEmitter,
-  inject
+  inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -46,12 +47,11 @@ import { MainButtonComponent } from '../../../../shared/components/main-button/m
     DragDropModule,
     MatDialogModule,
     ExpansionPanelComponent,
-    ConfirmDialogComponent,
-    SubButtonComponent,
-    MainButtonComponent
+
   ],
   templateUrl: './section-card.component.html',
-  styleUrl: './section-card.component.css'
+  styleUrl: './section-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SectionCardComponent {
 
@@ -113,7 +113,8 @@ export class SectionCardComponent {
       description: form.get('description')?.value,
       expectedOutcomes: this.expectedOutcomesArray.value
         .filter((o: string) => o?.trim()),
-      price: Number(form.get('price')?.value ?? 0)
+      isBasicSection: form.get('isBasicSection')?.value,
+      order: this.index
     };
 
 

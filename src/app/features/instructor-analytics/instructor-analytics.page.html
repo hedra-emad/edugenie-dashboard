@@ -215,20 +215,21 @@
             </button>
         </header>
 
-
-        <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+        <!-- Loading / Error states -->
+        @if (isLoading()) {
+        <div class="flex justify-center items-center py-20">
             <mat-spinner diameter="40"></mat-spinner>
         </div>
 
-        <div *ngIf="!isLoading && error"
-            class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+        } @else if (hasError()) {
+        <div class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
             <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>
             <p class="font-bold">Failed to load analytics data.</p>
             <p class="text-sm opacity-80 mt-1">Please try again later.</p>
         </div>
 
-        <ng-container *ngIf="!isLoading && !error && analyticsData">
-            <app-stats-cards [stats]="analyticsData.stats"></app-stats-cards>
+        } @else if (analyticsData()) {
+            <app-stats-cards [stats]="analyticsData()!.stats"></app-stats-cards>
 
             <section
                 class="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[var(--shadow-card)] border border-slate-100 overflow-hidden relative">
@@ -240,10 +241,10 @@
                         Last 30 Days
                     </div>
                 </div>
-                <app-revenue-chart [revenueChart]="analyticsData.revenueChart"></app-revenue-chart>
+                <app-revenue-chart [revenueChart]="analyticsData()!.revenueChart"></app-revenue-chart>
             </section>
 
-            <app-sales-table [recentSales]="analyticsData.recentSales"></app-sales-table>
-        </ng-container>
+            <app-sales-table [recentSales]="analyticsData()!.recentSales"></app-sales-table>
+        }
     </div>
 </div>

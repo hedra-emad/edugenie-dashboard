@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject, effect } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,8 @@ import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
 import { CreateCoursePayload } from '../../../../core/models/course.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
 import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
@@ -41,9 +42,7 @@ export class CourseBasicInfoComponent {
   router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
-
-  private destroy$ = new Subject<void>();
-  existingThumbnailPublicId: string | null = null;
+  private destroyRef = inject(DestroyRef);
 
   private fb = inject(FormBuilder);
   isSaving = signal(false);
@@ -63,6 +62,7 @@ export class CourseBasicInfoComponent {
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
   isLoading = signal(true);
+  existingThumbnailPublicId: string | null = null;
 
   status = signal<'idle' | 'saving' | 'updating' | 'ready'>('idle');
 
@@ -207,7 +207,7 @@ export class CourseBasicInfoComponent {
     this.hasChanges.set(false);
 
     this.courseForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         const current = this.normalize(this.courseForm.getRawValue());
 
@@ -226,19 +226,18 @@ export class CourseBasicInfoComponent {
   }
 
   populateForm(course: any) {
-    if (course.thumbnail) {
-      this.thumbnailPreview.set(course.thumbnail);
-      this.hasThumbnail.set(true);
-      this.existingThumbnailPublicId = course.thumbnailPublicId ?? null;
-    }
-
     this.courseForm.patchValue({
       title: course.title,
       description: course.description,
       thumbnail: course.thumbnail,
-      level: course.level,
-      category: typeof course.categoryId === 'string' ? course.categoryId : (course.categoryId as any)?._id
+      level: course.level as CourseLevel,
+      category: course.categoryId
     }, { emitEvent: false });
+
+    if (course.thumbnail) {
+      this.thumbnailPreview.set(course.thumbnail);
+      this.hasThumbnail.set(true);
+    }
 
     this.setArray('goals', course.goals || []);
     this.setArray('requirements', course.requirements || []);
@@ -254,6 +253,17 @@ export class CourseBasicInfoComponent {
     }
 
     if (this.mode() === 'create') {
+      // Find invalid controls
+      const invalidControls = Object.keys(this.courseForm.controls).filter(key => {
+        return this.courseForm.get(key)?.invalid;
+      });
+      if (invalidControls.length > 0) {
+        console.log('Invalid controls:', invalidControls);
+      }
+      if (!this.selectedThumbnailFile) {
+        console.log('Thumbnail file missing');
+      }
+
       return this.courseForm.invalid || !this.selectedThumbnailFile;
     }
 
@@ -335,6 +345,9 @@ export class CourseBasicInfoComponent {
 
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'Saving...';
+      const invalidKeys = Object.keys(this.courseForm.controls).filter(k => this.courseForm.get(k)?.invalid);
+      if (invalidKeys.length > 0) return `Missing: ${invalidKeys.join(', ')}`;
+      if (!this.selectedThumbnailFile) return `Missing: thumbnail`;
       return 'Add Course';
     }
 
@@ -402,7 +415,7 @@ export class CourseBasicInfoComponent {
 
 
     if (upload$) {
-      upload$.subscribe({
+      upload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           payload.thumbnail = res.secure_url;
           payload.thumbnailPublicId = res.public_id;
@@ -421,7 +434,7 @@ export class CourseBasicInfoComponent {
   }
 
   sendUpdate(payload: any) {
-    this.coursesService.updateCourse(this.courseId!, payload).subscribe({
+    this.coursesService.updateCourse(this.courseId!, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.status.set('ready');
         this.hasChanges.set(false);
@@ -487,6 +500,7 @@ export class CourseBasicInfoComponent {
 
     // 5) upload image
     this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (uploadRes) => {
           payload.thumbnail = uploadRes.secure_url;
@@ -495,6 +509,7 @@ export class CourseBasicInfoComponent {
           this.existingThumbnailPublicId = uploadRes.public_id;
           // 6) create course API
           this.coursesService.createCourse(payload)
+            .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
               next: (course) => {
 
@@ -502,7 +517,7 @@ export class CourseBasicInfoComponent {
                 this.isSaving.set(false);
 
                 // switch to update mode
-                this.courseId = course._id;
+                this.courseId = course.id;
                 this.mode.set('update');
 
                 // reset baseline (fix Continue button)
@@ -511,7 +526,7 @@ export class CourseBasicInfoComponent {
 
                 this.setBaseline();
 
-                this.courseCreatedEvent.emit(course._id);
+                this.courseCreatedEvent.emit(course.id);
                 this.toastr.success('Course created successfully');
               },
 

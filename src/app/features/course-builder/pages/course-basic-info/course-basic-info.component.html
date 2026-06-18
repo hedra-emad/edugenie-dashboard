@@ -260,7 +260,7 @@
 
 
     <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
-      [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isSubmitDisabled"
+      [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isButtonDisabled()"
       (action)="onMainAction()"></app-action-bar>
 
   </div>

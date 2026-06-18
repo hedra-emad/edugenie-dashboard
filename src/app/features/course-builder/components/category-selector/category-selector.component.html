@@ -39,7 +39,7 @@
          [&::-webkit-scrollbar-thumb:hover]:bg-[var(--color-primary-dark)]
   ">
 
-      <button *ngFor="let cat of availableCategories" type="button" (click)="selectCategory(cat._id)" class="w-full px-4 py-3 text-sm text-left
+      <button *ngFor="let cat of availableCategories" type="button" (click)="selectCategory(cat.id || cat._id)" class="w-full px-4 py-3 text-sm text-left
                hover:bg-[var(--color-primary)]
                hover:text-white transition-colors">
         {{ cat.name }}

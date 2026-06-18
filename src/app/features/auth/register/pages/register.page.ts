@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
+import { Component, inject, signal, HostListener, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ViewChild, ElementRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
@@ -47,6 +48,7 @@ export class RegisterPageComponent implements OnInit {
   private authService = inject(AuthService);
   fb = inject(FormBuilder);
   router = inject(Router);
+  destroyRef = inject(DestroyRef);
 
   currentStep = 1;
   isSubmitting = false;
@@ -204,14 +206,14 @@ export class RegisterPageComponent implements OnInit {
   //  Lifecycle
 
   ngOnInit(): void {
-    this.profileSetup.valueChanges.subscribe(() => {
+    this.profileSetup.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (this.isProfilePartial) {
         this.profileSetup.markAllAsTouched();
       } else if (this.isProfileEmpty) {
         this.profileSetup.markAsUntouched();
       }
     });
-    this.accountInfo.get('email')?.valueChanges.subscribe(() => {
+    this.accountInfo.get('email')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.emailAlreadyExists = false;
 
       const control = this.accountInfo.get('email');
@@ -334,10 +336,10 @@ export class RegisterPageComponent implements OnInit {
   }
 
   /** Common registration submit logic */
-  private submitRegistration(payload: any): void {
+  private submitRegistration(payload: Record<string, unknown>): void {
     this.isSubmitting = true;
 
-    this.authService.register(payload).subscribe({
+    this.authService.register(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         console.log('Register Success', res);
         this.isSubmitting = false;
