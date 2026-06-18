@@ -1,0 +1,108 @@
+/* ==============================================
+   Admin Sidebar Styles (Instructor Layout Theme)
+   ============================================== */
+
+/* Base */
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 100;
+  transition: width var(--transition-sidebar, 0.3s), background-color var(--transition-sidebar, 0.3s);
+}
+
+/* Desktop: always expanded, white surface, right border */
+.sidebar--desktop {
+  width: var(--sidebar-width, 260px);
+  background-color: var(--color-surface, #ffffff);
+  border-right: 1px solid var(--color-border, #e5e7eb);
+}
+
+/* Mobile: primary background */
+.sidebar--mobile {
+  background-color: var(--color-primary, #3b1892);
+}
+
+/* Mobile collapsed: mini nav rail or Desktop collapsed */
+.admin-sidebar.collapsed, .sidebar--collapsed {
+  width: var(--sidebar-width-mini, 72px);
+}
+
+/* Mobile expanded: full width overlay */
+.sidebar--expanded {
+  width: var(--sidebar-width, 260px);
+}
+
+/* Toggle button */
+.sidebar__toggle {
+  background: transparent;
+  border: none;
+}
+
+/* Avatar sizes — animate smoothly */
+.sidebar-profile__avatar--small {
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar-profile__avatar--large {
+  width: 80px;
+  height: 80px;
+}
+
+/* Desktop name color */
+.sidebar-profile__name--desktop {
+  color: var(--color-text-primary, #1f2937);
+}
+
+/* Desktop role color */
+.sidebar-profile__role--desktop {
+  color: var(--color-text-secondary, #6b7280);
+}
+
+/* Divider */
+.sidebar-divider {
+  height: 1px;
+  background-color: var(--color-border, #e5e7eb);
+  margin: 0 16px;
+}
+
+/* Active State Highlighting from Instructor Layout */
+.active-item {
+  background-color: var(--color-sidebar-active, #ede9fe) !important;
+  color: var(--color-primary, #3b1892) !important;
+  font-weight: 500;
+}
+
+/* Scrollbar styling for sidebar */
+.nav-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+/* Mobile responsive class toggled in layout */
+@media (max-width: 767px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar.sidebar--expanded {
+    transform: translateX(0);
+  }
+  
+  .sidebar-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}

@@ -146,5 +146,63 @@ export const routes: Routes = [
       },
 
     ]
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./layouts/admin-layout/admin-layout.component').then(
+        (m) => m.AdminLayoutComponent
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: {
+      roles: ['admin']
+    },
+    children: [
+      { path: '', redirectTo: 'course-approvals', pathMatch: 'full' },
+      {
+        path: 'analytics',
+        loadComponent: () =>
+          import('./features/instructor-analytics/instructor-analytics.page').then(
+            (m) => m.InstructorAnalyticsPageComponent
+          )
+      },
+      {
+        path: 'course-approvals',
+        loadComponent: () =>
+          import('./features/admin/course-approvals/course-approvals-page/course-approvals-page.component').then(
+            (m) => m.CourseApprovalsPageComponent
+          )
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./features/admin/placeholders').then((m) => m.AdminUsersComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import('./features/admin/placeholders').then((m) => m.AdminCategoriesComponent)
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/admin/placeholders').then((m) => m.AdminReportsComponent)
+      },
+      {
+        path: 'admins',
+        loadComponent: () =>
+          import('./features/admin/placeholders').then((m) => m.AdminAdminsComponent)
+      },
+      {
+        path: 'support',
+        loadComponent: () =>
+          import('./features/admin/placeholders').then((m) => m.AdminSupportComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/pages/account-settings/account-settings.page').then((m) => m.AccountSettingsPageComponent)
+      }
+    ]
   }
 ];

@@ -1,0 +1,72 @@
+<!-- Course Title & Category -->
+<td data-label="Course">
+  <div class="course-info">
+    <div class="thumbnail-container">
+      <mat-icon class="thumbnail-icon">{{ course.thumbnail }}</mat-icon>
+    </div>
+    <div class="course-details">
+      <h4 class="course-title">{{ course.title }}</h4>
+      <span class="course-category">{{ course.category }}</span>
+    </div>
+  </div>
+</td>
+
+<!-- Instructor -->
+<td data-label="Instructor">
+  <div class="instructor-container">
+    <img *ngIf="course.instructorAvatar; else initialsOnly" 
+         [src]="course.instructorAvatar" 
+         [alt]="course.instructorName" 
+         class="instructor-avatar" />
+    <ng-template #initialsOnly>
+      <div class="instructor-initials">{{ instructorInitials }}</div>
+    </ng-template>
+    <span class="instructor-name">{{ course.instructorName }}</span>
+  </div>
+</td>
+
+<!-- Video Length -->
+<td data-label="Video Length">
+  <div *ngIf="course.exceedsLimit; else normalDuration" class="warning-badge" title="Video length exceeds the allowed platform upload limits.">
+    <mat-icon class="warning-icon">warning</mat-icon>
+    <span>{{ course.videoDuration }} - Exceeds Limit</span>
+  </div>
+  <ng-template #normalDuration>
+    <span class="duration-text">{{ course.videoDuration }}</span>
+  </ng-template>
+</td>
+
+<!-- Actions / Status -->
+<td data-label="Actions">
+  <div class="actions-cell">
+    <!-- If pending, show action buttons -->
+    <ng-container *ngIf="course.status === 'pending'; else statusBadge">
+      <button 
+        (click)="onReject()" 
+        [disabled]="actionLoading" 
+        class="action-btn reject-btn" 
+        title="Reject Upload">
+        <div *ngIf="actionLoading; else rejectIcon" class="spinner reject-spinner"></div>
+        <ng-template #rejectIcon>
+          <mat-icon class="scale-90">close</mat-icon>
+        </ng-template>
+      </button>
+
+      <button 
+        (click)="onApprove()" 
+        [disabled]="actionLoading" 
+        class="action-btn approve-btn" 
+        title="Approve Upload">
+        <div *ngIf="actionLoading; else approveIcon" class="spinner"></div>
+        <ng-template #approveIcon>
+          <mat-icon class="scale-90">check</mat-icon>
+        </ng-template>
+      </button>
+    </ng-container>
+
+    <!-- If not pending, show status badge -->
+    <ng-template #statusBadge>
+      <app-approval-status-badge [status]="course.status"></app-approval-status-badge>
+    </ng-template>
+  </div>
+</td>

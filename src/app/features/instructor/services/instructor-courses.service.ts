@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map } from 'rxjs'; // 👈 IMPORT 'tap' here!
+import { Observable, tap, map } from 'rxjs';
 import { InstructorCourse } from '../models/instructor-course.model';
 
 @Injectable({
@@ -20,7 +20,7 @@ export class InstructorCoursesService {
         map((response) => response.data),
         tap((data) => {
           console.log('✅ Real Fetched Data:', data);
-        }),
+        })
       );
   }
 }

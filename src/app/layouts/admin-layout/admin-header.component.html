@@ -1,0 +1,92 @@
+<header class="admin-header">
+  <!-- Left Side: Sidebar Toggle & Search -->
+  <div class="header-left">
+    <button (click)="toggleSidebar.emit()" class="icon-btn toggle-btn" aria-label="Toggle Navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <div class="search-bar">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input type="text" placeholder="Search approvals, users, courses..." aria-label="Search" />
+    </div>
+  </div>
+
+  <!-- Right Side: Notifications, Help, Profile -->
+  <div class="header-right">
+    <!-- Help Center -->
+    <button class="icon-btn" title="Help Center">
+      <mat-icon>help_outline</mat-icon>
+    </button>
+
+    <!-- Notifications -->
+    <div class="dropdown-container">
+      <button (click)="toggleNotifications()" class="icon-btn notification-btn" title="Notifications">
+        <mat-icon>notifications</mat-icon>
+        <span class="badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+      </button>
+
+      <!-- Notifications Dropdown -->
+      <div class="dropdown-menu notifications-dropdown" *ngIf="showNotifications">
+        <div class="dropdown-header">
+          <h3>Notifications</h3>
+          <button (click)="clearNotifications()" *ngIf="unreadNotifications > 0" class="clear-btn">
+            Mark all read
+          </button>
+        </div>
+        <div class="dropdown-divider"></div>
+        <ul class="notifications-list">
+          <li *ngFor="let notification of notificationsList" [class.unread]="notification.unread">
+            <span class="notification-dot" *ngIf="notification.unread"></span>
+            <div class="notification-content">
+              <p class="notification-text">{{ notification.text }}</p>
+              <span class="notification-time">{{ notification.time }}</span>
+            </div>
+          </li>
+          <li class="empty-notifications" *ngIf="notificationsList.length === 0">
+            No notifications available
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Profile Menu -->
+    <div class="dropdown-container">
+      <button (click)="toggleProfile()" class="profile-trigger" aria-haspopup="true">
+        <div class="avatar-container">
+          <img *ngIf="adminUser?.avatar; else initialAvatar" [src]="adminUser?.avatar" alt="Admin Avatar" class="profile-img" />
+          <ng-template #initialAvatar>
+            <div class="avatar-initials">{{ adminInitials }}</div>
+          </ng-template>
+        </div>
+        <div class="profile-info" *ngIf="adminUser">
+          <span class="profile-name">{{ adminUser.firstName }} {{ adminUser.lastName }}</span>
+          <span class="profile-role">Administrator</span>
+        </div>
+        <mat-icon class="arrow-icon">keyboard_arrow_down</mat-icon>
+      </button>
+
+      <!-- Profile Dropdown -->
+      <div class="dropdown-menu profile-dropdown" *ngIf="showProfileMenu">
+        <div class="dropdown-user-details" *ngIf="adminUser">
+          <p class="user-fullname">{{ adminUser.firstName }} {{ adminUser.lastName }}</p>
+          <p class="user-email">{{ adminUser.email }}</p>
+        </div>
+        <div class="dropdown-divider"></div>
+        <ul class="profile-links">
+          <li>
+            <a href="/admin/settings" class="profile-link">
+              <mat-icon>settings</mat-icon>
+              <span>Account Settings</span>
+            </a>
+          </li>
+          <li>
+            <button (click)="logout()" class="profile-link logout-link">
+              <mat-icon>logout</mat-icon>
+              <span>Sign Out</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>

@@ -7,6 +7,9 @@ import { InstructorAnalyticsResponse } from '../models/instructor-analytics.mode
   providedIn: 'root'
 })
 export class InstructorAnalyticsService {
+  getAdminStats() {
+    throw new Error('Method not implemented.');
+  }
   private http = inject(HttpClient);
   private apiUrl = '/courses';
 
