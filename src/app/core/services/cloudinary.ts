@@ -144,9 +144,13 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   uploadThumbnail(
     file: File,
+    courseId?: string | null,
     oldPublicId?: string | null,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = 'edugenie/courses/thumbnails';
+    // courseId is unknown during initial creation → stage in 'pending' subfolder
+    const folder = courseId
+      ? `edugenie/courses/thumbnails/${courseId}`
+      : 'edugenie/courses/thumbnails/pending';
 
     return this.getSignature(folder).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName }) => {
@@ -188,7 +192,8 @@ export class CloudinaryService {
     sectionId: string,
     lessonId: string,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = 'edugenie/courses/videos';
+    const folder =
+      `edugenie/courses/videos/${courseId}/sections/${sectionId}/lessons/${lessonId}`;
 
     const context =
       `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`;

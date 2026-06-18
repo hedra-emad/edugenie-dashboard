@@ -15,7 +15,15 @@ import { AuthService } from './core/services/auth.service';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
 
 function initializeAuth(authService: AuthService) {
-  return () => firstValueFrom(authService.initializeAuth());
+  return async () => {
+    try {
+      await firstValueFrom(authService.initializeAuth());
+    } catch {
+      // Auth init failure must never abort Angular bootstrap.
+      // AuthService.initializeAuth() already handles errors internally,
+      // but guard here as a safety net against EmptyError / network errors.
+    }
+  };
 }
 
 export const appConfig: ApplicationConfig = {

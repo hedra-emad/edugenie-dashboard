@@ -56,7 +56,7 @@
 
 
   <div class="courses-grid">
-    @for (course of pagedCourses; track course._id) {
+    @for (course of pagedCourses; track course.id) {
     <mat-card class="course-card"
       [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
 
@@ -102,7 +102,7 @@
             <span class="price free" *ngIf="course.price === 0">Free</span>
           </div>
 
-          <button mat-flat-button color="primary" (click)="editCourse(course._id)">
+          <button mat-flat-button color="primary" (click)="editCourse(course.id)">
             Edit
           </button>
         </div>

@@ -78,8 +78,7 @@
         </button>
 
         <!-- VIDEO -->
-        <video class="w-full rounded-lg border mb-2" controls>
-          <source [src]="selectedVideoUrl" type="video/mp4">
+        <video [src]="selectedVideoUrl" class="w-full rounded-lg border mb-2" controls>
         </video>
 
         <!-- FILE INFO -->
@@ -98,8 +97,7 @@
       <div *ngIf="lessonForm.get('videoUrl')?.value && !selectedVideoFile"
         class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 text-sm text-center">
 
-        <video controls class="w-full rounded-xl border bg-black">
-          <source [src]="lessonForm.get('videoUrl')?.value" type="video/mp4">
+        <video [src]="lessonForm.get('videoUrl')?.value" controls class="w-full rounded-xl border bg-black">
         </video>
 
         <!-- Replace -->
