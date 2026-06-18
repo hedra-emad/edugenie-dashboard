@@ -48,6 +48,8 @@ export class ExpansionPanelComponent {
   @Input() lessonsButtonDisabled = false;
   @Input() showMobileMenu = false;
   @Input() hideMobileExpansionIndicator = false;
+  @Input() showQuizButton = false;
+  @Input() quizButtonDisabled = false;
 
   // ================= Outputs =================
   @Output() expandedChange = new EventEmitter<boolean>();
@@ -55,6 +57,7 @@ export class ExpansionPanelComponent {
   @Output() moveUpClicked = new EventEmitter<void>();
   @Output() moveDownClicked = new EventEmitter<void>();
   @Output() lessonsClicked = new EventEmitter<void>();
+  @Output() quizClicked = new EventEmitter<void>();
 
   @ViewChild('panel') panel!: MatExpansionPanel;
 
@@ -66,9 +69,7 @@ export class ExpansionPanelComponent {
   }
 
   preventHeaderToggle(event: Event) {
-    if (window.innerWidth < 640) {
-      event.stopPropagation();
-    }
+    event.stopPropagation();
   }
 
   onOpened() {
@@ -97,5 +98,10 @@ export class ExpansionPanelComponent {
   onMoveDownClicked(event: Event) {
     event.stopPropagation();
     this.moveDownClicked.emit();
+  }
+
+  onQuizClicked(event: Event) {
+    event.stopPropagation();
+    this.quizClicked.emit();
   }
 }

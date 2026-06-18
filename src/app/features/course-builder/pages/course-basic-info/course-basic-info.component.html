@@ -1,4 +1,9 @@
-<div [formGroup]="courseForm" class="space-y-4">
+<div *ngIf="isLoading()" class="flex justify-center py-16">
+  <app-loading [size]="40" color="var(--color-primary)"></app-loading>
+</div>
+
+<ng-container *ngIf="!isLoading()">
+  <div [formGroup]="courseForm" class="space-y-4">
 
   <!-- Thumbnail -->
 
@@ -126,6 +131,9 @@
       <p *ngIf="isInvalid('title')" class="text-xs text-red-500 mt-1">
         Title must be at least 5 characters
       </p>
+      <p *ngIf="!isInvalid('title')" class="text-xs text-[var(--color-text-secondary)] mt-1">
+        Title must be at least 5 characters.
+      </p>
     </div>
 
     <div class="relative">
@@ -152,6 +160,9 @@
 
       <p *ngIf="isInvalid('description')" class="text-xs text-red-500 mt-1">
         Description must be at least 20 characters
+      </p>
+      <p *ngIf="!isInvalid('description')" class="text-xs text-[var(--color-text-secondary)] mt-1">
+        Description must be at least 20 characters.
       </p>
     </div>
 
@@ -253,5 +264,5 @@
       (action)="onMainAction()"></app-action-bar>
 
   </div>
-
 </div>
+</ng-container>

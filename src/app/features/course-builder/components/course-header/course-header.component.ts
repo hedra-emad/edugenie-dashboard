@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { BadgeComponent } from '../../../../shared/components/badge-component/badge-component';
 import { CourseStatus } from '../../../../core/enums/course-status';
+import { PublishCourseButtonComponent } from '../publish-course-button/publish-course-button';
+
 @Component({
   selector: 'app-course-header',
   standalone: true,
-  imports: [CommonModule, MatIconModule, BadgeComponent],
+  imports: [CommonModule, MatIconModule, BadgeComponent, PublishCourseButtonComponent],
   templateUrl: './course-header.component.html',
   styleUrl: './course-header.component.css'
 })
@@ -16,6 +18,7 @@ export class CourseHeaderComponent {
   @Input() courseTitle: string | null = null;
   @Input() courseId: string | null = null;
   @Input() courseDuration: number = 0;
+  @Input() canPublish: boolean = false;
 
   formatDuration(seconds: number): string {
     if (!seconds || seconds <= 0) return '';

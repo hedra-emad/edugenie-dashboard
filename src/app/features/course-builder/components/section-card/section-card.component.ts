@@ -30,6 +30,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
+import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 
 @Component({
   selector: 'app-section-card',
@@ -44,7 +46,9 @@ import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.
     DragDropModule,
     MatDialogModule,
     ExpansionPanelComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    SubButtonComponent,
+    MainButtonComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css'
@@ -91,9 +95,6 @@ export class SectionCardComponent {
         const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
         panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
-    } else {
-      const panel = document.querySelector('.mat-expanded');
-      panel?.classList.remove('mat-expanded');
     }
   }
 
@@ -214,6 +215,19 @@ export class SectionCardComponent {
     ]);
   }
 
+  onGoToQuiz() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId || !this.courseId) return;
+
+    this.router.navigate([
+      '/course-builder',
+      this.courseId,
+      'sections',
+      sectionId,
+      'quiz-config'
+    ]);
+  }
+
   // ================= OUTCOMES =================
   get expectedOutcomesArray(): FormArray {
     return this.sectionForm.get('expectedOutcomes') as FormArray ?? this.fb.array([]);
@@ -255,41 +269,29 @@ export class SectionCardComponent {
     return !!this.sectionForm.get('id')?.value;
   }
 
-  // ================= LESSONS =================
 
-  moveLessonUp(index: number) {
-    if (index === 0) return;
-
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index - 1, control);
-
-    this.lessonsArray.markAsDirty();
-  }
-
-  moveLessonDown(index: number) {
-    if (index === this.lessonsArray.length - 1) return;
-
-    const control = this.lessonsArray.at(index);
-    this.lessonsArray.removeAt(index);
-    this.lessonsArray.insert(index + 1, control);
-
-    this.lessonsArray.markAsDirty();
-  }
 
 
 
   get totalSectionDuration(): number {
     const lessons = this.sectionForm.get('lessons')?.value || [];
-
     return lessons.reduce((sum: number, lesson: any) => {
       return sum + Number(lesson.videoDuration || 0);
     }, 0);
   }
 
+  get totalLessonsCount(): number {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    return lessons.length;
+  }
+
   formatDuration(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    if (!seconds || seconds <= 0) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
   }
 }

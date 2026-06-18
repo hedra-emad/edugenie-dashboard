@@ -1,13 +1,13 @@
 <app-expansion-panel [expanded]="isExpanded()" (expandedChange)="setExpanded($event)"
   [title]="lessonForm.get('title')?.value || 'Untitled Lesson'"
   [subtitle]="'(' + formatDuration(lessonForm.get('videoDuration')?.value || 0) + ' min)'" icon="play_circle_outline"
-  [index]="index" panelClass="lesson-panel" [showDragHandle]="false" [showMoveButtons]="true" [isFirst]="isFirst"
+  [index]="index" panelClass="lesson-panel" [showDragHandle]="true" [showMoveButtons]="true" [isFirst]="isFirst"
   [isLast]="isLast" [showDeleteButton]="true" [showLessonsButton]="false" [showMobileMenu]="false"
   [hideMobileExpansionIndicator]="false" (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()"
   (moveDownClicked)="moveDown.emit()">
 
   <!-- ================= CONTENT ================= -->
-  <div [formGroup]="lessonForm" class="pt-4 space-y-5">
+  <div [formGroup]="lessonForm" class="space-y-5">
 
     <div class="sm:hidden text-xs text-slate-500 mb-2">
       Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min
@@ -32,9 +32,13 @@
       </span>
 
       <span *ngIf="lessonForm.get('title')?.hasError('pattern') && lessonForm.get('title')?.touched"
-        class="text-xs text-red-500">
+        class="text-xs text-red-500 block mt-1">
         Title cannot be empty spaces
       </span>
+
+      <p *ngIf="!(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1 block">
+        Lesson title cannot be empty spaces.
+      </p>
     </div>
 
 
@@ -44,7 +48,7 @@
       <!-- NO VIDEO -->
       <!-- NO VIDEO -->
       <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile"
-        class="p-8 border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer"
+        class="p-8 border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer flex flex-col items-center justify-center"
         (click)="fileInput.click()">
 
         <mat-icon class="text-5xl text-[var(--color-text-secondary)]">
@@ -100,11 +104,9 @@
 
         <!-- Replace -->
         <div class="flex justify-center mt-2">
-          <label
-            class="cursor-pointer text-xs px-3 py-1 rounded-full border border-[var(--color-border)] bg-white hover:bg-gray-50 text-[var(--color-text-secondary)]">
-            Replace
-            <input hidden type="file" accept="video/*" (change)="onFileChange($event)">
-          </label>
+          <input #replaceInput hidden type="file" accept="video/*" (change)="onFileChange($event)">
+          <app-sub-button [label]="'Replace Video'" [icon]="'upload'" (action)="replaceInput.click()">
+          </app-sub-button>
         </div>
 
       </div>

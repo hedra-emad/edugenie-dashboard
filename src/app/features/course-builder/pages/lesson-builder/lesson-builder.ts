@@ -8,8 +8,10 @@ import { LessonCardComponent } from '../../components/lesson-card/lesson-card.co
 import { SectionsService } from '../../../../core/services/sections';
 import { LessonsService } from '../../../../core/services/lessons';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
-// import { LessonCardComponent_1 as LessonCardComponent } from "../components/lesson-card/lesson-card.component";
+import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChangeDetectorRef } from '@angular/core';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 @Component({
   selector: 'app-lessons-builder',
   standalone: true,
@@ -19,7 +21,10 @@ import { ChangeDetectorRef } from '@angular/core';
     MatIconModule,
     MatButtonModule,
     LessonCardComponent,
-    BackButtonComponent
+    BackButtonComponent,
+    MainButtonComponent,
+    DragDropModule,
+    AppLoader
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -35,6 +40,7 @@ export class LessonBuilder implements OnInit {
 
   courseId!: string;
   sectionId!: string;
+  isLoading = true;
 
   lessonsForm = this.fb.group({
     lessons: this.fb.array<FormGroup>([])
@@ -87,6 +93,7 @@ export class LessonBuilder implements OnInit {
   }
 
   loadLessons() {
+    this.isLoading = true;
     this.sectionsService.getCourse(this.courseId)
       .subscribe({
         next: (course: any) => {
@@ -112,10 +119,15 @@ export class LessonBuilder implements OnInit {
               })
             );
           });
+          
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
         },
         error: (err) => {
           console.error('Failed to load course', err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
         }
       });
   }
@@ -132,6 +144,9 @@ export class LessonBuilder implements OnInit {
     );
   }
 
+  goToQuiz() {
+    this.router.navigate(['/course-builder', this.courseId, 'sections', this.sectionId, 'quiz-config']);
+  }
 
   moveUp(index: number) {
     if (index === 0) return;
@@ -152,6 +167,14 @@ export class LessonBuilder implements OnInit {
     arr.setControl(index + 1, current);
     arr.setControl(index, below);
     arr.updateValueAndValidity();
+    this.saveOrder();
+  }
+
+  onLessonDropped(event: any) {
+    if (event.previousIndex === event.currentIndex) return;
+    const current = this.lessonsArray.at(event.previousIndex);
+    this.lessonsArray.removeAt(event.previousIndex);
+    this.lessonsArray.insert(event.currentIndex, current);
     this.saveOrder();
   }
 

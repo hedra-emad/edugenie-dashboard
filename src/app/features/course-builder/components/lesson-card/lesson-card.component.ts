@@ -15,6 +15,7 @@ import { finalize } from 'rxjs/operators';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 
 type VideoState =
   | 'empty'
@@ -36,8 +37,9 @@ type VideoState =
     ActionBarComponent,
     ExpansionPanelComponent,
     ConfirmDialogComponent,
-    AppLoader
-],
+    AppLoader,
+    SubButtonComponent
+  ],
   templateUrl: './lesson-card.component.html',
   styleUrl: './lesson-card.component.css'
 })
@@ -130,6 +132,7 @@ export class LessonCardComponent {
       });
 
       this.videoState = 'selected';
+
 
     } catch (err) {
       console.error(err);
@@ -246,6 +249,7 @@ export class LessonCardComponent {
           this.selectedVideoUrl = null;
 
           this.videoState = 'uploaded';
+
 
           this.createOrUpdateLesson();
         },

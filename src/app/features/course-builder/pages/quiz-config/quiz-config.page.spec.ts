@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NavbarLinksComponent } from './navbar-links.component';
+import { QuizConfigPageComponent } from './quiz-config.page';
 
-describe('NavbarLinksComponent', () => {
-  let component: NavbarLinksComponent;
-  let fixture: ComponentFixture<NavbarLinksComponent>;
+describe('QuizConfigPageComponent', () => {
+  let component: QuizConfigPageComponent;
+  let fixture: ComponentFixture<QuizConfigPageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NavbarLinksComponent]
+      imports: [QuizConfigPageComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(NavbarLinksComponent);
+    fixture = TestBed.createComponent(QuizConfigPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

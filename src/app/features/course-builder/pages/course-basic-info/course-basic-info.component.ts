@@ -16,6 +16,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
 import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 @Component({
   selector: 'app-course-basic-info',
@@ -28,6 +29,7 @@ import { CourseBuilderPageComponent } from '../course-builder-page/course-builde
     GoalsInputComponent,
     RequirementsInputComponent,
     ActionBarComponent,
+    AppLoader
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -60,6 +62,7 @@ export class CourseBasicInfoComponent {
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
+  isLoading = signal(true);
 
   status = signal<'idle' | 'saving' | 'updating' | 'ready'>('idle');
 
@@ -74,8 +77,9 @@ export class CourseBasicInfoComponent {
       const course = this.parent?.courseData();
       if (course && this.mode() === 'update') {
         this.populateForm(course);
+        this.isLoading.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   courseForm = this.fb.group({
@@ -98,6 +102,7 @@ export class CourseBasicInfoComponent {
 
     if (!id) {
       console.warn('No courseId found → create mode');
+      this.isLoading.set(false);
       return;
     }
 

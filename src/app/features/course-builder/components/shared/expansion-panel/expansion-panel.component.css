@@ -68,3 +68,16 @@
     padding-right: 8px !important;
   }
 }
+
+/* ===== Cursor overrides ===== */
+::ng-deep .mat-expansion-panel-header {
+  cursor: default !important;
+}
+
+::ng-deep .mat-expansion-panel-header .cursor-grab {
+  cursor: grab !important;
+}
+
+::ng-deep .mat-expansion-panel-header .active\:cursor-grabbing:active {
+  cursor: grabbing !important;
+}

@@ -56,7 +56,7 @@ export class SectionBuilderComponent implements OnInit {
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
   newSectionIndex: number | null = null;
-
+  isLoading = true;
 
   sectionForm = this.fb.group({
     sections: this.fb.array([])
@@ -163,6 +163,7 @@ export class SectionBuilderComponent implements OnInit {
     );
     this.sectionsArray.updateValueAndValidity();
     this.sectionsArray.markAsDirty();
+    this.saveSectionOrder();
   }
 
   trackBySection(index: number, item: FormGroup) {
@@ -171,6 +172,7 @@ export class SectionBuilderComponent implements OnInit {
 
   loadSections() {
     if (!this.courseId) return;
+    this.isLoading = true;
     this.coursesService.findOne(this.courseId).subscribe({
       next: (course: any) => {
         const sections = course.sections || [];
@@ -209,14 +211,73 @@ export class SectionBuilderComponent implements OnInit {
           );
         });
 
+        this.isLoading = false;
         this.cdr.detectChanges();
         console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
         console.error('Failed to load course sections:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
+  moveSectionUp(index: number) {
+    if (index === 0) return;
+    const arr = this.sectionsArray;
+    const current = arr.at(index);
+    const above = arr.at(index - 1);
+    arr.setControl(index - 1, current);
+    arr.setControl(index, above);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  moveSectionDown(index: number) {
+    const arr = this.sectionsArray;
+    if (index === arr.length - 1) return;
+    const current = arr.at(index);
+    const below = arr.at(index + 1);
+    arr.setControl(index + 1, current);
+    arr.setControl(index, below);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  private saveSectionOrder() {
+    const ids = this.sectionsArray.controls
+      .map(c => c.get('id')?.value)
+      .filter(Boolean);
+
+    if (ids.length < 2) return;
+
+    this.sectionsService.reorderSections(this.courseId, ids)
+      .subscribe({ error: err => console.error('Reorder failed', err) });
+  }
+
+  get totalCourseDuration(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.reduce((sum: number, lesson: any) => sum + Number(lesson.videoDuration || 0), 0);
+    }, 0);
+  }
+
+  get totalCourseLessons(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.length;
+    }, 0);
+  }
+
+  formatCourseDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
 
 }
