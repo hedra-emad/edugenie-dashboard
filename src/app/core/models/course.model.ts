@@ -1,4 +1,5 @@
 import { CourseLevel } from "../enums/course-level.enum";
+import { Section } from "./section.model";
 
 export interface Course {
   _id: string;
@@ -8,5 +9,8 @@ export interface Course {
   thumbnail: string;
   level: CourseLevel;
   categoryId: string;
-  courseStatus: 'DRAFT' | 'PUBLISHED';
+  courseStatus: 'draft' | 'published';
+  goals: string[];
+  requirements: string[];
+  sections: Section[];
 }

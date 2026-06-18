@@ -27,8 +27,7 @@
   <div class="empty-box">
     <mat-icon class="empty-icon">menu_book</mat-icon>
     <p class="empty-title">No courses yet</p>
-    <p class="empty-sub">
-      You haven't created any courses yet. Start building your first course.
+    <p class="empty-sub">You haven't created any courses yet. Start building your first course and share your knowledge.
     </p>
   </div>
 </div>
@@ -51,14 +50,21 @@
 
 
   <div class="courses-grid">
+    <mat-card class="course-card"
+      [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'"
+      *ngFor="let course of courses">
 
-    <mat-card class="course-card" *ngFor="let course of pagedCourses" [style.borderTop]="(course.courseStatus | lowercase) === 'published'
-        ? '4px solid #10B981'
-        : '4px solid #F59E0B'">
-
+      <!-- Thumbnail with Gradient Overlay -->
       <div class="card-thumbnail-wrap">
         <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
           [alt]="course.title" class="card-thumbnail" />
+        <div class="thumbnail-overlay"></div>
+
+        <!-- Hover Overlay -->
+        <div class="thumbnail-hover-overlay">
+          <mat-icon>visibility</mat-icon>
+          <span>View Course</span>
+        </div>
 
         <div class="thumbnail-overlay"></div>
       </div>

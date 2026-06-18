@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './publish-actions.component.css'
 })
 export class PublishActionsComponent {
-  @Input() draftStatus: 'Draft' | 'Published' = 'Draft';
+  @Input() draftStatus: 'draft' | 'published' = 'draft';
   @Input() hasUnsavedChanges = false;
   @Input() isValid = false;
   @Input() isSaving = false;

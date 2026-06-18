@@ -2,13 +2,15 @@
   <div class="space-y-1">
     <div class="flex items-center gap-3">
       <h1 class="text-xl md:text-3xl font-black text-[var(--color-primary)] tracking-tight leading-tight">
-        Course Builder
+         {{ courseTitle || 'Course Builder' }}
       </h1>
+
+      
       <!-- Badges -->
       <div class="flex items-center gap-2">
         <span
           class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"
-          [ngClass]="draftStatus === 'Draft' ? 'badge-draft' : 'badge-published'"
+          [ngClass]="draftStatus === 'draft' ? 'badge-draft' : 'badge-published'"
         >
           {{ draftStatus }}
         </span>

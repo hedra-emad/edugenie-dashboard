@@ -3,6 +3,19 @@
 @tailwind components;
 @tailwind utilities;
 /* EduGenie Design Tokens */
+.toast-success {
+  background-image: var(--toast-success-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+  background-color: transparent !important;
+}
+.toast-container .ngx-toastr.toast-success {
+  background: var(--toast-success-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
 
 :root {
   /* Primary Colors */
@@ -12,6 +25,11 @@
 
   /* Secondary Colors */
   --color-secondary: #00B0FF;
+  --toast-success-gradient: linear-gradient(
+  135deg,
+  var(--color-primary),
+  var(--color-secondary)
+);
 
   /* Accent */
   --color-tertiary: #621E00;
