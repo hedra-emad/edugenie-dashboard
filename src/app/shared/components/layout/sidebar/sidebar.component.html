@@ -40,4 +40,9 @@
     [sidebarExpanded]="sidebarExpanded">
   </app-sidebar-menu>
 
+  <!-- Auth buttons — pinned to very bottom of sidebar -->
+  <div class="mt-auto shrink-0 py-4 border-t border-[var(--color-border)]" [ngClass]="sidebarExpanded ? 'px-3' : 'px-1'">
+    <app-navbar-auth [isMobile]="isMobile" [sidebarExpanded]="sidebarExpanded"></app-navbar-auth>
+  </div>
+
 </aside>

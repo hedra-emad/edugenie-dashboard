@@ -18,18 +18,32 @@
         </button>
     </div>
 
-    <!-- Empty state -->
-    <div *ngIf="lessonsArray.length === 0" class="text-center py-10 border-2 border-dashed rounded-xl text-gray-500">
-        No lessons yet
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="flex justify-center py-16">
+        <app-loading [size]="40" color="var(--color-primary)"></app-loading>
     </div>
 
-    <!-- Lesson cards -->
-    <app-lesson-card *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson"
-        [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i" [isFirst]="i === 0"
-        [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)" (moveUp)="moveUp(i)"
-        (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)"> </app-lesson-card>
+    <ng-container *ngIf="!isLoading">
+        <!-- Empty state -->
+        <div *ngIf="lessonsArray.length === 0" class="text-center py-10 border-2 border-dashed rounded-xl text-gray-500">
+            No lessons yet
+        </div>
 
-    <app-back-button label="Back" (back)="goBackToSections()">
-    </app-back-button>
+        <!-- Lesson cards -->
+        <div cdkDropList (cdkDropListDropped)="onLessonDropped($event)" class="space-y-4">
+      <div cdkDrag *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson">
+        <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
+        <app-lesson-card
+            [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i" [isFirst]="i === 0"
+            [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)" (moveUp)="moveUp(i)"
+            (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)"> </app-lesson-card>
+      </div>
+        </div>
+    </ng-container>
+
+    <div class="flex justify-between items-center mt-6">
+        <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
+        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="lessonsArray.length === 0" (action)="goToQuiz()"></app-main-button>
+    </div>
 
 </div>

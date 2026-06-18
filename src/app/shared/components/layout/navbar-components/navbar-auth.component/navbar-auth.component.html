@@ -1,30 +1,33 @@
-<div class="hidden lg:flex items-center gap-2">
-
-  @if (!user) {
+@if (!user) {
+  <div class="flex flex-col gap-2 w-full" [ngClass]="!sidebarExpanded ? 'px-1' : ''">
 
     <button
       routerLink="/login"
-      class="h-10 px-4 rounded-xl text-sm font-medium text-primary border border-[var(--color-primary)] hover:bg-[var(--color-sidebar-hover)]"
+      class="w-full h-10 rounded-xl text-sm font-medium text-primary border border-[var(--color-primary)] hover:bg-[var(--color-sidebar-hover)] flex items-center justify-center gap-2 transition-all"
     >
-      Login
+      <mat-icon *ngIf="!sidebarExpanded" class="!text-[18px] !w-[18px] !h-[18px]">login</mat-icon>
+      <span *ngIf="sidebarExpanded">Login</span>
     </button>
 
     <button
       routerLink="/register"
-      class="h-10 px-5 rounded-xl text-sm font-medium text-white border border-[var(--color-primary)] bg-primary"
+      class="w-full h-10 rounded-xl text-sm font-medium text-white border border-[var(--color-primary)] bg-primary flex items-center justify-center gap-2 transition-all"
     >
-      Sign Up
+      <mat-icon *ngIf="!sidebarExpanded" class="!text-[18px] !w-[18px] !h-[18px]">person_add</mat-icon>
+      <span *ngIf="sidebarExpanded">Sign Up</span>
     </button>
 
-  } @else {
+  </div>
+} @else {
 
+  <div class="w-full" [ngClass]="!sidebarExpanded ? 'px-1' : ''">
     <button
       (click)="logout()"
-      class="h-10 px-5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+      class="w-full h-10 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 flex items-center justify-center gap-2 transition-all"
     >
-      Logout
+      <mat-icon *ngIf="!sidebarExpanded" class="!text-[18px] !w-[18px] !h-[18px] leading-none ml-1">logout</mat-icon>
+      <span *ngIf="sidebarExpanded">Logout</span>
     </button>
+  </div>
 
-  }
-
-</div>
+}

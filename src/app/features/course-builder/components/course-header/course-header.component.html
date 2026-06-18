@@ -1,31 +1,33 @@
-<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5 mb-6">
+<header
+  class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-3">
   <div class="space-y-1">
     <div class="flex items-center gap-3">
       <h1 class="text-xl md:text-3xl font-black text-[var(--color-primary)] tracking-tight leading-tight">
-         {{ courseTitle || 'Course Builder' }}
+        {{ courseTitle || 'Course Builder' }}
       </h1>
 
-      
+
       <!-- Badges -->
       <div class="flex items-center gap-2">
-        <span
-          class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"
-          [ngClass]="draftStatus === 'draft' ? 'badge-draft' : 'badge-published'"
-        >
-          {{ draftStatus }}
-        </span>
-
-        <span
-          *ngIf="hasUnsavedChanges"
-          class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[var(--color-warning)] bg-amber-50 border border-amber-200 flex items-center gap-1"
-        >
+        <app-badge *ngIf="courseTitle" [status]="courseStatus"></app-badge>
+        <span *ngIf="hasUnsavedChanges"
+          class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[var(--color-warning)] bg-amber-50 border border-amber-200 flex items-center gap-1">
           <span class="w-1 h-1 rounded-full bg-[var(--color-warning)] animate-ping"></span>
           Unsaved Changes
         </span>
+
+        <app-publish-course-button *ngIf="courseTitle && canPublish" [courseId]="courseId"></app-publish-course-button>
       </div>
     </div>
-    <p class="text-[var(--color-text-secondary)] text-[11px] md:text-sm font-medium opacity-70 italic">
-      Build and organize your curriculum, upload videos, and publish your course.
+    
+    <p 
+      *ngIf="courseDuration > 0"
+      class="text-xs font-medium flex items-center gap-1"
+      style="color: var(--color-text-secondary);">
+      <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">
+        schedule
+      </mat-icon>
+      {{ formatDuration(courseDuration) }}
     </p>
   </div>
 </header>

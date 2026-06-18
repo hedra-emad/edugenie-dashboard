@@ -1,0 +1,22 @@
+<button
+  type="button"
+  [disabled]="disabled || loading"
+  (click)="onClick()"
+  class="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-[var(--color-secondary)] text-[var(--color-secondary)] transition-all duration-200
+         hover:bg-[var(--color-secondary)] hover:text-white
+         active:scale-95"
+  [class.opacity-50]="disabled || loading"
+  [class.cursor-not-allowed]="disabled || loading">
+
+  <!-- Loading spinner -->
+  <mat-icon *ngIf="loading" class="!text-[16px] !w-[16px] !h-[16px] block leading-none animate-spin">
+    autorenew
+  </mat-icon>
+
+  <!-- Icon (only when not loading and icon is provided) -->
+  <mat-icon *ngIf="!loading && icon" class="!text-[16px] !w-[16px] !h-[16px] block leading-none">
+    {{ icon }}
+  </mat-icon>
+
+  <span class="leading-none whitespace-nowrap">{{ label }}</span>
+</button>

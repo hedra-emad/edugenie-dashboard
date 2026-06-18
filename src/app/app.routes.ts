@@ -88,6 +88,12 @@ export const routes: Routes = [
                 .then(m => m.LessonBuilder)
           },
           {
+            path: 'sections/:sectionId/quiz-config',
+            loadComponent: () =>
+              import('./features/course-builder/pages/quiz-config/quiz-config.page')
+                .then(m => m.QuizConfigPageComponent)
+          },
+          {
             path: '',
             redirectTo: 'basic',
             pathMatch: 'full'
@@ -117,6 +123,12 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/course-builder/pages/lesson-builder/lesson-builder')
                 .then(m => m.LessonBuilder)
+          },
+          {
+            path: 'sections/:sectionId/quiz-config',
+            loadComponent: () =>
+              import('./features/course-builder/pages/quiz-config/quiz-config.page')
+                .then(m => m.QuizConfigPageComponent)
           },
           {
             path: '',

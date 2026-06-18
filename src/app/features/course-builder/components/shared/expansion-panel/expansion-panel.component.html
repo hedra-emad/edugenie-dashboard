@@ -1,0 +1,148 @@
+<mat-expansion-panel
+  #panel="matExpansionPanel"
+  [expanded]="expanded"
+  [ngClass]="[panelClass, highlight ? 'highlight-border' : '']"
+  [hideToggle]="true"
+  class="border border-[var(--color-border)] rounded-2xl shadow-sm"
+  (opened)="onOpened()"
+  (closed)="onClosed()">
+
+  <mat-expansion-panel-header>
+    <mat-panel-title class="flex items-center justify-between w-full pr-0 sm:pr-2">
+
+      <!-- Content wrapper that intercepts touches and handles drag -->
+      <div class="flex items-center flex-1 min-w-0 cursor-grab active:cursor-grabbing"
+        cdkDragHandle
+        (click)="preventHeaderToggle($event)"
+        (touchstart)="preventHeaderToggle($event)">
+
+        <!-- Drag handle icon (visual only now) -->
+        <span *ngIf="showDragHandle"
+          class="flex items-center justify-center w-6 h-6 mr-1 flex-shrink-0 text-[var(--color-text-secondary)] opacity-60 hover:opacity-100"
+          aria-label="Drag to reorder">
+          <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block pointer-events-none">drag_indicator</mat-icon>
+        </span>
+
+        <!-- Title + subtitle -->
+        <div class="flex items-center gap-2 font-bold text-sm sm:text-base leading-snug min-w-0 flex-1"
+          [style.color]="'var(--color-primary)'">
+          <mat-icon class="text-[var(--color-text-secondary)] opacity-80 flex-shrink-0 !text-[18px] !w-[18px] !h-[18px]">{{ icon }}</mat-icon>
+          <span class="truncate block">
+            {{ index + 1 }}. {{ title }}
+          </span>
+          <span *ngIf="subtitle"
+            class="text-xs text-[var(--color-text-secondary)] ml-2 shrink-0 duration-text hidden sm:inline font-normal">
+            {{ subtitle }}
+          </span>
+        </div>
+
+        <!-- Desktop actions -->
+        <div class="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+
+          <!-- Move up/down buttons (lesson mode) -->
+          <ng-container *ngIf="showMoveButtons">
+            <button type="button"
+              [disabled]="isFirst"
+              (click)="onMoveUpClicked($event)"
+              class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Move lesson up">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex items-center justify-center leading-none">arrow_upward</mat-icon>
+            </button>
+            <button type="button"
+              [disabled]="isLast"
+              (click)="onMoveDownClicked($event)"
+              class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Move lesson down">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex items-center justify-center leading-none">arrow_downward</mat-icon>
+            </button>
+          </ng-container>
+
+          <!-- Extra actions slot -->
+          <ng-content select="[slot=extra-actions]"></ng-content>
+
+          <!-- Delete button -->
+          <button *ngIf="showDeleteButton"
+            type="button"
+            (click)="onDeleteClicked($event)"
+            [disabled]="isDeleting"
+            class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Delete">
+            <mat-icon *ngIf="!isDeleting" class="!text-[14px] !w-[14px] !h-[14px] block">delete</mat-icon>
+            <mat-icon *ngIf="isDeleting" class="!text-[14px] !w-[14px] !h-[14px] block">hourglass_top</mat-icon>
+          </button>
+
+          <!-- Lessons pill button (section mode) -->
+          <button *ngIf="showLessonsButton"
+            type="button"
+            (click)="onLessonsClicked($event)"
+            [disabled]="lessonsButtonDisabled"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white disabled:opacity-30 disabled:border-[var(--color-border)] disabled:text-[var(--color-text-secondary)] disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all"
+            aria-label="Go to Lessons">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block">menu_book</mat-icon>
+            <span>Lessons</span>
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block ml-0.5">chevron_right</mat-icon>
+          </button>
+
+        </div>
+
+        <!-- Mobile actions: delete button only (lesson mode) -->
+        <div *ngIf="showMoveButtons && !showMobileMenu" class="flex sm:hidden items-center gap-1 flex-shrink-0">
+          <button *ngIf="showDeleteButton"
+            type="button"
+            (click)="onDeleteClicked($event)"
+            [disabled]="isDeleting"
+            class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Delete">
+            <span class="flex items-center justify-center w-full h-full">
+              <mat-icon class="!text-[16px]">delete</mat-icon>
+            </span>
+          </button>
+        </div>
+
+        <!-- Mobile actions: three-dot mat-menu (section mode) -->
+        <div *ngIf="showMobileMenu" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
+          <button type="button"
+            [matMenuTriggerFor]="mobileMenu"
+            (click)="$event.stopPropagation()"
+            class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+            aria-label="More options">
+            <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block">more_vert</mat-icon>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Dedicated Expand/Collapse Button (always visible) -->
+      <button
+        type="button"
+        class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+        (click)="togglePanel($event, panel)"
+        (touchstart)="$event.stopPropagation()">
+        <mat-icon class="!text-[24px] !w-[24px] !h-[24px] block pointer-events-none">
+          {{ panel.expanded ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </button>
+
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <!-- Mobile mat-menu (CDK overlay, outside panel DOM) -->
+  <mat-menu #mobileMenu="matMenu" class="mobile-section-menu">
+    <button *ngIf="showDeleteButton" mat-menu-item (click)="onDeleteClicked($event)" [disabled]="isDeleting">
+      <mat-icon class="!text-[16px]">delete</mat-icon>
+      <span>{{ isDeleting ? 'Deleting...' : 'Delete Section' }}</span>
+    </button>
+    <button *ngIf="showLessonsButton" mat-menu-item (click)="onLessonsClicked($event)" [disabled]="lessonsButtonDisabled">
+      <mat-icon class="!text-[16px]">menu_book</mat-icon>
+      <span>Lessons</span>
+    </button>
+    <button *ngIf="showQuizButton" mat-menu-item (click)="onQuizClicked($event)" [disabled]="quizButtonDisabled">
+      <mat-icon class="!text-[16px]">quiz</mat-icon>
+      <span>Generate Quiz</span>
+    </button>
+  </mat-menu>
+
+  <!-- Body: default ng-content slot -->
+  <ng-content></ng-content>
+
+</mat-expansion-panel>

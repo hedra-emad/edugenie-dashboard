@@ -28,6 +28,9 @@ export class CategorySelectorComponent implements OnInit {
     this.categoriesService.getCategories().subscribe({
       next: (cats) => {
         this.availableCategories = cats;
+      },
+      error: (err) => {
+        console.error('Categories error:', err);
       }
     });
 

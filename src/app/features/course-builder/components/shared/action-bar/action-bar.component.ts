@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { MainButtonComponent } from '../../../../../shared/components/main-button/main-button.component';
 
 @Component({
   selector: 'app-action-bar',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MainButtonComponent],
   templateUrl: './action-bar.component.html'
 })
 export class ActionBarComponent {
