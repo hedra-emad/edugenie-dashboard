@@ -27,12 +27,12 @@ export class AdminSidebarComponent {
   @Output() toggle = new EventEmitter<void>();
 
   readonly navItems: NavItem[] = [
-    { icon: 'grid_view',     label: 'Overview',      route: '/admin/dashboard' },
+    { icon: 'grid_view',     label: 'Overview',      route: '/admin/analytics' },
     { icon: 'fact_check',    label: 'Approvals',     route: '/admin/course-approvals' },
     { icon: 'group',         label: 'Users',         route: '/admin/users' },
     { icon: 'category',      label: 'Categories',    route: '/admin/categories' },
     { icon: 'bar_chart',     label: 'Reports',       route: '/admin/reports' },
-    { icon: 'shield_person', label: 'Admins',        route: '/admin/admins' },
+    { icon: 'admin_panel_settings', label: 'Admins',        route: '/admin/admins' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
