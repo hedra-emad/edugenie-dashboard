@@ -17,7 +17,6 @@ import { SubButtonComponent } from '../../../../shared/components/sub-button/sub
     MatIconModule,
     BackButtonComponent,
     MainButtonComponent,
-    SubButtonComponent,
   ],
   templateUrl: './quiz-config.page.html',
   styleUrl: './quiz-config.page.css',

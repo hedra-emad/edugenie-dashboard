@@ -254,7 +254,6 @@ export class LessonCardComponent {
       this.selectedVideoFile!,
       this.courseId,
       this.sectionId,
-      lessonId,
     )
       .pipe(
         finalize(() => {
@@ -273,11 +272,11 @@ export class LessonCardComponent {
             videoUrl: res.secure_url,
             videoPublicId: res.public_id
           };
-          
+
           if (res.duration && isFinite(res.duration)) {
             patchData.videoDuration = Math.max(1, Math.round(res.duration));
           }
-          
+
           this.lessonForm.patchValue(patchData);
           this.durationChanged.emit();
 

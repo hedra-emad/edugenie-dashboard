@@ -2,6 +2,9 @@
 
   <!-- Header -->
   <div class="mb-6">
+    <div class="mb-4">
+      <app-back-button label="Back" (back)="goBack()"></app-back-button>
+    </div>
     <h1 class="text-2xl sm:text-3xl font-black text-[var(--color-primary)]">Quiz Configuration</h1>
     <p class="text-sm text-[var(--color-text-muted)] mt-1 mb-4">
       Set up AI-generated quiz parameters for this section
@@ -22,7 +25,7 @@
     <h2 class="text-lg font-semibold text-green-800 mb-1">Quiz Queued!</h2>
     <p class="text-sm text-green-600 mb-6">{{ successMessage }}</p>
     <div class="flex justify-center gap-3">
-      <app-sub-button label="Back to Sections" icon="list" (action)="goToSections()" />
+      <app-back-button label="Back to Sections" (back)="goToSections()"></app-back-button>
     </div>
   </div>
 
