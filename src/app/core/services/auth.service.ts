@@ -165,6 +165,7 @@ export class AuthService {
   getHomeRouteForRole(role: UserRole): string {
     switch (role) {
       case 'admin':
+      case 'superadmin':
         return '/admin';
       case 'instructor':
         return '/my-courses';
