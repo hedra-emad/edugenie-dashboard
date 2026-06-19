@@ -1,0 +1,17 @@
+<button
+  type="button"
+  [disabled]="loading || disabled"
+  (click)="handleClick()"
+  class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
+  [class.cursor-not-allowed]="disabled || loading"
+>
+  <ng-container *ngIf="loading; else normalState">
+    <app-loading [size]="18" [color]="'white'"></app-loading>
+  </ng-container>
+
+  <ng-template #normalState>
+    <mat-icon *ngIf="icon" class="!text-[18px] !w-[18px] !h-[18px] flex items-center justify-center">{{ icon }}</mat-icon>
+    <span>{{ label }}</span>
+  </ng-template>
+</button>
+   

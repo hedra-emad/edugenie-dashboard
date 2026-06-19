@@ -14,6 +14,7 @@ export class AuthInputComponent {
   @Input() type = 'text';
   @Input() placeholder = '';
   @Input() id = '';
+  @Input() autocomplete = '';
   @Input() showSuccessWhenValid = false;
 
   @Input() errorMessages: Record<string, string> = {};

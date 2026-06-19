@@ -18,6 +18,7 @@
 }
 
 :root {
+
   /* Primary Colors */
   --color-primary: #3B1892;
   --color-primary-light: #5B3DB8;
@@ -47,6 +48,8 @@
 
   /* Status */
   --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
 
@@ -54,6 +57,7 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
+  --radius-full: 9999px;
 
   /* Shadows */
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -126,4 +130,44 @@ body {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+/* ═══════════════════════════════════════
+   GLOBAL FILTER DRAWER STYLES
+═══════════════════════════════════════ */
+
+/* Ensure drawer appears above everything */
+.filter-drawer {
+  z-index: 1000 !important;
+}
+
+.drawer-overlay {
+  z-index: 999 !important;
+}
+
+/* Override Material Design form field styles for consistency */
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline {
+  border-radius: var(--radius-md) !important;
+}
+
+.mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-wrapper {
+  border-radius: var(--radius-md) !important;
+}
+
+/* Consistent button styles */
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button {
+  border-radius: var(--radius-md) !important;
+}
+
+/* Badge styles */
+.mat-badge-small .mat-badge-content {
+  border-radius: var(--radius-full) !important;
+}
+
+/* Fix for sub-button selected state in filter drawer */
+app-filter-bar .chips-container app-sub-button.selected button {
+  background: var(--color-secondary) !important;
+  color: white !important;
+  border-color: var(--color-secondary) !important;
 }

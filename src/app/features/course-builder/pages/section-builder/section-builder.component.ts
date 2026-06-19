@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, DestroyRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +12,11 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Course } from '../../../../core/models/course.model';
+import { Section } from '../../../../core/models/section.model';
+import { Lesson } from '../../../../core/models/lesson.model';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -23,6 +29,31 @@ export function maxArrayLength(max: number) {
     return null;
   };
 }
+
+export function extractId(val: any): string | null {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (typeof val.id === 'string') return val.id;
+  if (typeof val._id === 'string') return val._id;
+
+  const buf = val.buffer || val;
+  
+  // Node.js Buffer JSON serialization
+  if (buf && buf.type === 'Buffer' && Array.isArray(buf.data)) {
+    return buf.data.map((b: number) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Uint8Array or Buffer object
+  if (buf instanceof Uint8Array || (buf && typeof buf.byteLength === 'number' && typeof buf.slice === 'function')) {
+     return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+  }
+  
+  if (val.toString && typeof val.toString === 'function' && val.toString() !== '[object Object]') {
+      return val.toString();
+  }
+
+  return null;
+}
 @Component({
   selector: 'app-section-builder',
   standalone: true,
@@ -32,7 +63,9 @@ export function maxArrayLength(max: number) {
     MatIconModule,
     MatButtonModule,
     BackButtonComponent,
-    SectionCardComponent
+    SectionCardComponent,
+    AppLoader,
+    DragDropModule
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -46,11 +79,14 @@ export class SectionBuilderComponent implements OnInit {
   private sectionsService = inject(SectionsService);
   private coursesService = inject(CoursesService);
   private router = inject(Router);
+  courseNotFound = signal(false);
   expandedSectionId: string | null = null;
   highlightSectionId: string | null = null;
   courseId!: string;
   private cdr = inject(ChangeDetectorRef);
   newSectionIndex: number | null = null;
+  private destroyRef = inject(DestroyRef);
+  isLoading = true;
 
 
   sectionForm = this.fb.group({
@@ -125,7 +161,7 @@ export class SectionBuilderComponent implements OnInit {
 
       expectedOutcomes: this.fb.array([]),
 
-      isBasicSection: [false],
+      price: [0, [Validators.required, Validators.min(0)]],
       lessons: this.fb.array([]),
 
       isSaving: [false],
@@ -140,42 +176,23 @@ export class SectionBuilderComponent implements OnInit {
 
   onSectionDeleted(index: number) {
     this.expandedSectionId = null;
-
-    setTimeout(() => {
-      this.sectionsArray.removeAt(index);
-    }, 150);
+    this.sectionsArray.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   onSectionCreated(sectionId: string) {
     this.expandedSectionId = sectionId;
   }
 
-  moveSectionUp(index: number) {
-    if (index === 0) return;
-
-    const sections = this.sectionsArray;
-
-    const current = sections.at(index);
-    const above = sections.at(index - 1);
-
-    sections.setControl(index - 1, current);
-    sections.setControl(index, above);
-
-    sections.markAsDirty();
-  }
-
-  moveSectionDown(index: number) {
-    const sections = this.sectionsArray;
-
-    if (index === sections.length - 1) return;
-
-    const current = sections.at(index);
-    const below = sections.at(index + 1);
-
-    sections.setControl(index + 1, current);
-    sections.setControl(index, below);
-
-    sections.markAsDirty();
+  onSectionDropped(event: CdkDragDrop<FormGroup[]>) {
+    moveItemInArray(
+      this.sectionsArray.controls,
+      event.previousIndex,
+      event.currentIndex
+    );
+    this.sectionsArray.updateValueAndValidity();
+    this.sectionsArray.markAsDirty();
+    this.saveSectionOrder();
   }
 
   trackBySection(index: number, item: FormGroup) {
@@ -184,52 +201,119 @@ export class SectionBuilderComponent implements OnInit {
 
   loadSections() {
     if (!this.courseId) return;
-    this.coursesService.findOne(this.courseId).subscribe({
-      next: (course: any) => {
+    this.coursesService.findOne(this.courseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (course: Course) => {
         const sections = course.sections || [];
         this.sectionsArray.clear();
 
-        sections.forEach((section: any) => {
+        sections.forEach((section: Section) => {
           this.sectionsArray.push(
             this.fb.group({
               title: [section.title || '', [Validators.required, Validators.minLength(3)]],
               description: [section.description || '', [Validators.minLength(10)]],
-              isBasicSection: [section.isBasicSection || false],
+              price: [section.price ?? 0, [Validators.required, Validators.min(0)]],
               expectedOutcomes: this.fb.array(
                 (section.expectedOutcomes || []).map((o: string) =>
                   this.fb.control(o ?? '', Validators.required)
                 ) || []
               ),
 
-              // 👇 التعديل الجوهري هنا: تحويل كائنات الـ lessons إلى FormGroup منفصلة لكل درس
+
               lessons: this.fb.array(
-                (section.lessons || []).map((lesson: any) =>
+                (section.lessons || []).map((lesson: Lesson) =>
                   this.fb.group({
-                    id: [lesson._id || lesson.id || null], // تأكيد وجود حقل الـ id مستقبلاً من السيرفر
+                    id: [extractId((lesson as any)._id || lesson.id || lesson)],
                     title: [lesson.title || '', Validators.required],
                     videoUrl: [lesson.videoUrl || ''],
                     videoPublicId: [lesson.videoPublicId || ''],
                     videoDuration: [lesson.videoDuration || 0],
-                    expanded: [false] // حقل إضافي إذا كنت تستخدمه للتحكم بفتح وإغلاق العناصر
+                    expanded: [false]
                   })
                 )
               ),
 
-              id: [section._id],
+              id: [extractId((section as any)._id || section.id || section)],
               isSaving: [false],
               isDeleting: [false],
             })
           );
         });
 
+        this.isLoading = false;
         this.cdr.detectChanges();
         console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
         console.error('Failed to load course sections:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
+  moveSectionUp(index: number) {
+    if (index === 0) return;
+    const arr = this.sectionsArray;
+    const current = arr.at(index);
+    const above = arr.at(index - 1);
+    arr.setControl(index - 1, current);
+    arr.setControl(index, above);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  moveSectionDown(index: number) {
+    const arr = this.sectionsArray;
+    if (index === arr.length - 1) return;
+    const current = arr.at(index);
+    const below = arr.at(index + 1);
+    arr.setControl(index + 1, current);
+    arr.setControl(index, below);
+    arr.updateValueAndValidity();
+    this.saveSectionOrder();
+  }
+
+  private saveSectionOrder() {
+    const controls = this.sectionsArray.controls;
+
+    const hasUnsaved = controls.some(c => !extractId(c.get('id')?.value));
+
+    if (hasUnsaved) {
+      console.warn('Cannot reorder: there are unsaved sections');
+      return;
+    }
+
+    const ids = controls.map(c => extractId(c.get('id')!.value) as string);
+
+    this.sectionsService.reorderSections(this.courseId, ids)
+      .subscribe({
+        next: res => console.log('Reorder OK', res),
+        error: err => console.error('Reorder failed', err)
+      });
+  }
+
+  get totalCourseDuration(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.reduce((sum: number, lesson: any) => sum + Number(lesson.videoDuration || 0), 0);
+    }, 0);
+  }
+
+  get totalCourseLessons(): number {
+    return this.sections.reduce((total, section) => {
+      const lessons = section.get('lessons')?.value || [];
+      return total + lessons.length;
+    }, 0);
+  }
+
+  formatCourseDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
 
 }

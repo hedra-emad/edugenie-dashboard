@@ -125,7 +125,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   onSaveChanges() {
     if (this.profileForm.invalid || this.isUploadingAvatar) return;
     this.isSaving = true;
-    const payload: any = {
+    const payload: { firstName?: string; lastName?: string; avatar?: string | null; avatarPublicId?: string | null } = {
       firstName: this.profileForm.get('firstName')?.value,
       lastName:  this.profileForm.get('lastName')?.value
     };

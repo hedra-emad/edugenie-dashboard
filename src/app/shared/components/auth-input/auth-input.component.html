@@ -16,6 +16,7 @@
       [type]="type"
       [formControl]="formControl"
       [placeholder]="placeholder"
+      [attr.autocomplete]="autocomplete || null"
       class="w-full bg-surface text-text-primary rounded-[var(--radius-md)] py-2 pl-11 pr-4 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] placeholder:text-gray-400"
       [ngClass]="{
         'border-[var(--color-error)]': control?.invalid && control?.touched,

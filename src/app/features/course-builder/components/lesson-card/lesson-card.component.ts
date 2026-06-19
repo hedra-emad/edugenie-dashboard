@@ -1,15 +1,21 @@
-import { Component, Input, Output, EventEmitter, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { LessonsService } from '../../../../core/services/lessons';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ActionBarComponent } from "../shared/action-bar/action-bar.component";
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs/operators';
+import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 
 type VideoState =
   | 'empty'
@@ -27,10 +33,15 @@ type VideoState =
     MatExpansionModule,
     MatIconModule,
     MatButtonModule,
-    ActionBarComponent
+    MatDialogModule,
+    ActionBarComponent,
+    ExpansionPanelComponent,
+    AppLoader,
+    SubButtonComponent
   ],
   templateUrl: './lesson-card.component.html',
-  styleUrl: './lesson-card.component.css'
+  styleUrl: './lesson-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LessonCardComponent {
 
@@ -50,6 +61,7 @@ export class LessonCardComponent {
   private lessonsService = inject(LessonsService);
   private cloudinaryService = inject(CloudinaryService);
   private cdr = inject(ChangeDetectorRef);
+  private dialog = inject(MatDialog);
 
   isSaving = false;
   isUploading = false;
@@ -69,15 +81,32 @@ export class LessonCardComponent {
   videoState: VideoState = 'empty';
 
   get isUpdateMode(): boolean {
-
     const value = this.lessonForm.get('id')?.value;
-
     return !!value;
   }
 
   get isVideoValid(): boolean {
     const hasExistingVideo = !!this.lessonForm.get('videoUrl')?.value;
     return !!this.selectedVideoFile || hasExistingVideo;
+  }
+
+  get isFormChanged(): boolean {
+    return this.lessonForm.dirty || !!this.selectedVideoFile;
+  }
+
+  get showActionBar(): boolean {
+    if (this.isUpdateMode) return true;
+    return !!(this.lessonForm.get('title')?.valid && this.isVideoValid);
+  }
+
+  get isActionDisabled(): boolean {
+    if (this.lessonForm.invalid || !this.isVideoValid || this.isUploading || this.isSaving) {
+      return true;
+    }
+    if (this.isUpdateMode && !this.isFormChanged) {
+      return true;
+    }
+    return false;
   }
 
   // ---------------- FILE CHANGE ----------------
@@ -106,12 +135,16 @@ export class LessonCardComponent {
         this.selectedVideoUrl = null;
         this.lessonForm.patchValue({ videoDuration: 0 });
 
-        this.videoErrorMessage = 'Video must not exceed 10 seconds';
+        this.videoErrorMessage = 'Video must not exceed 10 minutes';
         this.videoState = 'error';
 
         input.value = '';
+        this.cdr.markForCheck();
         return;
       }
+
+      console.log('VIDEO SELECTED', file);
+      console.log('PREVIEW URL', this.selectedVideoUrl);
 
       this.selectedVideoFile = file;
 
@@ -120,6 +153,7 @@ export class LessonCardComponent {
       });
 
       this.videoState = 'selected';
+      this.cdr.markForCheck();
 
     } catch (err) {
       console.error(err);
@@ -130,6 +164,7 @@ export class LessonCardComponent {
       this.videoState = 'error';
 
       input.value = '';
+      this.cdr.markForCheck();
     }
   }
 
@@ -164,12 +199,15 @@ export class LessonCardComponent {
     this.videoErrorMessage = '';
 
     this.videoState = 'empty';
+    this.cdr.markForCheck();
   }
 
   // ---------------- SAVE ----------------
   saveLesson() {
-    // الحماية من الضغط المتكرر أثناء الرفع أو الحفظ
+    // Protection against repeated clicks during upload or save
     if (this.saveLock || this.isUploading) return;
+
+    if (this.isUpdateMode && !this.isFormChanged) return;
 
     this.saveLock = true;
     this.lessonForm.markAllAsTouched();
@@ -192,6 +230,8 @@ export class LessonCardComponent {
         if (duration > this.MAX_DURATION) {
           this.videoErrorMessage = 'Video must not exceed limit';
           this.selectedVideoFile = null;
+          this.saveLock = false;
+          this.cdr.markForCheck();
           return;
         }
 
@@ -206,37 +246,55 @@ export class LessonCardComponent {
   private startUpload() {
     this.isUploading = true;
     this.videoState = 'uploading';
+    this.cdr.markForCheck();
 
-    this.cloudinaryService.uploadVideo(this.selectedVideoFile!)
+    this.cloudinaryService.uploadVideo(
+      this.selectedVideoFile!,
+      this.courseId,
+      this.sectionId,
+    )
       .pipe(
         finalize(() => {
           this.isUploading = false;
+          this.cdr.markForCheck();
         })
       )
-
       .subscribe({
         next: (res) => {
+          // console.log('UPLOAD SUCCESS', res);
 
-          this.isUploading = false;
-
-          this.lessonForm.patchValue({
+          const patchData: any = {
             videoUrl: res.secure_url,
             videoPublicId: res.public_id
-          });
+          };
+
+          if (res.duration && isFinite(res.duration)) {
+            patchData.videoDuration = Math.max(1, Math.round(res.duration));
+          }
+
+          this.lessonForm.patchValue(patchData);
           this.durationChanged.emit();
 
           this.selectedVideoFile = null;
+          if (this.selectedVideoUrl) {
+            URL.revokeObjectURL(this.selectedVideoUrl);
+          }
           this.selectedVideoUrl = null;
 
           this.videoState = 'uploaded';
+          this.cdr.markForCheck();
 
           this.createOrUpdateLesson();
         },
         error: (err) => {
+          console.log('UPLOAD FAILED', err);
           console.error(err);
           this.isUploading = false;
           this.videoState = 'error';
           this.uploadError = true;
+          this.saveLock = false;
+          this.toastr.error('Video upload failed');
+          this.cdr.markForCheck();
         }
       });
   }
@@ -245,14 +303,23 @@ export class LessonCardComponent {
   private createOrUpdateLesson() {
     const lessonId = this.lessonForm.get('id')?.value;
 
+    let dur = Number(this.lessonForm.get('videoDuration')?.value);
+    if (!isFinite(dur) || isNaN(dur)) dur = 0;
+    const finalDuration = Math.max(1, Math.round(dur));
+
     const payload = {
       title: this.lessonForm.get('title')?.value,
       videoUrl: this.lessonForm.get('videoUrl')?.value,
       videoPublicId: this.lessonForm.get('videoPublicId')?.value,
-      videoDuration: this.lessonForm.get('videoDuration')?.value
+      videoDuration: finalDuration,
+      duration: finalDuration,
+      isFree: false
     };
 
+    console.log('CREATE LESSON PAYLOAD', payload);
+
     this.isSaving = true;
+    this.cdr.markForCheck();
 
     const req = lessonId
       ? this.lessonsService.updateLesson(this.courseId, this.sectionId, lessonId, payload)
@@ -262,6 +329,7 @@ export class LessonCardComponent {
       finalize(() => {
         this.isSaving = false;
         this.saveLock = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: (res: any) => {
@@ -275,28 +343,26 @@ export class LessonCardComponent {
 
 
 
-        const createdLesson = lessons[lessons.length - 1];
+        if (!lessonId) {
+          const createdLesson = lessons[lessons.length - 1];
+          const incomingId = createdLesson?._id;
 
+          if (incomingId) {
+            this.lessonForm.patchValue({
+              id: incomingId
+            });
 
+            this.lessonForm.get('id')?.updateValueAndValidity();
 
-        const incomingId = createdLesson?._id;
-
-
-
-        if (incomingId) {
-
-          this.lessonForm.patchValue({
-            id: incomingId
-          });
-
-
-          this.lessonForm.get('id')?.updateValueAndValidity();
-
-          this.lessonCreated.emit({
-            index: this.index,
-            id: incomingId
-          });
+            this.lessonCreated.emit({
+              index: this.index,
+              id: incomingId
+            });
+          }
         }
+
+        this.lessonForm.markAsPristine();
+        this.lessonForm.markAsUntouched();
 
         this.toastr.success(
           lessonId
@@ -305,6 +371,7 @@ export class LessonCardComponent {
         );
 
         this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);
@@ -315,7 +382,6 @@ export class LessonCardComponent {
 
   // ---------------- DELETE ----------------
   deleteLesson() {
-
     const lessonId = this.lessonForm.get('id')?.value;
 
     if (!lessonId) {
@@ -323,14 +389,14 @@ export class LessonCardComponent {
       return;
     }
 
-    this.lessonsService.deleteLesson(
-      this.courseId,
-      this.sectionId,
-      lessonId
-    ).subscribe({
-      next: () => {
-        this.delete.emit();
-      }
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete Lesson?', message: 'This cannot be undone.' }
+    });
+
+    ref.afterClosed().subscribe(result => {
+      if (result !== 'confirm') return;
+      this.lessonsService.deleteLesson(this.courseId, this.sectionId, lessonId)
+        .subscribe({ next: () => this.delete.emit() });
     });
   }
 

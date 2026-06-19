@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
   imports: [MatIconModule, MatButtonModule, CommonModule],
   templateUrl: './stats-cards.component.html',
   styleUrl: './stats-cards.component.css',
- 
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatsCardsComponent {
   @Input() stats: any;

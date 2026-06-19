@@ -1,8 +1,7 @@
-<!-- ═══════════════════════════════════════ -->
-<!-- LOADING STATE                          -->
-<!-- ═══════════════════════════════════════ -->
-<div *ngIf="isLoading" class="courses-grid skeleton-grid">
-  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+@if (isLoading()) {
+<div class="courses-grid skeleton-grid">
+  @for (i of [1,2,3,4,5,6]; track i) {
+  <div class="skeleton-card">
     <div class="skeleton-thumbnail"></div>
     <div class="skeleton-body">
       <div class="skeleton-title"></div>
@@ -11,120 +10,181 @@
       <div class="skeleton-price"></div>
     </div>
   </div>
+  }
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- ERROR STATE                            -->
-<!-- ═══════════════════════════════════════ -->
-<div *ngIf="!isLoading && error" class="state-container">
+
+} @else if (hasError()) {
+<div class="state-container">
   <div class="error-box">
     <mat-icon class="error-icon">error_outline</mat-icon>
     <p class="error-title">Failed to load courses</p>
     <p class="error-sub">We encountered an issue while loading your courses.</p>
-    <button mat-flat-button color="primary" class="retry-button" (click)="ngOnInit()">
+    <button mat-flat-button color="primary" (click)="ngOnInit()">
       <mat-icon>refresh</mat-icon> Retry
     </button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- EMPTY STATE                            -->
-<!-- ═══════════════════════════════════════ -->
-<div *ngIf="!isLoading && !error && courses.length === 0" class="state-container">
+
+} @else if (courses().length === 0) {
+<div class="state-container">
   <div class="empty-box">
-    <div class="empty-illustration">
-      <mat-icon class="empty-icon">menu_book</mat-icon>
-    </div>
+    <mat-icon class="empty-icon">menu_book</mat-icon>
     <p class="empty-title">No courses yet</p>
     <p class="empty-sub">You haven't created any courses yet. Start building your first course and share your knowledge.
     </p>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PAGE HEADER                            -->
-<!-- ═══════════════════════════════════════ -->
-<div *ngIf="!isLoading && !error && courses.length > 0" class="page-wrapper">
+
+} @else {
+<div class="page-wrapper" id="page-top">
+
   <div class="page-header">
     <div>
       <h1 class="page-title">My Courses</h1>
-      <p class="page-subtitle">Manage and track all your published and draft courses.</p>
+      <p class="page-subtitle">Manage and track all your courses.</p>
     </div>
+
     <div class="header-badge">
       <mat-icon>menu_book</mat-icon>
-      <span>{{ courses.length }} course{{ courses.length !== 1 ? 's' : '' }}</span>
+      <span>{{ getResultsText() }}</span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════ -->
-  <!-- COURSE GRID                            -->
-  <!-- ═══════════════════════════════════════ -->
-  <div class="courses-grid">
-    <mat-card class="course-card"
-      [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'"
-      *ngFor="let course of courses">
+  <!-- New Filter Bar Component -->
+  <app-filter-bar
+    [config]="filterConfig"
+    placeholder="Search courses..."
+    (filterChange)="onFilterChange($event)"
+    (clearFilters)="onClearFilters()">
+  </app-filter-bar>
 
-      <!-- Thumbnail with Gradient Overlay -->
-      <div class="card-thumbnail-wrap">
-        <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
-          [alt]="course.title" class="card-thumbnail" />
-        <div class="thumbnail-overlay"></div>
+  <!-- Results Summary (if filtered) -->
+  @if (filteredCourses().length !== courses().length) {
+    <div class="results-summary">
+      <mat-icon>filter_list</mat-icon>
+      <span>Showing {{ filteredCourses().length }} of {{ courses().length }} courses</span>
+      @if (currentFilters().searchTerm) {
+        <span class="search-highlight">for "{{ currentFilters().searchTerm }}"</span>
+      }
+    </div>
+  }
 
-        <!-- Hover Overlay -->
-        <div class="thumbnail-hover-overlay">
-          <mat-icon>visibility</mat-icon>
-          <span>View Course</span>
-        </div>
 
-        <!-- Badges -->
-        <div class="badge-container top-right">
-          <span class="status-badge" [ngClass]="(course.courseStatus | lowercase) === 'published' ? 'status-published' : 'status-draft'">
-            <mat-icon class="status-icon">{{ (course.courseStatus | lowercase) === 'published' ? 'check_circle' : 'edit_note' }}</mat-icon>
-            {{ (course.courseStatus | lowercase) === 'published' ? 'Published' : 'Draft' }}
-          </span>
-        </div>
-        
-        <div class="badge-container bottom-left">
-          <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
-            {{ course.level }}
-          </span>
-        </div>
+  <!-- Courses Grid -->
+  @if (filteredCourses().length === 0 && (currentFilters().searchTerm.trim() || currentFilters().selectedStatuses.length > 0 || currentFilters().selectedLevels.length > 0 || currentFilters().selectedPriceFilter !== 'all')) {
+    <!-- No Filter Results -->
+    <div class="state-container">
+      <div class="empty-box">
+        <mat-icon class="empty-icon">filter_list_off</mat-icon>
+        <p class="empty-title">No courses match your filters</p>
+        <p class="empty-sub">Try adjusting your filters or search terms to find courses.</p>
+        <button mat-flat-button color="primary" (click)="onClearFilters()">
+          <mat-icon>clear_all</mat-icon> Clear All Filters
+        </button>
       </div>
+    </div>
+  } @else {
+    <div class="courses-grid">
+      @for (course of pagedCourses; track course.id) {
+      <mat-card class="course-card"
+        [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
 
-      <!-- Card Body -->
-      <mat-card-content class="card-body">
-        <h2 class="course-title">{{ course.title }}</h2>
-        <span class="category-tag">{{ course.level }} Level</span>
-        <p class="course-description">{{ course.description }}</p>
+        <!-- Thumbnail with Gradient Overlay -->
+        <div class="card-thumbnail-wrap">
+          <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
+            [alt]="course.title" class="card-thumbnail" />
+          <div class="thumbnail-overlay"></div>
 
-        <div class="price-row">
-          <div>
-            <span class="price" *ngIf="course.price > 0">${{ course.price | number:'1.2-2' }}</span>
-            <span class="price free" *ngIf="course.price === 0">Free</span>
+          <!-- Hover Overlay -->
+          <div class="thumbnail-hover-overlay">
+            <mat-icon>visibility</mat-icon>
+            <span>View Course</span>
           </div>
-          <button mat-flat-button color="primary" class="edit-btn" (click)="editCourse(course._id)">Edit</button>
-        </div>
-      </mat-card-content>
 
-      <!-- Divider -->
-      <div class="card-divider"></div>
+          <!-- Badges -->
+          <div class="badge-container top-right">
+            <app-badge [status]="getCourseStatus(course.courseStatus)"></app-badge>
+          </div>
 
-      <!-- Stats Footer -->
-      <mat-card-footer class="card-footer">
-        <div class="stat-item">
-          <mat-icon class="stat-icon">group</mat-icon>
-          <span>{{ course.totalEnrollments | number }} enrolled</span>
+          <div class="badge-container bottom-left">
+            <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
+              {{ course.level }}
+            </span>
+          </div>
         </div>
-        <div class="stat-item">
-          <mat-icon class="stat-icon">library_books</mat-icon>
-          <span>{{ course.totalLessons }} lessons</span>
-        </div>
-        <div class="stat-item">
-          <mat-icon class="stat-icon">schedule</mat-icon>
-          <span>{{ course.totalHours }}h</span>
-        </div>
-      </mat-card-footer>
 
-    </mat-card>
-  </div>
+        <mat-card-content class="card-body">
+          <h2 class="course-title">{{ course.title }}</h2>
+          <p class="course-description">{{ course.description }}</p>
+
+          <div class="price-row">
+            <div>
+              <span class="price" *ngIf="course.price > 0">
+                ${{ course.price | number:'1.2-2' }}
+              </span>
+              <span class="price free" *ngIf="course.price === 0">Free</span>
+            </div>
+
+            <button mat-flat-button color="primary" (click)="editCourse(course.id)">
+              Edit
+            </button>
+          </div>
+        </mat-card-content>
+
+        <div class="card-divider"></div>
+
+        <mat-card-footer class="card-footer">
+          <div class="stat-item">
+            <mat-icon>group</mat-icon>
+            <span>{{ course.totalEnrollments }} enrolled</span>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>library_books</mat-icon>
+            <span>{{ course.totalLessons }} lessons</span>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ course.totalHours }}h</span>
+          </div>
+        </mat-card-footer>
+
+      </mat-card>
+      }
+    </div>
+  }
+
+  <nav *ngIf="totalPages > 1" class="flex justify-center items-center gap-3 mt-8">
+
+
+    <button
+      class="flex items-center justify-center text-gray-400 hover:text-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
+      [disabled]="currentPage === 1" (click)="loadPage(currentPage - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+
+    @for (p of getPages(); track p) {
+    <button (click)="loadPage(p)"
+      class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition" [ngClass]="currentPage === p
+      ? 'bg-[#6366f1] text-white shadow-md scale-110'
+      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+
+      {{ p }}
+    </button>
+    }
+
+
+    <button
+      class="flex items-center justify-center text-gray-400 hover:text-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
+      [disabled]="currentPage === totalPages" (click)="loadPage(currentPage + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+  </nav>
 </div>
+}

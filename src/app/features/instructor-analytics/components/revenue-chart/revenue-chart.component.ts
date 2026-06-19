@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, TooltipItem } from 'chart.js';
@@ -9,6 +9,7 @@ import { ChartConfiguration, TooltipItem } from 'chart.js';
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './revenue-chart.component.html',
   styleUrl: './revenue-chart.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RevenueChartComponent implements OnChanges {
   @Input() revenueChart: { labels: string[]; data: number[] } | undefined;

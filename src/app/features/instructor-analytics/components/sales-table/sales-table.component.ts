@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatChipsModule } from '@angular/material/chips';
+import { InstructorAnalyticsResponse } from '../../models/instructor-analytics.model';
 
 
 @Component({
@@ -12,5 +13,5 @@ import { MatChipsModule } from '@angular/material/chips';
   styleUrl: './sales-table.component.css',
 })
 export class SalesTableComponent {
-  @Input() recentSales: any[] | undefined = [];
+  @Input() recentSales: InstructorAnalyticsResponse['recentSales'] | undefined = [];
 }

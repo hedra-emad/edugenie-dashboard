@@ -1,6 +1,14 @@
 export interface Lesson {
+  id: string;
   title: string;
-  videoFile: string | null;
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error' | 'videoTooLong';
-  uploadProgress: number;
+  videoUrl?: string;
+  videoPublicId?: string;
+  videoDuration?: number;
+  transcript?: string;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Frontend state tracking
+  uploadStatus?: 'idle' | 'uploading' | 'success' | 'error' | 'videoTooLong';
+  uploadProgress?: number;
 }
