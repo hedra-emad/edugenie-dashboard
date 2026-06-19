@@ -79,7 +79,7 @@ export class CourseBasicInfoComponent {
         this.populateForm(course);
         this.isLoading.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   courseForm = this.fb.group({
@@ -101,7 +101,6 @@ export class CourseBasicInfoComponent {
       this.route.parent?.snapshot.paramMap.get('courseId');
 
     if (!id) {
-      console.warn('No courseId found → create mode');
       this.isLoading.set(false);
       return;
     }
@@ -240,7 +239,6 @@ export class CourseBasicInfoComponent {
         course.category
     });
 
-    console.log(this.courseForm.get('category')?.value);
 
     if (course.thumbnail) {
       this.thumbnailPreview.set(course.thumbnail);
@@ -266,10 +264,10 @@ export class CourseBasicInfoComponent {
         return this.courseForm.get(key)?.invalid;
       });
       if (invalidControls.length > 0) {
-        console.log('Invalid controls:', invalidControls);
+        // console.log('Invalid controls:', invalidControls);
       }
       if (!this.selectedThumbnailFile) {
-        console.log('Thumbnail file missing');
+        // console.log('Thumbnail file missing');
       }
 
       return this.courseForm.invalid || !this.selectedThumbnailFile;

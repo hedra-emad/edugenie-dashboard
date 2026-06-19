@@ -18,16 +18,17 @@
         </button>
     </div>
 
-    <!-- Loading state -->
-    <div *ngIf="isLoading" class="flex justify-center py-16">
-        <app-loading [size]="40" color="var(--color-primary)"></app-loading>
-    </div>
-
-    <ng-container *ngIf="!isLoading">
+    @if (!isLoading) {
         <!-- Empty state -->
-        <div *ngIf="lessonsArray.length === 0" class="text-center py-10 border-2 border-dashed rounded-xl text-gray-500">
-            No lessons yet
-        </div>
+        @if (lessonsArray.length === 0) {
+            <app-empty-state 
+                icon="menu_book"
+                title="No lessons in this section yet"
+                description="Add lessons to start building your course content with videos, text, and interactive materials."
+                actionLabel="Create First Lesson"
+                (actionClicked)="addLesson()">
+            </app-empty-state>
+        }
 
         <!-- Lesson cards -->
         <div cdkDropList (cdkDropListDropped)="onLessonDropped($event)" class="space-y-4">
@@ -39,11 +40,11 @@
             (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)"> </app-lesson-card>
       </div>
         </div>
-    </ng-container>
+    }
 
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
-        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="lessonsArray.length === 0" (action)="goToQuiz()"></app-main-button>
+        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="shouldDisableQuizButton" (action)="goToQuiz()"></app-main-button>
     </div>
 
 </div>

@@ -119,6 +119,13 @@ export const routes: Routes = [
           import('./features/settings/pages/account-settings/account-settings.page')
             .then(m => m.AccountSettingsPageComponent)
       },
+      {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/admin/notifications/notifications-page/notifications-page.component')
+            .then(m => m.NotificationsPageComponent)
+      },
 
     ]
   },

@@ -15,7 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Course } from '../../../../core/models/course.model';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 @Component({
   selector: 'app-lessons-builder',
   standalone: true,
@@ -28,7 +28,7 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     BackButtonComponent,
     MainButtonComponent,
     DragDropModule,
-    AppLoader
+    EmptyStateComponent
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -83,7 +83,7 @@ export class LessonBuilder implements OnInit {
     this.lessonsArray.push(
       this.fb.group({
         id: [null],
-        title: ['', Validators.required],
+        title: ['', [Validators.required, Validators.pattern(/.*\S.*/)]],
         videoUrl: [''],
         videoPublicId: [''],
         videoDuration: [0],
@@ -116,7 +116,7 @@ export class LessonBuilder implements OnInit {
             this.lessonsArray.push(
               this.fb.group({
                 id: [lesson.id || (lesson as any)._id || null],
-                title: [lesson.title, Validators.required],
+                title: [lesson.title, [Validators.required, Validators.pattern(/.*\S.*/)]],
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],
                 videoDuration: [lesson.videoDuration || 0],
@@ -201,6 +201,27 @@ export class LessonBuilder implements OnInit {
 
   get lessonsLength() {
     return this.lessonsArray.length;
+  }
+
+  get hasSavedLessons(): boolean {
+    return this.lessonsArray.controls.some(lesson => {
+      const id = lesson.get('id')?.value;
+      return id && id !== null;
+    });
+  }
+
+  get hasLessonsBeingCreated(): boolean {
+    // Check if any lesson cards are currently saving/uploading
+    return this.lessonsArray.controls.some(lesson => {
+      const id = lesson.get('id')?.value;
+      // If lesson has no ID, it's potentially being created
+      return !id || id === null;
+    });
+  }
+
+  get shouldDisableQuizButton(): boolean {
+    // Disable if no saved lessons exist
+    return !this.hasSavedLessons;
   }
 
 

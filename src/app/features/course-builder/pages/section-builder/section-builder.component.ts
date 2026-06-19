@@ -17,6 +17,7 @@ import { Course } from '../../../../core/models/course.model';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -65,7 +66,8 @@ export function extractId(val: any): string | null {
     BackButtonComponent,
     SectionCardComponent,
     AppLoader,
-    DragDropModule
+    DragDropModule,
+    EmptyStateComponent
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -241,7 +243,6 @@ export class SectionBuilderComponent implements OnInit {
 
         this.isLoading = false;
         this.cdr.detectChanges();
-        console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
         console.error('Failed to load course sections:', err);
@@ -279,7 +280,7 @@ export class SectionBuilderComponent implements OnInit {
     const hasUnsaved = controls.some(c => !extractId(c.get('id')?.value));
 
     if (hasUnsaved) {
-      console.warn('Cannot reorder: there are unsaved sections');
+      // console.warn('Cannot reorder: there are unsaved sections');
       return;
     }
 

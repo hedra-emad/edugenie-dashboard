@@ -333,7 +333,6 @@ export class RegisterPageComponent implements OnInit {
 
     this.authService.register(payload).subscribe({
       next: (res) => {
-        console.log('Register Success', res);
         this.isSubmitting = false;
         this.router.navigate(['/login']);
       },
@@ -355,8 +354,6 @@ export class RegisterPageComponent implements OnInit {
 
           return;
         }
-
-        console.error('Register Error', err);
       },
     });
   }

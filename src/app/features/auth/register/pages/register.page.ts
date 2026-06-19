@@ -341,7 +341,6 @@ export class RegisterPageComponent implements OnInit {
 
     this.authService.register(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
-        console.log('Register Success', res);
         this.isSubmitting = false;
         this.router.navigate(['/login']);
       },
