@@ -155,7 +155,7 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard, roleGuard],
     data: {
-      roles: ['admin']
+      roles: ['admin', 'superadmin']
     },
     children: [
       { path: '', redirectTo: 'course-approvals', pathMatch: 'full' },

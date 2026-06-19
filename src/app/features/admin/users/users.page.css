@@ -1,0 +1,538 @@
+/* ============================================================
+   USERS MANAGEMENT PAGE
+   Only contains things Tailwind cannot express:
+   - CSS custom property lookups (gradients, shadows)
+   - ::before pseudo-elements (data-label card layout)
+   - keyframe animations (skeleton shimmer, active dot pulse)
+   - Angular Material overlay overrides
+   - Complex layered box-shadows on avatars / buttons
+   ============================================================ */
+
+/* ─── Page wrapper ───────────────────────────────────────────── */
+.um-root {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 2rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ─── Export button ──────────────────────────────────────────── */
+.um-btn-export {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1.5rem;
+    background: linear-gradient(135deg, #4a1fb8 0%, var(--color-primary) 45%, var(--color-primary-light) 100%);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .15) inset, 0 4px 14px rgba(59, 24, 146, .38), 0 1px 3px rgba(59, 24, 146, .25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+}
+
+.um-btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .18) inset, 0 8px 24px rgba(59, 24, 146, .48), 0 2px 6px rgba(59, 24, 146, .3);
+    filter: brightness(1.06);
+}
+
+.um-btn-export:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+}
+
+/* ─── Filters card shell ─────────────────────────────────────── */
+.um-filters-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1.25rem;
+    box-shadow: var(--shadow-card);
+}
+
+/* Search input wrapper */
+.um-search-wrap {
+    position: relative;
+}
+
+.um-search-wrap__icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    color: var(--color-text-secondary);
+    pointer-events: none;
+}
+
+.um-search-wrap__input {
+    width: 100%;
+    padding: 0.5625rem 1rem 0.5625rem 2.5rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    background: var(--color-background);
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    box-sizing: border-box;
+}
+
+.um-search-wrap__input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.75;
+}
+
+.um-search-wrap__input:focus {
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(91, 61, 184, .12);
+    background: #fff;
+}
+
+/* Filter buttons */
+.um-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.875rem;
+    background: #fff;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.um-filter-btn:hover {
+    background: var(--color-background);
+    border-color: #c4b5fd;
+    box-shadow: 0 1px 4px rgba(59, 24, 146, .08);
+}
+
+.um-filter-btn__chevron {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: var(--color-text-secondary);
+}
+
+/* ─── Table card ─────────────────────────────────────────────── */
+.um-table-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+/* Hide table when loading (bound via [class.um-table-wrap--hidden]) */
+.um-table-wrap--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Table base */
+.um-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.um-table__head {
+    background: #f8f9fb;
+    border-bottom: 1.5px solid var(--color-border);
+}
+
+.um-table__th {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.um-table__th--center {
+    text-align: center;
+}
+
+.um-table__row {
+    border-bottom: 1px solid #f1f3f6;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.um-table__row:last-child {
+    border-bottom: none;
+}
+
+.um-table__row:hover {
+    background: #faf8ff;
+    box-shadow: inset 3px 0 0 var(--color-primary-light), 0 2px 12px rgba(91, 61, 184, .06);
+}
+
+.um-table__td {
+    vertical-align: middle;
+}
+
+.um-table__td--center {
+    text-align: center;
+}
+
+/* ─── Avatar with purple ring ────────────────────────────────── */
+.um-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.um-user-cell__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2.5px #c4b5fd, 0 3px 10px rgba(59, 24, 146, .16);
+    flex-shrink: 0;
+    background: var(--color-background);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.um-table__row:hover .um-user-cell__avatar {
+    box-shadow: 0 0 0 3px var(--color-primary-light), 0 4px 14px rgba(59, 24, 146, .22);
+    transform: scale(1.04);
+}
+
+.um-user-cell__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.um-user-cell__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+}
+
+.um-user-cell__joined {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    line-height: 1.3;
+}
+
+/* ─── Email ──────────────────────────────────────────────────── */
+.um-email {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* ─── Role trigger pill ──────────────────────────────────────── */
+.um-role-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    min-width: 115px;
+    padding: 0.3125rem 0.75rem;
+    background: #f4f0ff;
+    border: 1.5px solid #c4b5fd;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+}
+
+.um-role-trigger:hover {
+    background: #ede9fe;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 2px 8px rgba(59, 24, 146, .16);
+}
+
+.um-role-trigger__label {
+    flex: 1;
+    text-transform: capitalize;
+}
+
+.um-role-trigger__chevron {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--color-primary-light);
+    flex-shrink: 0;
+}
+
+/* ─── Mat-menu role items ────────────────────────────────────── */
+.um-role-menu__item {
+    font-size: 0.875rem !important;
+    color: var(--color-text-primary) !important;
+}
+
+.um-role-menu__item--danger {
+    color: var(--color-error) !important;
+}
+
+.um-role-menu__item--danger:hover {
+    background: #fff5f5 !important;
+}
+
+.um-role-menu__icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px;
+    color: #9ca3af;
+}
+
+.um-role-menu__icon--active {
+    color: var(--color-success) !important;
+}
+
+.um-role-menu__icon--danger {
+    color: var(--color-error) !important;
+}
+
+/* ─── Status badges ──────────────────────────────────────────── */
+.um-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.um-status-badge__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.um-status-badge--active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.um-status-badge--active .um-status-badge__dot {
+    background: var(--color-success);
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, .25);
+    animation: um-pulse-dot 2.2s ease-in-out infinite;
+}
+
+@keyframes um-pulse-dot {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, .25);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, .12);
+        transform: scale(1.15);
+    }
+}
+
+.um-status-badge--inactive {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.um-status-badge--inactive .um-status-badge__dot {
+    background: #9ca3af;
+}
+
+.um-status-badge--banned {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.um-status-badge--banned .um-status-badge__dot {
+    background: var(--color-error);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, .22);
+}
+
+/* ─── Action buttons ─────────────────────────────────────────── */
+.um-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    color: #9ca3af;
+}
+
+.um-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.um-action-btn__icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.um-action-btn--edit:hover {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.um-action-btn--block:hover {
+    background: #fff1f2;
+    color: var(--color-error);
+}
+
+.um-action-btn--more {
+    border-radius: 50%;
+}
+
+.um-action-btn--more:hover {
+    background: #f0eefe;
+    color: var(--color-primary);
+    box-shadow: 0 0 0 4px #ede9fe;
+}
+
+/* ─── Loading skeleton ───────────────────────────────────────── */
+.um-skeleton-wrap {
+    padding: 0.5rem 0;
+}
+
+.um-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f1f3f6;
+}
+
+.um-skeleton-row:last-child {
+    border-bottom: none;
+}
+
+.um-skeleton {
+    background: linear-gradient(90deg, #f1f3f5 25%, #e8eaed 50%, #f1f3f5 75%);
+    background-size: 200% 100%;
+    animation: um-shimmer 1.5s infinite;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+@keyframes um-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.um-skeleton--avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.um-skeleton-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    flex: 0 0 160px;
+}
+
+.um-skeleton--line {
+    height: 12px;
+}
+
+.um-skeleton--line-lg {
+    width: 130px;
+}
+
+.um-skeleton--line-md {
+    width: 110px;
+}
+
+.um-skeleton--line-sm {
+    width: 80px;
+}
+
+.um-skeleton--pill {
+    width: 80px;
+    height: 26px;
+    border-radius: 999px;
+}
+
+.um-skeleton--actions {
+    width: 90px;
+    height: 28px;
+}
+
+.um-skeleton--ml {
+    margin-left: 1.5rem;
+}
+
+/* ─── Empty state ────────────────────────────────────────────── */
+.um-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.um-empty-state__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f4f0ff;
+    margin-bottom: 1.25rem;
+}
+
+.um-empty-state__icon {
+    font-size: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    color: var(--color-primary-light);
+}
+
+.um-empty-state__title {
+    margin: 0 0 0.375rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.um-empty-state__sub {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+

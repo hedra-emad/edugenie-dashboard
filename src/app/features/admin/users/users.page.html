@@ -1,119 +1,209 @@
-<div class="max-w-[1200px] mx-auto p-6 md:p-8 space-y-8">
-  
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="um-root">
+
+  <!-- ═══════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════ -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">User Management</h1>
-      <p class="text-sm text-gray-500 mt-1">Manage platform accounts, roles, and access statuses.</p>
+      <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight m-0">
+        User Management
+      </h1>
+      <p class="text-sm text-gray-500 mt-1 m-0">Manage platform accounts, roles, and access statuses.</p>
     </div>
-    
-    <!-- Clean, standard SaaS button -->
-    <button class="inline-flex items-center justify-center px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[#3b1892]/90 text-white text-sm font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)]">
+    <button class="um-btn-export w-full sm:w-auto">
       Export Platform Report
     </button>
   </div>
 
-  <!-- Filters & Search (Clean layout) -->
-  <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
-    
-    <!-- Search Bar -->
-    <div class="relative w-full lg:w-96">
-      <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 !text-[20px] !w-[20px] !h-[20px]">search</mat-icon>
-      <input type="text" placeholder="Search by name, email, or ID..." 
-             class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-shadow">
+  <!-- ═══════════════════════════════════════════
+       FILTERS CARD
+  ═══════════════════════════════════════════ -->
+  <div class="um-filters-card flex flex-col sm:flex-row sm:items-center gap-3">
+
+    <!-- Search -->
+    <div class="um-search-wrap w-full sm:flex-1 min-w-0">
+      <mat-icon class="um-search-wrap__icon">search</mat-icon>
+      <input type="text" placeholder="Search by name, email, or ID…" class="um-search-wrap__input" />
     </div>
-    
-    <!-- Filters -->
-    <div class="flex items-center gap-3 w-full lg:w-auto">
-      <button class="flex items-center justify-between w-full lg:w-[130px] px-3.5 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none">
+
+    <!-- Role + Status dropdowns -->
+    <div class="flex gap-2 w-full sm:w-auto shrink-0">
+      <button class="um-filter-btn flex-1 sm:flex-none">
         All Roles
-        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-gray-500">expand_more</mat-icon>
+        <mat-icon class="um-filter-btn__chevron">expand_more</mat-icon>
       </button>
-
-      <button class="flex items-center justify-between w-full lg:w-[130px] px-3.5 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none">
+      <button class="um-filter-btn flex-1 sm:flex-none">
         All Statuses
-        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-gray-500">expand_more</mat-icon>
+        <mat-icon class="um-filter-btn__chevron">expand_more</mat-icon>
       </button>
     </div>
+
+    <!-- Results count -->
+    <span class="text-xs sm:text-sm font-medium text-gray-500 sm:ml-auto whitespace-nowrap">
+      Showing 1–10 of 2,451 users
+    </span>
   </div>
 
-  <!-- Showing Text (Simple) -->
-  <div class="text-sm text-gray-500 font-medium">
-    Showing 1-10 of 2,451 users
-  </div>
+  <!-- ═══════════════════════════════════════════
+       TABLE CARD
+  ═══════════════════════════════════════════ -->
+  <div class="um-table-card">
 
-  <!-- Table Card (No Scroll) -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm w-full overflow-hidden">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gray-50 border-b border-gray-200">
-          <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">Name</th>
-          <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">Email</th>
-          <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">Current Role</th>
-          <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">Status</th>
-          <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center w-[160px]">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <tr *ngFor="let user of users; let i = index" class="hover:bg-gray-50/50 transition-colors group">
-          <td class="py-4 px-6 align-middle text-left">
-            <div class="flex items-center gap-3">
-              <img [src]="user.avatar" class="w-10 h-10 rounded-full object-cover bg-gray-100 border border-gray-200">
-              <div>
-                <div class="text-sm font-semibold text-gray-900">{{user.name}}</div>
-                <div class="text-xs text-gray-500 mt-0.5">{{user.joined}}</div>
+    <!-- Loading skeleton -->
+    <div *ngIf="isChangingRole" class="um-skeleton-wrap" aria-busy="true" aria-label="Loading users">
+      <div *ngFor="let s of [1,2,3]" class="um-skeleton-row">
+        <div class="um-skeleton um-skeleton--avatar"></div>
+        <div class="um-skeleton-lines">
+          <div class="um-skeleton um-skeleton--line um-skeleton--line-lg"></div>
+          <div class="um-skeleton um-skeleton--line um-skeleton--line-sm"></div>
+        </div>
+        <div class="um-skeleton um-skeleton--line um-skeleton--line-md um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--pill um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--pill um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--actions um-skeleton--ml"></div>
+      </div>
+    </div>
+
+    <!-- Table — overflow-x-auto so it scrolls on mobile instead of overflowing -->
+    <div class="overflow-x-auto w-full" [class.um-table-wrap--hidden]="isChangingRole">
+      <table class="um-table min-w-[600px]">
+        <thead class="um-table__head">
+          <tr>
+            <th class="um-table__th px-3 sm:px-6 py-3">Name</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Email</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Role</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Status</th>
+            <th class="um-table__th um-table__th--center px-3 sm:px-6 py-3 w-[120px]">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users; let i = index" class="um-table__row">
+
+            <!-- Name + Avatar -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Name">
+              <div class="um-user-cell">
+                <img [src]="user.avatar" class="um-user-cell__avatar" alt="{{user.name}} avatar" />
+                <div class="um-user-cell__info">
+                  <span class="um-user-cell__name">{{user.name}}</span>
+                  <span class="um-user-cell__joined">{{user.joined}}</span>
+                </div>
               </div>
-            </div>
-          </td>
-          <td class="py-4 px-6 align-middle text-left">
-            <span class="text-sm text-gray-600">{{user.email}}</span>
-          </td>
-          <td class="py-4 px-6 align-middle text-left">
-            <div class="inline-flex items-center justify-between min-w-[100px] px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium cursor-pointer hover:bg-gray-200 transition-colors border border-transparent hover:border-gray-300">
-              {{user.role}}
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-gray-500">expand_more</mat-icon>
-            </div>
-          </td>
-          <td class="py-4 px-6 align-middle text-left">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
-                  [ngClass]="{'bg-green-50 text-green-700': user.status === 'Active', 'bg-gray-100 text-gray-600': user.status === 'Inactive'}">
-              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="{'bg-green-500': user.status === 'Active', 'bg-gray-400': user.status === 'Inactive'}"></span>
-              {{user.status}}
-            </span>
-          </td>
-          <td class="py-4 px-6 align-middle">
-            <div class="flex items-center justify-center gap-2">
-              <!-- Edit -->
-              <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">edit</mat-icon>
-              </button>
-              <!-- Block (Gray to Red on hover) -->
-              <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">block</mat-icon>
-              </button>
-              <!-- More -->
-              <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-                <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">more_vert</mat-icon>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            </td>
 
-    <!-- Pagination matching Instructor Courses (Simplified for single page) -->
-    <nav class="flex justify-center items-center gap-3 p-6 bg-white border-t border-gray-200">
-      <button class="flex items-center justify-center text-gray-400 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>
-        <mat-icon>chevron_left</mat-icon>
+            <!-- Email -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Email">
+              <span class="um-email">{{user.email}}</span>
+            </td>
+
+            <!-- Role dropdown (mat-menu) — bindings untouched -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Role">
+              <div [matMenuTriggerFor]="roleMenu" class="um-role-trigger">
+                <span class="um-role-trigger__label">{{user.role}}</span>
+                <mat-icon class="um-role-trigger__chevron">expand_more</mat-icon>
+              </div>
+
+              <mat-menu #roleMenu="matMenu" class="um-role-menu">
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'student')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'student'">
+                    {{user.role === 'student' ? 'check' : ''}}
+                  </mat-icon>
+                  Student
+                </button>
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'instructor')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'instructor'">
+                    {{user.role === 'instructor' ? 'check' : ''}}
+                  </mat-icon>
+                  Instructor
+                </button>
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'admin')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'admin'">
+                    {{user.role === 'admin' ? 'check' : ''}}
+                  </mat-icon>
+                  Admin
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item class="um-role-menu__item um-role-menu__item--danger"
+                  (click)="changeRole(user, 'superadmin')">
+                  <mat-icon class="um-role-menu__icon um-role-menu__icon--danger"
+                    [class.um-role-menu__icon--active]="user.role === 'superadmin'">
+                    {{user.role === 'superadmin' ? 'check' : 'shield'}}
+                  </mat-icon>
+                  Super Admin
+                </button>
+              </mat-menu>
+            </td>
+
+            <!-- Status badge -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Status">
+              <span class="um-status-badge" [ngClass]="{
+                  'um-status-badge--active':   user.status === 'Active',
+                  'um-status-badge--inactive': user.status === 'Inactive',
+                  'um-status-badge--banned':   user.status === 'Banned'
+                }">
+                <span class="um-status-badge__dot"></span>
+                {{user.status}}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="um-table__td um-table__td--center px-3 sm:px-6 py-3 sm:py-4" data-label="Actions">
+              <div class="flex items-center justify-center gap-1 sm:gap-2">
+                <button class="um-action-btn um-action-btn--edit min-w-[40px] min-h-[40px]" title="Edit user">
+                  <mat-icon class="um-action-btn__icon">edit</mat-icon>
+                </button>
+                <button class="um-action-btn um-action-btn--block min-w-[40px] min-h-[40px]" title="Block user">
+                  <mat-icon class="um-action-btn__icon">block</mat-icon>
+                </button>
+                <button class="um-action-btn um-action-btn--more min-w-[40px] min-h-[40px]" title="More options">
+                  <mat-icon class="um-action-btn__icon">more_vert</mat-icon>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="users.length === 0 && !isChangingRole" class="um-empty-state">
+      <div class="um-empty-state__icon-wrap">
+        <mat-icon class="um-empty-state__icon">group_off</mat-icon>
+      </div>
+      <p class="um-empty-state__title">No users found</p>
+      <p class="um-empty-state__sub">Try adjusting your search or filters.</p>
+    </div>
+
+    <!-- ─── Pagination ──────────────────────────────────────────── -->
+    <nav class="flex items-center justify-center gap-3 sm:gap-4 px-4 py-4 border-t border-gray-200 bg-white"
+      aria-label="Pagination">
+      <!-- Previous -->
+      <button disabled aria-label="Previous page" class="w-10 h-10 rounded-full flex items-center justify-center
+               border border-slate-200 bg-white text-slate-400
+               opacity-40 cursor-not-allowed
+               transition-all duration-200">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">chevron_left</mat-icon>
       </button>
 
-      <button class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition bg-[#6366f1] text-white shadow-md scale-110">
-        1
-      </button>
+      <!-- Current page bubble + "Page X of Y" label -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span aria-current="page" class="w-10 h-10 rounded-full flex items-center justify-center
+                 bg-[var(--color-primary)] text-white font-bold text-sm
+                 shadow-sm shadow-purple-400/40 select-none">1</span>
+        <span class="hidden xs:inline text-xs sm:text-sm font-medium text-gray-400 whitespace-nowrap">
+          Page 1 of 245
+        </span>
+      </div>
 
-      <button class="flex items-center justify-center text-gray-400 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>
-        <mat-icon>chevron_right</mat-icon>
+      <!-- Next -->
+      <button disabled aria-label="Next page" class="w-10 h-10 rounded-full flex items-center justify-center
+               border border-slate-200 bg-white text-slate-400
+               opacity-40 cursor-not-allowed
+               transition-all duration-200">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">chevron_right</mat-icon>
       </button>
     </nav>
-  </div>
+
+  </div><!-- /um-table-card -->
+
 </div>
