@@ -4,7 +4,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/services/auth.service';
 
-interface SidebarMenuItem {
+interface NavItem {
   icon: string;
   label: string;
   route: string;
@@ -26,30 +26,31 @@ export class AdminSidebarComponent {
   @Input() sidebarExpanded = true;
   @Output() toggle = new EventEmitter<void>();
 
-  menuItems: SidebarMenuItem[] = [
-    { icon: 'analytics', label: 'Analytics', route: '/admin/analytics' },
-    { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
-    { icon: 'group', label: 'Users', route: '/admin/users' },
-    { icon: 'category', label: 'Categories', route: '/admin/categories' },
-    { icon: 'bar_chart', label: 'Reports', route: '/admin/reports' },
-    { icon: 'shield_person', label: 'Admins', route: '/admin/admins' }
+  readonly navItems: NavItem[] = [
+    { icon: 'grid_view',     label: 'Overview',      route: '/admin/dashboard' },
+    { icon: 'fact_check',    label: 'Approvals',     route: '/admin/course-approvals' },
+    { icon: 'group',         label: 'Users',         route: '/admin/users' },
+    { icon: 'category',      label: 'Categories',    route: '/admin/categories' },
+    { icon: 'bar_chart',     label: 'Reports',       route: '/admin/reports' },
+    { icon: 'shield_person', label: 'Admins',        route: '/admin/admins' },
+    { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
-  bottomItems: SidebarMenuItem[] = [
+  readonly bottomItems: NavItem[] = [
     { icon: 'help_outline', label: 'Support Center', route: '/admin/support' },
-    { icon: 'settings', label: 'Settings', route: '/admin/settings' }
+    { icon: 'settings',     label: 'Settings',       route: '/admin/settings' },
   ];
 
-  get isCollapsed(): boolean {
-    if (this.isMobile) {
-      return !this.sidebarExpanded;
-    }
-    if (this.isTablet) {
-      return true; // Collapsed automatically on tablet
-    }
-    return !this.sidebarExpanded;
+  /** True when sidebar should behave as an off-canvas overlay */
+  get isOverlay(): boolean {
+    return this.isMobile || this.isTablet;
   }
-  
+
+  /** Show text labels? Yes on desktop-expanded; yes in overlay when open */
+  get showLabel(): boolean {
+    return this.sidebarExpanded;
+  }
+
   get user() {
     return this.authService.currentUserSignal();
   }
@@ -57,20 +58,28 @@ export class AdminSidebarComponent {
   get userInitials(): string {
     const u = this.user;
     if (!u) return '';
-    const first = u.firstName ? u.firstName.charAt(0).toUpperCase() : '';
-    const last = u.lastName ? u.lastName.charAt(0).toUpperCase() : '';
-    return first + last;
+    return ((u.firstName?.charAt(0) ?? '') + (u.lastName?.charAt(0) ?? '')).toUpperCase();
+  }
+
+  /**
+   * Navigate to route, then close overlay sidebar.
+   * Router.navigate().then() ensures the route change is committed
+   * before the sidebar emits toggle — prevents the race condition
+   * where ChangeDetection re-renders the layout mid-navigation.
+   */
+  onNavClick(route: string): void {
+    if (this.isOverlay) {
+      this.router.navigate([route]).then(() => {
+        this.toggle.emit();
+      });
+    }
+    // Desktop: [routerLink] handles navigation normally, no toggle needed
   }
 
   onLogout(): void {
     this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/login']);
-      },
-      error: (err) => {
-        console.error('Logout failed', err);
-        this.router.navigate(['/login']);
-      }
+      next:  () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
     });
   }
 }

@@ -149,6 +149,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'courses/:id',
+        loadComponent: () =>
+          import('./features/admin/course-details/course-details-page/course-details-page.component').then(
+            (m) => m.CourseDetailsPageComponent
+          )
+      },
+      {
         path: 'users',
         loadComponent: () =>
           import('./features/admin/users/users.page').then((m) => m.AdminUsersPageComponent)
@@ -156,7 +163,12 @@ export const routes: Routes = [
       {
         path: 'categories',
         loadComponent: () =>
-          import('./features/admin/placeholders').then((m) => m.AdminCategoriesComponent)
+          import('./features/admin/categories/categories-page/categories-page.component').then((m) => m.CategoriesPageComponent)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/admin/notifications/notifications-page/notifications-page.component').then((m) => m.NotificationsPageComponent)
       },
       {
         path: 'reports',

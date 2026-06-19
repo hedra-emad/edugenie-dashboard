@@ -1,0 +1,121 @@
+<div class="drawer-overlay" [class.open]="isOpen" (click)="onClose()">
+  <div class="drawer-container" [class.open]="isOpen" (click)="$event.stopPropagation()">
+    
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <h2>Course Details</h2>
+      <button class="close-btn" (click)="onClose()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Drawer Content -->
+    <div class="drawer-content" *ngIf="course">
+      <div class="course-thumbnail-section">
+        <div class="thumbnail-wrapper">
+          <img *ngIf="course.thumbnail && course.thumbnail !== 'image' && course.thumbnail !== 'video_library' && !course.thumbnail.includes('http'); else iconThumb" [src]="course.thumbnail" alt="Thumbnail" />
+          <ng-template #iconThumb>
+            <mat-icon class="fallback-icon">{{ course.thumbnail || 'video_library' }}</mat-icon>
+          </ng-template>
+        </div>
+        <div class="course-basic">
+          <h3>{{ course.title }}</h3>
+          <app-approval-status-badge [status]="course.status"></app-approval-status-badge>
+        </div>
+      </div>
+
+      <div class="details-section">
+        <h4>Description</h4>
+        <p class="description-text">{{ course.description || 'No description provided.' }}</p>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Category</span>
+          <span class="detail-val">{{ course.category }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Level</span>
+          <span class="detail-val">{{ course.level || 'Beginner' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Price</span>
+          <span class="detail-val">{{ course.price === 0 ? 'Free' : (course.price | currency) || 'Free' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Total Duration</span>
+          <span class="detail-val">{{ course.videoDuration }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Sections & Lessons</span>
+          <span class="detail-val">{{ course.sectionsCount }} Sections • {{ course.totalLessons || 0 }} Lessons</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Submission Date</span>
+          <span class="detail-val">{{ (course.createdAt | date:'mediumDate') || 'N/A' }}</span>
+        </div>
+      </div>
+
+      <div class="details-section">
+        <h4>Instructor Information</h4>
+        <div class="instructor-card">
+          <img *ngIf="course.instructorAvatar; else defaultAvatar" [src]="course.instructorAvatar" class="inst-avatar" />
+          <ng-template #defaultAvatar>
+            <div class="inst-avatar-placeholder"><mat-icon>person</mat-icon></div>
+          </ng-template>
+          <div class="inst-info">
+            <span class="inst-name">{{ course.instructorName }}</span>
+            <span class="inst-email">{{ course.instructorEmail || 'No email provided' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="details-section" *ngIf="course.goals?.length">
+        <h4>Course Goals</h4>
+        <ul class="bullet-list">
+          <li *ngFor="let goal of course.goals"><mat-icon>check</mat-icon> <span>{{ goal }}</span></li>
+        </ul>
+      </div>
+
+      <div class="details-section" *ngIf="course.requirements?.length">
+        <h4>Requirements</h4>
+        <ul class="bullet-list">
+          <li *ngFor="let req of course.requirements"><mat-icon>arrow_right</mat-icon> <span>{{ req }}</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Drawer Footer Actions -->
+    <div class="drawer-footer" *ngIf="course?.status === 'pending'">
+      <button class="btn-reject" (click)="openRejectModal()" [disabled]="isLoading">Reject</button>
+      <button class="btn-approve" (click)="onApprove()" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Approve Course</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Reject Confirmation Modal -->
+  <div class="reject-modal-overlay" *ngIf="showRejectModal" (click)="$event.stopPropagation()">
+    <div class="reject-modal" (click)="$event.stopPropagation()">
+      <h3>Reject Course</h3>
+      <p>Please provide a reason for rejecting this course. The instructor will receive this feedback.</p>
+      
+      <textarea 
+        [(ngModel)]="rejectReason" 
+        placeholder="Enter rejection reason here..." 
+        rows="4"
+        class="reject-textarea"
+        [disabled]="isLoading">
+      </textarea>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="isLoading">Cancel</button>
+        <button class="btn-confirm-reject" (click)="confirmReject()" [disabled]="!rejectReason.trim() || isLoading">
+          <span *ngIf="!isLoading">Confirm Rejection</span>
+          <span *ngIf="isLoading" class="spinner red-spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

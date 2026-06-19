@@ -1,72 +1,56 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import {
+  Component, OnInit, OnDestroy,
+  ChangeDetectionStrategy, ChangeDetectorRef, inject
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { Router } from '@angular/router';
+import { Subject, takeUntil, combineLatest, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../services/course-approval.service';
-import { CourseApproval, Category } from '../models/course-approval.model';
+import { CourseApproval, AdminStats } from '../models/course-approval.model';
 import { ApprovalsTableComponent } from '../components/approvals-table/approvals-table.component';
-import { CategoriesPanelComponent } from '../components/categories-panel/categories-panel.component';
 
 @Component({
   selector: 'app-course-approvals-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, ApprovalsTableComponent, CategoriesPanelComponent],
+  imports: [CommonModule, MatIconModule, ApprovalsTableComponent],
   templateUrl: './course-approvals-page.component.html',
   styleUrl: './course-approvals-page.component.css'
 })
 export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   private readonly service = inject(CourseApprovalService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   courses: CourseApproval[] = [];
-  categories: Category[] = [];
+  stats: AdminStats | null = null;
   loading = false;
   actionLoading: Record<string, boolean> = {};
-  successMessage: string | null = null;
-  errorMessage: string | null = null;
 
-  private successTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Bulk selection
+  selectedCourseIds = new Set<string>();
+  isBulkActionLoading = false;
+  showSelectedModal = false;
 
   ngOnInit(): void {
-    // Load initial data
     this.service.loadData();
 
-    // Subscribe to all state streams
     combineLatest([
       this.service.courses$,
-      this.service.categories$,
+      this.service.stats$,
       this.service.loading$,
-      this.service.actionLoading$,
-      this.service.success$,
-      this.service.error$
+      this.service.actionLoading$
     ])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([courses, categories, loading, actionLoading, success, error]) => {
+      .subscribe(([courses, stats, loading, actionLoading]) => {
         this.courses = courses;
-        this.categories = categories;
+        this.stats = stats;
         this.loading = loading;
         this.actionLoading = actionLoading;
-
-        if (success) {
-          this.successMessage = success;
-          this.errorMessage = null;
-          // Auto-clear after 3s
-          if (this.successTimeout) clearTimeout(this.successTimeout);
-          this.successTimeout = setTimeout(() => {
-            this.successMessage = null;
-            this.service.clearSuccess();
-            this.cdr.markForCheck();
-          }, 3000);
-        }
-
-        if (error) {
-          this.errorMessage = error;
-          this.successMessage = null;
-        }
-
         this.cdr.markForCheck();
       });
   }
@@ -74,44 +58,93 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    if (this.successTimeout) clearTimeout(this.successTimeout);
+  }
+
+  // --- Single Actions ---
+  onViewCourse(course: CourseApproval): void {
+    this.router.navigate(['/admin/courses', course.id]);
   }
 
   onApprove(courseId: string): void {
     this.service.approveCourse(courseId).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  onReject(courseId: string): void {
-    this.service.rejectCourse(courseId).pipe(takeUntil(this.destroy$)).subscribe();
+  onReject(event: { id: string; reason: string }): void {
+    this.service.rejectCourse(event.id, event.reason).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  onAddCategory(name: string): void {
-    this.service.addCategory(name);
+  // --- Selection ---
+  onSelectionChange(selectedIds: Set<string>): void {
+    this.selectedCourseIds = selectedIds;
+    this.cdr.markForCheck();
   }
 
-  onUpdateCategory(event: { id: string; name: string }): void {
-    this.service.updateCategory(event.id, event.name);
+  get selectedCourses(): CourseApproval[] {
+    return this.courses.filter(c => this.selectedCourseIds.has(c.id));
   }
 
-  onDeleteCategory(id: string): void {
-    this.service.deleteCategory(id);
+  clearSelection(): void {
+    this.selectedCourseIds = new Set();
+    this.cdr.markForCheck();
   }
 
-  onReorderCategories(categories: Category[]): void {
-    this.service.updateCategoriesList(categories);
+  // --- Selected Modal ---
+  openSelectedModal(): void {
+    this.showSelectedModal = true;
+    this.cdr.markForCheck();
   }
 
-  get pendingCount(): number {
-    return this.courses.filter(c => c.status === 'pending').length;
+  closeSelectedModal(): void {
+    this.showSelectedModal = false;
+    this.cdr.markForCheck();
   }
 
-  dismissSuccess(): void {
-    this.successMessage = null;
-    this.service.clearSuccess();
+  removeFromSelection(courseId: string): void {
+    const newSet = new Set(this.selectedCourseIds);
+    newSet.delete(courseId);
+    this.selectedCourseIds = newSet;
+    this.cdr.markForCheck();
+    if (this.selectedCourseIds.size === 0) {
+      this.closeSelectedModal();
+    }
   }
 
-  dismissError(): void {
-    this.errorMessage = null;
-    this.service.clearError();
+  // --- Bulk Actions (forkJoin — parallel execution) ---
+  bulkApprove(): void {
+    if (this.selectedCourseIds.size === 0) return;
+    this.isBulkActionLoading = true;
+    this.cdr.markForCheck();
+
+    forkJoin(Array.from(this.selectedCourseIds).map(id => this.service.approveCourse(id)))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isBulkActionLoading = false;
+          this.selectedCourseIds = new Set();
+          this.closeSelectedModal();
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe();
+  }
+
+  bulkReject(): void {
+    if (this.selectedCourseIds.size === 0) return;
+    this.isBulkActionLoading = true;
+    this.cdr.markForCheck();
+
+    forkJoin(Array.from(this.selectedCourseIds).map(id =>
+      this.service.rejectCourse(id, 'Bulk rejection by admin')
+    ))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isBulkActionLoading = false;
+          this.selectedCourseIds = new Set();
+          this.closeSelectedModal();
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe();
   }
 }
