@@ -248,8 +248,6 @@ export class LessonCardComponent {
     this.videoState = 'uploading';
     this.cdr.markForCheck();
 
-    const lessonId = this.lessonForm.get('id')?.value ?? 'new';
-
     this.cloudinaryService.uploadVideo(
       this.selectedVideoFile!,
       this.courseId,
@@ -261,12 +259,9 @@ export class LessonCardComponent {
           this.cdr.markForCheck();
         })
       )
-
       .subscribe({
         next: (res) => {
-          console.log('UPLOAD SUCCESS', res);
-
-          this.isUploading = false;
+          // console.log('UPLOAD SUCCESS', res);
 
           const patchData: any = {
             videoUrl: res.secure_url,
@@ -281,6 +276,9 @@ export class LessonCardComponent {
           this.durationChanged.emit();
 
           this.selectedVideoFile = null;
+          if (this.selectedVideoUrl) {
+            URL.revokeObjectURL(this.selectedVideoUrl);
+          }
           this.selectedVideoUrl = null;
 
           this.videoState = 'uploaded';
@@ -295,6 +293,7 @@ export class LessonCardComponent {
           this.videoState = 'error';
           this.uploadError = true;
           this.saveLock = false;
+          this.toastr.error('Video upload failed');
           this.cdr.markForCheck();
         }
       });

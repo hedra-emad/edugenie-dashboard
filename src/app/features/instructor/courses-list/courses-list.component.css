@@ -185,8 +185,29 @@
 }
 
 /* ═══════════════════════════════════════
-   GRID
+   RESULTS SUMMARY
 ═══════════════════════════════════════ */
+.results-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(59, 24, 146, 0.05);
+  border: 1px solid rgba(59, 24, 146, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.search-highlight {
+  background: var(--color-primary);
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
 .courses-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -317,37 +338,6 @@
 .bottom-left {
   bottom: 0.75rem;
   left: 0.75rem;
-}
-
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  backdrop-filter: blur(8px);
-}
-
-.status-icon {
-  font-size: 0.8rem !important;
-  width: 0.8rem !important;
-  height: 0.8rem !important;
-}
-
-.status-published {
-  background: rgba(16, 185, 129, 0.9); /* #10B981 */
-  color: white;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-.status-draft {
-  background: rgba(217, 119, 6, 0.9); /* #D97706 */
-  color: white;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
 }
 
 .level-badge {

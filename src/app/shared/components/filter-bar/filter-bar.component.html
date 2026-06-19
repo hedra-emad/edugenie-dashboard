@@ -1,0 +1,156 @@
+<div class="filter-bar-container">
+
+  <!-- Search Input -->
+  <div class="search-container">
+    <div class="search-field">
+      <input 
+        type="text"
+        [value]="searchTerm()" 
+        (input)="onSearchChange($any($event.target).value)"
+        [placeholder]="placeholder"
+        class="search-input">
+      <mat-icon class="search-icon">search</mat-icon>
+    </div>
+  </div>
+
+  <!-- Filter Actions -->
+  <div class="filter-actions">
+    <!-- Clear Filters Button -->
+    @if (activeFilterCount() > 0) {
+      <app-sub-button
+        label="Remove Filters"
+        icon="clear_all"
+        class="remove-filters-mobile"
+        (action)="clearAllFilters()">
+      </app-sub-button>
+    }
+
+    <!-- Filters Button -->
+    <div class="filters-button-wrapper">
+      <app-main-button
+        label="Filters"
+        icon="tune"
+        [class.active]="isDrawerOpen()"
+        (action)="toggleDrawer()">
+      </app-main-button>
+      @if (activeFilterCount() > 0) {
+        <span class="filter-badge">
+          {{ activeFilterCount() }}
+        </span>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Drawer Overlay -->
+<div 
+  *ngIf="isDrawerOpen()"
+  class="drawer-overlay"
+  (click)="closeDrawer()">
+</div>
+
+<!-- Filter Drawer -->
+<div 
+  class="filter-drawer"
+  [class.open]="isDrawerOpen()">
+  
+  <!-- Drawer Header -->
+  <div class="drawer-header">
+    <h3 class="drawer-title">Filters & Sorting</h3>
+    <button 
+      type="button"
+      class="close-button"
+      (click)="closeDrawer()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Drawer Content -->
+  <div class="drawer-content">
+    
+    <!-- Sort Section -->
+    @if (config.sortOptions && config.sortOptions.length > 0) {
+      <div class="filter-section">
+        <label class="section-label">Sort by</label>
+        <div class="dropdown-container">
+          <button 
+            type="button" 
+            (click)="toggleSortDropdown()" 
+            class="dropdown-button" 
+            [class.open]="sortDropdownOpen()">
+            {{ getSelectedSortLabel() }}
+            <mat-icon class="dropdown-icon" [class.rotate]="sortDropdownOpen()">
+              expand_more
+            </mat-icon>
+          </button>
+
+          @if (sortDropdownOpen()) {
+            <div class="dropdown-menu">
+              @for (option of config.sortOptions; track option.value) {
+                <button 
+                  type="button" 
+                  (click)="selectSort(option.value)"
+                  class="dropdown-item"
+                  [class.selected]="selectedSort() === option.value">
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Status Section -->
+    @if (config.statusOptions && config.statusOptions.length > 0) {
+      <div class="filter-section">
+        <label class="section-label">Status</label>
+        <div class="chips-container">
+          @for (status of config.statusOptions; track status.value) {
+            <app-sub-button
+              [label]="status.label"
+              [icon]="isStatusSelected(status.value) ? 'check_circle' : 'radio_button_unchecked'"
+              [class.selected]="isStatusSelected(status.value)"
+              (action)="toggleStatusFilter(status.value)">
+            </app-sub-button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Level Section -->
+    @if (config.levelOptions && config.levelOptions.length > 0) {
+      <div class="filter-section">
+        <label class="section-label">Level</label>
+        <div class="chips-container">
+          @for (level of config.levelOptions; track level.value) {
+            <app-sub-button
+              [label]="level.label"
+              [icon]="isLevelSelected(level.value) ? 'check_circle' : 'radio_button_unchecked'"
+              [class.selected]="isLevelSelected(level.value)"
+              (action)="toggleLevelFilter(level.value)">
+            </app-sub-button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Price Section -->
+    @if (config.priceOptions && config.priceOptions.length > 0) {
+      <div class="filter-section">
+        <label class="section-label">Price</label>
+        <div class="chips-container">
+          @for (price of config.priceOptions; track price.value) {
+            <app-sub-button
+              [label]="price.label"
+              [icon]="selectedPriceFilter() === price.value ? 'radio_button_checked' : 'radio_button_unchecked'"
+              [class.selected]="selectedPriceFilter() === price.value"
+              (action)="selectPriceFilter(price.value)">
+            </app-sub-button>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

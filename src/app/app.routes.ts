@@ -179,5 +179,14 @@ export const routes: Routes = [
           import('./features/settings/pages/account-settings/account-settings.page').then((m) => m.AccountSettingsPageComponent)
       }
     ]
+  },
+  
+  // 404 Catch-all route - MUST be last
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found.page').then(
+        (m) => m.NotFoundPageComponent
+      )
   }
 ];
