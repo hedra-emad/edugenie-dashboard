@@ -151,7 +151,7 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () =>
-          import('./features/admin/placeholders').then((m) => m.AdminUsersComponent)
+          import('./features/admin/users/users.page').then((m) => m.AdminUsersPageComponent)
       },
       {
         path: 'categories',
