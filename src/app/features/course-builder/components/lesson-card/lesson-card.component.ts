@@ -90,23 +90,50 @@ export class LessonCardComponent {
     return !!this.selectedVideoFile || hasExistingVideo;
   }
 
-  get isFormChanged(): boolean {
+  get isFormValid(): boolean {
+    const titleValid = this.lessonForm.get('title')?.valid;
+    const hasVideo = this.isVideoValid;
+    return !!(titleValid && hasVideo);
+  }
+
+  get hasFormChanges(): boolean {
     return this.lessonForm.dirty || !!this.selectedVideoFile;
   }
 
-  get showActionBar(): boolean {
-    if (this.isUpdateMode) return true;
-    return !!(this.lessonForm.get('title')?.valid && this.isVideoValid);
+  get shouldDisableButton(): boolean {
+    // Always disable if uploading or saving
+    if (this.isUploading || this.isSaving) {
+      return true;
+    }
+
+    // For create mode: disable if form is invalid or no video
+    if (!this.isUpdateMode) {
+      return !this.isFormValid;
+    }
+
+    // For update mode: disable if no changes made or form is invalid
+    return !this.hasFormChanges || !this.isFormValid;
   }
 
-  get isActionDisabled(): boolean {
-    if (this.lessonForm.invalid || !this.isVideoValid || this.isUploading || this.isSaving) {
-      return true;
+  getButtonLabel(): string {
+    if (this.isSaving) {
+      return this.isUpdateMode ? 'Updating...' : 'Creating...';
     }
-    if (this.isUpdateMode && !this.isFormChanged) {
-      return true;
+
+    if (this.isUploading) {
+      return 'Uploading...';
     }
-    return false;
+
+    if (!this.isUpdateMode) {
+      // Create mode
+      return 'Create Lesson';
+    } else {
+      // Update mode
+      if (!this.hasFormChanges) {
+        return 'No Changes';
+      }
+      return 'Update Lesson';
+    }
   }
 
   // ---------------- FILE CHANGE ----------------
@@ -116,6 +143,9 @@ export class LessonCardComponent {
     if (!input.files?.length) return;
 
     const file = input.files[0];
+
+    // Mark form as touched to show validation
+    this.lessonForm.markAsTouched();
 
     this.videoErrorMessage = '';
     this.uploadError = false;
@@ -141,10 +171,7 @@ export class LessonCardComponent {
         input.value = '';
         this.cdr.markForCheck();
         return;
-      }
-
-      console.log('VIDEO SELECTED', file);
-      console.log('PREVIEW URL', this.selectedVideoUrl);
+      };
 
       this.selectedVideoFile = file;
 
@@ -205,14 +232,12 @@ export class LessonCardComponent {
   // ---------------- SAVE ----------------
   saveLesson() {
     // Protection against repeated clicks during upload or save
-    if (this.saveLock || this.isUploading) return;
-
-    if (this.isUpdateMode && !this.isFormChanged) return;
+    if (this.saveLock || this.isUploading || this.shouldDisableButton) return;
 
     this.saveLock = true;
     this.lessonForm.markAllAsTouched();
 
-    if (this.lessonForm.invalid || !this.isVideoValid) {
+    if (!this.isFormValid) {
       this.saveLock = false;
       return;
     }
@@ -315,8 +340,6 @@ export class LessonCardComponent {
       duration: finalDuration,
       isFree: false
     };
-
-    console.log('CREATE LESSON PAYLOAD', payload);
 
     this.isSaving = true;
     this.cdr.markForCheck();

@@ -18,53 +18,94 @@
         Lesson Title *
       </label>
 
-      <input type="text" formControlName="title" class="w-full px-4 py-2.5 rounded-lg border
-         focus:outline-none
-         focus:ring-[var(--color-primary)]
-         focus:border-[var(--color-primary)]" [ngClass]="{
-    'border-red-500': lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
-    'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched)
-  }" />
+      <input type="text" 
+             formControlName="title" 
+             placeholder="Enter lesson title..."
+             class="w-full px-4 py-2.5 rounded-lg border
+                    focus:outline-none
+                    focus:ring-2 focus:ring-[var(--color-primary)]
+                    focus:border-[var(--color-primary)]
+                    transition-all duration-200" 
+             [ngClass]="{
+               'border-red-500 bg-red-50': lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
+               'border-green-500': lessonForm.get('title')?.valid && lessonForm.get('title')?.touched,
+               'border-gray-300': lessonForm.get('title')?.untouched
+             }" />
 
-      <span *ngIf="lessonForm.get('title')?.hasError('required') && lessonForm.get('title')?.touched"
-        class="text-xs text-red-500">
-        Title is required
-      </span>
-
-      <span *ngIf="lessonForm.get('title')?.hasError('pattern') && lessonForm.get('title')?.touched"
-        class="text-xs text-red-500 block mt-1">
-        Title cannot be empty spaces
-      </span>
-
-      <p *ngIf="!(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1 block">
-        Lesson title cannot be empty spaces.
-      </p>
+      @if (lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) {
+        @if (lessonForm.get('title')?.hasError('required')) {
+          <span class="text-xs text-red-500 flex items-center gap-1">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+            Title is required
+          </span>
+        }
+        @if (lessonForm.get('title')?.hasError('pattern')) {
+          <span class="text-xs text-red-500 flex items-center gap-1">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+            Title cannot be empty spaces
+          </span>
+        }
+      } @else if (lessonForm.get('title')?.valid && lessonForm.get('title')?.touched) {
+        <span class="text-xs text-green-600 flex items-center gap-1">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
+          Title looks good
+        </span>
+      } @else {
+        <p class="text-xs text-[var(--color-text-secondary)]">
+          Enter a descriptive title for this lesson
+        </p>
+      }
     </div>
 
 
     <!-- VIDEO -->
     <div class="space-y-4">
+      <label class="text-xs font-bold uppercase text-gray-700">
+        Lesson Video *
+      </label>
 
-      <!-- NO VIDEO -->
       <!-- NO VIDEO -->
       <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile"
-        class="p-8 border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer flex flex-col items-center justify-center"
+        class="p-8 border-2 border-dashed rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer flex flex-col items-center justify-center"
+        [ngClass]="{
+          'border-red-300 bg-red-50': lessonForm.touched && !isVideoValid,
+          'border-[var(--color-border)]': !lessonForm.touched || isVideoValid
+        }"
         (click)="fileInput.click()">
 
-        <mat-icon class="text-5xl text-[var(--color-text-secondary)]">
+        <mat-icon class="text-5xl" 
+          [ngClass]="{
+            'text-red-400': lessonForm.touched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
+          }">
           cloud_upload
         </mat-icon>
 
-        <div class="text-sm mt-3 text-[var(--color-text-secondary)]">
+        <div class="text-sm mt-3"
+          [ngClass]="{
+            'text-red-600': lessonForm.touched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
+          }">
           Drag &amp; drop or click to upload lesson video
         </div>
 
-        <div class="mt-3 text-sm text-[var(--color-primary)] font-medium">
+        <div class="mt-3 text-sm font-medium"
+          [ngClass]="{
+            'text-red-600': lessonForm.touched && !isVideoValid,
+            'text-[var(--color-primary)]': !lessonForm.touched || isVideoValid
+          }">
           Browse video
         </div>
 
         <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
       </div>
+
+      @if (lessonForm.touched && !isVideoValid && !selectedVideoFile) {
+        <span class="text-xs text-red-500 flex items-center gap-1">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+          Video is required for this lesson
+        </span>
+      }
 
       <!-- SELECTED FILE + PREVIEW -->
       <div *ngIf="selectedVideoFile"
@@ -132,8 +173,12 @@
     <div class="pt-4">
 
       <div class="pt-4">
-        <app-action-bar [actionLabel]="isUpdateMode ? 'Update Lesson' : 'Create Lesson'" [actionIcon]="'save'"
-          [loading]="isSaving" [disabled]="lessonForm.invalid || isUploading || isSaving" (action)="saveLesson()">
+        <app-action-bar 
+          [actionLabel]="getButtonLabel()" 
+          [actionIcon]="'save'"
+          [loading]="isSaving" 
+          [disabled]="shouldDisableButton" 
+          (action)="saveLesson()">
         </app-action-bar>
       </div>
 

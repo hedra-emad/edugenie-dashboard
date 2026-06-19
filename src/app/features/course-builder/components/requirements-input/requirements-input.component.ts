@@ -20,18 +20,33 @@ export class RequirementsInputComponent {
   }
 
   addRequirement() {
-    this.requirementsArray.push(
-      this.fb.control('', [
-        Validators.required,
-        Validators.pattern(/.*\S.*/)
-      ])
-    );
-
+    const newControl = this.fb.control('', [
+      Validators.required,
+      Validators.pattern(/.*\S.*/)
+    ]);
+    
+    this.requirementsArray.push(newControl);
     this.requirementsArray.markAsDirty();
+    
+    // Focus the new input after a short delay
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('app-requirements-input input[type="text"]');
+      const lastInput = inputs[inputs.length - 1] as HTMLInputElement;
+      if (lastInput) {
+        lastInput.focus();
+      }
+    }, 100);
   }
 
   removeRequirement(index: number) {
-    this.requirementsArray.removeAt(index);
-    this.requirementsArray.markAsDirty();
+    if (this.requirementsArray.length > 0) {
+      this.requirementsArray.removeAt(index);
+      this.requirementsArray.markAsDirty();
+    }
+  }
+
+  // Helper method to check if requirement should show error
+  shouldShowRequirementError(control: FormControl): boolean {
+    return control.invalid && (control.touched || control.dirty);
   }
 }
