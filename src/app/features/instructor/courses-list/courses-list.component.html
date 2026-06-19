@@ -41,7 +41,6 @@
 } @else {
 <div class="page-wrapper" id="page-top">
 
-
   <div class="page-header">
     <div>
       <h1 class="page-title">My Courses</h1>
@@ -50,87 +49,114 @@
 
     <div class="header-badge">
       <mat-icon>menu_book</mat-icon>
-      <span>{{ courses().length }} courses</span>
+      <span>{{ getResultsText() }}</span>
     </div>
   </div>
 
+  <!-- New Filter Bar Component -->
+  <app-filter-bar
+    [config]="filterConfig"
+    placeholder="Search courses..."
+    (filterChange)="onFilterChange($event)"
+    (clearFilters)="onClearFilters()">
+  </app-filter-bar>
 
-  <div class="courses-grid">
-    @for (course of pagedCourses; track course._id) {
-    <mat-card class="course-card"
-      [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
+  <!-- Results Summary (if filtered) -->
+  @if (filteredCourses().length !== courses().length) {
+    <div class="results-summary">
+      <mat-icon>filter_list</mat-icon>
+      <span>Showing {{ filteredCourses().length }} of {{ courses().length }} courses</span>
+      @if (currentFilters().searchTerm) {
+        <span class="search-highlight">for "{{ currentFilters().searchTerm }}"</span>
+      }
+    </div>
+  }
 
-      <!-- Thumbnail with Gradient Overlay -->
-      <div class="card-thumbnail-wrap">
-        <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
-          [alt]="course.title" class="card-thumbnail" />
-        <div class="thumbnail-overlay"></div>
 
-        <!-- Hover Overlay -->
-        <div class="thumbnail-hover-overlay">
-          <mat-icon>visibility</mat-icon>
-          <span>View Course</span>
-        </div>
-
-        <!-- Badges -->
-        <div class="badge-container top-right">
-          <span class="status-badge"
-            [ngClass]="(course.courseStatus | lowercase) === 'published' ? 'status-published' : (course.courseStatus | lowercase) === 'draft' ? 'status-draft' : 'status-under-review'">
-            <mat-icon class="status-icon">{{ (course.courseStatus | lowercase) === 'published' ? 'check_circle' :
-              'edit_note' }}</mat-icon>
-            {{ (course.courseStatus | lowercase) === 'published' ? 'Published' : (course.courseStatus | lowercase) ===
-            'draft' ? 'Draft' : 'Under Review' }}
-          </span>
-        </div>
-
-        <div class="badge-container bottom-left">
-          <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
-            {{ course.level }}
-          </span>
-        </div>
+  <!-- Courses Grid -->
+  @if (filteredCourses().length === 0 && (currentFilters().searchTerm.trim() || currentFilters().selectedStatuses.length > 0 || currentFilters().selectedLevels.length > 0 || currentFilters().selectedPriceFilter !== 'all')) {
+    <!-- No Filter Results -->
+    <div class="state-container">
+      <div class="empty-box">
+        <mat-icon class="empty-icon">filter_list_off</mat-icon>
+        <p class="empty-title">No courses match your filters</p>
+        <p class="empty-sub">Try adjusting your filters or search terms to find courses.</p>
+        <button mat-flat-button color="primary" (click)="onClearFilters()">
+          <mat-icon>clear_all</mat-icon> Clear All Filters
+        </button>
       </div>
+    </div>
+  } @else {
+    <div class="courses-grid">
+      @for (course of pagedCourses; track course.id) {
+      <mat-card class="course-card"
+        [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
 
-      <mat-card-content class="card-body">
-        <h2 class="course-title">{{ course.title }}</h2>
-        <p class="course-description">{{ course.description }}</p>
+        <!-- Thumbnail with Gradient Overlay -->
+        <div class="card-thumbnail-wrap">
+          <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
+            [alt]="course.title" class="card-thumbnail" />
+          <div class="thumbnail-overlay"></div>
 
-        <div class="price-row">
-          <div>
-            <span class="price" *ngIf="course.price > 0">
-              ${{ course.price | number:'1.2-2' }}
-            </span>
-            <span class="price free" *ngIf="course.price === 0">Free</span>
+          <!-- Hover Overlay -->
+          <div class="thumbnail-hover-overlay">
+            <mat-icon>visibility</mat-icon>
+            <span>View Course</span>
           </div>
 
-          <button mat-flat-button color="primary" (click)="editCourse(course._id)">
-            Edit
-          </button>
-        </div>
-      </mat-card-content>
+          <!-- Badges -->
+          <div class="badge-container top-right">
+            <app-badge [status]="getCourseStatus(course.courseStatus)"></app-badge>
+          </div>
 
-      <div class="card-divider"></div>
-
-      <mat-card-footer class="card-footer">
-        <div class="stat-item">
-          <mat-icon>group</mat-icon>
-          <span>{{ course.totalEnrollments }} enrolled</span>
+          <div class="badge-container bottom-left">
+            <span class="level-badge" [ngClass]="'level-' + course.level.toLowerCase()">
+              {{ course.level }}
+            </span>
+          </div>
         </div>
 
-        <div class="stat-item">
-          <mat-icon>library_books</mat-icon>
-          <span>{{ course.totalLessons }} lessons</span>
-        </div>
+        <mat-card-content class="card-body">
+          <h2 class="course-title">{{ course.title }}</h2>
+          <p class="course-description">{{ course.description }}</p>
 
-        <div class="stat-item">
-          <mat-icon>schedule</mat-icon>
-          <span>{{ course.totalHours }}h</span>
-        </div>
-      </mat-card-footer>
+          <div class="price-row">
+            <div>
+              <span class="price" *ngIf="course.price > 0">
+                ${{ course.price | number:'1.2-2' }}
+              </span>
+              <span class="price free" *ngIf="course.price === 0">Free</span>
+            </div>
 
-    </mat-card>
-    }
+            <button mat-flat-button color="primary" (click)="editCourse(course.id)">
+              Edit
+            </button>
+          </div>
+        </mat-card-content>
 
-  </div>
+        <div class="card-divider"></div>
+
+        <mat-card-footer class="card-footer">
+          <div class="stat-item">
+            <mat-icon>group</mat-icon>
+            <span>{{ course.totalEnrollments }} enrolled</span>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>library_books</mat-icon>
+            <span>{{ course.totalLessons }} lessons</span>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ course.totalHours }}h</span>
+          </div>
+        </mat-card-footer>
+
+      </mat-card>
+      }
+    </div>
+  }
 
   <nav *ngIf="totalPages > 1" class="flex justify-center items-center gap-3 mt-8">
 

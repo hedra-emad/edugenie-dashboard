@@ -115,7 +115,7 @@ export class LessonBuilder implements OnInit {
           lessons.forEach((lesson: Lesson) => {
             this.lessonsArray.push(
               this.fb.group({
-                id: [lesson.id],
+                id: [lesson.id || (lesson as any)._id || null],
                 title: [lesson.title, Validators.required],
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],

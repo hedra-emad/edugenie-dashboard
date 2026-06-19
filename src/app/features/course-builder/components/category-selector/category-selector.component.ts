@@ -51,9 +51,11 @@ export class CategorySelectorComponent implements OnInit {
   }
 
   get selectedCategoryName(): string {
+    const val = this.control.value;
+    if (!val) return '';
     return (
       this.availableCategories.find(
-        c => (c.id || c._id) === this.control.value
+        c => String(c.id || c._id) === String(val)
       )?.name || ''
     );
   }

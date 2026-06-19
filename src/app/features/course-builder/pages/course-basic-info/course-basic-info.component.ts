@@ -230,9 +230,17 @@ export class CourseBasicInfoComponent {
       title: course.title,
       description: course.description,
       thumbnail: course.thumbnail,
-      level: course.level as CourseLevel,
-      category: course.categoryId
-    }, { emitEvent: false });
+      level: course.level,
+      category:
+        course.categoryId?._id ||
+        course.categoryId?.id ||
+        course.categoryId ||
+        course.category?._id ||
+        course.category?.id ||
+        course.category
+    });
+
+    console.log(this.courseForm.get('category')?.value);
 
     if (course.thumbnail) {
       this.thumbnailPreview.set(course.thumbnail);
@@ -268,7 +276,7 @@ export class CourseBasicInfoComponent {
     }
 
     if (this.mode() === 'update') {
-      return this.courseForm.invalid && !this.hasChanges();
+      return this.courseForm.invalid;
     }
 
     return false;
@@ -395,7 +403,7 @@ export class CourseBasicInfoComponent {
     const categoryId =
       typeof formValue.category === 'string'
         ? formValue.category
-        : (formValue.category as any)?._id;
+        : (formValue.category as any)?._id || (formValue.category as any)?.id;
 
     const payload: any = {
       title: formValue.title,
@@ -409,6 +417,7 @@ export class CourseBasicInfoComponent {
     const upload$ = this.selectedThumbnailFile
       ? this.cloudinaryService.uploadThumbnail(
         this.selectedThumbnailFile,
+        this.courseId!,
         this.existingThumbnailPublicId,
       )
       : null;
@@ -453,24 +462,22 @@ export class CourseBasicInfoComponent {
   }
 
   createCourse() {
-    // 1) validation
+    // 1) Validate form + thumbnail presence
     if (this.courseForm.invalid || !this.selectedThumbnailFile) {
       this.courseForm.markAllAsTouched();
-
       if (!this.selectedThumbnailFile) {
         this.imageError = 'Thumbnail is required';
       }
-
       return;
     }
 
-    // 2) loading
+    // 2) Set loading state
     this.status.set('saving');
     this.isSaving.set(true);
 
     const form = this.courseForm.getRawValue();
 
-    // 3) strict guard (important)
+    // 3) Strict guard
     if (!form.title || !form.description || !form.level || !form.category) {
       this.courseForm.markAllAsTouched();
       this.status.set('idle');
@@ -478,73 +485,97 @@ export class CourseBasicInfoComponent {
       return;
     }
 
-    // 4) SAFE payload (NO TS ERRORS)
-    const payload: CreateCoursePayload = {
-      title: form.title?.trim(),
-      description: form.description?.trim(),
-
-      level: form.level as CourseLevel,
-
-      categoryId: form.category as string,
-
-      goals: (form.goals || []).map((g: any) =>
-        typeof g === 'string' ? g : g?.value
-      ),
-
-      requirements: (form.requirements || []).map((r: any) =>
-        typeof r === 'string' ? r : r?.value
-      ),
-
-      thumbnail: '',
-    };
-
-    // 5) upload image
-    this.cloudinaryService.uploadThumbnail(this.selectedThumbnailFile!)
+    // ─────────────────────────────────────────────────────────
+    // PHASE 1: Stage thumbnail in pending folder to get a valid
+    //          URL (backend requires non-empty URL to create course)
+    // ─────────────────────────────────────────────────────────
+    this.cloudinaryService
+      .uploadThumbnail(this.selectedThumbnailFile!)   // no courseId → pending folder
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (uploadRes) => {
-          payload.thumbnail = uploadRes.secure_url;
-          payload.thumbnailPublicId = uploadRes.public_id;
-          this.existingThumbnailPublicId = uploadRes.public_id;
-          this.existingThumbnailPublicId = uploadRes.public_id;
-          // 6) create course API
+        next: (stagingRes) => {
+          const stagingPublicId = stagingRes.public_id;
+
+          // PHASE 2: Create course with the staging thumbnail URL
+          const payload: CreateCoursePayload = {
+            title: form.title!.trim(),
+            description: form.description!.trim(),
+            level: form.level as CourseLevel,
+            categoryId: form.category as string,
+            goals: (form.goals || []).map((g: any) =>
+              typeof g === 'string' ? g : g?.value
+            ),
+            requirements: (form.requirements || []).map((r: any) =>
+              typeof r === 'string' ? r : r?.value
+            ),
+            thumbnail: stagingRes.secure_url,
+            thumbnailPublicId: stagingRes.public_id,
+          };
+
           this.coursesService.createCourse(payload)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
               next: (course) => {
-
-                this.status.set('ready');
-                this.isSaving.set(false);
-
-                // switch to update mode
                 this.courseId = course.id;
-                this.mode.set('update');
 
-                // reset baseline (fix Continue button)
-                this.initialValue = this.normalize(this.courseForm.getRawValue());
-                this.hasChanges.set(false);
+                // PHASE 3: Re-upload to correct courseId folder,
+                //          delete staging asset, patch course with final URL
+                this.cloudinaryService
+                  .uploadThumbnail(
+                    this.selectedThumbnailFile!,
+                    this.courseId,          // now we have the real courseId
+                    stagingPublicId,        // delete the pending asset after upload
+                  )
+                  .pipe(takeUntilDestroyed(this.destroyRef))
+                  .subscribe({
+                    next: (finalRes) => {
+                      this.existingThumbnailPublicId = finalRes.public_id;
 
-                this.setBaseline();
-
-                this.courseCreatedEvent.emit(course.id);
-                this.toastr.success('Course created successfully');
+                      this.coursesService
+                        .updateCourse(this.courseId!, {
+                          thumbnail: finalRes.secure_url,
+                          thumbnailPublicId: finalRes.public_id,
+                        })
+                        .pipe(takeUntilDestroyed(this.destroyRef))
+                        .subscribe({
+                          next: () => this.finalizeCourseCreation(course.id),
+                          error: () => this.finalizeCourseCreation(course.id), // non-blocking
+                        });
+                    },
+                    error: (err) => {
+                      // Staging URL is still valid — course works, just folder is not ideal
+                      console.error('PHASE 3 RE-UPLOAD ERROR:', err);
+                      this.existingThumbnailPublicId = stagingPublicId;
+                      this.finalizeCourseCreation(course.id);
+                    }
+                  });
               },
-
               error: (err) => {
                 console.error('CREATE COURSE ERROR:', err);
-                this.status.set('ready');
+                this.status.set('idle');
                 this.isSaving.set(false);
               }
             });
         },
-
         error: (err) => {
-          console.error('UPLOAD ERROR:', err);
-          this.status.set('ready');
+          console.error('STAGING UPLOAD ERROR:', err);
+          this.status.set('idle');
           this.isSaving.set(false);
-          this.imageError = 'Failed to upload image';
+          this.imageError = 'Failed to upload thumbnail';
         }
       });
+  }
+
+  /** Shared finalization after all phases of course creation succeed */
+  private finalizeCourseCreation(courseId: string) {
+    this.status.set('ready');
+    this.isSaving.set(false);
+    this.mode.set('update');
+    this.initialValue = this.normalize(this.courseForm.getRawValue());
+    this.hasChanges.set(false);
+    this.setBaseline();
+    this.courseCreatedEvent.emit(courseId);
+    this.toastr.success('Course created successfully');
   }
 
   formatLevel(level: string): string {

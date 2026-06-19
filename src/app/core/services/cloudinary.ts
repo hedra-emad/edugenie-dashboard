@@ -1,60 +1,3 @@
-// import { Injectable, inject } from '@angular/core';
-// import { HttpClient } from '@angular/common/http';
-// import { environment } from '../../../environments/environment'
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class CloudinaryService {
-
-//   private http = inject(HttpClient);
-
-//   private cloudName = 'dxeoqi3kb';
-//   private uploadPreset = 'edugenie_avatar';
-
-// uploadImage(file: File | Blob) {
-//   const formData = new FormData();
-
-
-//   formData.append('file', file);
-//   formData.append('upload_preset', this.uploadPreset);
-
-//   return this.http.post<{ secure_url: string; public_id: string }>(
-//     `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
-//     formData
-//   );
-// }
-
-//   uploadThumbnail(file: File) {
-//     const formData = new FormData();
-
-//     formData.append('file', file);
-
-//     // THIS MUST BE UPLOAD PRESET NAME
-//     formData.append('upload_preset', environment.thumbnailUploadPreset);
-
-//     return this.http.post<{ secure_url: string; public_id: string }>(
-//       `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
-//       formData
-//     );
-//   }
-
-//   uploadVideo(file: File) {
-//     console.log('upload preset =', environment.lessonUploadPreset);
-
-//     const formData = new FormData();
-
-//     formData.append('file', file);
-//     formData.append('upload_preset', environment.lessonUploadPreset);
-
-//     return this.http.post<any>(
-//       `https://api.cloudinary.com/v1_1/${this.cloudName}/video/upload`,
-//       formData
-//     );
-//   }
-
-// }
-
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -144,9 +87,13 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   uploadThumbnail(
     file: File,
+    courseId?: string | null,
     oldPublicId?: string | null,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = 'edugenie/courses/thumbnails';
+    // courseId is unknown during initial creation → stage in 'pending' subfolder
+    const folder = courseId
+      ? `edugenie/courses/thumbnails/${courseId}`
+      : 'edugenie/courses/thumbnails/pending';
 
     return this.getSignature(folder).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName }) => {
@@ -179,19 +126,17 @@ export class CloudinaryService {
 
   // ─────────────────────────────────────────────────────────────
   // PUBLIC: upload lesson video (signed)
-  // Folder path must match backend webhook parser exactly:
-  // courses/{courseId}/sections/{sectionId}/lessons/{lessonId}
+  // Videos are stored in the section folder:
+  // edugenie/courses/videos/{courseId}/sections/{sectionId}
   // ─────────────────────────────────────────────────────────────
   uploadVideo(
     file: File,
     courseId: string,
     sectionId: string,
-    lessonId: string,
   ): Observable<CloudinaryUploadResponse> {
-    const folder = 'edugenie/courses/videos';
+    const folder = `edugenie/courses/videos/${courseId}/sections/${sectionId}`;
 
-    const context =
-      `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`;
+    const context = `courseId=${courseId}|sectionId=${sectionId}`;
 
     return this.getSignature(folder, context).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName }) => {
@@ -201,8 +146,7 @@ export class CloudinaryService {
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
-
-        formData.append('context', `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`);
+        formData.append('context', context);
 
         return this.http.post<CloudinaryUploadResponse>(
           `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
