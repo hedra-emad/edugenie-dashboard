@@ -1,0 +1,114 @@
+<div class="categories-page">
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1 class="page-title">Categories Management</h1>
+      <p class="page-subtitle">Organize and structure the platform's learning catalog.</p>
+    </div>
+    <button class="btn-primary" (click)="openCreateModal()">
+      <mat-icon>add</mat-icon>
+      New Category
+    </button>
+  </div>
+
+  <!-- Loading Skeleton -->
+  <div class="skeleton-layout" *ngIf="loading; else mainContent">
+    <div class="skeleton-card">
+      <div class="skeleton-line" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+  </div>
+
+  <ng-template #mainContent>
+    <div class="main-card">
+      <div class="card-header">
+        <div class="search-wrapper">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input type="text" class="search-input" placeholder="Search categories..." [(ngModel)]="searchQuery" />
+        </div>
+        <span class="meta-count">{{ filteredCategories.length }} Categories</span>
+      </div>
+
+      <div class="table-container" *ngIf="filteredCategories.length > 0; else emptyState">
+        <table>
+          <thead>
+            <tr>
+              <th>Category Name</th>
+              <th>Courses</th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let category of filteredCategories; trackBy: trackById">
+              <td>
+                <div class="cat-name-cell">
+                  <mat-icon class="cat-icon">folder</mat-icon>
+                  <span class="cat-name">{{ category.name }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="course-count-badge">{{ category.courseCount || 0 }}</span>
+              </td>
+              <td class="actions-col">
+                <button class="action-btn edit-btn" (click)="openEditModal(category)" title="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="action-btn delete-btn" (click)="openDeleteModal(category)" title="Delete">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="professional-empty-state">
+          <mat-icon class="empty-icon">category</mat-icon>
+          <h3>No Categories Found</h3>
+          <p>{{ searchQuery ? 'Try adjusting your search.' : 'Create your first category to get started.' }}</p>
+          <button class="btn-secondary" (click)="openCreateModal()" *ngIf="!searchQuery">Add Category</button>
+        </div>
+      </ng-template>
+    </div>
+  </ng-template>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showCategoryModal" (click)="closeCategoryModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalMode === 'create' ? 'Create New Category' : 'Edit Category' }}</h3>
+        <button class="modal-close" (click)="closeCategoryModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" class="form-input" [(ngModel)]="categoryNameInput" placeholder="e.g. Web Development" (keyup.enter)="saveCategory()" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeCategoryModal()">Cancel</button>
+        <button class="btn-confirm" (click)="saveCategory()" [disabled]="!categoryNameInput.trim()">
+          {{ modalMode === 'create' ? 'Create' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header reject-header">
+        <h3>Delete Category</h3>
+        <button class="modal-close" (click)="closeDeleteModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{ categoryToDelete?.name }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. Courses using this category may be affected.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn-confirm-reject" (click)="confirmDelete()">Delete Category</button>
+      </div>
+    </div>
+  </div>
+
+</div>

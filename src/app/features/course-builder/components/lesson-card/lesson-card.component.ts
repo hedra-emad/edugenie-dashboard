@@ -81,15 +81,59 @@ export class LessonCardComponent {
   videoState: VideoState = 'empty';
 
   get isUpdateMode(): boolean {
-
     const value = this.lessonForm.get('id')?.value;
-
     return !!value;
   }
 
   get isVideoValid(): boolean {
     const hasExistingVideo = !!this.lessonForm.get('videoUrl')?.value;
     return !!this.selectedVideoFile || hasExistingVideo;
+  }
+
+  get isFormValid(): boolean {
+    const titleValid = this.lessonForm.get('title')?.valid;
+    const hasVideo = this.isVideoValid;
+    return !!(titleValid && hasVideo);
+  }
+
+  get hasFormChanges(): boolean {
+    return this.lessonForm.dirty || !!this.selectedVideoFile;
+  }
+
+  get shouldDisableButton(): boolean {
+    // Always disable if uploading or saving
+    if (this.isUploading || this.isSaving) {
+      return true;
+    }
+
+    // For create mode: disable if form is invalid or no video
+    if (!this.isUpdateMode) {
+      return !this.isFormValid;
+    }
+
+    // For update mode: disable if no changes made or form is invalid
+    return !this.hasFormChanges || !this.isFormValid;
+  }
+
+  getButtonLabel(): string {
+    if (this.isSaving) {
+      return this.isUpdateMode ? 'Updating...' : 'Creating...';
+    }
+
+    if (this.isUploading) {
+      return 'Uploading...';
+    }
+
+    if (!this.isUpdateMode) {
+      // Create mode
+      return 'Create Lesson';
+    } else {
+      // Update mode
+      if (!this.hasFormChanges) {
+        return 'No Changes';
+      }
+      return 'Update Lesson';
+    }
   }
 
   // ---------------- FILE CHANGE ----------------
@@ -99,6 +143,9 @@ export class LessonCardComponent {
     if (!input.files?.length) return;
 
     const file = input.files[0];
+
+    // Mark form as touched to show validation
+    this.lessonForm.markAsTouched();
 
     this.videoErrorMessage = '';
     this.uploadError = false;
@@ -118,12 +165,13 @@ export class LessonCardComponent {
         this.selectedVideoUrl = null;
         this.lessonForm.patchValue({ videoDuration: 0 });
 
-        this.videoErrorMessage = 'Video must not exceed 10 seconds';
+        this.videoErrorMessage = 'Video must not exceed 10 minutes';
         this.videoState = 'error';
 
         input.value = '';
+        this.cdr.markForCheck();
         return;
-      }
+      };
 
       this.selectedVideoFile = file;
 
@@ -132,7 +180,7 @@ export class LessonCardComponent {
       });
 
       this.videoState = 'selected';
-
+      this.cdr.markForCheck();
 
     } catch (err) {
       console.error(err);
@@ -143,6 +191,7 @@ export class LessonCardComponent {
       this.videoState = 'error';
 
       input.value = '';
+      this.cdr.markForCheck();
     }
   }
 
@@ -177,17 +226,18 @@ export class LessonCardComponent {
     this.videoErrorMessage = '';
 
     this.videoState = 'empty';
+    this.cdr.markForCheck();
   }
 
   // ---------------- SAVE ----------------
   saveLesson() {
     // Protection against repeated clicks during upload or save
-    if (this.saveLock || this.isUploading) return;
+    if (this.saveLock || this.isUploading || this.shouldDisableButton) return;
 
     this.saveLock = true;
     this.lessonForm.markAllAsTouched();
 
-    if (this.lessonForm.invalid || !this.isVideoValid) {
+    if (!this.isFormValid) {
       this.saveLock = false;
       return;
     }
@@ -205,6 +255,8 @@ export class LessonCardComponent {
         if (duration > this.MAX_DURATION) {
           this.videoErrorMessage = 'Video must not exceed limit';
           this.selectedVideoFile = null;
+          this.saveLock = false;
+          this.cdr.markForCheck();
           return;
         }
 
@@ -219,45 +271,55 @@ export class LessonCardComponent {
   private startUpload() {
     this.isUploading = true;
     this.videoState = 'uploading';
-
-    const lessonId = this.lessonForm.get('id')?.value ?? 'new';
+    this.cdr.markForCheck();
 
     this.cloudinaryService.uploadVideo(
       this.selectedVideoFile!,
       this.courseId,
       this.sectionId,
-      lessonId,
     )
       .pipe(
         finalize(() => {
           this.isUploading = false;
+          this.cdr.markForCheck();
         })
       )
-
       .subscribe({
         next: (res) => {
+          // console.log('UPLOAD SUCCESS', res);
 
-          this.isUploading = false;
-
-          this.lessonForm.patchValue({
+          const patchData: any = {
             videoUrl: res.secure_url,
             videoPublicId: res.public_id
-          });
+          };
+
+          if (res.duration && isFinite(res.duration)) {
+            patchData.videoDuration = Math.max(1, Math.round(res.duration));
+          }
+
+          this.lessonForm.patchValue(patchData);
           this.durationChanged.emit();
 
           this.selectedVideoFile = null;
+          if (this.selectedVideoUrl) {
+            URL.revokeObjectURL(this.selectedVideoUrl);
+          }
           this.selectedVideoUrl = null;
 
           this.videoState = 'uploaded';
-
+          this.cdr.markForCheck();
 
           this.createOrUpdateLesson();
         },
         error: (err) => {
+          console.log('UPLOAD FAILED', err);
           console.error(err);
           this.isUploading = false;
           this.videoState = 'error';
           this.uploadError = true;
+          this.saveLock = false;
+          this.toastr.error('Video upload failed');
+          this.cdr.markForCheck();
         }
       });
   }
@@ -266,15 +328,21 @@ export class LessonCardComponent {
   private createOrUpdateLesson() {
     const lessonId = this.lessonForm.get('id')?.value;
 
+    let dur = Number(this.lessonForm.get('videoDuration')?.value);
+    if (!isFinite(dur) || isNaN(dur)) dur = 0;
+    const finalDuration = Math.max(1, Math.round(dur));
+
     const payload = {
       title: this.lessonForm.get('title')?.value,
       videoUrl: this.lessonForm.get('videoUrl')?.value,
       videoPublicId: this.lessonForm.get('videoPublicId')?.value,
-      videoDuration: this.lessonForm.get('videoDuration')?.value,
-      order: this.index
+      videoDuration: finalDuration,
+      duration: finalDuration,
+      isFree: false
     };
 
     this.isSaving = true;
+    this.cdr.markForCheck();
 
     const req = lessonId
       ? this.lessonsService.updateLesson(this.courseId, this.sectionId, lessonId, payload)
@@ -284,6 +352,7 @@ export class LessonCardComponent {
       finalize(() => {
         this.isSaving = false;
         this.saveLock = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: (res: any) => {
@@ -315,6 +384,9 @@ export class LessonCardComponent {
           }
         }
 
+        this.lessonForm.markAsPristine();
+        this.lessonForm.markAsUntouched();
+
         this.toastr.success(
           lessonId
             ? 'Lesson updated successfully'
@@ -322,6 +394,7 @@ export class LessonCardComponent {
         );
 
         this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);

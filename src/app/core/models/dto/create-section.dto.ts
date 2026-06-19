@@ -3,5 +3,5 @@ export interface CreateSectionDto {
   description?: string;
   order: number;
   expectedOutcomes?: string[];
-  isBasicSection?: boolean;
+  price?: number | null;
 }

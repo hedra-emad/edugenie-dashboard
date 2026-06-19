@@ -5,6 +5,5 @@ export interface CreateLessonDto {
   videoPublicId?: string;
   duration?: number;
   videoDuration?: number;
-  order: number;
   isFree?: boolean;
 }

@@ -4,7 +4,8 @@ import {
   Output,
   EventEmitter,
   inject,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -33,6 +34,7 @@ import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-pan
 import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
+import { extractId } from '../../pages/section-builder/section-builder.component';
 
 @Component({
   selector: 'app-section-card',
@@ -98,6 +100,8 @@ export class SectionCardComponent {
     }
   }
 
+  private cdr = inject(ChangeDetectorRef);
+
   // ================= SAVE (CREATE / UPDATE) =================
   saveSection() {
     if (this.sectionForm.invalid) {
@@ -106,14 +110,14 @@ export class SectionCardComponent {
     }
     const form = this.sectionForm;
 
-    const sectionId = form.get('id')?.value;
+    const sectionId = extractId(form.get('id')?.value);
 
     const payload = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
       expectedOutcomes: this.expectedOutcomesArray.value
         .filter((o: string) => o?.trim()),
-      isBasicSection: form.get('isBasicSection')?.value,
+      price: form.get('price')?.value !== null ? Number(form.get('price')?.value) : null,
       order: this.index
     };
 
@@ -131,9 +135,9 @@ export class SectionCardComponent {
         const isNewSection = !sectionId;
 
         if (isNewSection) {
-          const createdSection = res[res.length - 1];
+          const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
 
-          const incomingId = createdSection?._id;
+          const incomingId = extractId(createdSection);
 
           if (incomingId) {
             if (!form.contains('id')) {
@@ -152,10 +156,12 @@ export class SectionCardComponent {
 
         form.markAsPristine();
         form.updateValueAndValidity();
+        this.cdr.markForCheck();
       },
 
       error: () => {
         this.isSaving = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -174,7 +180,8 @@ export class SectionCardComponent {
   }
 
   confirmDelete() {
-    const sectionId = this.sectionForm.get('id')?.value;
+    const rawId = this.sectionForm.get('id')?.value;
+    const sectionId = extractId(rawId);
 
     if (!sectionId) {
       this.delete.emit(this.index);
@@ -183,13 +190,14 @@ export class SectionCardComponent {
 
     this.isDeleting = true;
 
-    this.sectionsService.deleteSection(this.courseId, sectionId)
+    this.sectionsService.deleteSection(this.courseId, String(sectionId))
       .subscribe({
         next: () => {
           this.isDeleting = false;
           this.delete.emit(this.index);
         },
-        error: () => {
+        error: (err) => {
+          console.error('Delete error:', err);
           this.isDeleting = false;
           this.toastr.error('Delete failed');
         }
@@ -204,7 +212,8 @@ export class SectionCardComponent {
 
   // ================= NAVIGATION =================
   onGoToLessons() {
-    const sectionId = this.sectionForm.get('id')?.value;
+    const rawId = this.sectionForm.get('id')?.value;
+    const sectionId = extractId(rawId);
     if (!sectionId || !this.courseId) return;
 
     this.router.navigate([
@@ -217,7 +226,8 @@ export class SectionCardComponent {
   }
 
   onGoToQuiz() {
-    const sectionId = this.sectionForm.get('id')?.value;
+    const rawId = this.sectionForm.get('id')?.value;
+    const sectionId = extractId(rawId);
     if (!sectionId || !this.courseId) return;
 
     this.router.navigate([

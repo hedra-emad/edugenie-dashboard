@@ -19,8 +19,7 @@ export class InstructorCoursesService {
       .pipe(
         map((response) => response.data),
         tap((data) => {
-          console.log('✅ Real Fetched Data:', data);
         })
       );
-  }
+  } 
 }

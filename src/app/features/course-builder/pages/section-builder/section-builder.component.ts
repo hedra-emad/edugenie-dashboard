@@ -17,6 +17,7 @@ import { Course } from '../../../../core/models/course.model';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -29,6 +30,31 @@ export function maxArrayLength(max: number) {
     return null;
   };
 }
+
+export function extractId(val: any): string | null {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (typeof val.id === 'string') return val.id;
+  if (typeof val._id === 'string') return val._id;
+
+  const buf = val.buffer || val;
+  
+  // Node.js Buffer JSON serialization
+  if (buf && buf.type === 'Buffer' && Array.isArray(buf.data)) {
+    return buf.data.map((b: number) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Uint8Array or Buffer object
+  if (buf instanceof Uint8Array || (buf && typeof buf.byteLength === 'number' && typeof buf.slice === 'function')) {
+     return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+  }
+  
+  if (val.toString && typeof val.toString === 'function' && val.toString() !== '[object Object]') {
+      return val.toString();
+  }
+
+  return null;
+}
 @Component({
   selector: 'app-section-builder',
   standalone: true,
@@ -40,7 +66,8 @@ export function maxArrayLength(max: number) {
     BackButtonComponent,
     SectionCardComponent,
     AppLoader,
-    DragDropModule
+    DragDropModule,
+    EmptyStateComponent
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -151,10 +178,8 @@ export class SectionBuilderComponent implements OnInit {
 
   onSectionDeleted(index: number) {
     this.expandedSectionId = null;
-
-    setTimeout(() => {
-      this.sectionsArray.removeAt(index);
-    }, 150);
+    this.sectionsArray.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   onSectionCreated(sectionId: string) {
@@ -195,21 +220,21 @@ export class SectionBuilderComponent implements OnInit {
                 ) || []
               ),
 
-              // 👇 التعديل الجوهري هنا: تحويل كائنات الـ lessons إلى FormGroup منفصلة لكل درس
+
               lessons: this.fb.array(
                 (section.lessons || []).map((lesson: Lesson) =>
                   this.fb.group({
-                    id: [lesson.id || null], // تأكيد وجود حقل الـ id مستقبلاً من السيرفر
+                    id: [extractId((lesson as any)._id || lesson.id || lesson)],
                     title: [lesson.title || '', Validators.required],
                     videoUrl: [lesson.videoUrl || ''],
                     videoPublicId: [lesson.videoPublicId || ''],
                     videoDuration: [lesson.videoDuration || 0],
-                    expanded: [false] // حقل إضافي إذا كنت تستخدمه للتحكم بفتح وإغلاق العناصر
+                    expanded: [false]
                   })
                 )
               ),
 
-              id: [section.id],
+              id: [extractId((section as any)._id || section.id || section)],
               isSaving: [false],
               isDeleting: [false],
             })
@@ -218,7 +243,6 @@ export class SectionBuilderComponent implements OnInit {
 
         this.isLoading = false;
         this.cdr.detectChanges();
-        console.log('Sections loaded from course:', sections);
       },
       error: (err) => {
         console.error('Failed to load course sections:', err);
@@ -251,14 +275,22 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   private saveSectionOrder() {
-    const ids = this.sectionsArray.controls
-      .map(c => c.get('id')?.value)
-      .filter(Boolean);
+    const controls = this.sectionsArray.controls;
 
-    if (ids.length < 2) return;
+    const hasUnsaved = controls.some(c => !extractId(c.get('id')?.value));
+
+    if (hasUnsaved) {
+      // console.warn('Cannot reorder: there are unsaved sections');
+      return;
+    }
+
+    const ids = controls.map(c => extractId(c.get('id')!.value) as string);
 
     this.sectionsService.reorderSections(this.courseId, ids)
-      .subscribe({ error: err => console.error('Reorder failed', err) });
+      .subscribe({
+        next: res => console.log('Reorder OK', res),
+        error: err => console.error('Reorder failed', err)
+      });
   }
 
   get totalCourseDuration(): number {

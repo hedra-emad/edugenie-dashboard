@@ -5,6 +5,38 @@ import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { CourseBuilderPageComponent } from './features/course-builder/pages/course-builder-page/course-builder-page.component';
 
+const courseBuilderChildren: Routes = [
+  {
+    path: 'basic',
+    loadComponent: () =>
+      import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
+        .then(m => m.CourseBasicInfoComponent)
+  },
+  {
+    path: 'sections',
+    loadComponent: () =>
+      import('./features/course-builder/pages/section-builder/section-builder.component')
+        .then(m => m.SectionBuilderComponent)
+  },
+  {
+    path: 'sections/:sectionId/lessons',
+    loadComponent: () =>
+      import('./features/course-builder/pages/lesson-builder/lesson-builder')
+        .then(m => m.LessonBuilder)
+  },
+  {
+    path: 'sections/:sectionId/quiz-config',
+    loadComponent: () =>
+      import('./features/course-builder/pages/quiz-config/quiz-config.page')
+        .then(m => m.QuizConfigPageComponent)
+  },
+  {
+    path: '',
+    redirectTo: 'basic',
+    pathMatch: 'full'
+  }
+];
+
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
@@ -65,75 +97,18 @@ export const routes: Routes = [
       // -- YOUR COURSE BUILDER ROUTES MERGED WITH MAIN'S GUARDS --
       {
         path: 'course-builder',
-        component: CourseBuilderPageComponent,
         canActivate: [authGuard, roleGuard],
         data: { roles: ['instructor', 'admin'] },
         children: [
           {
-            path: 'basic',
-            loadComponent: () =>
-              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
-                .then(m => m.CourseBasicInfoComponent)
-          },
-          {
-            path: 'sections',
-            loadComponent: () =>
-              import('./features/course-builder/pages/section-builder/section-builder.component')
-                .then(m => m.SectionBuilderComponent)
-          },
-          {
-            path: 'sections/:sectionId/lessons',
-            loadComponent: () =>
-              import('./features/course-builder/pages/lesson-builder/lesson-builder')
-                .then(m => m.LessonBuilder)
-          },
-          {
-            path: 'sections/:sectionId/quiz-config',
-            loadComponent: () =>
-              import('./features/course-builder/pages/quiz-config/quiz-config.page')
-                .then(m => m.QuizConfigPageComponent)
-          },
-          {
             path: '',
-            redirectTo: 'basic',
-            pathMatch: 'full'
-          }
-        ]
-      },
-      {
-        path: 'course-builder/:courseId',
-        component: CourseBuilderPageComponent,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: ['instructor', 'admin'] },
-        children: [
-          {
-            path: 'basic',
-            loadComponent: () =>
-              import('./features/course-builder/pages/course-basic-info/course-basic-info.component')
-                .then(m => m.CourseBasicInfoComponent)
+            component: CourseBuilderPageComponent,
+            children: courseBuilderChildren
           },
           {
-            path: 'sections',
-            loadComponent: () =>
-              import('./features/course-builder/pages/section-builder/section-builder.component')
-                .then(m => m.SectionBuilderComponent)
-          },
-          {
-            path: 'sections/:sectionId/lessons',
-            loadComponent: () =>
-              import('./features/course-builder/pages/lesson-builder/lesson-builder')
-                .then(m => m.LessonBuilder)
-          },
-          {
-            path: 'sections/:sectionId/quiz-config',
-            loadComponent: () =>
-              import('./features/course-builder/pages/quiz-config/quiz-config.page')
-                .then(m => m.QuizConfigPageComponent)
-          },
-          {
-            path: '',
-            redirectTo: 'basic',
-            pathMatch: 'full'
+            path: ':courseId',
+            component: CourseBuilderPageComponent,
+            children: courseBuilderChildren
           }
         ]
       },
@@ -143,6 +118,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/pages/account-settings/account-settings.page')
             .then(m => m.AccountSettingsPageComponent)
+      },
+      {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/admin/notifications/notifications-page/notifications-page.component')
+            .then(m => m.NotificationsPageComponent)
       },
 
     ]
@@ -174,6 +156,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'courses/:id',
+        loadComponent: () =>
+          import('./features/admin/course-details/course-details-page/course-details-page.component').then(
+            (m) => m.CourseDetailsPageComponent
+          )
+      },
+      {
         path: 'users',
         loadComponent: () =>
           import('./features/admin/users/users.page').then((m) => m.AdminUsersPageComponent)
@@ -181,7 +170,12 @@ export const routes: Routes = [
       {
         path: 'categories',
         loadComponent: () =>
-          import('./features/admin/placeholders').then((m) => m.AdminCategoriesComponent)
+          import('./features/admin/categories/categories-page/categories-page.component').then((m) => m.CategoriesPageComponent)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/admin/notifications/notifications-page/notifications-page.component').then((m) => m.NotificationsPageComponent)
       },
       {
         path: 'reports',
@@ -204,5 +198,14 @@ export const routes: Routes = [
           import('./features/settings/pages/account-settings/account-settings.page').then((m) => m.AccountSettingsPageComponent)
       }
     ]
+  },
+  
+  // 404 Catch-all route - MUST be last
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found.page').then(
+        (m) => m.NotFoundPageComponent
+      )
   }
 ];
