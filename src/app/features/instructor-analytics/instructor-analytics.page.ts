@@ -33,6 +33,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
   analyticsData = signal<InstructorAnalyticsResponse | null>(null);
+  adminStatsData = signal<any>(null);
   isLoading = signal(true);
   hasError = signal(false);
   errorMsg = signal('');
@@ -58,7 +59,21 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
         this.isAdmin = user?.role === 'admin';
 
         if (this.isAdmin) {
-          this.isLoading.set(false);
+          this.isLoading.set(true);
+          this.analyticsService.getAdminStats()
+            .pipe(
+              takeUntilDestroyed(this.destroyRef),
+              finalize(() => this.isLoading.set(false))
+            )
+            .subscribe({
+              next: (data) => {
+                this.adminStatsData.set(data);
+              },
+              error: (err) => {
+                console.error('Failed to load admin stats', err);
+                // Keep UI static on error
+              }
+            });
         } else {
           this.isLoading.set(true);
           this.analyticsService.getStats()

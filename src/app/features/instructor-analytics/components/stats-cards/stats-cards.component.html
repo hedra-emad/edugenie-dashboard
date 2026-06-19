@@ -1,6 +1,7 @@
 <div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- 1. Total Earnings -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#EDE9FF] flex items-center justify-center shrink-0">
                 <mat-icon class="text-[var(--color-primary)]">payments</mat-icon>
@@ -8,15 +9,18 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Earnings</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.totalEarnings | number:'1.2-2' }}</h3>
-            <div class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 uppercase mt-2">
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.totalEarnings |
+                number:'1.2-2' }}</h3>
+            <div
+                class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 uppercase mt-2">
                 +14%
             </div>
         </div>
     </div>
 
     <!-- 2. Total Students -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#F3E8FF] flex items-center justify-center shrink-0">
                 <mat-icon class="text-purple-600">groups</mat-icon>
@@ -24,15 +28,18 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Students</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents | number }}</h3>
-            <div class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents |
+                number }}</h3>
+            <div
+                class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
                 +52 New
             </div>
         </div>
     </div>
 
     <!-- 3. Pending Payouts -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#E0F7FF] flex items-center justify-center shrink-0">
                 <mat-icon class="text-[var(--color-secondary)]">pending_actions</mat-icon>
@@ -40,13 +47,15 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pending Payouts</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.pendingPayouts | number:'1.2-2' }}</h3>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.pendingPayouts |
+                number:'1.2-2' }}</h3>
             <div class="mt-2 h-[18px]"></div>
         </div>
     </div>
 
     <!-- 4. Next Payout Date -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
                 <mat-icon class="text-amber-500">event</mat-icon>
@@ -54,7 +63,8 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Next Payout</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.nextPayoutDate | date:'mediumDate' }}</h3>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.nextPayoutDate |
+                date:'mediumDate' }}</h3>
             <div class="mt-2 h-[18px]"></div>
         </div>
     </div>
