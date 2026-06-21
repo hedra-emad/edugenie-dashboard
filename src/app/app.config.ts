@@ -36,6 +36,18 @@ export const appConfig: ApplicationConfig = {
     provideToastr({
       positionClass: 'toast-bottom-left',
       preventDuplicates: true,
+      maxOpened: 3,
+      autoDismiss: true,
+      timeOut: 4000,
+      extendedTimeOut: 1000,
+      progressBar: true,
+      progressAnimation: 'increasing',
+      enableHtml: false,
+      closeButton: false,
+      tapToDismiss: true,
+      toastClass: 'ngx-toastr slide-in-left',
+      titleClass: 'toast-title',
+      messageClass: 'toast-message',
     }),
     provideCharts(withDefaultRegisterables()),
     {

@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject, DestroyRef, effect } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,10 +14,16 @@ import { CreateCoursePayload } from '../../../../core/models/course.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntil } from 'rxjs/operators';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
 import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+
+// Draft system imports
+import { DraftStateService } from '../../../../core/services/draft-state.service';
+import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
+import { FileDraftService } from '../../../../core/services/file-draft.service';
 
 @Component({
   selector: 'app-course-basic-info',
@@ -36,13 +42,19 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
   styleUrl: './course-basic-info.component.css'
 })
 
-export class CourseBasicInfoComponent {
+export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
   private coursesService = inject(CoursesService);
   router = inject(Router);
   private cloudinaryService = inject(CloudinaryService);
   isDragging = signal(false);
   private destroyRef = inject(DestroyRef);
+  private draftStateService = inject(DraftStateService);
+  private formDraftIntegration = inject(FormDraftIntegrationService);
+  private fileDraftService = inject(FileDraftService);
+  
+  // Lifecycle management
+  private destroy$ = new Subject<void>();
 
   private fb = inject(FormBuilder);
   isSaving = signal(false);
@@ -72,6 +84,16 @@ export class CourseBasicInfoComponent {
   private toastr = inject(ToastrService);
   parent = inject(CourseBuilderPageComponent, { optional: true });
 
+  // ================= Draft State =================
+  draftId: string = '';
+  hasDraftData = signal(false);
+
+  // Utility function to truncate names for toastr messages
+  private truncateName(name: string, maxLength: number = 40): string {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  }
+
   constructor() {
     effect(() => {
       const course = this.parent?.courseData();
@@ -80,6 +102,105 @@ export class CourseBasicInfoComponent {
         this.isLoading.set(false);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.cleanup();
+  }
+
+  isFormPopulated = false;
+  
+  private initializeDraftSystem() {
+    // Generate or get draft ID
+    this.draftId = this.formDraftIntegration.generateDraftId('course', undefined, this.courseId || undefined);
+
+    if (this.mode() === 'update' && !this.isFormPopulated) {
+      // In update mode, wait until form is populated with server data before connecting
+      return;
+    }
+
+    this.connectDraftSystem();
+  }
+
+  private connectDraftSystem() {
+    // Connect form to draft system
+    this.formDraftIntegration.connectForm(this.courseForm, {
+      draftId: this.draftId,
+      type: 'course',
+      excludeFields: [], // Don't exclude any fields for courses
+      fileFields: [{
+        fieldName: 'thumbnail',
+        uploadType: 'thumbnail',
+        validation: {
+          maxSize: 2 * 1024 * 1024, // 2MB
+          allowedTypes: ['image']
+        }
+      }],
+      autoSave: true,
+      autoSaveDelay: 1000
+    });
+
+    // Restore thumbnail file from draft if it exists
+    this.restoreThumbnailFromDraft();
+
+    // Monitor draft changes
+    this.draftStateService.getDraftChanges()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.updateDraftState();
+      });
+
+    // Initial draft state update
+    this.updateDraftState();
+  }
+
+  private restoreThumbnailFromDraft() {
+    const restoredFile = this.fileDraftService.getFileFromDraft(this.draftId, 'thumbnail');
+    if (restoredFile) {
+      this.selectedThumbnailFile = restoredFile;
+      this.hasThumbnail.set(true);
+      const previewUrl = this.fileDraftService.createPreviewUrl(this.draftId, 'thumbnail');
+      if (previewUrl) {
+        this.thumbnailPreview.set(previewUrl);
+      }
+    } else {
+      const draft = this.draftStateService.getDraft(this.draftId);
+      const thumbnailMetadata = draft?.files?.find(f => f.fieldName === 'thumbnail');
+      if (thumbnailMetadata && thumbnailMetadata.url) {
+        this.thumbnailPreview.set(thumbnailMetadata.url);
+        this.hasThumbnail.set(true);
+      }
+    }
+  }
+
+  private updateDraftState() {
+    this.hasDraftData.set(this.formDraftIntegration.hasDraftData(this.draftId));
+  }
+
+  private cleanup() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.formDraftIntegration.disconnectForm(this.draftId);
+
+    // If the user navigated away without making real changes,
+    // remove the course draft entry from localStorage so it doesn't persist.
+    if (!this.hasChanges()) {
+      this.draftStateService.removeDraft(this.draftId);
+    }
+  }
+
+  private clearDraftAfterSave() {
+    this.formDraftIntegration.clearDraft({
+      draftId: this.draftId,
+      type: 'course'
+    });
+    this.hasDraftData.set(false);
+
+    // In create mode, re-init so a fresh draft ID is generated for the next new course.
+    // In update mode, the draftId is the real courseId — no need to re-init.
+    if (this.mode() === 'create') {
+      this.initializeDraftSystem();
+    }
   }
 
   courseForm = this.fb.group({
@@ -102,12 +223,12 @@ export class CourseBasicInfoComponent {
 
     if (!id) {
       this.isLoading.set(false);
-      return;
+    } else {
+      this.courseId = id;
+      this.mode.set('update');
     }
 
-    this.courseId = id;
-    this.mode.set('update');
-
+    this.initializeDraftSystem();
     this.listenToArraysChanges();
   }
 
@@ -139,6 +260,24 @@ export class CourseBasicInfoComponent {
     // 2) ONLY IF VALID → SET STATE
     this.selectedThumbnailFile = file;
     this.hasThumbnail.set(true);
+
+    // Store file in draft system
+    this.fileDraftService.addFileToDraft(
+      this.draftId,
+      'thumbnail',
+      file,
+      {
+        maxSize: 2 * 1024 * 1024, // 2MB
+        allowedTypes: ['image']
+      }
+    ).subscribe({
+      next: (fileId) => {
+        console.log('Thumbnail stored in draft system:', fileId);
+      },
+      error: (error) => {
+        console.error('Failed to store thumbnail in draft:', error);
+      }
+    });
 
     this.courseForm.get('thumbnail')?.setValue(file.name);
     this.courseForm.get('thumbnail')?.markAsDirty();
@@ -201,17 +340,21 @@ export class CourseBasicInfoComponent {
     return control.touched && control.valid;
   }
 
-  private setBaseline() {
-    this.initialValue = this.normalize(this.courseForm.getRawValue());
-    this.hasChanges.set(false);
+  private setBaseline(baselineValue?: any) {
+    this.initialValue = baselineValue || this.normalize(this.courseForm.getRawValue());
+    
+    const current = this.normalize(this.courseForm.getRawValue());
+    this.hasChanges.set(
+      JSON.stringify(current) !== JSON.stringify(this.initialValue)
+    );
 
     this.courseForm.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        const current = this.normalize(this.courseForm.getRawValue());
+        const currentVal = this.normalize(this.courseForm.getRawValue());
 
         this.hasChanges.set(
-          JSON.stringify(current) !== JSON.stringify(this.initialValue)
+          JSON.stringify(currentVal) !== JSON.stringify(this.initialValue)
         );
       });
   }
@@ -225,6 +368,9 @@ export class CourseBasicInfoComponent {
   }
 
   populateForm(course: any) {
+    if (this.isFormPopulated) return;
+    this.isFormPopulated = true;
+
     this.courseForm.patchValue({
       title: course.title,
       description: course.description,
@@ -237,8 +383,7 @@ export class CourseBasicInfoComponent {
         course.category?._id ||
         course.category?.id ||
         course.category
-    });
-
+    }, { emitEvent: false });
 
     if (course.thumbnail) {
       this.thumbnailPreview.set(course.thumbnail);
@@ -248,8 +393,14 @@ export class CourseBasicInfoComponent {
     this.setArray('goals', course.goals || []);
     this.setArray('requirements', course.requirements || []);
 
+    // Get baseline value from form right now (pure server data)
+    const baselineVal = this.normalize(this.courseForm.getRawValue());
+
+    // Connect to draft system now that server data is populated
+    this.connectDraftSystem();
+
     setTimeout(() => {
-      this.setBaseline();
+      this.setBaseline(baselineVal);
     });
   }
 
@@ -449,12 +600,21 @@ export class CourseBasicInfoComponent {
         this.initialValue = this.normalize(this.courseForm.getRawValue());
 
         this.courseForm.markAsPristine();
-        this.toastr.success('Course updated successfully');
+        
+        // Clear draft state after successful update
+        this.clearDraftAfterSave();
+        
+        const courseTitle = this.courseForm.get('title')?.value || 'Course';
+        const truncatedTitle = this.truncateName(courseTitle);
+        this.toastr.success(`"${truncatedTitle}" updated successfully`);
 
       },
       error: () => {
         this.isSaving.set(false);
         this.status.set('ready');
+        const courseTitle = this.courseForm.get('title')?.value || 'course';
+        const truncatedTitle = this.truncateName(courseTitle);
+        this.toastr.error(`Failed to update "${truncatedTitle}". Please try again.`);
       }
     });
   }
@@ -572,8 +732,14 @@ export class CourseBasicInfoComponent {
     this.initialValue = this.normalize(this.courseForm.getRawValue());
     this.hasChanges.set(false);
     this.setBaseline();
+    
+    // Clear draft state after successful course creation
+    this.clearDraftAfterSave();
+    
     this.courseCreatedEvent.emit(courseId);
-    this.toastr.success('Course created successfully');
+    const courseTitle = this.courseForm.get('title')?.value || 'Course';
+    const truncatedTitle = this.truncateName(courseTitle);
+    this.toastr.success(`"${truncatedTitle}" created successfully`);
   }
 
   formatLevel(level: string): string {

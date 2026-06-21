@@ -4,6 +4,12 @@ import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { CourseBuilderPageComponent } from './features/course-builder/pages/course-builder-page/course-builder-page.component';
+import { createPendingOperationsGuard, PendingOperationsGuard } from './core/guards/pending-operations.guard';
+import { LessonBuilder } from './features/course-builder/pages/lesson-builder/lesson-builder';
+import { SectionBuilderComponent } from './features/course-builder/pages/section-builder/section-builder.component';
+
+// Create guard for components that implement HasPendingOperations (no instance needed - Angular passes the component)
+const pendingOpsGuard = createPendingOperationsGuard<LessonBuilder>();
 
 const courseBuilderChildren: Routes = [
   {
@@ -16,13 +22,15 @@ const courseBuilderChildren: Routes = [
     path: 'sections',
     loadComponent: () =>
       import('./features/course-builder/pages/section-builder/section-builder.component')
-        .then(m => m.SectionBuilderComponent)
+        .then(m => m.SectionBuilderComponent),
+    canDeactivate: [pendingOpsGuard]
   },
   {
     path: 'sections/:sectionId/lessons',
     loadComponent: () =>
       import('./features/course-builder/pages/lesson-builder/lesson-builder')
-        .then(m => m.LessonBuilder)
+        .then(m => m.LessonBuilder),
+    canDeactivate: [pendingOpsGuard]
   },
   {
     path: 'sections/:sectionId/quiz-config',

@@ -19,32 +19,30 @@
     </div>
 
     @if (!isLoading) {
-        <!-- Empty state -->
-        @if (lessonsArray.length === 0) {
-            <app-empty-state 
-                icon="menu_book"
-                title="No lessons in this section yet"
-                description="Add lessons to start building your course content with videos, text, and interactive materials."
-                actionLabel="Create First Lesson"
-                (actionClicked)="addLesson()">
-            </app-empty-state>
-        }
+    <!-- Empty state -->
+    @if (lessonsArray.length === 0) {
+    <app-empty-state icon="menu_book" title="No lessons in this section yet"
+        description="Add lessons to start building your course content with videos, text, and interactive materials."
+        actionLabel="Create First Lesson" (actionClicked)="addLesson()">
+    </app-empty-state>
+    }
 
-        <!-- Lesson cards -->
-        <div cdkDropList (cdkDropListDropped)="onLessonDropped($event)" class="space-y-4">
-      <div cdkDrag *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson">
-        <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
-        <app-lesson-card
-            [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i" [isFirst]="i === 0"
-            [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)" (moveUp)="moveUp(i)"
-            (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)"> </app-lesson-card>
-      </div>
+    <!-- Lesson cards -->
+    <div cdkDropList (cdkDropListDropped)="onLessonDropped($event)" class="space-y-4">
+        <div cdkDrag *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson">
+            <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
+            <app-lesson-card [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i"
+                [isFirst]="i === 0" [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)"
+                (moveUp)="moveUp(i)" (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)">
+            </app-lesson-card>
         </div>
+    </div>
     }
 
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
-        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="shouldDisableQuizButton" (action)="goToQuiz()"></app-main-button>
+        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="shouldDisableQuizButton"
+            (action)="goToQuiz()"></app-main-button>
     </div>
 
 </div>

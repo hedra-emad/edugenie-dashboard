@@ -8,4 +8,5 @@ export interface CreateCourseDto {
   courseStatus: string;
   goals?: string[];
   requirements?: string[];
+  transcript?: string;
 }
