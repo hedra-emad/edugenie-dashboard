@@ -18,6 +18,11 @@ export const guestGuard: CanActivateFn = () => {
         ? authService.getHomeRouteForRole(user.role)
         : '/settings';
 
+      if (authService.isExternalRedirect(homeRoute)) {
+        window.location.href = authService.getStudentAppRedirectUrl();
+        return false;
+      }
+
       return router.createUrlTree([homeRoute]);
     }),
   );
