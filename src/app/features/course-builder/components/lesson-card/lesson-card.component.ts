@@ -158,6 +158,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // ── Upload State Persistence ───────────────────────────────
   private persistUploadState(): void {
     if (!this.draftId || this.isPermanentlyDeleted) return;
+    if (this.snap.state === 'saved' || this.snap.state === 'idle') return;
     try {
       const snapshot = {
         state: this.snap.state,
@@ -505,6 +506,9 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     this.stopTranscriptPolling();
     this.formDraftInteg.disconnectForm(this.draftId);
     if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+    if (this.s !== 'saved' && !this.isPermanentlyDeleted) {
+      this.clearPersistedUploadState();
+    }
   }
 
   // ─────────────────────────────────────────────────────────
@@ -910,19 +914,22 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // Delete
   // ─────────────────────────────────────────────────────────
   deleteLesson() {
+    console.log('id is:', this.lessonForm.get('id')?.value, 's is:', this.s);
     if (this.isDeleting || this.isPermanentlyDeleted) return;
 
     const rawId = this.lessonForm.get('id')?.value;
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const lessonId = isDraft ? null : rawId;
 
-    const hasNothingToLose =
-      !lessonId &&
-      !this.lessonForm.get('title')?.value &&
-      !this.snap.videoUrl &&
-      !this.selectedVideoFile;
+    const hasAssetOrContent =
+      !!this.snap.videoUrl ||
+      !!this.lessonForm.get('videoUrl')?.value ||
+      !!this.lessonForm.get('title')?.value ||
+      !!this.selectedVideoFile ||
+      this.s === 'save_failed';
 
-    if (hasNothingToLose) {
+    if (!lessonId && !hasAssetOrContent) {
+      // genuinely nothing to lose — safe to skip confirm/cleanup
       this.isPermanentlyDeleted = true;
       this.isDeleting = true;
       this.clearPersistedUploadState();
@@ -936,19 +943,65 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       return;
     }
 
+
+
     // If no saved lesson, just emit delete and clear draft
     // If no saved lesson, just emit delete and clear draft
     if (!lessonId) {
-      this.isPermanentlyDeleted = true;
-      this.isDeleting = true;
-      this.clearPersistedUploadState();
-      this.clearDraftAfterSave();
-      this.delete.emit();
-      
-      // Reset state without persisting
-      this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
-      this.isDeleting = false;
-      this.cdr.markForCheck();
+      // No real DB row can exist here (forceFail is test-only; in prod a failed
+      // addLesson() means the POST never committed). But a Cloudinary asset or
+      // unsaved content may still exist, so confirm before discarding it.
+      const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
+
+      if (!hasAssetOrContent) {
+        // Nothing to lose at all — shouldn't normally reach here given the
+        // earlier check, but keep this safe no-confirm path just in case.
+        this.isPermanentlyDeleted = true;
+        this.isDeleting = true;
+        this.clearPersistedUploadState();
+        this.clearDraftAfterSave();
+        this.delete.emit();
+        this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
+        this.isDeleting = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      const ref = this.dialog.open(ConfirmDialogComponent, {
+        data: { title: 'Delete Lesson?', message: 'This cannot be undone.' },
+      });
+
+      ref.afterClosed().pipe(take(1)).subscribe((result) => {
+        if (result !== 'confirm') return;
+
+        this.isPermanentlyDeleted = true;
+        this.clearPersistedUploadState();
+        this.setState({ state: 'deleting' });
+        this.isDeleting = true;
+        this.cdr.markForCheck();
+
+        const finish = () => {
+          this.clearPersistedUploadState();
+          this.clearDraftAfterSave();
+          this.delete.emit();
+          this.isDeleting = false;
+          this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
+          this.isPermanentlyDeleted = false;
+          this.cdr.markForCheck();
+        };
+
+        if (publicId) {
+          this.cloudinaryService.deleteAsset(publicId, 'video')
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => console.log('[LessonCard] Cloudinary asset deleted:', publicId),
+              error: (err) => console.warn('[LessonCard] Cloudinary delete failed (continuing):', err),
+              complete: () => finish(),
+            });
+        } else {
+          finish();
+        }
+      });
       return;
     }
 

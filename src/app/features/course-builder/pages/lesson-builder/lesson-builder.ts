@@ -268,8 +268,8 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   }
 
   trackByLesson(index: number, item: FormGroup) {
-    return item.get('id')?.value || index;
-  }
+  return item; // track by FormGroup reference — stable across id mutations
+}
 
   get lessonsLength() {
     return this.lessonsArray.length;
