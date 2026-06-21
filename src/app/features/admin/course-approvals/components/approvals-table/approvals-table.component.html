@@ -1,16 +1,22 @@
 <div class="approvals-card">
 
-  <!-- Card Header: Title + Search -->
+  <!-- Card Header -->
   <div class="card-header">
     <div class="header-top">
       <div class="header-title-section">
         <h3>{{ cardTitle }}</h3>
         @if (badgeCount > 0) {
-          <span class="count-badge" [class.badge-orange]="currentFilter === 'pending'"
-                                    [class.badge-green]="currentFilter === 'approved'"
-                                    [class.badge-red]="currentFilter === 'rejected'"
-                                    [class.badge-gray]="currentFilter === 'all'">
+          <span class="count-badge"
+            [class.badge-orange]="currentFilter === 'pending'"
+            [class.badge-green]="currentFilter === 'approved'"
+            [class.badge-red]="currentFilter === 'rejected'"
+            [class.badge-gray]="currentFilter === 'all'">
             {{ badgeCount }}
+          </span>
+        }
+        @if (selectedCount > 0) {
+          <span class="selected-indicator">
+            {{ selectedCount }} selected
           </span>
         }
       </div>
@@ -26,7 +32,7 @@
           (input)="onSearch($event)"
           aria-label="Search courses" />
         @if (searchQuery) {
-          <button class="search-clear" (click)="clearSearch()">
+          <button class="search-clear" (click)="clearSearch()" aria-label="Clear search">
             <mat-icon>close</mat-icon>
           </button>
         }
@@ -35,25 +41,17 @@
 
     <!-- Filter Tabs -->
     <div class="filter-tabs" role="tablist">
-      <button role="tab" class="filter-tab" [class.active-all]="currentFilter === 'all'"
-              (click)="setFilter('all')">
-        All
-        <span class="tab-count">{{ totalCount }}</span>
+      <button role="tab" class="filter-tab" [class.active-all]="currentFilter === 'all'" (click)="setFilter('all')">
+        All <span class="tab-count">{{ totalCount }}</span>
       </button>
-      <button role="tab" class="filter-tab" [class.active-pending]="currentFilter === 'pending'"
-              (click)="setFilter('pending')">
-        Pending Review
-        <span class="tab-count pending-count">{{ pendingCount }}</span>
+      <button role="tab" class="filter-tab" [class.active-pending]="currentFilter === 'pending'" (click)="setFilter('pending')">
+        Pending Review <span class="tab-count pending-count">{{ pendingCount }}</span>
       </button>
-      <button role="tab" class="filter-tab" [class.active-approved]="currentFilter === 'approved'"
-              (click)="setFilter('approved')">
-        Approved
-        <span class="tab-count approved-count">{{ approvedCount }}</span>
+      <button role="tab" class="filter-tab" [class.active-approved]="currentFilter === 'approved'" (click)="setFilter('approved')">
+        Approved <span class="tab-count approved-count">{{ approvedCount }}</span>
       </button>
-      <button role="tab" class="filter-tab" [class.active-rejected]="currentFilter === 'rejected'"
-              (click)="setFilter('rejected')">
-        Rejected
-        <span class="tab-count rejected-count">{{ rejectedCount }}</span>
+      <button role="tab" class="filter-tab" [class.active-rejected]="currentFilter === 'rejected'" (click)="setFilter('rejected')">
+        Rejected <span class="tab-count rejected-count">{{ rejectedCount }}</span>
       </button>
     </div>
   </div>
@@ -64,15 +62,20 @@
       <table>
         <thead>
           <tr>
-            <th class="checkbox-th">
-              <input
-                type="checkbox"
-                class="custom-checkbox"
-                [checked]="allSelected"
-                [indeterminate]="someSelected"
-                (change)="toggleAll()"
-                aria-label="Select all" />
-            </th>
+            @if (!isReadonlyTab) {
+              <th class="checkbox-th">
+                <label class="select-all-label">
+                  <input
+                    type="checkbox"
+                    class="custom-checkbox"
+                    [checked]="allSelected"
+                    [indeterminate]="someSelected"
+                    (change)="toggleAll()"
+                    aria-label="Select all visible courses" />
+                  <span class="select-all-text">Select All</span>
+                </label>
+              </th>
+            }
             <th>Course</th>
             <th>Instructor</th>
             <th>Status</th>
@@ -81,32 +84,63 @@
           </tr>
         </thead>
         <tbody>
-          @for (course of filteredCourses; track trackByCourseId($index, course)) {
+          @for (course of pagedCourses; track trackByCourseId($index, course)) {
             <tr app-approval-row
                 [course]="course"
-                [actionLoading]="!!actionLoading[course.id]"
+                [approveLoading]="isApproveLoading(course.id)"
+                [rejectLoading]="isRejectLoading(course.id)"
                 [isSelected]="selectedIds.has(course.id)"
+                [readonly]="isReadonlyTab"
                 (toggleSelection)="toggleRow($event)"
                 (click)="onRowClick(course)"
-                (approve)="approve.emit($event)"
-                (reject)="reject.emit($event)"
+                (approve)="onApprove($event)"
+                (reject)="onReject($event)"
                 style="cursor: pointer;">
             </tr>
           }
         </tbody>
       </table>
+
+      <!-- Pagination bar -->
+      @if (totalPages > 1 || totalFiltered > 10) {
+        <div class="pagination-bar">
+          <span class="pagination-info">
+            Showing {{ pageFrom }}–{{ pageTo }} of {{ totalFiltered }}
+          </span>
+
+          <div class="pagination-controls">
+            <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0" aria-label="Previous page">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.page-btn--active]="p === pageIndex" (click)="setPage(p)">
+                {{ p + 1 }}
+              </button>
+            }
+            <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1" aria-label="Next page">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+
+          <div class="page-size-wrapper">
+            <span class="page-size-label">Per page</span>
+            @for (size of pageSizeOptions; track size) {
+              <button class="page-size-btn" [class.page-size-btn--active]="pageSize === size" (click)="setPageSize(size)">
+                {{ size }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
     } @else {
       <div class="empty-state">
-        <mat-icon class="empty-icon">
-          {{ searchQuery ? 'search_off' : 'inbox' }}
-        </mat-icon>
+        <mat-icon class="empty-icon">{{ searchQuery ? 'search_off' : 'inbox' }}</mat-icon>
         <p class="empty-text">
           {{ searchQuery ? 'No courses match "' + searchQuery + '"' : 'No courses found for this filter.' }}
         </p>
         @if (searchQuery) {
-          <button class="empty-clear-btn" (click)="clearSearch()">
-            Clear Search
-          </button>
+          <button class="empty-clear-btn" (click)="clearSearch()">Clear Search</button>
         }
       </div>
     }
