@@ -1,7 +1,9 @@
-<!-- Checkbox -->
-<td data-label="Select" class="checkbox-cell" (click)="$event.stopPropagation()">
-  <input type="checkbox" class="custom-checkbox" [checked]="isSelected" (change)="toggleSelection.emit(course.id)" />
-</td>
+<!-- Checkbox — hidden on read-only tabs (Approved / Rejected) -->
+@if (!readonly) {
+  <td data-label="Select" class="checkbox-cell" (click)="$event.stopPropagation()">
+    <input type="checkbox" class="custom-checkbox" [checked]="isSelected" (change)="toggleSelection.emit(course.id)" />
+  </td>
+}
 
 <!-- Course Title & Category -->
 <td data-label="Course">
@@ -52,17 +54,17 @@
   }
 </td>
 
-<!-- Actions -->
+<!-- Actions — hidden on read-only tabs, replaced with a view arrow -->
 <td data-label="Actions">
   <div class="actions-cell">
-    @if (course.status === 'pending') {
+    @if (!readonly && course.status === 'pending') {
       <!-- Reject -->
       <button
         (click)="onReject($event)"
-        [disabled]="actionLoading"
+        [disabled]="anyLoading"
         class="action-btn reject-btn"
         title="Reject Course">
-        @if (actionLoading) {
+        @if (rejectLoading) {
           <div class="spinner reject-spinner"></div>
         } @else {
           <mat-icon>close</mat-icon>
@@ -71,17 +73,17 @@
       <!-- Approve -->
       <button
         (click)="onApprove($event)"
-        [disabled]="actionLoading"
+        [disabled]="anyLoading"
         class="action-btn approve-btn"
         title="Approve Course">
-        @if (actionLoading) {
+        @if (approveLoading) {
           <div class="spinner"></div>
         } @else {
           <mat-icon>check</mat-icon>
         }
       </button>
     } @else {
-      <!-- View Details Link -->
+      <!-- Read-only: just navigate to course detail -->
       <span class="view-link" title="View Details">
         <mat-icon>arrow_forward</mat-icon>
       </span>

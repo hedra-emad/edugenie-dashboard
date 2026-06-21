@@ -203,7 +203,7 @@
                                     @if (lesson.videoDuration) {
                                       <span class="lesson-duration">
                                         <mat-icon>schedule</mat-icon>
-                                        {{ lesson.videoDuration }}
+                                        {{ lesson.videoDuration }}s
                                       </span>
                                     }
                                     @if (lesson.videoUrl) {
@@ -260,7 +260,7 @@
               </div>
               <div class="inst-details">
                 <h3 class="inst-name">{{ getInstructorName() }}</h3>
-                <p class="inst-email">{{ course.instructor?.email || 'No email provided' }}</p>
+                <p class="inst-email">{{ getInstructorEmail() }}</p>
                 <span class="inst-role">{{ (course.instructor?.role || 'Instructor') | titlecase }}</span>
               </div>
             </div>
@@ -301,39 +301,42 @@
             </ul>
           </div>
 
+          <!-- ================================================
+               APPROVAL ACTIONS — sticky bar at the bottom
+               Shown for courses that are still pending/draft
+               ================================================ -->
+          <!-- Approval Actions -->
+          <!-- <div class="actions-panel">
+            <div class="actions-inner">
+              <div class="actions-text">
+                <h3>Ready to make a decision?</h3>
+                <p>Review all course content carefully before approving or rejecting.</p>
+              </div> -->
+              <div class="actions-buttons">
+                <button class="btn-reject"
+                  (click)="openRejectModal()"
+                  [disabled]="approveLoading || rejectLoading">
+                  <mat-icon>cancel</mat-icon>
+                  Reject
+                </button>
+                <button class="btn-approve"
+                  (click)="approveCourse()"
+                  [disabled]="approveLoading || rejectLoading">
+                  @if (approveLoading) {
+                    <div class="btn-spinner"></div>
+                  } @else {
+                    <mat-icon>check_circle</mat-icon>
+                  }
+                  Approve
+                </button>
+              </div>
+            <!-- </div>
+          </div> -->
         </div>
         <!-- END RIGHT COLUMN -->
 
       </div>
 
-      <!-- ================================================
-           APPROVAL ACTIONS — sticky bar at the bottom
-           Shown for courses that are still pending/draft
-           ================================================ -->
-      @if (course.status === 'pending' || course.status === 'draft') {
-        <div class="actions-panel">
-          <div class="actions-inner">
-            <div class="actions-text">
-              <h3>Ready to make a decision?</h3>
-              <p>Review all course content carefully before approving or rejecting.</p>
-            </div>
-            <div class="actions-buttons">
-              <button class="btn-reject" (click)="openRejectModal()" [disabled]="actionLoading">
-                <mat-icon>cancel</mat-icon>
-                Reject Course
-              </button>
-              <button class="btn-approve" (click)="approveCourse()" [disabled]="actionLoading">
-                @if (actionLoading) {
-                  <div class="btn-spinner"></div>
-                } @else {
-                  <mat-icon>check_circle</mat-icon>
-                }
-                Approve Course
-              </button>
-            </div>
-          </div>
-        </div>
-      }
 
       <!-- Already reviewed banner -->
       @if (course.status === 'approved') {
@@ -361,36 +364,59 @@
   <div class="modal-overlay" (click)="closeRejectModal()">
     <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
       <div class="modal-header reject-header">
-        <h3>Reject Course</h3>
-        <button class="modal-close" (click)="closeRejectModal()" aria-label="Close">
+        <div class="modal-header-icon">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div>
+          <h3>Reject Course</h3>
+          @if (course?.title) {
+            <p class="modal-subtitle">"{{ course.title }}"</p>
+          }
+        </div>
+        <button class="modal-close" (click)="closeRejectModal()" [disabled]="rejectLoading" aria-label="Close">
           <mat-icon>close</mat-icon>
         </button>
       </div>
       <div class="modal-body">
         <p class="reject-description">
-          Please provide a reason for rejecting
-          <strong>{{ course?.title }}</strong>.
-          The instructor will receive this feedback to make necessary adjustments.
+          Please provide a reason for rejection. This feedback will help the instructor improve the course.
         </p>
-        <textarea
-          [(ngModel)]="rejectReason"
-          placeholder="Enter rejection reason (required)..."
-          rows="4"
-          class="reject-textarea"
-          [disabled]="actionLoading"
-          autofocus></textarea>
+        <div class="field-group">
+          <label class="field-label" for="detailRejectReason">
+            Reason of Rejection <span class="field-required">*</span>
+          </label>
+          <textarea
+            id="detailRejectReason"
+            class="reject-textarea"
+            [class.field-error]="rejectReasonTouched && !rejectReason.trim()"
+            [(ngModel)]="rejectReason"
+            (blur)="rejectReasonTouched = true"
+            placeholder="e.g. Course description is incomplete. Please add detailed module outlines."
+            rows="4"
+            [disabled]="rejectLoading">
+          </textarea>
+          @if (rejectReasonTouched && !rejectReason.trim()) {
+            <span class="field-error-msg">
+              <mat-icon>error_outline</mat-icon>
+              Rejection reason is required.
+            </span>
+          }
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="actionLoading">
+        <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="rejectLoading">
           Cancel
         </button>
         <button class="btn-confirm-reject"
-                (click)="confirmReject()"
-                [disabled]="!rejectReason.trim() || actionLoading">
-          @if (actionLoading) {
-            <span class="btn-spinner red-spinner"></span>
+          (click)="confirmReject()"
+          [disabled]="rejectLoading || !rejectReason.trim()">
+          @if (rejectLoading) {
+            <span class="btn-spinner-sm"></span>
+            Rejecting...
+          } @else {
+            <mat-icon>cancel</mat-icon>
+            Reject Course
           }
-          {{ actionLoading ? 'Processing...' : 'Confirm Rejection' }}
         </button>
       </div>
     </div>

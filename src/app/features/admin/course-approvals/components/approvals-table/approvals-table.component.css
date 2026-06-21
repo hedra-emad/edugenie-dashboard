@@ -216,30 +216,61 @@ th {
 }
 
 /* Column widths — intentional proportions */
-th.checkbox-th  { width: 44px; padding-left: 16px; }
-th:nth-child(2) { width: 35%; }   /* Course */
-th:nth-child(3) { width: 20%; }   /* Instructor */
-th:nth-child(4) { width: 12%; }   /* Status */
-th:nth-child(5) { width: 10%; }   /* Duration */
+th.checkbox-th  { width: 130px; padding-left: 20px; }
+th:nth-child(2) { width: 35%; }
+th:nth-child(3) { width: 20%; }
+th:nth-child(4) { width: 12%; }
+th:nth-child(5) { width: 10%; }
 th.actions-th   { width: 100px; text-align: right; }
 
 /* Tablet: hide Duration column */
 @media (max-width: 1023px) and (min-width: 768px) {
-  th:nth-child(5),
-  :host ::ng-deep td:nth-child(5) {
-    display: none;
-  }
+  th:nth-child(5) { display: none; }
   th:nth-child(2) { width: 42%; }
   th:nth-child(3) { width: 25%; }
 }
 
-/* --- Indeterminate checkbox --- */
+/* Checkbox */
 .custom-checkbox {
   width: 16px;
   height: 16px;
   accent-color: var(--color-primary, #3b1892);
   cursor: pointer;
 }
+
+/* Select All label — checkbox + text aligned, both clickable */
+.select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.select-all-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Selected count pill */
+.selected-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: var(--color-primary, #3b1892);
+  color: white;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* --- Empty State --- */
 .empty-state {
@@ -323,4 +354,50 @@ th.actions-th   { width: 100px; text-align: right; }
 
   thead { display: none; }
   tbody { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+}
+
+/* ── Pagination ── */
+.pagination-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-top: 1px solid var(--color-border,#e5e7eb);
+  background: #f9fafb; gap: 12px; flex-wrap: wrap;
+}
+.pagination-info { font-size: 0.8125rem; color: #6b7280; white-space: nowrap; }
+.pagination-controls { display: flex; align-items: center; gap: 4px; }
+
+.page-btn {
+  min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px;
+  border: 1px solid var(--color-border,#e5e7eb); background: white;
+  font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--color-primary-light,#5b3db8);
+  color: var(--color-primary,#3b1892); background: #f5f3ff;
+}
+.page-btn--active {
+  background: var(--color-primary,#3b1892); color: white;
+  border-color: var(--color-primary,#3b1892);
+}
+.page-btn--active:hover { background: var(--color-primary-dark,#2d1073); }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.page-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.page-size-wrapper { display: flex; align-items: center; gap: 6px; }
+.page-size-label { font-size: 0.8125rem; color: #6b7280; white-space: nowrap; }
+.page-size-btn {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid var(--color-border,#e5e7eb);
+  background: white; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.15s;
+}
+.page-size-btn:hover { border-color: var(--color-primary-light,#5b3db8); color: var(--color-primary,#3b1892); }
+.page-size-btn--active {
+  background: var(--color-primary,#3b1892); color: white;
+  border-color: var(--color-primary,#3b1892);
+}
+
+@media (max-width: 767px) {
+  .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .pagination-controls { justify-content: center; }
+  .page-size-wrapper { justify-content: center; }
+  .pagination-info { text-align: center; }
 }

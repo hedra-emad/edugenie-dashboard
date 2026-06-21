@@ -343,12 +343,24 @@ import { CourseApproval } from '../../models/course-approval.model';
 })
 export class ApprovalRowComponent {
   @Input() course!: CourseApproval;
-  @Input() actionLoading = false;
+  /** True when THIS course's approve action is in progress */
+  @Input() approveLoading = false;
+  /** True when THIS course's reject action is in progress */
+  @Input() rejectLoading = false;
   @Input() isSelected = false;
+  /**
+   * When true (Approved / Rejected tabs) the checkbox and action buttons
+   * are hidden — the row is read-only.
+   */
+  @Input() readonly = false;
 
   @Output() approve = new EventEmitter<string>();
   @Output() reject = new EventEmitter<string>();
   @Output() toggleSelection = new EventEmitter<string>();
+
+  get anyLoading(): boolean {
+    return this.approveLoading || this.rejectLoading;
+  }
 
   get instructorInitials(): string {
     if (!this.course?.instructorName) return 'I';
@@ -361,14 +373,14 @@ export class ApprovalRowComponent {
 
   onApprove(event: Event): void {
     event.stopPropagation();
-    if (!this.actionLoading && this.course.status === 'pending') {
+    if (!this.anyLoading && this.course.status === 'pending') {
       this.approve.emit(this.course.id);
     }
   }
 
   onReject(event: Event): void {
     event.stopPropagation();
-    if (!this.actionLoading && this.course.status === 'pending') {
+    if (!this.anyLoading && this.course.status === 'pending') {
       this.reject.emit(this.course.id);
     }
   }
