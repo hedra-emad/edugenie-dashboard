@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CreateLessonDto } from '../models/dto/create-lesson.dto';
 import { Lesson } from '../models/lesson.model';
-import { Observable, map } from 'rxjs';
+import { Observable, map, mergeMap, of, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class LessonsService {
@@ -12,9 +12,18 @@ export class LessonsService {
   private baseUrl = '';
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
+    const forceFail = false; // ⬅️ set to true only while testing, then back to false
+
     return this.http
-      .post<{ success: boolean; data: any }>(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
-      .pipe(map((res) => res.data || res));
+      .post(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
+      .pipe(
+        mergeMap(res => {
+          if (forceFail) {
+            return throwError(() => new Error('Simulated DB failure'));
+          }
+          return of(res);
+        })
+      );
   }
 
   updateLesson(courseId: string, sectionId: string, lessonId: string, body: Partial<CreateLessonDto>): Observable<any> {

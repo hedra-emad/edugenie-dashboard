@@ -19,6 +19,9 @@ import { Lesson } from '../../../../core/models/lesson.model';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
+import { DraftStateService } from '../../../../core/services/draft-state.service';
+import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
+
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
@@ -89,6 +92,8 @@ export class SectionBuilderComponent implements OnInit {
   newSectionIndex: number | null = null;
   private destroyRef = inject(DestroyRef);
   isLoading = true;
+  private draftStateService = inject(DraftStateService);
+  private formDraftIntegration = inject(FormDraftIntegrationService);
 
 
   sectionForm = this.fb.group({
@@ -143,8 +148,10 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   addSection() {
+    const draftId = this.formDraftIntegration.generateDraftId('section', this.courseId);
+
     const section = this.fb.group({
-      id: [null],
+      id: [draftId],
 
       title: [
         '',
@@ -172,8 +179,7 @@ export class SectionBuilderComponent implements OnInit {
 
     this.sectionsArray.push(section);
 
-
-    this.expandedSectionId = null;
+    this.expandedSectionId = draftId;
   }
 
   onSectionDeleted(index: number) {
@@ -201,6 +207,44 @@ export class SectionBuilderComponent implements OnInit {
     return item.get('id')?.value;
   }
 
+  private populateLessonsForSection(sectionGroup: FormGroup, sectionId: string, serverLessons: Lesson[]) {
+    const lessonsArray = sectionGroup.get('lessons') as FormArray;
+    lessonsArray.clear();
+
+    // 1. Add server-side lessons
+    serverLessons.forEach((lesson: Lesson) => {
+      lessonsArray.push(
+        this.fb.group({
+          id: [extractId((lesson as any)._id || lesson.id || lesson)],
+          title: [lesson.title || '', Validators.required],
+          videoUrl: [lesson.videoUrl || ''],
+          videoPublicId: [lesson.videoPublicId || ''],
+          videoDuration: [lesson.videoDuration || 0],
+          expanded: [false]
+        })
+      );
+    });
+
+    // 2. Add draft lessons (unsaved new lessons)
+    if (sectionId) {
+      const draftLessons = this.draftStateService.getDraftsByParent(sectionId)
+        .filter(draft => draft.type === 'lesson' && this.draftStateService.isDraftId(draft.id));
+
+      draftLessons.forEach(draft => {
+        lessonsArray.push(
+          this.fb.group({
+            id: [draft.id],
+            title: [draft.data?.title || '', Validators.required],
+            videoUrl: [draft.data?.videoUrl || ''],
+            videoPublicId: [draft.data?.videoPublicId || ''],
+            videoDuration: [draft.data?.videoDuration || 0],
+            expanded: [false]
+          })
+        );
+      });
+    }
+  }
+
   loadSections() {
     if (!this.courseId) return;
     this.coursesService.findOne(this.courseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -209,36 +253,48 @@ export class SectionBuilderComponent implements OnInit {
         this.sectionsArray.clear();
 
         sections.forEach((section: Section) => {
-          this.sectionsArray.push(
-            this.fb.group({
-              title: [section.title || '', [Validators.required, Validators.minLength(3)]],
-              description: [section.description || '', [Validators.minLength(10)]],
-              price: [section.price ?? 0, [Validators.required, Validators.min(0)]],
-              expectedOutcomes: this.fb.array(
-                (section.expectedOutcomes || []).map((o: string) =>
-                  this.fb.control(o ?? '', Validators.required)
-                ) || []
-              ),
+          const sectionId = extractId((section as any)._id || section.id || section) || '';
+          const sectionGroup = this.fb.group({
+            title: [section.title || '', [Validators.required, Validators.minLength(3)]],
+            description: [section.description || '', [Validators.minLength(10)]],
+            price: [section.price ?? 0, [Validators.required, Validators.min(0)]],
+            expectedOutcomes: this.fb.array(
+              (section.expectedOutcomes || []).map((o: string) =>
+                this.fb.control(o ?? '', Validators.required)
+              ) || []
+            ),
+            lessons: this.fb.array([]),
+            id: [sectionId],
+            isSaving: [false],
+            isDeleting: [false],
+          });
 
+          this.populateLessonsForSection(sectionGroup, sectionId, section.lessons || []);
+          this.sectionsArray.push(sectionGroup);
+        });
 
-              lessons: this.fb.array(
-                (section.lessons || []).map((lesson: Lesson) =>
-                  this.fb.group({
-                    id: [extractId((lesson as any)._id || lesson.id || lesson)],
-                    title: [lesson.title || '', Validators.required],
-                    videoUrl: [lesson.videoUrl || ''],
-                    videoPublicId: [lesson.videoPublicId || ''],
-                    videoDuration: [lesson.videoDuration || 0],
-                    expanded: [false]
-                  })
-                )
-              ),
+        // Load new draft sections (ID starts with 'draft_')
+        const draftSections = this.draftStateService.getDraftsByParent(this.courseId)
+          .filter(draft => draft.type === 'section' && this.draftStateService.isDraftId(draft.id));
 
-              id: [extractId((section as any)._id || section.id || section)],
-              isSaving: [false],
-              isDeleting: [false],
-            })
-          );
+        draftSections.forEach(draft => {
+          const sectionGroup = this.fb.group({
+            id: [draft.id],
+            title: [draft.data?.title || '', [Validators.required, Validators.minLength(3)]],
+            description: [draft.data?.description || '', [Validators.minLength(10)]],
+            price: [draft.data?.price ?? 0, [Validators.required, Validators.min(0)]],
+            expectedOutcomes: this.fb.array(
+              (draft.data?.expectedOutcomes || []).map((o: string) =>
+                this.fb.control(o ?? '', Validators.required)
+              )
+            ),
+            lessons: this.fb.array([]),
+            isSaving: [false],
+            isDeleting: [false]
+          });
+
+          this.populateLessonsForSection(sectionGroup, draft.id, []);
+          this.sectionsArray.push(sectionGroup);
         });
 
         this.isLoading = false;

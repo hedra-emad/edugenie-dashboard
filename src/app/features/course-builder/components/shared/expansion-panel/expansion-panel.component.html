@@ -1,14 +1,27 @@
 <mat-expansion-panel
   #panel="matExpansionPanel"
   [expanded]="expanded"
-  [ngClass]="[panelClass, highlight ? 'highlight-border' : '']"
+  [class.mat-expansion-panel-deleting]="isDeleting"
+  [ngClass]="[
+    panelClass, 
+    highlight ? 'highlight-border' : '',
+    currentDraftType === 'unsaved' ? 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]' : '',
+    currentDraftType === 'modified' ? 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]' : '',
+    currentDraftType === 'uploaded_unsaved' ? 'border-emerald-500 !shadow-[0_0_8px_rgba(16,185,129,0.2)]' : '',
+    !currentDraftType ? 'border-[var(--color-border)]' : ''
+  ]"
   [hideToggle]="true"
-  class="border border-[var(--color-border)] rounded-2xl shadow-sm"
+  class="border rounded-2xl shadow-sm transition-colors duration-300"
   (opened)="onOpened()"
   (closed)="onClosed()">
 
+  <!-- Deleting Loader Overlay -->
+  <div *ngIf="isDeleting" class="deleting-overlay">
+    <app-loading [size]="40"></app-loading>
+  </div>
+
   <mat-expansion-panel-header>
-    <mat-panel-title class="flex items-center justify-between w-full pr-0 sm:pr-2">
+    <mat-panel-title class="flex items-center justify-between w-full pr-0 sm:pr-2 gap-2">
 
       <!-- Content wrapper that intercepts touches and handles drag -->
       <div class="flex items-center flex-1 min-w-0 cursor-grab active:cursor-grabbing"
@@ -30,6 +43,38 @@
           <span class="truncate block">
             {{ index + 1 }}. {{ title }}
           </span>
+          
+          <!-- Unified Draft Indicator (New System) -->
+          <app-draft-indicator *ngIf="shouldShowDraftIndicator"
+                              [draftId]="draftId || ''"
+                              [type]="draftIndicatorType || legacyIndicatorType"
+                              [customTooltip]="customTooltip"
+                              [autoDetect]="autoDetectDraftState && !!draftId"
+                              class="flex-shrink-0 ml-1">
+          </app-draft-indicator>
+          
+          <!-- Failed State Indicators -->
+          <div *ngIf="hasSaveFailed" 
+               class="save-failed-indicator flex-shrink-0 ml-1"
+               matTooltip="Save failed - Click to retry"
+               matTooltipPosition="above"
+               matTooltipShowDelay="500">
+          </div>
+          
+          <div *ngIf="hasUploadError" 
+               class="upload-error-indicator flex-shrink-0 ml-1"
+               matTooltip="Upload failed - Please try again"
+               matTooltipPosition="above"
+               matTooltipShowDelay="500">
+          </div>
+          
+          <div *ngIf="hasFailedLessons" 
+               class="section-failed-lessons-indicator flex-shrink-0 ml-1"
+               matTooltip="This section has lessons with save failures"
+               matTooltipPosition="above"
+               matTooltipShowDelay="500">
+          </div>
+          
           <span *ngIf="subtitle"
             class="text-xs text-[var(--color-text-secondary)] ml-2 shrink-0 duration-text hidden sm:inline font-normal">
             {{ subtitle }}
@@ -42,14 +87,14 @@
           <!-- Move up/down buttons (lesson mode) -->
           <ng-container *ngIf="showMoveButtons">
             <button type="button"
-              [disabled]="isFirst"
+              [disabled]="isFirst || isDeleting"
               (click)="onMoveUpClicked($event)"
               class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Move lesson up">
               <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex items-center justify-center leading-none">arrow_upward</mat-icon>
             </button>
             <button type="button"
-              [disabled]="isLast"
+              [disabled]="isLast || isDeleting"
               (click)="onMoveDownClicked($event)"
               class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Move lesson down">
@@ -75,7 +120,7 @@
           <button *ngIf="showLessonsButton"
             type="button"
             (click)="onLessonsClicked($event)"
-            [disabled]="lessonsButtonDisabled"
+            [disabled]="lessonsButtonDisabled || isDeleting"
             class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white disabled:opacity-30 disabled:border-[var(--color-border)] disabled:text-[var(--color-text-secondary)] disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all"
             aria-label="Go to Lessons">
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block">menu_book</mat-icon>
@@ -103,8 +148,9 @@
         <div *ngIf="showMobileMenu" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
           <button type="button"
             [matMenuTriggerFor]="mobileMenu"
+            [disabled]="isDeleting"
             (click)="$event.stopPropagation()"
-            class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+            class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="More options">
             <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block">more_vert</mat-icon>
           </button>
@@ -115,7 +161,8 @@
       <!-- Dedicated Expand/Collapse Button (always visible) -->
       <button
         type="button"
-        class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+        [disabled]="isDeleting"
+        class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         (click)="togglePanel($event, panel)"
         (touchstart)="$event.stopPropagation()">
         <mat-icon class="!text-[24px] !w-[24px] !h-[24px] block pointer-events-none">
