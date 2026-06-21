@@ -123,26 +123,26 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   }
 
   addLesson() {
-    // Run outside Angular to avoid ExpressionChangedAfterItHasBeenCheckedError
-    this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => {
-        this.ngZone.run(() => {
-          this.lessonsArray.push(
-            this.fb.group({
-              id: [null],
-              title: ['', [Validators.required, Validators.pattern(/.*\S.*/)]],
-              videoUrl: [''],
-              videoPublicId: [''],
-              videoDuration: [0],
-              uploadStatus: ['idle'],
-              expanded: [true]
-            })
-          );
-          this.cdr.detectChanges();
-        });
-      }, 0);
-    });
-  }
+  this.ngZone.runOutsideAngular(() => {
+    setTimeout(() => {
+      this.ngZone.run(() => {
+        this.lessonsArray.push(
+          this.fb.group({
+            id: [null],
+            title: ['', [Validators.required, Validators.pattern(/.*\S.*/)]],
+            videoUrl: [''],
+            videoPublicId: [''],
+            videoDuration: [0],
+            transcript: [null], // ✅ add this
+            uploadStatus: ['idle'],
+            expanded: [true]
+          })
+        );
+        this.cdr.detectChanges();
+      });
+    }, 0);
+  });
+}
 
   onDeleted(index: number) {
     this.lessonsArray.removeAt(index);
@@ -172,6 +172,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
                 videoUrl: [lesson.videoUrl || ''],
                 videoPublicId: [lesson.videoPublicId || ''],
                 videoDuration: [lesson.videoDuration || 0],
+                transcript: [(lesson as any).transcript || null],
                 uploadStatus: ['idle'],
                 expanded: [false]
               })
@@ -190,6 +191,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
                 videoUrl: [draft.data?.videoUrl || ''],
                 videoPublicId: [draft.data?.videoPublicId || ''],
                 videoDuration: [draft.data?.videoDuration || 0],
+                 transcript: [draft.data?.transcript || null],
                 uploadStatus: ['idle'],
                 expanded: [true]
               })

@@ -315,6 +315,16 @@
     </div><!-- /VIDEO -->
 
 
+    <!-- Transcript status -->
+<div *ngIf="isPollingTranscript" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-gray-500">
+  <app-loading [size]="12" color="#9ca3af"></app-loading>
+  <span>Generating transcript…</span>
+</div>
+<div *ngIf="!isPollingTranscript && lessonForm.get('transcript')?.value" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-green-600">
+  <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
+  <span>Transcript ready</span>
+</div>
+
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">
       <div class="pt-4">

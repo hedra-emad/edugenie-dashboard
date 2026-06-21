@@ -3,13 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { CreateLessonDto } from '../models/dto/create-lesson.dto';
 import { Lesson } from '../models/lesson.model';
 import { Observable, map, mergeMap, of, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface TranscriptionStatus {
+  videoReady: boolean;
+  transcriptReady: boolean;
+  transcript: string | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class LessonsService {
 
   private http = inject(HttpClient);
 
-  private baseUrl = '';
+  private readonly baseUrl = environment.apiUrl;
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
     const forceFail = false; // ⬅️ set to true only while testing, then back to false
@@ -42,6 +49,12 @@ export class LessonsService {
     return this.http.patch(
       `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/reorder`,
       { lessonIds }
+    );
+  }
+
+  getTranscriptionStatus(courseId: string, sectionId: string, lessonId: string): Observable<TranscriptionStatus> {
+    return this.http.get<TranscriptionStatus>(
+      `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/transcription-status`
     );
   }
 }

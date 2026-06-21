@@ -8,7 +8,9 @@ interface SignatureResponse {
   signature: string;
   timestamp: number;
   apiKey: string;
-  cloudName: string;}
+  cloudName: string;
+  raw_convert: string;
+}
 
 export interface CloudinaryUploadResponse {
   secure_url: string;
@@ -107,7 +109,7 @@ export class CloudinaryService {
       : 'edugenie/courses/thumbnails/pending';
 
     return this.getSignature(folder).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -149,7 +151,7 @@ export class CloudinaryService {
     const context = `courseId=${courseId}|sectionId=${sectionId}`;
 
     return this.getSignature(folder, context).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -157,13 +159,15 @@ export class CloudinaryService {
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
+        formData.append('raw_convert', raw_convert);
+
 
         const req = new HttpRequest(
-          'POST',
-          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-          formData,
-          { reportProgress: true }
-        );
+  'POST',
+  `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+  formData,
+  { reportProgress: true }
+);
 
         return this.http.request<CloudinaryUploadResponse>(req).pipe(
           switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {

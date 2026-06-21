@@ -126,6 +126,16 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   readonly UPLOAD_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes timeout
   private readonly UPLOAD_STATE_KEY = 'edugenie_upload_state';
 
+  isStalled = false; // For template to show stall warning
+  private isPermanentlyDeleted = false;
+
+  // ── Transcript Polling ───────────────────────────────────
+  private transcriptPollInterval: any = null;
+  private transcriptPollStartTime = 0;
+  private readonly TRANSCRIPT_POLL_INTERVAL_MS = 5000;
+  private readonly TRANSCRIPT_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+  isPollingTranscript = false; // For template binding
+
   // ── Draft ─────────────────────────────────────────────────
   draftId = '';
   hasDraftData = false;
@@ -144,8 +154,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // ── Upload Progress Tracking ─────────────────────────────
   private lastProgressTime = 0;
   private progressCheckInterval: any = null;
-  isStalled = false; // For template to show stall warning
-  private isPermanentlyDeleted = false;
 
   // ── Upload State Persistence ───────────────────────────────
   private persistUploadState(): void {
@@ -494,6 +502,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private teardown() {
     this.destroy$.next();
     this.destroy$.complete();
+    this.stopTranscriptPolling();
     this.formDraftInteg.disconnectForm(this.draftId);
     if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
   }
@@ -570,6 +579,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
   removeSelectedVideo() {
     // Clean up Cloudinary video if exists and not saved
+    this.stopTranscriptPolling();
     const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
     if (publicId && this.s !== 'saved') {
       this.cloudinaryService.deleteAsset(publicId, 'video').subscribe();
@@ -807,6 +817,13 @@ export class LessonCardComponent implements OnInit, OnDestroy {
             videoUrl: null,
             videoPublicId: null,
           });
+
+          // Kick off transcript polling if this lesson has a video but no transcript yet
+          const finalLessonId = lessonId || newId;
+          const currentPublicId = this.lessonForm.get('videoPublicId')?.value || payload.videoPublicId;
+          if (finalLessonId && currentPublicId && !this.lessonForm.get('transcript')?.value) {
+            this.startTranscriptPolling(finalLessonId);
+          }
 
           this.clearPersistedUploadState();
           this.clearDraftAfterSave();
@@ -1180,5 +1197,49 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       default:
         return 'You have unsaved changes. Leaving now may lose your work.';
     }
+  }
+
+  // transcript
+  // ─────────────────────────────────────────────────────────
+  // Transcript Polling
+  // ─────────────────────────────────────────────────────────
+  private startTranscriptPolling(lessonId: string): void {
+    this.stopTranscriptPolling(); // safety: clear any existing poll
+    this.isPollingTranscript = true;
+    this.transcriptPollStartTime = Date.now();
+    this.cdr.markForCheck();
+
+    this.transcriptPollInterval = setInterval(() => {
+      if (Date.now() - this.transcriptPollStartTime > this.TRANSCRIPT_POLL_TIMEOUT_MS) {
+        console.warn('[LessonCard] Transcript polling timed out for lesson', lessonId);
+        this.stopTranscriptPolling();
+        return;
+      }
+
+      this.lessonsService
+        .getTranscriptionStatus(this.courseId, this.sectionId, lessonId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (status) => {
+            if (status.transcriptReady && status.transcript) {
+              this.lessonForm.patchValue({ transcript: status.transcript }, { emitEvent: false });
+              this.stopTranscriptPolling();
+              this.toastr.success('Transcript generated successfully');
+              this.cdr.markForCheck();
+            }
+          },
+          error: (err) => {
+            console.warn('[LessonCard] Transcript poll failed (will retry):', err);
+          },
+        });
+    }, this.TRANSCRIPT_POLL_INTERVAL_MS);
+  }
+
+  private stopTranscriptPolling(): void {
+    if (this.transcriptPollInterval) {
+      clearInterval(this.transcriptPollInterval);
+      this.transcriptPollInterval = null;
+    }
+    this.isPollingTranscript = false;
   }
 }
