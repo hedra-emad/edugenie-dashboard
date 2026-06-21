@@ -1,7 +1,7 @@
 import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
@@ -40,6 +40,8 @@ export class LoginPageComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
@@ -52,9 +54,18 @@ export class LoginPageComponent implements OnInit {
 
   ngOnInit() {
     this.onResize();
+    this.route.queryParams.subscribe((params) => {
+      if (params['error']) {
+        if (params['error'] === 'invalid_token') {
+          this.errorMessage.set('Invalid or missing authentication token.');
+        } else if (params['error'] === 'auth_failed') {
+          this.errorMessage.set('Authentication failed. Please log in again.');
+        } else {
+          this.errorMessage.set('An error occurred during authentication.');
+        }
+      }
+    });
   }
-
-  private router = inject(Router);
 
  loginForm: FormGroup = this.fb.group({
   email: [
@@ -90,6 +101,15 @@ export class LoginPageComponent implements OnInit {
         next: (res: LoginResponse) => {
           this.isLoading.set(false);
           const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
+
+          if (this.authService.isExternalRedirect(homeRoute)) {
+            // Student — leave the Angular app entirely.
+            // Using the exchangeToken from backend response to authenticate in Next.js
+            const token = res.data.exchangeToken;
+            window.location.href = `${this.authService.getStudentAppRedirectUrl()}/auth-callback?token=${token}`;
+            return;
+          }
+
           this.router.navigate([homeRoute]);
         },
 

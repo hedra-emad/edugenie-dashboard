@@ -24,9 +24,14 @@ export const roleGuard: CanActivateFn = (route) => {
         return true;
       }
 
-      return router.createUrlTree([
-        authService.getHomeRouteForRole(user.role),
-      ]);
+      const homeRoute = authService.getHomeRouteForRole(user.role);
+
+      if (authService.isExternalRedirect(homeRoute)) {
+        window.location.href = authService.getStudentAppRedirectUrl();
+        return false; // block internal navigation, browser is leaving
+      }
+
+      return router.createUrlTree([homeRoute]);
     }),
   );
 };
