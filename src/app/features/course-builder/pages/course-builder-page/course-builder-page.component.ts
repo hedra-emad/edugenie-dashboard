@@ -55,7 +55,7 @@ export class CourseBuilderPageComponent implements OnInit {
 
     const currentId = this.courseId();
     if (!currentId || currentId === 'null' || currentId === 'undefined') {
-      console.warn('No valid courseId in URL');
+      // console.warn('No valid courseId in URL');
     } else {
       this.fetchCourseData();
     }

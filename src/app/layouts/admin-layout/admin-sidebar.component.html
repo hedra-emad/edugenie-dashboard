@@ -1,118 +1,132 @@
-<div class="admin-sidebar transition-all duration-300" 
-     [class.sidebar--desktop]="!isMobile"
-     [class.sidebar--mobile]="isMobile"
-     [class.sidebar--expanded]="isMobile && sidebarExpanded"
-     [class.sidebar--collapsed]="isCollapsed">
-  
-  <!-- Mobile toggle button -->
-  <div *ngIf="isMobile" class="flex justify-center py-3 shrink-0">
-    <button
-      (click)="toggle.emit()"
-      class="sidebar__toggle w-10 h-10 flex items-center justify-center rounded-full
-             cursor-pointer transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
-      [style.color]="'var(--color-surface)'"
-      aria-label="Toggle sidebar">
-      <mat-icon>{{ sidebarExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
-    </button>
-  </div>
+<aside
+  class="admin-sidebar shrink-0"
+  [class.sidebar--desktop]="!isOverlay"
+  [class.sidebar--overlay]="isOverlay"
+  [class.sidebar--overlay-open]="isOverlay && sidebarExpanded"
+  [class.sidebar--icon-rail]="!isOverlay && !sidebarExpanded">
 
-  <!-- Admin Profile Section -->
-  <div class="sidebar-profile flex flex-col items-center text-center py-4 transition-all duration-300">
-    <div *ngIf="user?.avatar; else noAvatar">
-      <img
-        class="rounded-full object-cover transition-all duration-300"
-        [ngClass]="{
-          'sidebar-profile__avatar--small': isCollapsed,
-          'sidebar-profile__avatar--large': !isCollapsed
-        }"
-        [src]="user?.avatar"
-        alt="User avatar"
-      />
+  <!-- ── Overlay header: brand + close button ── -->
+  @if (isOverlay) {
+    <div class="overlay-header shrink-0">
+      <span class="overlay-brand">EduGenie</span>
+      <button class="overlay-close" (click)="toggle.emit()" aria-label="Close menu">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
-    <ng-template #noAvatar>
-       <div 
-        class="rounded-full transition-all duration-300 flex items-center justify-center bg-gray-200 text-gray-600 font-bold"
-        [ngClass]="{
-          'sidebar-profile__avatar--small': isCollapsed,
-          'sidebar-profile__avatar--large': !isCollapsed,
-          'text-xs': isCollapsed,
-          'text-2xl': !isCollapsed
-        }">
-          {{ userInitials }}
-       </div>
-    </ng-template>
+  }
 
-    <h3 *ngIf="!isCollapsed"
-        class="sidebar-profile__name mt-2 text-sm font-semibold truncate transition-all duration-300"
-        [ngClass]="{
-          'text-white': isMobile,
-          'sidebar-profile__name--desktop': !isMobile
-        }">
-      {{ user?.firstName }} {{ user?.lastName }}
-    </h3>
-    <p *ngIf="!isCollapsed"
-       class="sidebar-profile__role text-xs truncate transition-all duration-300 uppercase"
-       [ngClass]="{
-         'text-white/70': isMobile,
-         'sidebar-profile__role--desktop': !isMobile
-       }">
-     {{ user?.role }}
-    </p>
+  <!-- ── Desktop collapse/expand toggle ── -->
+  @if (!isOverlay) {
+    <div class="desktop-toggle-row shrink-0">
+      <button
+        class="desktop-toggle"
+        (click)="toggle.emit()"
+        [title]="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'">
+        <mat-icon>{{ sidebarExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+      </button>
+    </div>
+  }
+
+  <!-- ── Profile section ── -->
+  <div class="sidebar-profile shrink-0" [class.profile--collapsed]="!isOverlay && !sidebarExpanded">
+
+    @if (user?.avatar) {
+      <img
+        class="profile-avatar rounded-full object-cover"
+        [class.profile-avatar--small]="!isOverlay && !sidebarExpanded"
+        [src]="user!.avatar"
+        alt="User avatar" />
+    } @else {
+      <div
+        class="profile-initials rounded-full font-bold"
+        [class.profile-initials--small]="!isOverlay && !sidebarExpanded"
+        [class.profile-initials--overlay]="isOverlay">
+        {{ userInitials }}
+      </div>
+    }
+
+    @if (showLabel) {
+      <h3
+        class="profile-name truncate"
+        [class.profile-name--overlay]="isOverlay">
+        {{ user?.firstName }} {{ user?.lastName }}
+      </h3>
+      <p
+        class="profile-role truncate uppercase"
+        [class.profile-role--overlay]="isOverlay">
+        {{ user?.role }}
+      </p>
+    }
   </div>
 
-  <!-- Divider -->
-  <div class="sidebar-divider"></div>
+  <div class="sidebar-divider shrink-0"></div>
 
-  <!-- Navigation Menu Items -->
-  <nav class="nav-menu flex-1 overflow-y-auto overflow-x-hidden">
-    <ul class="nav-list px-3 py-2 flex flex-col gap-1">
-      <li *ngFor="let item of menuItems">
-        <a [routerLink]="item.route"
-           routerLinkActive="active-item"
-           [routerLinkActiveOptions]="{ exact: false }"
-           (click)="isMobile && toggle.emit()"
-           class="nav-link flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-primary)] min-w-0"
-           [ngClass]="{
-             'justify-center px-0': isCollapsed,
-             'gap-3 px-3': !isCollapsed
-           }"
-           [title]="item.label">
-          <mat-icon class="nav-icon shrink-0 flex items-center justify-center w-5 h-5">{{ item.icon }}</mat-icon>
-          <span class="nav-label whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">{{ item.label }}</span>
-        </a>
-      </li>
+  <!-- ── Main navigation ── -->
+  <nav class="nav-area">
+    <ul class="nav-list">
+      @for (item of navItems; track item.route) {
+        <li>
+          <!--
+            On overlay (mobile/tablet): navigate via onNavClick(), [routerLink] still
+            provides routerLinkActive styling but the actual navigation is handled
+            imperatively to guarantee sidebar closes AFTER the route resolves.
+            On desktop: [routerLink] handles navigation normally.
+          -->
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="nav-active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="onNavClick(item.route)"
+            class="nav-link"
+            [class.nav-link--icon-only]="!isOverlay && !sidebarExpanded"
+            [class.nav-link--overlay]="isOverlay"
+            [title]="item.label">
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            @if (showLabel) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+          </a>
+        </li>
+      }
     </ul>
   </nav>
 
-  <!-- Bottom Section Menu Items -->
-  <div class="bottom-section">
+  <!-- ── Bottom items + Logout ── -->
+  <div class="sidebar-bottom shrink-0">
     <div class="sidebar-divider"></div>
-    <ul class="nav-list px-3 py-2 flex flex-col gap-1">
-      <li *ngFor="let item of bottomItems">
-        <a [routerLink]="item.route"
-           routerLinkActive="active-item"
-           (click)="isMobile && toggle.emit()"
-           class="nav-link flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-primary)] min-w-0"
-           [ngClass]="{
-             'justify-center px-0': isCollapsed,
-             'gap-3 px-3': !isCollapsed
-           }"
-           [title]="item.label">
-          <mat-icon class="nav-icon shrink-0 flex items-center justify-center w-5 h-5">{{ item.icon }}</mat-icon>
-          <span class="nav-label whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">{{ item.label }}</span>
-        </a>
-      </li>
+    <ul class="nav-list">
+      @for (item of bottomItems; track item.route) {
+        <li>
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="nav-active"
+            (click)="onNavClick(item.route)"
+            class="nav-link"
+            [class.nav-link--icon-only]="!isOverlay && !sidebarExpanded"
+            [class.nav-link--overlay]="isOverlay"
+            [title]="item.label">
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            @if (showLabel) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+          </a>
+        </li>
+      }
+
       <li>
-        <button (click)="onLogout()" class="nav-link logout-btn flex items-center w-full h-11 rounded-md transition-all duration-300 text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-hover)] min-w-0" 
-           [ngClass]="{
-             'justify-center px-0': isCollapsed,
-             'gap-3 px-3': !isCollapsed
-           }"
-           title="Logout">
-          <mat-icon class="nav-icon text-red-400 shrink-0 flex items-center justify-center w-5 h-5">logout</mat-icon>
-          <span class="nav-label text-red-400 whitespace-nowrap overflow-hidden transition-all duration-300" *ngIf="!isCollapsed">Logout</span>
+        <button
+          class="nav-link nav-link--btn"
+          [class.nav-link--icon-only]="!isOverlay && !sidebarExpanded"
+          [class.nav-link--overlay]="isOverlay"
+          (click)="onLogout()"
+          title="Logout">
+          <mat-icon class="nav-icon nav-icon--logout">logout</mat-icon>
+          @if (showLabel) {
+            <span class="nav-label nav-label--logout">Logout</span>
+          }
         </button>
       </li>
     </ul>
   </div>
-</div>
+
+</aside>

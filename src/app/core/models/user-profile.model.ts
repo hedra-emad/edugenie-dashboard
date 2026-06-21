@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'instructor' | 'admin';
+export type UserRole = 'student' | 'instructor' | 'admin' | 'superadmin';
 
 export interface UserProfile {
   id: string;
@@ -19,6 +19,7 @@ export interface LoginResponse {
   data: {
     message: string;
     user: UserProfile;
+    exchangeToken?: string;
   };
 }
 

@@ -7,11 +7,14 @@ import { InstructorAnalyticsResponse } from '../models/instructor-analytics.mode
   providedIn: 'root'
 })
 export class InstructorAnalyticsService {
-  getAdminStats() {
-    throw new Error('Method not implemented.');
-  }
   private http = inject(HttpClient);
   private apiUrl = '/courses';
+
+  getAdminStats(): Observable<any> {
+    return this.http
+      .get<{ success: boolean; data: any }>(`${this.apiUrl}/admin/stats`)
+      .pipe(map(response => response.data));
+  }
 
   getStats(): Observable<InstructorAnalyticsResponse> {
     return this.http

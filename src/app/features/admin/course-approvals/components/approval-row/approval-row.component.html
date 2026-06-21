@@ -1,8 +1,19 @@
+<!-- Checkbox — hidden on read-only tabs (Approved / Rejected) -->
+@if (!readonly) {
+  <td data-label="Select" class="checkbox-cell" (click)="$event.stopPropagation()">
+    <input type="checkbox" class="custom-checkbox" [checked]="isSelected" (change)="toggleSelection.emit(course.id)" />
+  </td>
+}
+
 <!-- Course Title & Category -->
 <td data-label="Course">
   <div class="course-info">
     <div class="thumbnail-container">
-      <mat-icon class="thumbnail-icon">{{ course.thumbnail }}</mat-icon>
+      @if (course.thumbnail && course.thumbnail.startsWith('http')) {
+        <img [src]="course.thumbnail" [alt]="course.title" class="thumb-img" />
+      } @else {
+        <mat-icon class="thumbnail-icon">video_library</mat-icon>
+      }
     </div>
     <div class="course-details">
       <h4 class="course-title">{{ course.title }}</h4>
@@ -14,59 +25,68 @@
 <!-- Instructor -->
 <td data-label="Instructor">
   <div class="instructor-container">
-    <img *ngIf="course.instructorAvatar; else initialsOnly" 
-         [src]="course.instructorAvatar" 
-         [alt]="course.instructorName" 
-         class="instructor-avatar" />
-    <ng-template #initialsOnly>
+    @if (course.instructorAvatar) {
+      <img [src]="course.instructorAvatar" [alt]="course.instructorName" class="instructor-avatar" />
+    } @else {
       <div class="instructor-initials">{{ instructorInitials }}</div>
-    </ng-template>
+    }
     <span class="instructor-name">{{ course.instructorName }}</span>
   </div>
 </td>
 
-<!-- Video Length -->
-<td data-label="Video Length">
-  <div *ngIf="course.exceedsLimit; else normalDuration" class="warning-badge" title="Video length exceeds the allowed platform upload limits.">
-    <mat-icon class="warning-icon">warning</mat-icon>
-    <span>{{ course.videoDuration }} - Exceeds Limit</span>
-  </div>
-  <ng-template #normalDuration>
-    <span class="duration-text">{{ course.videoDuration }}</span>
-  </ng-template>
+<!-- Status -->
+<td data-label="Status">
+  <span class="status-pill" [ngClass]="'status-' + course.status">
+    <span class="status-dot"></span>
+    {{ course.status | titlecase }}
+  </span>
 </td>
 
-<!-- Actions / Status -->
+<!-- Video Duration -->
+<td data-label="Duration">
+  @if (course.exceedsLimit) {
+    <div class="warning-badge" title="Video length exceeds allowed platform limits.">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      <span>{{ course.videoDuration }}</span>
+    </div>
+  } @else {
+    <span class="duration-text">{{ course.videoDuration }}</span>
+  }
+</td>
+
+<!-- Actions — hidden on read-only tabs, replaced with a view arrow -->
 <td data-label="Actions">
   <div class="actions-cell">
-    <!-- If pending, show action buttons -->
-    <ng-container *ngIf="course.status === 'pending'; else statusBadge">
-      <button 
-        (click)="onReject()" 
-        [disabled]="actionLoading" 
-        class="action-btn reject-btn" 
-        title="Reject Upload">
-        <div *ngIf="actionLoading; else rejectIcon" class="spinner reject-spinner"></div>
-        <ng-template #rejectIcon>
-          <mat-icon class="scale-90">close</mat-icon>
-        </ng-template>
+    @if (!readonly && course.status === 'pending') {
+      <!-- Reject -->
+      <button
+        (click)="onReject($event)"
+        [disabled]="anyLoading"
+        class="action-btn reject-btn"
+        title="Reject Course">
+        @if (rejectLoading) {
+          <div class="spinner reject-spinner"></div>
+        } @else {
+          <mat-icon>close</mat-icon>
+        }
       </button>
-
-      <button 
-        (click)="onApprove()" 
-        [disabled]="actionLoading" 
-        class="action-btn approve-btn" 
-        title="Approve Upload">
-        <div *ngIf="actionLoading; else approveIcon" class="spinner"></div>
-        <ng-template #approveIcon>
-          <mat-icon class="scale-90">check</mat-icon>
-        </ng-template>
+      <!-- Approve -->
+      <button
+        (click)="onApprove($event)"
+        [disabled]="anyLoading"
+        class="action-btn approve-btn"
+        title="Approve Course">
+        @if (approveLoading) {
+          <div class="spinner"></div>
+        } @else {
+          <mat-icon>check</mat-icon>
+        }
       </button>
-    </ng-container>
-
-    <!-- If not pending, show status badge -->
-    <ng-template #statusBadge>
-      <app-approval-status-badge [status]="course.status"></app-approval-status-badge>
-    </ng-template>
+    } @else {
+      <!-- Read-only: just navigate to course detail -->
+      <span class="view-link" title="View Details">
+        <mat-icon>arrow_forward</mat-icon>
+      </span>
+    }
   </div>
 </td>

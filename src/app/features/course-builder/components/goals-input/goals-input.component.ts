@@ -21,18 +21,33 @@ export class GoalsInputComponent {
   }
 
   addGoal() {
-    this.goalsArray.push(
-      this.fb.control('', [
-        Validators.required,
-        Validators.pattern(/.*\S.*/)
-      ])
-    );
-
+    const newControl = this.fb.control('', [
+      Validators.required,
+      Validators.pattern(/.*\S.*/)
+    ]);
+    
+    this.goalsArray.push(newControl);
     this.goalsArray.markAsDirty();
+    
+    // Focus the new input after a short delay
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('app-goals-input input[type="text"]');
+      const lastInput = inputs[inputs.length - 1] as HTMLInputElement;
+      if (lastInput) {
+        lastInput.focus();
+      }
+    }, 100);
   }
 
   removeGoal(index: number) {
-    this.goalsArray.removeAt(index);
-    this.goalsArray.markAsDirty();
+    if (this.goalsArray.length > 0) {
+      this.goalsArray.removeAt(index);
+      this.goalsArray.markAsDirty();
+    }
+  }
+
+  // Helper method to check if goal should show error
+  shouldShowGoalError(control: FormControl): boolean {
+    return control.invalid && (control.touched || control.dirty);
   }
 }

@@ -1,4 +1,5 @@
-<div class="admin-layout-wrapper">
+<div class="admin-layout-wrapper" [style.background]="'var(--color-background-page)'">
+
   <!-- Sidebar -->
   <app-admin-sidebar
     [isMobile]="isMobile"
@@ -7,21 +8,27 @@
     (toggle)="toggleSidebar()">
   </app-admin-sidebar>
 
-  <!-- Mobile Overlay Backdrop -->
-  <div
-    class="sidebar-backdrop"
-    *ngIf="isMobile && sidebarExpanded"
-    (click)="closeMobileSidebar()">
-  </div>
+  <!-- Backdrop: shown on mobile + tablet when sidebar is open -->
+  @if ((isMobile || isTablet) && sidebarExpanded) {
+    <div class="sidebar-backdrop" (click)="closeOverlaySidebar()"></div>
+  }
 
-  <!-- Main Area -->
-  <div class="main-container" [class.sidebar-collapsed]="isTablet || (!isMobile && !sidebarExpanded)">
-    <!-- Header -->
-    <app-admin-header (toggleSidebar)="toggleSidebar()"></app-admin-header>
+  <!-- Main content — never resizes; sidebar is position:fixed on mobile+tablet -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
 
-    <!-- Page Content -->
-    <main class="page-content">
+    <!-- Menu trigger: visible only on tablet + mobile, sits above page content -->
+    @if (isMobile || isTablet) {
+      <button
+        class="menu-trigger"
+        (click)="toggleSidebar()"
+        aria-label="Open navigation menu">
+        <mat-icon>{{ sidebarExpanded ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+    }
+
+    <main class="main-content">
       <router-outlet></router-outlet>
     </main>
   </div>
+
 </div>

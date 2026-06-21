@@ -55,19 +55,14 @@
     </div>
 
     <ng-container *ngIf="!isLoading">
-      <div *ngIf="sections.length === 0"
-        class="text-center py-16 border-2 border-dashed border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] shadow-sm">
-        <mat-icon
-          class="text-[var(--color-text-secondary)] opacity-50 text-[48px] w-12 h-12 mx-auto mb-2">layers</mat-icon>
-        <p class="text-sm font-bold text-[var(--color-text-primary)]">Your curriculum is empty</p>
-        <p class="text-xs text-[var(--color-text-secondary)] mt-1 max-w-[280px] mx-auto">
-          Add sections to structure your lectures, quizzes, and project uploads.
-        </p>
-        <button type="button" (click)="addSection()"
-          class="mt-4 text-xs font-extrabold text-[var(--color-primary)] uppercase tracking-wider px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-background)] transition-colors">
-          Create First Section
-        </button>
-      </div>
+      <app-empty-state 
+        *ngIf="sections.length === 0"
+        icon="layers"
+        title="Your curriculum is empty"
+        description="Add sections to structure your lectures, quizzes, and project uploads."
+        actionLabel="Create First Section"
+        (actionClicked)="addSection()">
+      </app-empty-state>
 
       <!-- Section list -->
       <div *ngIf="sections.length > 0" cdkDropList (cdkDropListDropped)="onSectionDropped($event)" class="space-y-3">

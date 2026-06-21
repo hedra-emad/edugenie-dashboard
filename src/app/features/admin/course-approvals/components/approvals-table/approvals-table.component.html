@@ -1,67 +1,148 @@
 <div class="approvals-card">
+
   <!-- Card Header -->
   <div class="card-header">
-    <div class="header-title-section">
-      <h3>Pending Review</h3>
-      <span class="pending-badge" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
+    <div class="header-top">
+      <div class="header-title-section">
+        <h3>{{ cardTitle }}</h3>
+        @if (badgeCount > 0) {
+          <span class="count-badge"
+            [class.badge-orange]="currentFilter === 'pending'"
+            [class.badge-green]="currentFilter === 'approved'"
+            [class.badge-red]="currentFilter === 'rejected'"
+            [class.badge-gray]="currentFilter === 'all'">
+            {{ badgeCount }}
+          </span>
+        }
+        @if (selectedCount > 0) {
+          <span class="selected-indicator">
+            {{ selectedCount }} selected
+          </span>
+        }
+      </div>
+
+      <!-- Live Search -->
+      <div class="search-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by title, instructor, category..."
+          [value]="searchQuery"
+          (input)="onSearch($event)"
+          aria-label="Search courses" />
+        @if (searchQuery) {
+          <button class="search-clear" (click)="clearSearch()" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
     </div>
 
-    <!-- Filtering -->
-    <div class="filter-wrapper">
-      <button (click)="toggleFilterDropdown()" class="filter-btn" [class.active]="currentFilter !== 'pending'" aria-haspopup="true">
-        <mat-icon class="scale-90">filter_list</mat-icon>
-        <span>Show: {{ currentFilter | titlecase }}</span>
-        <mat-icon class="scale-75">keyboard_arrow_down</mat-icon>
+    <!-- Filter Tabs -->
+    <div class="filter-tabs" role="tablist">
+      <button role="tab" class="filter-tab" [class.active-all]="currentFilter === 'all'" (click)="setFilter('all')">
+        All <span class="tab-count">{{ totalCount }}</span>
       </button>
-
-      <div class="filter-dropdown" *ngIf="showFilterDropdown">
-        <button (click)="setFilter('pending')" class="filter-option" [class.selected]="currentFilter === 'pending'">
-          <span>Pending Only</span>
-          <mat-icon *ngIf="currentFilter === 'pending'" class="scale-75">check</mat-icon>
-        </button>
-        <button (click)="setFilter('approved')" class="filter-option" [class.selected]="currentFilter === 'approved'">
-          <span>Approved Only</span>
-          <mat-icon *ngIf="currentFilter === 'approved'" class="scale-75">check</mat-icon>
-        </button>
-        <button (click)="setFilter('rejected')" class="filter-option" [class.selected]="currentFilter === 'rejected'">
-          <span>Rejected Only</span>
-          <mat-icon *ngIf="currentFilter === 'rejected'" class="scale-75">check</mat-icon>
-        </button>
-        <button (click)="setFilter('all')" class="filter-option" [class.selected]="currentFilter === 'all'">
-          <span>Show All</span>
-          <mat-icon *ngIf="currentFilter === 'all'" class="scale-75">check</mat-icon>
-        </button>
-      </div>
+      <button role="tab" class="filter-tab" [class.active-pending]="currentFilter === 'pending'" (click)="setFilter('pending')">
+        Pending Review <span class="tab-count pending-count">{{ pendingCount }}</span>
+      </button>
+      <button role="tab" class="filter-tab" [class.active-approved]="currentFilter === 'approved'" (click)="setFilter('approved')">
+        Approved <span class="tab-count approved-count">{{ approvedCount }}</span>
+      </button>
+      <button role="tab" class="filter-tab" [class.active-rejected]="currentFilter === 'rejected'" (click)="setFilter('rejected')">
+        Rejected <span class="tab-count rejected-count">{{ rejectedCount }}</span>
+      </button>
     </div>
   </div>
 
-  <!-- Table Section -->
+  <!-- Table -->
   <div class="table-container">
-    <table *ngIf="filteredCourses.length > 0; else noData">
-      <thead>
-        <tr>
-          <th>Course Title & Category</th>
-          <th>Instructor</th>
-          <th>Video Length</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr app-approval-row 
-            *ngFor="let course of filteredCourses; trackBy: trackByCourseId"
-            [course]="course"
-            [actionLoading]="!!actionLoading[course.id]"
-            (approve)="approve.emit($event)"
-            (reject)="reject.emit($event)">
-        </tr>
-      </tbody>
-    </table>
+    @if (filteredCourses.length > 0) {
+      <table>
+        <thead>
+          <tr>
+            @if (!isReadonlyTab) {
+              <th class="checkbox-th">
+                <label class="select-all-label">
+                  <input
+                    type="checkbox"
+                    class="custom-checkbox"
+                    [checked]="allSelected"
+                    [indeterminate]="someSelected"
+                    (change)="toggleAll()"
+                    aria-label="Select all visible courses" />
+                  <span class="select-all-text">Select All</span>
+                </label>
+              </th>
+            }
+            <th>Course</th>
+            <th>Instructor</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th class="actions-th">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (course of pagedCourses; track trackByCourseId($index, course)) {
+            <tr app-approval-row
+                [course]="course"
+                [approveLoading]="isApproveLoading(course.id)"
+                [rejectLoading]="isRejectLoading(course.id)"
+                [isSelected]="selectedIds.has(course.id)"
+                [readonly]="isReadonlyTab"
+                (toggleSelection)="toggleRow($event)"
+                (click)="onRowClick(course)"
+                (approve)="onApprove($event)"
+                (reject)="onReject($event)"
+                style="cursor: pointer;">
+            </tr>
+          }
+        </tbody>
+      </table>
 
-    <ng-template #noData>
+      <!-- Pagination bar -->
+      @if (totalPages > 1 || totalFiltered > 10) {
+        <div class="pagination-bar">
+          <span class="pagination-info">
+            Showing {{ pageFrom }}–{{ pageTo }} of {{ totalFiltered }}
+          </span>
+
+          <div class="pagination-controls">
+            <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0" aria-label="Previous page">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.page-btn--active]="p === pageIndex" (click)="setPage(p)">
+                {{ p + 1 }}
+              </button>
+            }
+            <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1" aria-label="Next page">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+
+          <div class="page-size-wrapper">
+            <span class="page-size-label">Per page</span>
+            @for (size of pageSizeOptions; track size) {
+              <button class="page-size-btn" [class.page-size-btn--active]="pageSize === size" (click)="setPageSize(size)">
+                {{ size }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+    } @else {
       <div class="empty-state">
-        <mat-icon class="empty-icon">inbox</mat-icon>
-        <p class="empty-text">No courses found matching "{{ currentFilter }}" status</p>
+        <mat-icon class="empty-icon">{{ searchQuery ? 'search_off' : 'inbox' }}</mat-icon>
+        <p class="empty-text">
+          {{ searchQuery ? 'No courses match "' + searchQuery + '"' : 'No courses found for this filter.' }}
+        </p>
+        @if (searchQuery) {
+          <button class="empty-clear-btn" (click)="clearSearch()">Clear Search</button>
+        }
       </div>
-    </ng-template>
+    }
   </div>
 </div>

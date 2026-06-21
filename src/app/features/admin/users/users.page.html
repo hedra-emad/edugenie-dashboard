@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 <div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
 <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
+=======
+<div class="um-root">
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
 
   <!-- ═══════════════════════════════════════════
        HEADER
   ═══════════════════════════════════════════ -->
+<<<<<<< HEAD
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
     <div>
       <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
@@ -20,12 +25,24 @@
     
     <button mat-flat-button class="!rounded-xl !px-6 !h-10 !text-[13px] !font-semibold !text-white shrink-0 w-full sm:w-auto" style="background-color:#3B1892;box-shadow:0 4px 14px rgba(59,24,146,0.35);">
       Export Report
+=======
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight m-0">
+        User Management
+      </h1>
+      <p class="text-sm text-gray-500 mt-1 m-0">Manage platform accounts, roles, and access statuses.</p>
+    </div>
+    <button class="um-btn-export w-full sm:w-auto">
+      Export Platform Report
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
     </button>
   </div>
 
   <!-- ═══════════════════════════════════════════
        FILTERS CARD
   ═══════════════════════════════════════════ -->
+<<<<<<< HEAD
   <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4">
 
     <!-- Search -->
@@ -71,11 +88,38 @@
         <span class="text-violet-600">{{ users.length }}</span> / {{ totalUsers }} users
       </span>
     </div>
+=======
+  <div class="um-filters-card flex flex-col sm:flex-row sm:items-center gap-3">
+
+    <!-- Search -->
+    <div class="um-search-wrap w-full sm:flex-1 min-w-0">
+      <mat-icon class="um-search-wrap__icon">search</mat-icon>
+      <input type="text" placeholder="Search by name, email, or ID…" class="um-search-wrap__input" />
+    </div>
+
+    <!-- Role + Status dropdowns -->
+    <div class="flex gap-2 w-full sm:w-auto shrink-0">
+      <button class="um-filter-btn flex-1 sm:flex-none">
+        All Roles
+        <mat-icon class="um-filter-btn__chevron">expand_more</mat-icon>
+      </button>
+      <button class="um-filter-btn flex-1 sm:flex-none">
+        All Statuses
+        <mat-icon class="um-filter-btn__chevron">expand_more</mat-icon>
+      </button>
+    </div>
+
+    <!-- Results count -->
+    <span class="text-xs sm:text-sm font-medium text-gray-500 sm:ml-auto whitespace-nowrap">
+      Showing 1–10 of 2,451 users
+    </span>
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
   </div>
 
   <!-- ═══════════════════════════════════════════
        TABLE CARD
   ═══════════════════════════════════════════ -->
+<<<<<<< HEAD
   <div class="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden relative">
     <div *ngIf="isLoading" class="w-full flex flex-col gap-4 p-6 animate-pulse" aria-busy="true" aria-label="Loading users">
       <div *ngFor="let s of [1,2,3,4,5]" class="flex items-center gap-6 pb-4 border-b border-slate-100 last:border-0">
@@ -104,10 +148,27 @@
           <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
           <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
         </div>
+=======
+  <div class="um-table-card">
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isChangingRole" class="um-skeleton-wrap" aria-busy="true" aria-label="Loading users">
+      <div *ngFor="let s of [1,2,3]" class="um-skeleton-row">
+        <div class="um-skeleton um-skeleton--avatar"></div>
+        <div class="um-skeleton-lines">
+          <div class="um-skeleton um-skeleton--line um-skeleton--line-lg"></div>
+          <div class="um-skeleton um-skeleton--line um-skeleton--line-sm"></div>
+        </div>
+        <div class="um-skeleton um-skeleton--line um-skeleton--line-md um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--pill um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--pill um-skeleton--ml"></div>
+        <div class="um-skeleton um-skeleton--actions um-skeleton--ml"></div>
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
       </div>
     </div>
 
     <!-- Table — overflow-x-auto so it scrolls on mobile instead of overflowing -->
+<<<<<<< HEAD
     <div *ngIf="!isLoading" class="overflow-x-auto w-full animate-fade-in">
       <table class="w-full text-left border-collapse min-w-[800px]">
         <thead class="bg-gradient-to-r from-[#3B1892]/10 via-[#3B1892]/5 to-transparent border-b border-[#3B1892]/20 sticky top-0 z-10">
@@ -132,11 +193,35 @@
                 <div class="flex flex-col min-w-0">
                   <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{user.name || user.firstName + ' ' + user.lastName}}</span>
                   <span class="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Joined {{user.createdAt | date}}</span>
+=======
+    <div class="overflow-x-auto w-full" [class.um-table-wrap--hidden]="isChangingRole">
+      <table class="um-table min-w-[600px]">
+        <thead class="um-table__head">
+          <tr>
+            <th class="um-table__th px-3 sm:px-6 py-3">Name</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Email</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Role</th>
+            <th class="um-table__th px-3 sm:px-6 py-3">Status</th>
+            <th class="um-table__th um-table__th--center px-3 sm:px-6 py-3 w-[120px]">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users; let i = index" class="um-table__row">
+
+            <!-- Name + Avatar -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Name">
+              <div class="um-user-cell">
+                <img [src]="user.avatar" class="um-user-cell__avatar" alt="{{user.name}} avatar" />
+                <div class="um-user-cell__info">
+                  <span class="um-user-cell__name">{{user.name}}</span>
+                  <span class="um-user-cell__joined">{{user.joined}}</span>
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
                 </div>
               </div>
             </td>
 
             <!-- Email -->
+<<<<<<< HEAD
             <td class="px-6 py-4 align-middle">
               <span class="text-[13px] font-medium text-slate-500 whitespace-nowrap">{{user.email}}</span>
             </td>
@@ -164,10 +249,64 @@
               <span *ngIf="user.status === 'deactivated'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
                 Deactivated
+=======
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Email">
+              <span class="um-email">{{user.email}}</span>
+            </td>
+
+            <!-- Role dropdown (mat-menu) — bindings untouched -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Role">
+              <div [matMenuTriggerFor]="roleMenu" class="um-role-trigger">
+                <span class="um-role-trigger__label">{{user.role}}</span>
+                <mat-icon class="um-role-trigger__chevron">expand_more</mat-icon>
+              </div>
+
+              <mat-menu #roleMenu="matMenu" class="um-role-menu">
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'student')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'student'">
+                    {{user.role === 'student' ? 'check' : ''}}
+                  </mat-icon>
+                  Student
+                </button>
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'instructor')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'instructor'">
+                    {{user.role === 'instructor' ? 'check' : ''}}
+                  </mat-icon>
+                  Instructor
+                </button>
+                <button mat-menu-item class="um-role-menu__item" (click)="changeRole(user, 'admin')">
+                  <mat-icon class="um-role-menu__icon" [class.um-role-menu__icon--active]="user.role === 'admin'">
+                    {{user.role === 'admin' ? 'check' : ''}}
+                  </mat-icon>
+                  Admin
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item class="um-role-menu__item um-role-menu__item--danger"
+                  (click)="changeRole(user, 'superadmin')">
+                  <mat-icon class="um-role-menu__icon um-role-menu__icon--danger"
+                    [class.um-role-menu__icon--active]="user.role === 'superadmin'">
+                    {{user.role === 'superadmin' ? 'check' : 'shield'}}
+                  </mat-icon>
+                  Super Admin
+                </button>
+              </mat-menu>
+            </td>
+
+            <!-- Status badge -->
+            <td class="um-table__td px-3 sm:px-6 py-3 sm:py-4" data-label="Status">
+              <span class="um-status-badge" [ngClass]="{
+                  'um-status-badge--active':   user.status === 'Active',
+                  'um-status-badge--inactive': user.status === 'Inactive',
+                  'um-status-badge--banned':   user.status === 'Banned'
+                }">
+                <span class="um-status-badge__dot"></span>
+                {{user.status}}
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
               </span>
             </td>
 
             <!-- Actions -->
+<<<<<<< HEAD
             <td class="px-6 py-4 align-middle">
               <!-- Action Dropdown -->
               <div class="flex items-center justify-end pr-2">
@@ -196,6 +335,19 @@
                     Delete User
                   </button>
                 </mat-menu>
+=======
+            <td class="um-table__td um-table__td--center px-3 sm:px-6 py-3 sm:py-4" data-label="Actions">
+              <div class="flex items-center justify-center gap-1 sm:gap-2">
+                <button class="um-action-btn um-action-btn--edit min-w-[40px] min-h-[40px]" title="Edit user">
+                  <mat-icon class="um-action-btn__icon">edit</mat-icon>
+                </button>
+                <button class="um-action-btn um-action-btn--block min-w-[40px] min-h-[40px]" title="Block user">
+                  <mat-icon class="um-action-btn__icon">block</mat-icon>
+                </button>
+                <button class="um-action-btn um-action-btn--more min-w-[40px] min-h-[40px]" title="More options">
+                  <mat-icon class="um-action-btn__icon">more_vert</mat-icon>
+                </button>
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
               </div>
             </td>
 
@@ -205,6 +357,7 @@
     </div>
 
     <!-- Empty state -->
+<<<<<<< HEAD
     <div *ngIf="users.length === 0 && !isLoading" class="flex flex-col items-center justify-center py-20 px-4 text-center">
       <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
         <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px]">group_off</mat-icon>
@@ -252,12 +405,49 @@
                [class.hover:bg-slate-100]="currentPage < totalPages"
                [class.hover:text-[#3B1892]]="currentPage < totalPages"
                [class.text-[#3B1892]]="currentPage < totalPages">
+=======
+    <div *ngIf="users.length === 0 && !isChangingRole" class="um-empty-state">
+      <div class="um-empty-state__icon-wrap">
+        <mat-icon class="um-empty-state__icon">group_off</mat-icon>
+      </div>
+      <p class="um-empty-state__title">No users found</p>
+      <p class="um-empty-state__sub">Try adjusting your search or filters.</p>
+    </div>
+
+    <!-- ─── Pagination ──────────────────────────────────────────── -->
+    <nav class="flex items-center justify-center gap-3 sm:gap-4 px-4 py-4 border-t border-gray-200 bg-white"
+      aria-label="Pagination">
+      <!-- Previous -->
+      <button disabled aria-label="Previous page" class="w-10 h-10 rounded-full flex items-center justify-center
+               border border-slate-200 bg-white text-slate-400
+               opacity-40 cursor-not-allowed
+               transition-all duration-200">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">chevron_left</mat-icon>
+      </button>
+
+      <!-- Current page bubble + "Page X of Y" label -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span aria-current="page" class="w-10 h-10 rounded-full flex items-center justify-center
+                 bg-[var(--color-primary)] text-white font-bold text-sm
+                 shadow-sm shadow-purple-400/40 select-none">1</span>
+        <span class="hidden xs:inline text-xs sm:text-sm font-medium text-gray-400 whitespace-nowrap">
+          Page 1 of 245
+        </span>
+      </div>
+
+      <!-- Next -->
+      <button disabled aria-label="Next page" class="w-10 h-10 rounded-full flex items-center justify-center
+               border border-slate-200 bg-white text-slate-400
+               opacity-40 cursor-not-allowed
+               transition-all duration-200">
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
         <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">chevron_right</mat-icon>
       </button>
     </nav>
 
   </div><!-- /um-table-card -->
 
+<<<<<<< HEAD
   <!-- ═══════════════════════════════════════════
        BLOCK USER MODAL
   ═══════════════════════════════════════════ -->
@@ -344,4 +534,6 @@
     </div>
   </div>
 </div>
+=======
+>>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
 </div>

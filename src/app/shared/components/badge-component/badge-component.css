@@ -10,8 +10,8 @@
 }
 
 .badge--draft {
-  background: #F3F4F6;
-  color: var(--color-text-secondary);
+  background: var(--color-text-secondary);
+  color: var(--color-surface);
 }
 
 .badge--under-review {

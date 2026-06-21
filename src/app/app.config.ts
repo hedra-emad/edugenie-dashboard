@@ -15,7 +15,15 @@ import { AuthService } from './core/services/auth.service';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
 
 function initializeAuth(authService: AuthService) {
-  return () => firstValueFrom(authService.initializeAuth());
+  return async () => {
+    try {
+      await firstValueFrom(authService.initializeAuth());
+    } catch {
+      // Auth init failure must never abort Angular bootstrap.
+      // AuthService.initializeAuth() already handles errors internally,
+      // but guard here as a safety net against EmptyError / network errors.
+    }
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +36,18 @@ export const appConfig: ApplicationConfig = {
     provideToastr({
       positionClass: 'toast-bottom-left',
       preventDuplicates: true,
+      maxOpened: 3,
+      autoDismiss: true,
+      timeOut: 4000,
+      extendedTimeOut: 1000,
+      progressBar: true,
+      progressAnimation: 'increasing',
+      enableHtml: false,
+      closeButton: false,
+      tapToDismiss: true,
+      toastClass: 'ngx-toastr slide-in-left',
+      titleClass: 'toast-title',
+      messageClass: 'toast-message',
     }),
     provideCharts(withDefaultRegisterables()),
     {

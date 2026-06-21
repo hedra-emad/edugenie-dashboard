@@ -1,0 +1,203 @@
+import {
+  Component, OnInit, OnDestroy,
+  ChangeDetectionStrategy, ChangeDetectorRef, inject
+} from '@angular/core';
+import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+
+import { CourseApprovalService } from '../../course-approvals/services/course-approval.service';
+import { ToastrService } from 'ngx-toastr';
+
+@Component({
+  selector: 'app-course-details-page',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, MatIconModule, FormsModule, DatePipe, TitleCasePipe],
+  templateUrl: './course-details-page.component.html',
+  styleUrl: './course-details-page.component.css'
+})
+export class CourseDetailsPageComponent implements OnInit, OnDestroy {
+  private readonly route   = inject(ActivatedRoute);
+  private readonly router  = inject(Router);
+  private readonly service = inject(CourseApprovalService);
+  private readonly cdr     = inject(ChangeDetectorRef);
+  private readonly toastr  = inject(ToastrService);
+  private readonly destroy$ = new Subject<void>();
+
+  courseId: string | null = null;
+  course:   any = null;
+  loading  = true;
+  error    = false;
+
+  // ── Per-button loading — independent flags ────────────────────────────────
+  approveLoading = false;
+  rejectLoading  = false;
+
+  // ── Reject modal ──────────────────────────────────────────────────────────
+  showRejectModal      = false;
+  rejectReason         = '';
+  rejectReasonTouched  = false;
+
+  expandedSections: Record<number, boolean> = {};
+  playingVideoLessonId: string | null = null;
+
+  ngOnInit(): void {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      this.courseId = params.get('id');
+      if (this.courseId) {
+        this.loadCourse(this.courseId);
+      } else {
+        this.router.navigate(['/admin/course-approvals']);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadCourse(id: string): void {
+    this.loading = true;
+    this.error   = false;
+    this.cdr.markForCheck();
+
+    this.service.getCourseById(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: data => {
+        this.course = data;
+        if (this.course?.sections?.length > 0) {
+          this.expandedSections[0] = true;
+        }
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.error   = true;
+        this.loading = false;
+        this.toastr.error('Failed to load course details');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/admin/course-approvals']);
+  }
+
+  toggleSection(index: number): void {
+    this.expandedSections[index] = !this.expandedSections[index];
+    this.cdr.markForCheck();
+  }
+
+  toggleVideoPreview(lessonKey: string): void {
+    this.playingVideoLessonId =
+      this.playingVideoLessonId === lessonKey ? null : lessonKey;
+    this.cdr.markForCheck();
+  }
+
+  getTotalLessons(): number {
+    if (!this.course?.sections) return 0;
+    return this.course.sections.reduce(
+      (total: number, section: any) => total + (section.lessons?.length || 0), 0
+    );
+  }
+
+  // ── Approve ───────────────────────────────────────────────────────────────
+  approveCourse(): void {
+    if (!this.courseId || this.approveLoading || this.rejectLoading) return;
+    this.approveLoading = true;
+    this.cdr.markForCheck();
+
+    this.service.approveCourse(this.courseId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.approveLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe(success => {
+        if (success) {
+          this.course = { ...this.course, status: 'approved' };
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // ── Reject modal ──────────────────────────────────────────────────────────
+
+  /** Open modal — no loading starts here */
+  openRejectModal(): void {
+    if (this.approveLoading || this.rejectLoading) return;
+    this.rejectReason        = '';
+    this.rejectReasonTouched = false;
+    this.showRejectModal     = true;
+    this.cdr.markForCheck();
+  }
+
+  /** Close modal — allowed any time unless API is in-flight */
+  closeRejectModal(): void {
+    if (this.rejectLoading) return;
+    this.showRejectModal     = false;
+    this.rejectReason        = '';
+    this.rejectReasonTouched = false;
+    this.cdr.markForCheck();
+  }
+
+  /** Confirm rejection — loading starts only here, after admin submits */
+  confirmReject(): void {
+    this.rejectReasonTouched = true;
+    const reason = this.rejectReason.trim();
+    if (!reason || !this.courseId || this.rejectLoading) return;
+
+    this.rejectLoading = true;
+    this.cdr.markForCheck();
+
+    this.service.rejectCourse(this.courseId, reason)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.rejectLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe(success => {
+        if (success) {
+          this.showRejectModal     = false;
+          this.rejectReason        = '';
+          this.rejectReasonTouched = false;
+          this.course = { ...this.course, status: 'rejected' };
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  getInstructorInitials(): string {
+    if (!this.course?.instructor) return 'I';
+    const first = this.course.instructor.firstName?.charAt(0) || '';
+    const last  = this.course.instructor.lastName?.charAt(0)  || '';
+    return (first + last).toUpperCase() || 'I';
+  }
+
+  getInstructorName(): string {
+    if (!this.course?.instructor) return 'Unknown Instructor';
+    const { firstName, lastName, name } = this.course.instructor;
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return name || 'Unknown Instructor';
+  }
+
+  getInstructorEmail(): string {
+    if(!this.course?.instructor) return 'Unknown Instructor';
+    const { email } = this.course.instructor;
+    console.log(this.course);
+    console.log(this.course.instructor);
+    if(email) return email
+    return 'No email provided';
+  }
+}

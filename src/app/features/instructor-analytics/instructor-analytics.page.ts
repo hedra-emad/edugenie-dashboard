@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { filter, take, finalize, Subscription } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
+import { finalize } from 'rxjs';
 import { StatsCardsComponent } from './components/stats-cards/stats-cards.component';
 import { SalesTableComponent } from './components/sales-table/sales-table.component';
 import { RevenueChartComponent } from './components/revenue-chart/revenue-chart.component';
@@ -28,19 +26,20 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './instructor-analytics.page.html',
   styleUrl: './instructor-analytics.page.css'
 })
-export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
+export class InstructorAnalyticsPageComponent implements OnInit {
   private analyticsService = inject(InstructorAnalyticsService);
   private authService = inject(AuthService);
 
-  analyticsData = signal<InstructorAnalyticsResponse | null>(null);
-  isLoading = signal(true);
-  hasError = signal(false);
-  errorMsg = signal('');
+  // Instructor view
+  analyticsData: InstructorAnalyticsResponse | null = null;
+  isLoading = true;
+  error = false;
 
+  // Admin view
   isAdmin = false;
-
-  private userSub?: Subscription;
-  private destroyRef = inject(DestroyRef);
+  adminStatsData: any = null;
+  adminStatsLoading = true;
+  adminStatsError = false;
 
   flaggedContent = [
     { contentName: 'Advanced Physics Lecture 4', type: 'Video', flagReason: 'Copyright Violation', reporter: 'Inst_Admin_A' },
@@ -49,37 +48,25 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    this.userSub = this.authService.currentUser$
-      .pipe(
-        filter(user => user !== null),
-        take(1)
-      )
-      .subscribe(user => {
-        this.isAdmin = user?.role === 'admin';
+    const user = this.authService.getCurrentUser();
+    this.isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-        if (this.isAdmin) {
-          this.isLoading.set(false);
-        } else {
-          this.isLoading.set(true);
-          this.analyticsService.getStats()
-            .pipe(
-              takeUntilDestroyed(this.destroyRef),
-              finalize(() => this.isLoading.set(false))
-            )
-            .subscribe({
-              next: (data) => {
-                this.analyticsData.set(data);
-              },
-              error: (err) => {
-                this.hasError.set(true);
-                this.errorMsg.set(err?.error?.message ?? 'Failed to load data');
-              }
-            });
-        }
-      });
-  }
-
-  ngOnDestroy() {
-    this.userSub?.unsubscribe();
+    if (this.isAdmin) {
+      this.isLoading = false;
+      this.analyticsService.getAdminStats()
+        .pipe(finalize(() => this.adminStatsLoading = false))
+        .subscribe({
+          next: (data) => { this.adminStatsData = data; },
+          error: () => { this.adminStatsError = true; }
+        });
+    } else {
+      this.adminStatsLoading = false;
+      this.analyticsService.getStats()
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: (data) => { this.analyticsData = data; },
+          error: () => { this.error = true; }
+        });
+    }
   }
 }

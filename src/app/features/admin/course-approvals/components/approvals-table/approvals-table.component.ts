@@ -1,255 +1,279 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component, EventEmitter, Input, Output,
+  OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { CourseApproval, ApprovalStatus } from '../../models/course-approval.model';
+import { Router } from '@angular/router';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { CourseApproval } from '../../models/course-approval.model';
 import { ApprovalRowComponent } from '../approval-row/approval-row.component';
+import { CourseApprovalService } from '../../services/course-approval.service';
 
 type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
 
 @Component({
   selector: 'app-approvals-table',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, MatIconModule, ApprovalRowComponent],
   templateUrl: './approvals-table.component.html',
-  styles: [`
-    .approvals-card {
-      background-color: var(--color-surface, #ffffff);
-      border-radius: var(--radius-md, 12px);
-      box-shadow: var(--shadow-card, 0 4px 20px rgba(0, 0, 0, 0.08));
-      border: 1px solid var(--color-border, #e5e7eb);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-header {
-      padding: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--color-border, #e5e7eb);
-    }
-
-    .header-title-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-title-section h3 {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--color-text-primary, #1f2937);
-    }
-
-    .pending-badge {
-      background-color: var(--color-primary-light, #5b3db8);
-      color: #ffffff;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 9999px;
-      min-width: 20px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(91, 61, 184, 0.3);
-    }
-
-    .filter-wrapper {
-      position: relative;
-    }
-
-    .filter-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border: 1px solid var(--color-border, #e5e7eb);
-      border-radius: 8px;
-      background-color: #ffffff;
-      color: var(--color-text-secondary, #6b7280);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .filter-btn:hover {
-      background-color: #f9fafb;
-      color: var(--color-text-primary, #1f2937);
-      border-color: #d1d5db;
-    }
-
-    .filter-btn.active {
-      background-color: #ede9fe;
-      color: var(--color-primary, #3b1892);
-      border-color: var(--color-primary-light, #5b3db8);
-    }
-
-    .filter-dropdown {
-      position: absolute;
-      top: 44px;
-      right: 0;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      border: 1px solid var(--color-border, #e5e7eb);
-      z-index: 50;
-      width: 160px;
-      padding: 4px;
-      animation: slideDown 0.15s ease-out;
-    }
-
-    .filter-option {
-      width: 100%;
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      text-align: left;
-      font-size: 0.8125rem;
-      color: var(--color-text-secondary, #6b7280);
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background-color 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .filter-option:hover {
-      background-color: #f3f4f6;
-      color: var(--color-text-primary, #1f2937);
-    }
-
-    .filter-option.selected {
-      background-color: #f5f3ff;
-      color: var(--color-primary, #3b1892);
-      font-weight: 600;
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th {
-      padding: 12px 20px;
-      background-color: #f9fafb;
-      color: var(--color-text-secondary, #6b7280);
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--color-border, #e5e7eb);
-    }
-
-    th:last-child {
-      text-align: right;
-    }
-
-    .empty-state {
-      padding: 48px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      color: var(--color-text-secondary, #6b7280);
-    }
-
-    .empty-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: var(--color-border, #e5e7eb);
-    }
-
-    .empty-text {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      margin: 0;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Mobile Responsive Layout */
-    @media (max-width: 767px) {
-      .table-container {
-        overflow-x: visible;
-        padding: 16px;
-        background: #f9fafb;
-      }
-      
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      
-      thead tr {
-        display: none;
-      }
-      
-      table { border: none; }
-      
-      .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-      }
-      
-      .filter-wrapper {
-        width: 100%;
-      }
-      
-      .filter-btn {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .filter-dropdown {
-        width: 100%;
-      }
-    }
-  `]
+  styleUrl: './approvals-table.component.css'
 })
-export class ApprovalsTableComponent {
-  @Input() courses: CourseApproval[] = [];
-  @Input() actionLoading: Record<string, boolean> = {};
+export class ApprovalsTableComponent implements OnInit, OnDestroy {
+  private readonly router  = inject(Router);
+  private readonly cdr     = inject(ChangeDetectorRef);
+  private readonly service = inject(CourseApprovalService);
+  private readonly destroy$ = new Subject<void>();
 
-  @Output() approve = new EventEmitter<string>();
-  @Output() reject = new EventEmitter<string>();
+  @Input() courses: CourseApproval[] = [];
+
+  @Input() set actionLoading(val: Record<string, boolean>) {
+    this._actionLoading = val;
+    for (const id of Object.keys(this._approveLoading)) {
+      if (!val[id]) delete this._approveLoading[id];
+    }
+    for (const id of Object.keys(this._rejectLoading)) {
+      if (!val[id]) delete this._rejectLoading[id];
+    }
+  }
+  get actionLoading(): Record<string, boolean> { return this._actionLoading; }
+  private _actionLoading: Record<string, boolean> = {};
+
+  _approveLoading: Record<string, boolean> = {};
+  _rejectLoading:  Record<string, boolean> = {};
+
+  @Input() selectedIds = new Set<string>();
+
+  @Output() viewDetails    = new EventEmitter<CourseApproval>();
+  @Output() approve        = new EventEmitter<string>();
+  @Output() reject         = new EventEmitter<string>();
+  @Output() selectionChange = new EventEmitter<Set<string>>();
+  @Output() filterChange    = new EventEmitter<string>();
 
   currentFilter: FilterType = 'pending';
-  showFilterDropdown = false;
+  searchQuery = '';
+  private debouncedSearchQuery = '';
+  private searchSubject = new Subject<string>();
+  private searchSub?: Subscription;
 
-  get pendingCount(): number {
-    return this.courses.filter(c => c.status === 'pending').length;
+  // ── Pagination ─────────────────────────────────────────────────────────────
+  pageSize  = 10;
+  pageIndex = 0;
+  readonly pageSizeOptions = [10, 25, 50];
+
+  /**
+   * For the pending tab, total comes from the backend response.
+   * For all other tabs, total is computed from the local filtered list.
+   */
+  private pendingTotal = 0;   // populated from pendingPage$ subscription
+
+  ngOnInit(): void {
+    // Debounced search
+    this.searchSub = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      this.debouncedSearchQuery = query;
+      this.pageIndex = 0;
+      if (this.currentFilter === 'pending') {
+        this.service.loadPendingPage(1, this.pageSize, query);
+      }
+      this.cdr.markForCheck();
+    });
+
+    // Track backend pending-page metadata
+    this.service.pendingPage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(meta => {
+        this.pendingTotal = meta.total;
+        this.cdr.markForCheck();
+      });
   }
 
-  get filteredCourses(): CourseApproval[] {
-    if (this.currentFilter === 'all') {
-      return this.courses;
+  ngOnDestroy(): void {
+    this.searchSub?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearch(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchSubject.next('');
+  }
+
+  onRowClick(course: CourseApproval): void {
+    this.router.navigate(['/admin/courses', course.id]);
+  }
+
+  onApprove(courseId: string): void {
+    this._approveLoading[courseId] = true;
+    this.cdr.markForCheck();
+    this.approve.emit(courseId);
+  }
+
+  onReject(courseId: string): void {
+    this.reject.emit(courseId);
+  }
+
+  @Input() set rejectConfirmedId(id: string | null) {
+    if (id) {
+      this._rejectLoading[id] = true;
+      this.cdr.markForCheck();
     }
-    return this.courses.filter(c => c.status === this.currentFilter);
   }
 
-  toggleFilterDropdown(): void {
-    this.showFilterDropdown = !this.showFilterDropdown;
+  isApproveLoading(courseId: string): boolean { return !!this._approveLoading[courseId]; }
+  isRejectLoading(courseId: string):  boolean { return !!this._rejectLoading[courseId]; }
+
+  // ── Filter counts (from full in-memory list) ──────────────────────────────
+  get pendingCount():  number { return this.courses.filter(c => c.status === 'pending').length; }
+  get approvedCount(): number { return this.courses.filter(c => c.status === 'approved').length; }
+  get rejectedCount(): number { return this.courses.filter(c => c.status === 'rejected').length; }
+  get totalCount():    number { return this.courses.length; }
+
+  get badgeCount(): number {
+    switch (this.currentFilter) {
+      case 'pending':  return this.pendingTotal || this.pendingCount;
+      case 'approved': return this.approvedCount;
+      case 'rejected': return this.rejectedCount;
+      default:         return this.totalCount;
+    }
+  }
+
+  get cardTitle(): string {
+    switch (this.currentFilter) {
+      case 'pending':  return 'Pending Review';
+      case 'approved': return 'Approved Courses';
+      case 'rejected': return 'Rejected Courses';
+      default:         return 'All Courses';
+    }
+  }
+
+  // ── Local filtered list (non-pending tabs + frontend search) ──────────────
+  get filteredCourses(): CourseApproval[] {
+    let result = this.courses;
+    if (this.currentFilter !== 'all') {
+      result = result.filter(c => c.status === this.currentFilter);
+    }
+    const q = this.debouncedSearchQuery.trim().toLowerCase();
+    if (q && this.currentFilter !== 'pending') {
+      result = result.filter(c =>
+        c.title.toLowerCase().includes(q) ||
+        c.instructorName.toLowerCase().includes(q) ||
+        (c.category as string).toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }
+
+  // ── Pagination ─────────────────────────────────────────────────────────────
+  /** Total courses for the current filter/page context */
+  get totalFiltered(): number {
+    return this.currentFilter === 'pending'
+      ? (this.pendingTotal || this.pendingCount)
+      : this.filteredCourses.length;
+  }
+
+  get totalPages(): number { return Math.ceil(this.totalFiltered / this.pageSize); }
+  get pageFrom():   number { return this.totalFiltered === 0 ? 0 : this.pageIndex * this.pageSize + 1; }
+  get pageTo():     number { return Math.min((this.pageIndex + 1) * this.pageSize, this.totalFiltered); }
+
+  /**
+   * For pending tab: the service already delivers the correct page slice into courses$.
+   * For other tabs: slice locally.
+   */
+  get pagedCourses(): CourseApproval[] {
+    if (this.currentFilter === 'pending') {
+      // The service puts exactly the current page's pending courses into courses$
+      return this.courses.filter(c => c.status === 'pending');
+    }
+    const start = this.pageIndex * this.pageSize;
+    return this.filteredCourses.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur   = this.pageIndex;
+    let start = Math.max(0, cur - 2);
+    let end   = Math.min(total - 1, start + 4);
+    if (end - start < 4) start = Math.max(0, end - 4);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+
+  setPage(p: number): void {
+    if (p < 0 || p >= this.totalPages) return;
+    this.pageIndex = p;
+
+    if (this.currentFilter === 'pending') {
+      this.service.loadPendingPage(p + 1, this.pageSize, this.debouncedSearchQuery);
+    }
+    this.cdr.markForCheck();
+  }
+
+  setPageSize(size: number): void {
+    this.pageSize  = size;
+    this.pageIndex = 0;
+
+    if (this.currentFilter === 'pending') {
+      this.service.loadPendingPage(1, size, this.debouncedSearchQuery);
+    }
+    this.cdr.markForCheck();
+  }
+
+  // ── Filter tabs ────────────────────────────────────────────────────────────
+  /** Selection (checkbox + bulk actions) is ONLY valid on the pending tab */
+  get isReadonlyTab(): boolean {
+    return this.currentFilter !== 'pending';
   }
 
   setFilter(filter: FilterType): void {
     this.currentFilter = filter;
-    this.showFilterDropdown = false;
+    this.pageIndex     = 0;
+    this.filterChange.emit(filter);
+
+    if (filter === 'pending') {
+      this.service.loadPendingPage(1, this.pageSize, this.debouncedSearchQuery);
+    }
+    this.cdr.markForCheck();
   }
 
-  trackByCourseId(index: number, course: CourseApproval): string {
-    return course.id;
+  // ── Selection ──────────────────────────────────────────────────────────────
+  get allSelected(): boolean {
+    const fc = this.pagedCourses;
+    return fc.length > 0 && fc.every(c => this.selectedIds.has(c.id));
   }
+
+  get someSelected(): boolean {
+    return this.pagedCourses.some(c => this.selectedIds.has(c.id)) && !this.allSelected;
+  }
+
+  get selectedCount(): number { return this.selectedIds.size; }
+
+  toggleAll(): void {
+    const newSelection = new Set(this.selectedIds);
+    if (this.allSelected) {
+      this.pagedCourses.forEach(c => newSelection.delete(c.id));
+    } else {
+      this.pagedCourses.forEach(c => newSelection.add(c.id));
+    }
+    this.selectionChange.emit(newSelection);
+  }
+
+  toggleRow(id: string): void {
+    const newSelection = new Set(this.selectedIds);
+    newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
+    this.selectionChange.emit(newSelection);
+  }
+
+  trackByCourseId(_index: number, course: CourseApproval): string { return course.id; }
 }

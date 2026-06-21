@@ -2,12 +2,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CourseApproval } from '../../models/course-approval.model';
-import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-status-badge.component';
 
 @Component({
   selector: '[app-approval-row]',
   standalone: true,
-  imports: [CommonModule, MatIconModule, ApprovalStatusBadgeComponent],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './approval-row.component.html',
   styles: [`
     :host {
@@ -22,21 +21,22 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
     }
 
     td {
-      padding: 16px 20px;
+      padding: 14px 20px;
       vertical-align: middle;
       color: var(--color-text-primary, #1f2937);
       font-size: 0.875rem;
     }
 
+    /* --- Course Info --- */
     .course-info {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .thumbnail-container {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 8px;
       background: linear-gradient(135deg, var(--color-primary-light, #5b3db8), var(--color-primary, #3b1892));
       color: #ffffff;
@@ -44,38 +44,52 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 4px 10px rgba(91, 61, 184, 0.15);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(91, 61, 184, 0.15);
+    }
+
+    .thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .thumbnail-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
     }
 
     .course-details {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
+      min-width: 0;
     }
 
     .course-title {
       font-weight: 600;
       color: var(--color-text-primary, #1f2937);
       margin: 0;
-      font-size: 0.9375rem;
+      font-size: 0.9rem;
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
 
     .course-category {
-      font-size: 0.75rem;
+      font-size: 0.725rem;
       color: var(--color-text-secondary, #6b7280);
-      background-color: #f3f4f6;
+      background: #f3f4f6;
       padding: 2px 8px;
       border-radius: 4px;
       align-self: flex-start;
+      white-space: nowrap;
     }
 
+    /* --- Instructor --- */
     .instructor-container {
       display: flex;
       align-items: center;
@@ -87,7 +101,7 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
       height: 28px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1.5px solid #ffffff;
+      border: 1.5px solid #fff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
@@ -95,92 +109,118 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background-color: #ede9fe;
+      background: #ede9fe;
       color: var(--color-primary, #3b1892);
       font-weight: 700;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid #ffffff;
+      border: 1.5px solid #fff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
     }
 
     .instructor-name {
       font-weight: 500;
       color: var(--color-text-primary, #1f2937);
+      white-space: nowrap;
     }
 
-    /* Video duration warnings */
+    /* --- Status Pill --- */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-pill.status-pending  { background: rgba(245,158,11,0.1);  color: #d97706; }
+    .status-pill.status-pending  .status-dot { background: #f59e0b; }
+
+    .status-pill.status-approved { background: rgba(34,197,94,0.1);   color: #15803d; }
+    .status-pill.status-approved .status-dot { background: #22c55e; }
+
+    .status-pill.status-rejected { background: rgba(239,68,68,0.1);   color: #b91c1c; }
+    .status-pill.status-rejected .status-dot { background: #ef4444; }
+
+    /* --- Duration --- */
     .duration-text {
       font-weight: 500;
       color: var(--color-text-secondary, #6b7280);
+      white-space: nowrap;
     }
 
     .warning-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background-color: rgba(245, 158, 11, 0.1);
+      gap: 5px;
+      background: rgba(245,158,11,0.1);
       color: #d97706;
-      border: 1px solid rgba(245, 158, 11, 0.2);
-      padding: 4px 10px;
+      border: 1px solid rgba(245,158,11,0.2);
+      padding: 3px 8px;
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
     }
 
-    .warning-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-      color: #f59e0b;
-    }
+    .warning-icon { font-size: 13px; width: 13px; height: 13px; color: #f59e0b; }
 
-    /* Actions styling */
+    /* --- Actions --- */
     .actions-cell {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       justify-content: flex-end;
     }
 
     .action-btn {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.25s ease;
-      background: transparent;
+      transition: all 0.2s;
+      border: none;
       outline: none;
     }
 
+    /* Approve — strong green */
     .approve-btn {
-      background-color: var(--color-primary, #3b1892);
+      background: #10b981;
       color: #ffffff;
-      border: none;
-      box-shadow: 0 4px 10px rgba(59, 24, 146, 0.2);
+      box-shadow: 0 2px 8px rgba(16,185,129,0.25);
     }
 
     .approve-btn:hover:not(:disabled) {
-      background-color: var(--color-primary-light, #5b3db8);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(59, 24, 146, 0.3);
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.35);
     }
 
+    /* Reject — strong red */
     .reject-btn {
-      border: 1.5px solid var(--color-border, #e5e7eb);
-      color: var(--color-text-secondary, #6b7280);
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.25);
     }
 
     .reject-btn:hover:not(:disabled) {
-      border-color: #ef4444;
-      color: #ef4444;
-      background-color: rgba(239, 68, 68, 0.05);
-      transform: translateY(-2px);
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239,68,68,0.35);
     }
 
     .action-btn:disabled {
@@ -190,105 +230,157 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
       box-shadow: none !important;
     }
 
-    .spinner {
+    .action-btn mat-icon {
+      font-size: 18px;
       width: 18px;
       height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* View link arrow */
+    .view-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #9ca3af;
+      transition: all 0.2s;
+    }
+
+    :host:hover .view-link {
+      background: #f3f4f6;
+      color: var(--color-primary, #3b1892);
+    }
+
+    .view-link mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    /* --- Spinners --- */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
       border-radius: 50%;
       border-top-color: #ffffff;
       animation: spin 0.8s linear infinite;
     }
 
     .reject-spinner {
-      border-color: rgba(239, 68, 68, 0.1);
-      border-top-color: #ef4444;
+      border-color: rgba(255,255,255,0.3);
+      border-top-color: #ffffff;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- Checkbox --- */
+    .custom-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-primary, #3b1892);
+      cursor: pointer;
     }
 
-    /* Mobile Responsive Cards */
+    /* --- Mobile Card Layout --- */
     @media (max-width: 767px) {
       :host {
-        display: flex;
+        display: flex !important;
         flex-direction: column;
         border: 1px solid var(--color-border, #e5e7eb);
-        border-radius: 12px;
-        margin-bottom: 16px;
-        background-color: #ffffff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        border-bottom: 1px solid var(--color-border, #e5e7eb) !important;
-      }
-      
-      :host:last-child {
-        margin-bottom: 0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       td {
         display: flex;
         align-items: center;
-        padding: 14px 16px;
+        padding: 10px 14px;
         border-bottom: 1px solid #f3f4f6;
         width: 100%;
         box-sizing: border-box;
-      }
-
-      td:last-child {
-        border-bottom: none;
-      }
-
-      td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--color-text-secondary);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        margin-right: 16px;
-        flex-shrink: 0;
-        width: 100px;
-      }
-
-      .course-info {
-        flex: 1;
         min-width: 0;
       }
-      
-      .instructor-container {
-        flex: 1;
+
+      td:last-child { border-bottom: none; }
+
+      /* Label prefix */
+      td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--color-text-secondary, #6b7280);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-right: 12px;
+        flex-shrink: 0;
+        min-width: 72px;
       }
-      
-      .actions-cell {
-        flex: 1;
-        justify-content: flex-start;
+
+      /* Checkbox row is compact */
+      td[data-label="Select"] {
+        padding: 8px 14px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      td[data-label="Select"]::before { display: none; }
+
+      .course-info          { flex: 1; min-width: 0; }
+      .instructor-container { flex: 1; min-width: 0; }
+      .actions-cell         { flex: 1; justify-content: flex-start; gap: 10px; }
+      .course-title         { max-width: none; }
+      .instructor-name      { white-space: normal; }
+    }
+
+    /* Tablet — hide Duration cell */
+    @media (max-width: 1023px) and (min-width: 768px) {
+      td[data-label="Duration"] {
+        display: none;
       }
     }
   `]
 })
 export class ApprovalRowComponent {
   @Input() course!: CourseApproval;
-  @Input() actionLoading = false;
+  /** True when THIS course's approve action is in progress */
+  @Input() approveLoading = false;
+  /** True when THIS course's reject action is in progress */
+  @Input() rejectLoading = false;
+  @Input() isSelected = false;
+  /**
+   * When true (Approved / Rejected tabs) the checkbox and action buttons
+   * are hidden — the row is read-only.
+   */
+  @Input() readonly = false;
 
   @Output() approve = new EventEmitter<string>();
   @Output() reject = new EventEmitter<string>();
+  @Output() toggleSelection = new EventEmitter<string>();
+
+  get anyLoading(): boolean {
+    return this.approveLoading || this.rejectLoading;
+  }
 
   get instructorInitials(): string {
-    if (!this.course.instructorName) return 'I';
-    const parts = this.course.instructorName.split(' ');
+    if (!this.course?.instructorName) return 'I';
+    const parts = this.course.instructorName.trim().split(' ');
     if (parts.length >= 2) {
       return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
     }
     return parts[0].charAt(0).toUpperCase();
   }
 
-  onApprove(): void {
-    if (!this.actionLoading && this.course.status === 'pending') {
+  onApprove(event: Event): void {
+    event.stopPropagation();
+    if (!this.anyLoading && this.course.status === 'pending') {
       this.approve.emit(this.course.id);
     }
   }
 
-  onReject(): void {
-    if (!this.actionLoading && this.course.status === 'pending') {
+  onReject(event: Event): void {
+    event.stopPropagation();
+    if (!this.anyLoading && this.course.status === 'pending') {
       this.reject.emit(this.course.id);
     }
   }
