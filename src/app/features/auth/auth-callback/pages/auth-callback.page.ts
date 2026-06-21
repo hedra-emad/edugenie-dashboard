@@ -26,6 +26,17 @@ export class AuthCallbackPageComponent implements OnInit {
       this.authService.verifyExchangeToken(token).subscribe({
         next: (res) => {
           const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
+
+          if (this.authService.isExternalRedirect(homeRoute)) {
+            const exchangeToken = res.data.exchangeToken;
+            if (exchangeToken) {
+              window.location.href = `${this.authService.getStudentAppRedirectUrl()}/auth-callback?token=${exchangeToken}`;
+            } else {
+              window.location.href = this.authService.getStudentAppRedirectUrl();
+            }
+            return;
+          }
+
           this.router.navigate([homeRoute]);
         },
         error: (err) => {
