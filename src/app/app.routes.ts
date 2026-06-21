@@ -70,6 +70,13 @@ export const routes: Routes = [
         (m) => m.ResetPasswordPageComponent,
       ),
   },
+  {
+    path: 'auth-callback',
+    loadComponent: () =>
+      import('./features/auth/auth-callback/pages/auth-callback.page').then(
+        (m) => m.AuthCallbackPageComponent,
+      ),
+  },
 
   {
     path: '',

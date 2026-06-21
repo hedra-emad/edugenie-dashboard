@@ -19,6 +19,7 @@ export interface LoginResponse {
   data: {
     message: string;
     user: UserProfile;
+    exchangeToken?: string;
   };
 }
 

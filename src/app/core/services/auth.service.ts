@@ -21,6 +21,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -85,7 +86,27 @@ export class AuthService {
       .pipe(
         tap((response) => {
           if (response.data && response.data.user) {
-            this.setCurrentUser(response.data.user);
+            if (response.data.user.role !== 'student') {
+              this.setCurrentUser(response.data.user);
+            }
+          }
+        }),
+      );
+  }
+
+  verifyExchangeToken(token: string): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(
+        `${this.authApiUrl}/verify-exchange-token`,
+        { token },
+        { withCredentials: true }
+      )
+      .pipe(
+        tap((response) => {
+          if (response.data && response.data.user) {
+            if (response.data.user.role !== 'student') {
+              this.setCurrentUser(response.data.user);
+            }
           }
         }),
       );
@@ -170,9 +191,21 @@ export class AuthService {
       case 'instructor':
         return '/my-courses';
       case 'student':
-        return '/settings';
+        return 'EXTERNAL_STUDENT_APP';
       default:
+        // NOTE: default case is unchanged deliberately — if a
+        // role value is ever unrecognized, falling back to an
+        // internal Angular route is safer than an undefined
+        // external redirect.
         return '/settings';
     }
+  }
+
+  isExternalRedirect(route: string): boolean {
+    return route === 'EXTERNAL_STUDENT_APP';
+  }
+
+  getStudentAppRedirectUrl(): string {
+    return environment.studentAppUrl;
   }
 }
