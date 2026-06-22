@@ -87,6 +87,7 @@ export class CourseBuilderPageComponent implements OnInit {
   private fetchCourseData() {
     const id = this.courseId();
     if (!id) return;
+    this.loadingCourse.set(true);
 
     this.coursesService.getCourseById(id).subscribe({
       next: (course) => {

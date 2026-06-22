@@ -18,26 +18,34 @@
         </button>
     </div>
 
-    @if (!isLoading) {
+    <app-loading *ngIf="isLoading" [fullScreen]="false"></app-loading>
+
     <!-- Empty state -->
-    @if (lessonsArray.length === 0) {
-    <app-empty-state icon="menu_book" title="No lessons in this section yet"
+    <app-empty-state *ngIf="!isLoading && lessonsArray.length === 0" icon="menu_book" title="No lessons in this section yet"
         description="Add lessons to start building your course content with videos, text, and interactive materials."
         actionLabel="Create First Lesson" (actionClicked)="addLesson()">
     </app-empty-state>
-    }
 
     <!-- Lesson cards -->
+    <ng-container *ngIf="!isLoading && lessonsArray.length > 0">
     <div cdkDropList (cdkDropListDropped)="onLessonDropped($event)" class="space-y-4">
-        <div cdkDrag *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson">
+        <div cdkDrag *ngFor="let lesson of lessonsArray.controls; let i = index; trackBy: trackByLesson" [id]="'lesson-card-' + i">
             <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
             <app-lesson-card [lessonForm]="lesson" [courseId]="courseId" [sectionId]="sectionId" [index]="i"
                 [isFirst]="i === 0" [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)"
                 (moveUp)="moveUp(i)" (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)">
             </app-lesson-card>
+            <!-- Secondary Add Lesson button under each lesson card -->
+            <div class="flex justify-center mt-3 mb-5">
+              <button type="button" (click)="addLesson()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[var(--color-primary-light)]/40 text-[var(--color-primary-light)] text-xs font-semibold hover:border-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/5 transition duration-150">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">add</mat-icon>
+                <span>Add another lesson</span>
+              </button>
+            </div>
         </div>
     </div>
-    }
+    </ng-container>
 
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>

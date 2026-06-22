@@ -274,7 +274,7 @@ export class RegisterPageComponent implements OnInit {
         this.accountInfo.markAllAsTouched();
         return;
       }
-    
+
       this.currentStep = 3;
       return;
     }

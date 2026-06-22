@@ -3,8 +3,8 @@
   [subtitle]="'(' + formatDuration(lessonForm.get('videoDuration')?.value || 0) + ' min)'" icon="play_circle_outline"
   [index]="index" panelClass="lesson-panel"
   [panelClass]="(s === 'save_failed' || s === 'upload_error') ? 'lesson-panel lesson-failed' : 'lesson-panel'"
-  [showDragHandle]="true" [showMoveButtons]="true" [isFirst]="isFirst" [isLast]="isLast" [showDeleteButton]="true"
-  [showLessonsButton]="false" [showMobileMenu]="false" [hideMobileExpansionIndicator]="false"
+  [showDragHandle]="true" [showMoveButtons]="false" [isFirst]="isFirst" [isLast]="isLast" [showDeleteButton]="true"
+  [showLessonsButton]="false" [showMobileMenu]="true" [hideMobileExpansionIndicator]="false"
   (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()" (moveDownClicked)="moveDown.emit()"
   [draftId]="draftId" [autoDetectDraftState]="true" [isDeleting]="isDeleting" [hasSaveFailed]="s === 'save_failed'"
   [hasUploadError]="s === 'upload_error'">
@@ -56,38 +56,40 @@
     <!-- ── VIDEO ─────────────────────────────────────── -->
     <div class="space-y-4">
       <label class="text-xs font-bold uppercase text-gray-700">Lesson Video *</label>
+      <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
 
       <!-- (A) DROP ZONE – no file selected, no uploaded URL -->
       <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile" class="p-8 border-2 border-dashed rounded-[var(--radius-lg)] text-center bg-white
                hover:border-[var(--color-primary-light)] transition cursor-pointer
                flex flex-col items-center justify-center" [ngClass]="{
-          'border-red-300 bg-red-50':          lessonForm.touched && !isVideoValid,
-          'border-[var(--color-border)]': !lessonForm.touched || isVideoValid
-        }" (click)="fileInput.click()">
+          'border-red-300 bg-red-50':          videoTouched && !isVideoValid,
+          'border-[var(--color-border)]': !videoTouched || isVideoValid,
+          'border-[var(--color-primary)] bg-[var(--color-primary)]/5': isDraggingVideo
+        }" (click)="fileInput.click()" (dragover)="onVideoDragOver($event)" (dragleave)="onVideoDragLeave($event)"
+        (drop)="onVideoDrop($event)">
 
         <mat-icon class="text-5xl" [ngClass]="{
-            'text-red-400':                          lessonForm.touched && !isVideoValid,
-            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
+            'text-red-400':                          videoTouched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !videoTouched || isVideoValid
           }">cloud_upload</mat-icon>
 
         <div class="text-sm mt-3" [ngClass]="{
-            'text-red-600':                          lessonForm.touched && !isVideoValid,
-            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
+            'text-red-600':                          videoTouched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !videoTouched || isVideoValid
           }">
           Drag &amp; drop or click to upload lesson video
         </div>
 
         <div class="mt-3 text-sm font-medium" [ngClass]="{
-            'text-red-600':                  lessonForm.touched && !isVideoValid,
-            'text-[var(--color-primary)]': !lessonForm.touched || isVideoValid
+            'text-red-600':                  videoTouched && !isVideoValid,
+            'text-[var(--color-primary)]': !videoTouched || isVideoValid
           }">
           Browse video
         </div>
 
-        <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
       </div>
 
-      @if (lessonForm.touched && !isVideoValid && !selectedVideoFile) {
+      @if (videoTouched && !isVideoValid && !selectedVideoFile && !snap.message) {
       <span class="text-xs text-red-500 flex items-center gap-1">
         <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
         Video is required for this lesson
@@ -133,12 +135,17 @@
           class="mt-3 p-3 rounded-lg bg-red-50 border border-red-200 flex flex-col items-center gap-2">
 
           <div class="flex items-center gap-1.5 text-xs text-red-600 font-medium">
-            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error_outline</mat-icon>
-            {{ snap.message }}
+            @if (snap.message && s === 'idle' && !lessonForm.get('videoUrl')?.value && !selectedVideoFile) {
+  <span class="text-xs text-red-500 flex items-center gap-1">
+    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+    {{ snap.message }}
+  </span>
+}
+            
           </div>
 
           <div class="flex items-center gap-2">
-         <button *ngIf="canRetry" type="button" (click)="retrySave()" [disabled]="isWorking" class="px-3 py-1.5 bg-[#3B1892] hover:bg-[#2c126e]
+            <button *ngIf="canRetry" type="button" (click)="retrySave()" [disabled]="isWorking" class="px-3 py-1.5 bg-[#3B1892] hover:bg-[#2c126e]
          disabled:opacity-50 disabled:cursor-not-allowed
          text-white text-[11px] font-bold rounded-lg
          transition-colors duration-150 shadow-sm flex items-center gap-1">
@@ -178,8 +185,7 @@
 
       <!-- (D) Generic message (file unavailable, duration error, upload_error, max_retries) -->
       <!-- Upload Error State (Cloudinary failed) -->
-      <div *ngIf="s === 'upload_error'" 
-        class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+      <div *ngIf="s === 'upload_error'" class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
         <div class="flex items-center justify-center gap-2 text-red-700 font-semibold text-sm">
           <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           Video upload failed
@@ -187,11 +193,15 @@
         <div class="mt-1.5 text-red-600 text-xs leading-relaxed">
           {{ snap.message }}
         </div>
+        <button type="button" (click)="fileInput.click()"
+          class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors duration-150 shadow-sm mx-auto">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">video_file</mat-icon>
+          Try Again — Select Video
+        </button>
       </div>
 
       <!-- Max Retries Exceeded State -->
-      <div *ngIf="s === 'max_retries_exceeded'" 
-        class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+      <div *ngIf="s === 'max_retries_exceeded'" class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
         <div class="flex items-center justify-center gap-2 text-red-700 font-semibold text-sm">
           <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           Couldn't save lesson
@@ -199,10 +209,15 @@
         <div class="mt-1.5 text-red-600 text-xs leading-relaxed">
           {{ snap.message }}
         </div>
+        <button type="button" (click)="fileInput.click()"
+          class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors duration-150 shadow-sm mx-auto">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">video_file</mat-icon>
+          Select Video
+        </button>
       </div>
 
       <!-- Generic message (other errors) -->
-      <div *ngIf="snap.message && !showRetryBlock && s !== 'upload_error' && s !== 'max_retries_exceeded'" 
+      <div *ngIf="snap.message && !showRetryBlock && s !== 'upload_error' && s !== 'max_retries_exceeded'"
         class="text-xs text-red-500 text-center">
         {{ snap.message }}
       </div>
@@ -218,26 +233,13 @@
         <div class="mt-1.5 text-red-500 leading-relaxed">
           {{ snap.message }}
         </div>
-        <button type="button" (click)="retryFromRecovery()" class="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold
-           rounded-lg transition-colors duration-150 shadow-sm flex items-center
-           justify-center gap-1.5 mx-auto">
-          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">replay</mat-icon>
-          {{ s === 'uploading_recovered' ? 'Select New Video' : 'Retry Saving' }}
-        </button>
+
       </div>
 
       <!-- (E) PROGRESS PANEL – upload → save pipeline -->
       <!-- (E) PROGRESS PANEL – upload → save pipeline -->
-      <div class="mt-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm space-y-4" *ngIf="showUploadingPanel">
-
-        <!-- Don't leave page notice during upload (blue/purple theme) -->
-        <div *ngIf="s === 'uploading'"
-          class="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-0.5 flex-shrink-0">info</mat-icon>
-          <span>
-            Please stay on this page while the video is uploading. Refreshing the page, closing the tab, or navigating away may interrupt the upload and require selecting the video again.
-          </span>
-        </div>
+      <div class="mt-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm space-y-4"
+        *ngIf="showUploadingPanel && !isRecoveredState">
 
         <!-- Upload stalled warning -->
         <div *ngIf="s === 'upload_stalled'"
@@ -316,14 +318,15 @@
 
 
     <!-- Transcript status -->
-<div *ngIf="isPollingTranscript" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-  <app-loading [size]="12" color="#9ca3af"></app-loading>
-  <span>Generating transcript…</span>
-</div>
-<div *ngIf="!isPollingTranscript && lessonForm.get('transcript')?.value" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-green-600">
-  <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
-  <span>Transcript ready</span>
-</div>
+    <div *ngIf="isPollingTranscript" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-gray-500">
+      <app-loading [size]="12" color="#9ca3af"></app-loading>
+      <span>Generating transcript…</span>
+    </div>
+    <div *ngIf="!isPollingTranscript && lessonForm.get('transcript')?.value"
+      class="mt-2 flex items-center justify-center gap-1.5 text-xs text-green-600">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
+      <span>Transcript ready</span>
+    </div>
 
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">

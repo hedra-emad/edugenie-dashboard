@@ -19,7 +19,7 @@ export class LessonsService {
   private readonly baseUrl = environment.apiUrl;
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
-    const forceFail = true;
+    const forceFail = false;
     if (forceFail) {
       return throwError(() => new Error('Simulated DB failure'));   // ← returns immediately, http.post() below never runs
     }

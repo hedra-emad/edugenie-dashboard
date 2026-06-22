@@ -77,7 +77,7 @@ export class RegisterPageComponent implements OnInit {
     const hasLower = /[a-z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
     const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
-    const longEnough = pwd.length >= 6;
+    const longEnough = pwd.length >= 8;
 
     let score = 0;
     if (hasUpper) score++;
@@ -121,7 +121,7 @@ export class RegisterPageComponent implements OnInit {
     }),
     securityInfo: this.fb.group(
       {
-        password: ['', [Validators.required, Validators.minLength(6), this.passwordValidator]],
+        password: ['', [Validators.required, Validators.minLength(8), this.passwordValidator]],
         confirmPassword: ['', Validators.required],
       },
       { validators: this.passwordMatchValidator }
@@ -363,6 +363,23 @@ export class RegisterPageComponent implements OnInit {
           return;
         }
 
+        const messages: string[] = Array.isArray(err?.error?.message)
+          ? err.error.message
+          : err?.error?.message
+          ? [err.error.message]
+          : [];
+
+        const isPasswordError = messages.some((m: string) => /password/i.test(m));
+
+        if (err.status === 400 && isPasswordError) {
+          this.currentStep = 3;
+
+          const passwordControl = this.securityInfo.get('password');
+          passwordControl?.setErrors({ serverPasswordInvalid: true });
+          passwordControl?.markAsTouched();
+          return;
+        }
+
         console.error('Register Error', err);
       },
     });
@@ -384,11 +401,11 @@ export class RegisterPageComponent implements OnInit {
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
 
     //Length limit
-    if (pwd.length < 6) {
+    if (pwd.length < 8) {
       return Math.min(score, 2);
     }
 
-    if (pwd.length < 8) {
+    if (pwd.length < 10) {
       return Math.min(score, 3);
     }
 

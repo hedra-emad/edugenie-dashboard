@@ -87,6 +87,9 @@ export class ExpansionPanelComponent {
   // ================= Internal Methods =================
   
   get shouldShowDraftIndicator(): boolean {
+    if (this.hasSaveFailed || this.hasUploadError) {
+      return false;
+    }
     // Show new unified indicator if draftId is provided
     if (this.draftId) {
       return true;
@@ -126,6 +129,18 @@ export class ExpansionPanelComponent {
     if (this.showUnsavedIndicator) return 'unsaved';
     if (this.showModifiedIndicator) return 'modified';
     return 'unsaved';
+  }
+
+  get panelBorderClass(): string {
+    if (this.hasSaveFailed || this.hasUploadError) {
+      return 'border-red-500 !shadow-[0_0_8px_rgba(239,68,68,0.25)]';
+    }
+    switch (this.currentDraftType) {
+      case 'unsaved': return 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]';
+      case 'modified': return 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]';
+      case 'uploaded_unsaved': return 'border-emerald-500 !shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+      default: return 'border-[var(--color-border)]';
+    }
   }
   
   togglePanel(event: Event, panel: MatExpansionPanel) {

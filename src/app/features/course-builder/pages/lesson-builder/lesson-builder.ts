@@ -10,7 +10,7 @@ import { LessonsService } from '../../../../core/services/lessons';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { ChangeDetectorRef, ChangeDetectionStrategy, NgZone } from '@angular/core';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { Course } from '../../../../core/models/course.model';
@@ -19,6 +19,7 @@ import { Lesson } from '../../../../core/models/lesson.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { HasPendingOperations } from '../../../../core/guards/pending-operations.guard';
+import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
 @Component({
   selector: 'app-lessons-builder',
@@ -32,7 +33,8 @@ import { HasPendingOperations } from '../../../../core/guards/pending-operations
     BackButtonComponent,
     MainButtonComponent,
     DragDropModule,
-    EmptyStateComponent
+    EmptyStateComponent,
+    AppLoader
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -123,26 +125,30 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   }
 
   addLesson() {
-  this.ngZone.runOutsideAngular(() => {
-    setTimeout(() => {
-      this.ngZone.run(() => {
-        this.lessonsArray.push(
-          this.fb.group({
-            id: [null],
-            title: ['', [Validators.required, Validators.pattern(/.*\S.*/)]],
-            videoUrl: [''],
-            videoPublicId: [''],
-            videoDuration: [0],
-            transcript: [null], // ✅ add this
-            uploadStatus: ['idle'],
-            expanded: [true]
-          })
-        );
-        this.cdr.detectChanges();
-      });
-    }, 0);
-  });
-}
+    this.ngZone.runOutsideAngular(() => {
+      setTimeout(() => {
+        this.ngZone.run(() => {
+          this.lessonsArray.push(
+            this.fb.group({
+              id: [null],
+              title: ['', [Validators.required, Validators.pattern(/.*\S.*/)]],
+              videoUrl: [''],
+              videoPublicId: [''],
+              videoDuration: [0],
+              transcript: [null], //  add this
+              uploadStatus: ['idle'],
+              expanded: [true]
+            })
+          );
+          this.cdr.detectChanges();
+          const newIndex = this.lessonsArray.length - 1;
+          setTimeout(() => {
+            document.getElementById('lesson-card-' + newIndex)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 0);
+        });
+      }, 0);
+    });
+  }
 
   onDeleted(index: number) {
     this.lessonsArray.removeAt(index);
@@ -295,6 +301,5 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     // Disable if no saved lessons exist
     return !this.hasSavedLessons;
   }
-
 
 }
