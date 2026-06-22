@@ -164,6 +164,12 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private lastProgressTime = 0;
   private progressCheckInterval: any = null;
 
+  // ── Transcript Polling ─────────────────────────────────────
+  // private transcriptPollInterval: any = null;
+  // private readonly TRANSCRIPT_POLL_INTERVAL_MS = 5000;
+  // private readonly TRANSCRIPT_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+  // isPollingTranscript = false; // for template binding
+
   // ── Upload State Persistence ───────────────────────────────
   private persistUploadState(): void {
     if (!this.draftId || this.isPermanentlyDeleted) return;

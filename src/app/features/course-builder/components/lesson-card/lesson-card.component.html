@@ -25,7 +25,7 @@
                focus:border-[var(--color-primary)] transition-all duration-200" [ngClass]="{
           'border-red-500 bg-red-50':      lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
           'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]':   lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty && !isUpdateMode,
-          'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]': lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty &&  isUpdateMode,
+          'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]': lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty &&  isUpdateMode,
           'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) && !lessonForm.get('title')?.dirty
         }" />
 
@@ -101,7 +101,7 @@
         class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border text-sm text-center transition-all duration-300"
         [ngClass]="{
           'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]':   !isUpdateMode,
-          'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]':  isUpdateMode
+          'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]':  isUpdateMode
         }">
 
         <!-- Remove -->
@@ -136,12 +136,12 @@
 
           <div class="flex items-center gap-1.5 text-xs text-red-600 font-medium">
             @if (snap.message && s === 'idle' && !lessonForm.get('videoUrl')?.value && !selectedVideoFile) {
-  <span class="text-xs text-red-500 flex items-center gap-1">
-    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
-    {{ snap.message }}
-  </span>
-}
-            
+            <span class="text-xs text-red-500 flex items-center gap-1">
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+              {{ snap.message }}
+            </span>
+            }
+
           </div>
 
           <div class="flex items-center gap-2">
@@ -315,18 +315,6 @@
       </div>
 
     </div><!-- /VIDEO -->
-
-
-    <!-- Transcript status -->
-    <div *ngIf="isPollingTranscript" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-      <app-loading [size]="12" color="#9ca3af"></app-loading>
-      <span>Generating transcript…</span>
-    </div>
-    <div *ngIf="!isPollingTranscript && lessonForm.get('transcript')?.value"
-      class="mt-2 flex items-center justify-center gap-1.5 text-xs text-green-600">
-      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
-      <span>Transcript ready</span>
-    </div>
 
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">

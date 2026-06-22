@@ -64,9 +64,9 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
 
     /* Uploaded but Unsaved state (Emerald Green to Sky Blue) */
     .draft-indicator--uploaded_unsaved {
-      background: linear-gradient(135deg, #10B981, #0EA5E9);
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4), 0 0 12px rgba(14, 165, 233, 0.2);
-    }
+  background: linear-gradient(135deg, #3B1892, #5B3DB8);
+  box-shadow: 0 0 6px rgba(59, 24, 146, 0.4), 0 0 12px rgba(59, 24, 146, 0.2);
+}
 
     .draft-indicator--uploaded_unsaved::before {
       content: '';
@@ -76,7 +76,8 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
       right: -2px;
       bottom: -2px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 24, 146, 0.3) 0%, transparent 70%);
+
       animation: pulse-glow-uploaded 2s ease-in-out infinite;
       z-index: -1;
     }
@@ -94,9 +95,9 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
 
     /* Modified state (Purple) */
     .draft-indicator--modified {
-      background: linear-gradient(135deg, #A855F7, #D946EF);
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.4), 0 0 12px rgba(168, 85, 247, 0.2);
-    }
+  background: linear-gradient(135deg, #3B1892, #5B3DB8);
+  box-shadow: 0 0 6px rgba(59, 24, 146, 0.4), 0 0 12px rgba(59, 24, 146, 0.2);
+}
 
     .draft-indicator--modified::before {
       content: '';
@@ -106,7 +107,7 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
       right: -2px;
       bottom: -2px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+       background: radial-gradient(circle, rgba(59, 24, 146, 0.3) 0%, transparent 70%);
       animation: pulse-glow-purple 2s ease-in-out infinite;
       z-index: -1;
     }
@@ -117,10 +118,9 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
     }
 
     .draft-indicator--modified:hover {
-      transform: scale(1.15);
-      background: linear-gradient(135deg, #9333EA, #A855F7);
-      box-shadow: 0 0 8px rgba(168, 85, 247, 0.6), 0 0 16px rgba(168, 85, 247, 0.3);
-    }
+  background: linear-gradient(135deg, #2A1069, #3B1892);
+  box-shadow: 0 0 8px rgba(59, 24, 146, 0.6), 0 0 16px rgba(59, 24, 146, 0.3);
+}
 
     /* Uploading state (Blue with spinning) */
     .draft-indicator--uploading {

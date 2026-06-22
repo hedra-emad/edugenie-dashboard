@@ -35,7 +35,10 @@
                 [isFirst]="i === 0" [isLast]="i === lessonsArray.controls.length - 1" (delete)="onDeleted(i)"
                 (moveUp)="moveUp(i)" (moveDown)="moveDown(i)" (lessonCreated)="onLessonCreated($event)">
             </app-lesson-card>
-            <!-- Secondary Add Lesson button under each lesson card -->
+            
+        </div>
+    </div>
+    <!-- Secondary Add Lesson button under each lesson card -->
             <div class="flex justify-center mt-3 mb-5">
               <button type="button" (click)="addLesson()"
                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[var(--color-primary-light)]/40 text-[var(--color-primary-light)] text-xs font-semibold hover:border-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/5 transition duration-150">
@@ -43,8 +46,6 @@
                 <span>Add another lesson</span>
               </button>
             </div>
-        </div>
-    </div>
     </ng-container>
 
     <div class="flex justify-between items-center mt-6">

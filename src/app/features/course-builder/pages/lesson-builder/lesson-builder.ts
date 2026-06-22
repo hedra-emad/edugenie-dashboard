@@ -81,26 +81,26 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
       // Check for any lesson with active states
       const id = lesson.get('id')?.value;
       const uploadStatus = lesson.get('uploadStatus')?.value;
-      
-      return uploadStatus === 'uploading' || 
-             uploadStatus === 'saving' || 
-             uploadStatus === 'retrying' ||
-             (!id || id === null); // Unsaved lessons
+
+      return uploadStatus === 'uploading' ||
+        uploadStatus === 'saving' ||
+        uploadStatus === 'retrying' ||
+        (!id || id === null); // Unsaved lessons
     });
   }
 
   getPendingOperationMessage(): string {
     const pendingCount = this.lessonsArray.controls.filter(lesson => {
       const uploadStatus = lesson.get('uploadStatus')?.value;
-      return uploadStatus === 'uploading' || 
-             uploadStatus === 'saving' || 
-             uploadStatus === 'retrying';
+      return uploadStatus === 'uploading' ||
+        uploadStatus === 'saving' ||
+        uploadStatus === 'retrying';
     }).length;
 
     if (pendingCount > 0) {
       return `You have ${pendingCount} lesson${pendingCount > 1 ? 's' : ''} with operations in progress. Leaving now may cancel the operations and leave orphaned files.`;
     }
-    
+
     return 'You have unsaved lessons. Leaving now will lose your changes.';
   }
 
@@ -197,7 +197,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
                 videoUrl: [draft.data?.videoUrl || ''],
                 videoPublicId: [draft.data?.videoPublicId || ''],
                 videoDuration: [draft.data?.videoDuration || 0],
-                 transcript: [draft.data?.transcript || null],
+                transcript: [draft.data?.transcript || null],
                 uploadStatus: ['idle'],
                 expanded: [true]
               })
@@ -217,6 +217,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   }
 
   goBackToSections() {
+    console.log('goBackToSections called, sectionId =', this.sectionId);
     this.router.navigate(
       ['/course-builder', this.courseId, 'sections'],
       {
@@ -274,8 +275,8 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   }
 
   trackByLesson(index: number, item: FormGroup) {
-  return item; // track by FormGroup reference — stable across id mutations
-}
+    return item; // track by FormGroup reference — stable across id mutations
+  }
 
   get lessonsLength() {
     return this.lessonsArray.length;

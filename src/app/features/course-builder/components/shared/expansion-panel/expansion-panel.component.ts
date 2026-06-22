@@ -143,8 +143,8 @@ export class ExpansionPanelComponent {
     }
     switch (this.currentDraftType) {
       case 'unsaved': return 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]';
-      case 'modified': return 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]';
-      case 'uploaded_unsaved': return 'border-emerald-500 !shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+      case 'modified': return 'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]';
+     case 'uploaded_unsaved': return 'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]';
       case 'uploading': return 'border-sky-400 !shadow-[0_0_8px_rgba(14,165,233,0.2)]';
       case 'saving': return 'border-indigo-500 !shadow-[0_0_8px_rgba(99,102,241,0.2)]';
       case 'save_failed': return 'border-red-600 !shadow-[0_0_8px_rgba(220,38,38,0.25)]';

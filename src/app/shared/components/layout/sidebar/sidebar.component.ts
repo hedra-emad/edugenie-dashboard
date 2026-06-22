@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { SidebarProfile } from './components/sidebar-profile/sidebar-profile';
-import { SidebarAction } from './components/sidebar-action/sidebar-action';
+
 import { SidebarMenu } from './components/sidebar-menu/sidebar-menu';
 import { NavbarAuthComponent } from '../navbar-components/navbar-auth.component/navbar-auth.component';
 
@@ -13,7 +13,6 @@ import { NavbarAuthComponent } from '../navbar-components/navbar-auth.component/
     CommonModule,
     MatIconModule,
     SidebarProfile,
-    SidebarAction,
     SidebarMenu,
     NavbarAuthComponent,
   ],

@@ -8,6 +8,7 @@ import { InstructorCourse } from '../models/instructor-course.model';
 import { BadgeComponent } from '../../../shared/components/badge-component/badge-component';
 import { CourseStatus } from '../../../core/enums/course-status';
 import { FilterBarComponent, FilterConfig, FilterState } from '../../../shared/components/filter-bar/filter-bar.component';
+import { MainButtonComponent } from '../../../shared/components/main-button/main-button.component';
 
 // Angular Material
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -28,6 +29,7 @@ import { MatButtonModule } from '@angular/material/button';
     MatButtonModule,
     BadgeComponent,
     FilterBarComponent,
+    MainButtonComponent,
   ],
   templateUrl: './courses-list.component.html',
   styleUrls: ['./courses-list.component.css'],
@@ -204,6 +206,10 @@ export class CoursesListComponent implements OnInit {
           this.errorMsg.set(err?.error?.message ?? 'Failed to load data');
         },
       });
+  }
+
+  goToCreateCourse(): void {
+    this.router.navigate(['/course-builder']);
   }
 
   editCourse(id: string) {

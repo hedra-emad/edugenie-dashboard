@@ -41,7 +41,7 @@ export function extractId(val: any): string | null {
   if (typeof val._id === 'string') return val._id;
 
   const buf = val.buffer || val;
-  
+
   // Node.js Buffer JSON serialization
   if (buf && buf.type === 'Buffer' && Array.isArray(buf.data)) {
     return buf.data.map((b: number) => b.toString(16).padStart(2, '0')).join('');
@@ -49,11 +49,11 @@ export function extractId(val: any): string | null {
 
   // Uint8Array or Buffer object
   if (buf instanceof Uint8Array || (buf && typeof buf.byteLength === 'number' && typeof buf.slice === 'function')) {
-     return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
   }
-  
+
   if (val.toString && typeof val.toString === 'function' && val.toString() !== '[object Object]') {
-      return val.toString();
+    return val.toString();
   }
 
   return null;
@@ -251,9 +251,11 @@ export class SectionBuilderComponent implements OnInit {
       next: (course: Course) => {
         const sections = course.sections || [];
         this.sectionsArray.clear();
+        console.log('expandedSectionId from route:', this.expandedSectionId);
 
         sections.forEach((section: Section) => {
           const sectionId = extractId((section as any)._id || section.id || section) || '';
+                  console.log('loaded section id:', sectionId);
           const sectionGroup = this.fb.group({
             title: [section.title || '', [Validators.required, Validators.minLength(3)]],
             description: [section.description || '', [Validators.minLength(10)]],
@@ -276,9 +278,9 @@ export class SectionBuilderComponent implements OnInit {
         // Load new draft sections (ID starts with 'draft_')
         const draftSections = this.draftStateService.getDraftsByParent(this.courseId)
           .filter(draft => draft.type === 'section' && this.draftStateService.isDraftId(draft.id));
-
         draftSections.forEach(draft => {
-          const sectionGroup = this.fb.group({
+
+          const sectionGroup = this.fb.group({   
             id: [draft.id],
             title: [draft.data?.title || '', [Validators.required, Validators.minLength(3)]],
             description: [draft.data?.description || '', [Validators.minLength(10)]],
