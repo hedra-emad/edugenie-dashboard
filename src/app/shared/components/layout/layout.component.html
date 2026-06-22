@@ -1,16 +1,30 @@
-<div class="flex h-screen relative" [style.background]="'var(--color-background-page)'">
-
+<div class="admin-layout-wrapper" [style.background]="'var(--color-background-page)'">
   <!-- Sidebar -->
-  <app-sidebar [isMobile]="isMobile" [sidebarExpanded]="sidebarExpanded" (toggle)="toggleSidebar()">
+  <app-sidebar
+    [isMobile]="isMobile"
+    [isTablet]="isTablet"
+    [sidebarExpanded]="sidebarExpanded"
+    (toggle)="toggleSidebar()">
   </app-sidebar>
 
-  <!-- Main content area -->
-  <div class="flex flex-col flex-1 min-w-0">
+  <!-- Backdrop: shown on mobile + tablet when sidebar is open -->
+  @if ((isMobile || isTablet) && sidebarExpanded) {
+    <div class="sidebar-backdrop" (click)="closeOverlaySidebar()"></div>
+  }
 
-    <main class="flex-1 overflow-auto p-4 md:p-6">
+  <!-- Main content -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+    <!-- Menu trigger: visible only on tablet + mobile -->
+    @if (isMobile || isTablet) {
+      <button
+        class="menu-trigger"
+        (click)="toggleSidebar()"
+        aria-label="Open navigation menu">
+        <mat-icon>{{ sidebarExpanded ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+    }
+    <main class="main-content">
       <router-outlet></router-outlet>
     </main>
-
   </div>
-
 </div>

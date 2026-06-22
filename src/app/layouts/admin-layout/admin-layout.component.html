@@ -1,12 +1,12 @@
 <div class="admin-layout-wrapper" [style.background]="'var(--color-background-page)'">
 
   <!-- Sidebar -->
-  <app-admin-sidebar
+  <app-sidebar
     [isMobile]="isMobile"
     [isTablet]="isTablet"
     [sidebarExpanded]="sidebarExpanded"
     (toggle)="toggleSidebar()">
-  </app-admin-sidebar>
+  </app-sidebar>
 
   <!-- Backdrop: shown on mobile + tablet when sidebar is open -->
   @if ((isMobile || isTablet) && sidebarExpanded) {

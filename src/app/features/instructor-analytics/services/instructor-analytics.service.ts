@@ -18,7 +18,22 @@ export class InstructorAnalyticsService {
 
   getStats(): Observable<InstructorAnalyticsResponse> {
     return this.http
-      .get<{ success: boolean; data: InstructorAnalyticsResponse }>(`${this.apiUrl}/instructor-stats`)
-      .pipe(map(response => response.data));
+      .get<{ success: boolean; data: any }>(`${this.apiUrl}/instructor-stats`)
+      .pipe(
+        map(response => {
+          const rawData = response.data || {};
+          return {
+            stats: rawData.stats,
+            revenueChart: rawData.revenueChart,
+            recentSales: (rawData.recentSales || []).map((sale: any) => ({
+              student: sale.studentName || '',
+              course: sale.courseTitle || '',
+              date: sale.date,
+              amount: sale.price || 0,
+              status: sale.status
+            }))
+          } as InstructorAnalyticsResponse;
+        })
+      );
   }
 }
