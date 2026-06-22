@@ -123,20 +123,42 @@ export class SectionBuilderComponent implements OnInit {
 
     this.courseId = id;
 
-
-    const highlight = this.route.snapshot.queryParamMap.get('highlight');
-    const expand = this.route.snapshot.queryParamMap.get('expand');
-
-    this.highlightSectionId = highlight;
-    this.expandedSectionId = expand;
-
     this.loadSections();
 
+    // Subscribe to query params so that navigating back from lesson-builder
+    // (which passes ?expand=sectionId&highlight=sectionId) works even when
+    // this component is already mounted and ngOnInit would not re-fire.
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const highlight = params['highlight'] ?? null;
+        const expand = params['expand'] ?? null;
 
-    this.router.navigate([], {
-      queryParams: {},
-      replaceUrl: true
-    });
+        if (expand) {
+          this.expandedSectionId = expand;
+        }
+        if (highlight) {
+          this.highlightSectionId = highlight;
+          // Clear highlight glow after 5 seconds
+          setTimeout(() => { this.highlightSectionId = null; }, 5000);
+        }
+
+        // Scroll to expanded section after DOM updates
+        if (expand) {
+          setTimeout(() => {
+            const idx = this.sections.findIndex(s => s.get('id')?.value === expand);
+            if (idx !== -1) {
+              const el = document.getElementById('section-card-' + idx);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 150);
+        }
+
+        // Clear query params from the URL so a future refresh doesn't re-expand
+        if (highlight || expand) {
+          this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        }
+      });
   }
 
   ngAfterViewInit() {
@@ -180,6 +202,14 @@ export class SectionBuilderComponent implements OnInit {
     this.sectionsArray.push(section);
 
     this.expandedSectionId = draftId;
+    this.cdr.detectChanges();
+    const newIndex = this.sectionsArray.length - 1;
+    setTimeout(() => {
+      const element = document.getElementById('section-card-' + newIndex);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   }
 
   onSectionDeleted(index: number) {

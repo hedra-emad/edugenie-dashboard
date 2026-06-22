@@ -32,7 +32,6 @@ export class SidebarComponent {
     { icon: 'group',                 label: 'Users',         route: '/admin/users' },
     { icon: 'category',              label: 'Categories',    route: '/admin/categories' },
     { icon: 'bar_chart',             label: 'Reports',       route: '/admin/reports' },
-    { icon: 'admin_panel_settings',  label: 'Admins',        route: '/admin/admins' },
     { icon: 'notifications',         label: 'Notifications', route: '/admin/notifications' },
   ];
 

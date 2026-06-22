@@ -143,7 +143,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
           this.cdr.detectChanges();
           const newIndex = this.lessonsArray.length - 1;
           setTimeout(() => {
-            document.getElementById('lesson-card-' + newIndex)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('lesson-card-' + newIndex)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }, 0);
         });
       }, 0);
