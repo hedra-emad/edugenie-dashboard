@@ -1,10 +1,10 @@
-import { Component, Input, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, inject, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DraftStateService } from '../../../core/services/draft-state.service';
 import { Subject, takeUntil } from 'rxjs';
 
-export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' | 'uploaded_unsaved';
+export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' | 'uploaded_unsaved' | 'saving' | 'save_failed' | 'recovered';
 
 @Component({
   selector: 'app-draft-indicator',
@@ -170,6 +170,96 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
       box-shadow: 0 0 8px rgba(239, 68, 68, 0.6), 0 0 16px rgba(239, 68, 68, 0.3);
     }
 
+    /* Saving state (Indigo/Violet with pulse — distinct from uploading's spin) */
+    .draft-indicator--saving {
+      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      box-shadow: 0 0 6px rgba(99, 102, 241, 0.4), 0 0 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .draft-indicator--saving::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
+      animation: pulse-glow-indigo 1.2s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse-glow-indigo {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.25); opacity: 0.85; }
+    }
+
+    .draft-indicator--saving:hover {
+      transform: scale(1.15);
+      background: linear-gradient(135deg, #4F46E5, #4338CA);
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.6), 0 0 16px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Save-failed state (Deep Red — distinct from upload-error's bright red) */
+    .draft-indicator--save_failed {
+      background: linear-gradient(135deg, #DC2626, #991B1B);
+      box-shadow: 0 0 6px rgba(220, 38, 38, 0.4), 0 0 12px rgba(153, 27, 27, 0.2);
+    }
+
+    .draft-indicator--save_failed::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, transparent 70%);
+      animation: pulse-glow-deep-red 2.5s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse-glow-deep-red {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+    }
+
+    .draft-indicator--save_failed:hover {
+      transform: scale(1.15);
+      background: linear-gradient(135deg, #B91C1C, #7F1D1D);
+      box-shadow: 0 0 8px rgba(220, 38, 38, 0.6), 0 0 16px rgba(153, 27, 27, 0.3);
+    }
+
+    /* Recovered state (Amber/Orange — matches lesson-card's stalled/recovered amber UI) */
+    .draft-indicator--recovered {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), 0 0 12px rgba(217, 119, 6, 0.2);
+    }
+
+    .draft-indicator--recovered::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
+      animation: pulse-glow-amber 2s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse-glow-amber {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    .draft-indicator--recovered:hover {
+      transform: scale(1.15);
+      background: linear-gradient(135deg, #D97706, #B45309);
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(217, 119, 6, 0.3);
+    }
+
     /* Mobile optimizations */
     @media (max-width: 768px) {
       .draft-indicator {
@@ -183,7 +273,7 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
     }
   `]
 })
-export class DraftIndicatorComponent implements OnInit, OnDestroy {
+export class DraftIndicatorComponent implements OnInit, OnChanges, OnDestroy {
   @Input() draftId: string = '';
   @Input() type: DraftIndicatorType = 'unsaved';
   @Input() customTooltip?: string;
@@ -200,7 +290,16 @@ export class DraftIndicatorComponent implements OnInit, OnDestroy {
       this.setupAutoDetection();
     } else {
       this.currentType = this.type;
-      this.shouldShow = true;
+      this.shouldShow = !!this.type;
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Keep the non-autoDetect path reactive: whenever [type] changes from
+    // the parent, reflect it immediately without waiting for a new ngOnInit.
+    if (!this.autoDetect && changes['type']) {
+      this.currentType = this.type;
+      this.shouldShow = !!this.type;
     }
   }
 
@@ -286,6 +385,12 @@ export class DraftIndicatorComponent implements OnInit, OnDestroy {
         return 'File is uploading...';
       case 'error':
         return 'Upload failed. Click to retry.';
+      case 'saving':
+        return 'Saving…';
+      case 'save_failed':
+        return 'Save failed — click Retry';
+      case 'recovered':
+        return 'Interrupted — action needed';
       default:
         return 'Draft state';
     }

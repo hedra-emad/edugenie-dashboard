@@ -87,6 +87,10 @@ export class ExpansionPanelComponent {
   // ================= Internal Methods =================
   
   get shouldShowDraftIndicator(): boolean {
+    // Explicit type always wins — it already encodes failure states.
+    if (this.draftIndicatorType) {
+      return true;
+    }
     if (this.hasSaveFailed || this.hasUploadError) {
       return false;
     }
@@ -101,6 +105,9 @@ export class ExpansionPanelComponent {
   private draftStateService = inject(DraftStateService);
 
   get currentDraftType(): DraftIndicatorType | null {
+    // Explicit type from parent always takes priority over auto-detect.
+    if (this.draftIndicatorType) return this.draftIndicatorType;
+
     if (this.draftId && this.autoDetectDraftState) {
       const draft = this.draftStateService.getDraft(this.draftId);
       if (draft) {
@@ -118,7 +125,6 @@ export class ExpansionPanelComponent {
       return null;
     }
     
-    if (this.draftIndicatorType) return this.draftIndicatorType;
     if (this.showUnsavedIndicator) return 'unsaved';
     if (this.showModifiedIndicator) return 'modified';
     
@@ -139,6 +145,11 @@ export class ExpansionPanelComponent {
       case 'unsaved': return 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]';
       case 'modified': return 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]';
       case 'uploaded_unsaved': return 'border-emerald-500 !shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+      case 'uploading': return 'border-sky-400 !shadow-[0_0_8px_rgba(14,165,233,0.2)]';
+      case 'saving': return 'border-indigo-500 !shadow-[0_0_8px_rgba(99,102,241,0.2)]';
+      case 'save_failed': return 'border-red-600 !shadow-[0_0_8px_rgba(220,38,38,0.25)]';
+      case 'recovered': return 'border-amber-400 !shadow-[0_0_8px_rgba(245,158,11,0.2)]';
+      case 'error': return 'border-red-500 !shadow-[0_0_8px_rgba(239,68,68,0.25)]';
       default: return 'border-[var(--color-border)]';
     }
   }
