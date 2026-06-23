@@ -4,7 +4,6 @@ export interface Category {
   _id?: string;
   id: string;
   name: string;
-  slug?: string;
   courseCount?: number;
   order?: number;
   createdAt?: string;

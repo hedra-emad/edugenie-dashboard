@@ -2,7 +2,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, switchMap, catchError, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
 
 interface SignatureResponse {
   signature: string;
@@ -30,7 +29,7 @@ export interface VideoUploadEvent {
 export class CloudinaryService {
   private http = inject(HttpClient);
 
-  private readonly apiBase = environment.apiUrl; // e.g. 'http://localhost:3000'
+  private readonly apiBase = import.meta.env.NG_APP_API_URL; // e.g. 'http://localhost:3000'
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend

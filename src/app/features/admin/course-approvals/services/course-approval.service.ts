@@ -130,11 +130,9 @@ export class CourseApprovalService {
   // ────────────────────────────────────────────────────────────────────────────
   // Category CRUD — all return Observable<boolean> so callers can react
   // ────────────────────────────────────────────────────────────────────────────
-  addCategory(name: string, slug?: string): Observable<boolean> {
+  addCategory(name: string): Observable<boolean> {
     if (!name.trim()) return of(false);
     const payload: any = { name: name.trim() };
-    if (slug?.trim()) payload.slug = slug.trim();
-
     return this.http
       .post<any>(
         this.categoriesApiUrl, payload, { withCredentials: true }
@@ -164,10 +162,9 @@ export class CourseApprovalService {
       );
   }
 
-  updateCategory(id: string, name: string, slug?: string): Observable<boolean> {
+  updateCategory(id: string, name: string): Observable<boolean> {
     if (!name.trim()) return of(false);
     const payload: any = { name: name.trim() };
-    if (slug?.trim()) payload.slug = slug.trim();
 
     return this.http
       .patch<any>(
