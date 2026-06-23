@@ -50,11 +50,11 @@ export const routes: Routes = [
 
   {
     path: 'login',
-    canActivate: [guestGuard],
     loadComponent: () =>
-      import('./features/auth/login/pages/login.page').then(
-        (m) => m.LoginPageComponent,
-      ),
+      import('./features/auth/login-redirect/login-redirect.component')
+        .then(m => m.LoginRedirectComponent)
+    // No guestGuard — even authenticated users who land here
+    // by mistake should be sent to Next.js, not blocked
   },
   {
     path: 'register',
@@ -84,6 +84,13 @@ export const routes: Routes = [
       import('./features/auth/auth-callback/pages/auth-callback.page').then(
         (m) => m.AuthCallbackPageComponent,
       ),
+  },
+  {
+    path: 'auth/redeem',
+    loadComponent: () =>
+      import('./features/auth/redeem/redeem.component')
+        .then(m => m.RedeemComponent)
+    // NO guards — this is the unauthenticated entry point
   },
 
   {
