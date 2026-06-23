@@ -112,6 +112,18 @@ export class AuthService {
       );
   }
 
+  redeemCode(code: string): Observable<{ userId: string; userRole: UserRole }> {
+    return this.http
+      .post<{ success: boolean; data: { userId: string; userRole: UserRole } }>(
+        `${this.authApiUrl}/redeem-code`,
+        { code },
+        { withCredentials: true }
+      )
+      .pipe(
+        map((response) => response.data)
+      );
+  }
+
   register(data: Record<string, unknown>): Observable<unknown> {
     return this.http.post(`${this.authApiUrl}/register`, data);
   }
