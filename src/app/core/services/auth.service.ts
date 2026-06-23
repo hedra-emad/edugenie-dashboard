@@ -149,6 +149,42 @@ export class AuthService {
       );
   }
 
+  /**
+   * Upload a new avatar image via the backend (signed Cloudinary upload).
+   * Sends a multipart/form-data request to PATCH /users/profile with the
+   * cropped image file. The backend handles Cloudinary upload, deletion of
+   * any previous avatar, and persisting avatar + avatarPublicId.
+   */
+  uploadAvatar(croppedBlob: Blob): Observable<ProfileApiResponse> {
+    const formData = new FormData();
+    formData.append('profileImage', croppedBlob, 'avatar.png');
+    return this.http
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, formData)
+      .pipe(
+        tap((response) => {
+          if (response.success && response.data) {
+            this.setCurrentUser(response.data);
+          }
+        }),
+      );
+  }
+
+  /**
+   * Remove the current avatar. Sends { removeAvatar: true } to the backend
+   * which deletes the Cloudinary asset and clears avatar + avatarPublicId.
+   */
+  removeAvatar(): Observable<ProfileApiResponse> {
+    return this.http
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { removeAvatar: true })
+      .pipe(
+        tap((response) => {
+          if (response.success && response.data) {
+            this.setCurrentUser(response.data);
+          }
+        }),
+      );
+  }
+
   logout(): Observable<void> {
     return this.http
       .post(`${this.authApiUrl}/logout`, {})

@@ -22,10 +22,24 @@
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-green"><mat-icon>calendar_month</mat-icon></div>
+      <div class="stat-icon icon-emerald"><mat-icon>today</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Added Today</span>
+        <span class="stat-value">{{ addedToday }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><mat-icon>date_range</mat-icon></div>
       <div class="stat-info">
         <span class="stat-label">Added This Month</span>
         <span class="stat-value">{{ addedThisMonth }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple"><mat-icon>calendar_month</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Added This Year</span>
+        <span class="stat-value">{{ addedThisYear }}</span>
       </div>
     </div>
   </div>
@@ -50,6 +64,31 @@
 
     <!-- Main Card -->
     <div class="main-card">
+      
+      <!-- Date Filters -->
+      <div class="date-filters-container">
+        <div class="filter-chips">
+          <button class="filter-chip" [class.active]="dateFilter === 'all'" (click)="setDateFilter('all')">All Time</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'today'" (click)="setDateFilter('today')">Today</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'week'" (click)="setDateFilter('week')">This Week</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'month'" (click)="setDateFilter('month')">This Month</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'year'" (click)="setDateFilter('year')">This Year</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'custom'" (click)="setDateFilter('custom')">Custom Range</button>
+        </div>
+        
+        @if (dateFilter === 'custom') {
+          <div class="custom-date-inputs">
+            <div class="date-input-group">
+              <label for="dateFrom">From</label>
+              <input type="date" id="dateFrom" [(ngModel)]="customDateFrom" (change)="onCustomDateChange()" />
+            </div>
+            <div class="date-input-group">
+              <label for="dateTo">To</label>
+              <input type="date" id="dateTo" [(ngModel)]="customDateTo" (change)="onCustomDateChange()" />
+            </div>
+          </div>
+        }
+      </div>
 
       <!-- Toolbar: Search + Sort + Count -->
       <div class="card-toolbar">
@@ -60,7 +99,7 @@
             <input
               type="text"
               class="search-input"
-              placeholder="Search by name or slug..."
+              placeholder="Search by name..."
               [(ngModel)]="searchQuery"
               (ngModelChange)="onSearchChange()"
               aria-label="Search categories" />
@@ -113,7 +152,7 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Slug</th>
+                <!-- <th>Slug</th> -->
                 <th>Courses</th>
                 <th>Created</th>
                 <th class="actions-th">Actions</th>
@@ -121,23 +160,28 @@
             </thead>
             <tbody>
               @for (cat of pagedCategories; track trackById($index, cat)) {
-                <tr>
+                <tr class="table-row">
                   <td data-label="Name">
                     <div class="cat-name-cell">
-                      <div class="cat-icon-wrap">
-                        <mat-icon>folder</mat-icon>
+                      <div class="cat-icon-wrap" [style.background-color]="getCategoryTheme(cat.name).bg" [style.color]="getCategoryTheme(cat.name).color">
+                        <span class="cat-letter">{{ getCategoryTheme(cat.name).letter }}</span>
                       </div>
-                      <span class="cat-name">{{ cat.name }}</span>
+                      <div class="cat-name-details">
+                        <span class="cat-name">{{ cat.name }}</span>
+                        @if (isNew(cat.createdAt)) {
+                          <span class="new-badge">NEW</span>
+                        }
+                      </div>
                     </div>
                   </td>
-                  <td data-label="Slug">
+                  <!-- <td data-label="Slug">
                     <code class="slug-chip">{{ cat.slug || '—' }}</code>
-                  </td>
+                  </td> -->
                   <td data-label="Courses">
                     <span class="count-badge">{{ cat.courseCount || 0 }}</span>
                   </td>
                   <td data-label="Created">
-                    <span class="date-text">{{ (cat.createdAt | date:'mediumDate') || '—' }}</span>
+                    <span class="date-text">{{ (cat.createdAt | date:'dd MMM yyyy • hh:mm a') || '—' }}</span>
                   </td>
                   <td class="actions-col" data-label="Actions">
                     <div class="actions-cell">
@@ -247,31 +291,6 @@
             [disabled]="isSubmitting" />
           @if (nameError) {
             <span class="error-msg"><mat-icon>error_outline</mat-icon>{{ nameError }}</span>
-          }
-        </div>
-
-        <!-- Slug -->
-        <div class="form-group">
-          <label class="form-label" for="catSlug">
-            Slug <span class="field-required">*</span>
-          </label>
-          <div class="slug-input-wrapper">
-            <span class="slug-prefix">/</span>
-            <input
-              id="catSlug"
-              type="text"
-              class="form-input slug-input"
-              [class.input-error]="slugError"
-              [(ngModel)]="catSlug"
-              (ngModelChange)="onSlugChange()"
-              (blur)="catSlugTouched = true"
-              placeholder="web-development"
-              [disabled]="isSubmitting" />
-          </div>
-          @if (slugError) {
-            <span class="error-msg"><mat-icon>error_outline</mat-icon>{{ slugError }}</span>
-          } @else {
-            <span class="field-hint">Lowercase letters, numbers and hyphens only.</span>
           }
         </div>
 

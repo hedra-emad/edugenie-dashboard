@@ -3,10 +3,27 @@
 .page-title  { margin: 0 0 6px; font-size: 1.75rem; font-weight: 800; color: var(--color-text-primary, #1f2937); letter-spacing: -0.5px; }
 .page-subtitle { margin: 0; color: var(--color-text-secondary, #6b7280); font-size: 0.9375rem; }
 
-/* 6-card grid: 3 columns × 2 rows on desktop */
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-@media (max-width: 1023px) and (min-width: 641px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; gap: 12px; } }
+/* Stats Grid Layout: 5 Cards Total */
+.stats-grid { display: grid; gap: 20px; }
+
+/* Desktop: 6 columns total. Top row 2 cards (span 3), bottom row 3 cards (span 2) */
+@media (min-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(6, 1fr); }
+  .stat-card:nth-child(1), .stat-card:nth-child(2) { grid-column: span 3; }
+  .stat-card:nth-child(3), .stat-card:nth-child(4), .stat-card:nth-child(5) { grid-column: span 2; }
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 1023px) and (min-width: 641px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-card { grid-column: span 1 !important; }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 640px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+  .stat-card { grid-column: span 1 !important; }
+}
 
 .stat-card {
   background: var(--color-surface, #fff);

@@ -11,7 +11,7 @@ import { CourseApproval } from '../../models/course-approval.model';
 import { ApprovalRowComponent } from '../approval-row/approval-row.component';
 import { CourseApprovalService } from '../../services/course-approval.service';
 
-type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
+export type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
 
 @Component({
   selector: 'app-approvals-table',
@@ -50,9 +50,9 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   @Output() approve        = new EventEmitter<string>();
   @Output() reject         = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<Set<string>>();
-  @Output() filterChange    = new EventEmitter<string>();
+  @Output() filterChange    = new EventEmitter<FilterType>();
 
-  currentFilter: FilterType = 'pending';
+  @Input() currentFilter: FilterType = 'pending';
   searchQuery = '';
   private debouncedSearchQuery = '';
   private searchSubject = new Subject<string>();
