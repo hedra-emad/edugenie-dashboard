@@ -1,9 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserRole } from '../../../core/models/user-profile.model';
-import { switchMap, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-redeem',
@@ -21,41 +18,28 @@ import { switchMap, catchError, of } from 'rxjs';
 export class RedeemComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private http = inject(HttpClient);
   private authService = inject(AuthService);
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe(async (params) => {
       const code = params['code'];
       if (!code) {
         this.router.navigate(['/login']);
         return;
       }
 
-      this.http.post<{ success: boolean; data: { userId: string; userRole: UserRole } }>('/auth/redeem-code', { code })
-        .pipe(
-          switchMap((res) => {
-            if (res.success && res.data) {
-              // Cookie is now set — fetch full profile to populate auth state
-              // before the guard checks isAuthenticated()
-              return this.authService.getProfile();
-            }
-            return of(null);
-          }),
-          catchError(() => {
-            this.router.navigate(['/login'], { queryParams: { error: 'session_expired' } });
-            return of(null);
-          })
-        )
-        .subscribe((profileRes) => {
-          if (profileRes && profileRes.success && profileRes.data) {
-            const homeRoute = this.authService.getHomeRouteForRole(profileRes.data.role as UserRole);
-            this.router.navigate([homeRoute]);
-          } else if (profileRes !== null) {
-            // redeem succeeded but profile fetch failed
-            this.router.navigate(['/login'], { queryParams: { error: 'session_expired' } });
-          }
-        });
+      try {
+        const result = await this.authService.redeemCode(code).toPromise();
+        if (result) {
+          // Force auth state refresh before navigation
+          await this.authService.initializeAuth().toPromise();
+          // Now navigate — auth guard will see authenticated user
+          const route = this.authService.getHomeRouteForRole(result.userRole);
+          this.router.navigate([route]);
+        }
+      } catch (error) {
+        this.router.navigate(['/login'], { queryParams: { error: 'session_expired' } });
+      }
     });
   }
 }
