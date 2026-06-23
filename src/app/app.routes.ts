@@ -198,11 +198,6 @@ export const routes: Routes = [
           import('./features/admin/placeholders').then((m) => m.AdminReportsComponent)
       },
       {
-        path: 'admins',
-        loadComponent: () =>
-          import('./features/admin/placeholders').then((m) => m.AdminAdminsComponent)
-      },
-      {
         path: 'support',
         loadComponent: () =>
           import('./features/admin/placeholders').then((m) => m.AdminSupportComponent)

@@ -1,45 +1,60 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-
-import { SidebarComponent } from './sidebar/sidebar.component';
+import {
+  Component, HostListener, OnInit,
+  ChangeDetectionStrategy, ChangeDetectorRef, inject
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-
+import { MatIconModule } from '@angular/material/icon';
+import { SidebarComponent } from './sidebar/sidebar.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [
-    SidebarComponent,
-    RouterOutlet
-  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterOutlet, MatIconModule, SidebarComponent],
   templateUrl: './layout.component.html',
+  styleUrl: './layout.component.css',
 })
 export class LayoutComponent implements OnInit {
+  private readonly cdr = inject(ChangeDetectorRef);
   sidebarExpanded = true;
   isMobile = false;
+  isTablet = false;
 
   ngOnInit(): void {
-    this.checkScreen();
+    this.checkScreenSize();
   }
 
   @HostListener('window:resize')
   onResize(): void {
-    this.checkScreen();
+    this.checkScreenSize();
   }
 
-  private checkScreen(): void {
+  private checkScreenSize(): void {
+    const w = window.innerWidth;
     const wasMobile = this.isMobile;
-    this.isMobile = window.innerWidth < 768;
-
-    // Only reset sidebar state on breakpoint crossing, not every resize
-    if (this.isMobile !== wasMobile) {
-      this.sidebarExpanded = !this.isMobile;
+    const wasTablet = this.isTablet;
+    this.isMobile = w < 768;
+    this.isTablet = w >= 768 && w < 1024;
+    if (this.isMobile !== wasMobile || this.isTablet !== wasTablet) {
+      if (this.isMobile || this.isTablet) {
+        this.sidebarExpanded = false;
+      } else {
+        this.sidebarExpanded = true;
+      }
+      this.cdr.markForCheck();
     }
   }
 
   toggleSidebar(): void {
-    if (this.isMobile) {
-      this.sidebarExpanded = !this.sidebarExpanded;
+    this.sidebarExpanded = !this.sidebarExpanded;
+    this.cdr.markForCheck();
+  }
+
+  closeOverlaySidebar(): void {
+    if (this.isMobile || this.isTablet) {
+      this.sidebarExpanded = false;
+      this.cdr.markForCheck();
     }
-    // Desktop sidebar is always expanded — do nothing
   }
 }

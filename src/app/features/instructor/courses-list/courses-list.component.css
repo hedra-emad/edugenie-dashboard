@@ -33,6 +33,20 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .header-badge {
   display: flex;
   align-items: center;

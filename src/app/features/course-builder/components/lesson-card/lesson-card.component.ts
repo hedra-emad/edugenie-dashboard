@@ -8,6 +8,8 @@ import {
   ChangeDetectionStrategy,
   OnInit,
   OnDestroy,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -121,7 +123,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private ignoreRestore = false;
 
   // ── Constants ─────────────────────────────────────────────
-  readonly MAX_DURATION = 10 * 60; // seconds
+  readonly MAX_DURATION = 15 * 60; // seconds
   readonly MAX_RETRIES = 3;
   readonly UPLOAD_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes timeout
   private readonly UPLOAD_STATE_KEY = 'edugenie_upload_state';
@@ -136,6 +138,10 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private readonly TRANSCRIPT_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
   isPollingTranscript = false; // For template binding
 
+  // ── Video drop-zone flags ─────────────────────────────────
+  videoTouched = false;
+  isDraggingVideo = false;
+
   // ── Draft ─────────────────────────────────────────────────
   draftId = '';
   hasDraftData = false;
@@ -143,10 +149,13 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // ── Local video file (in-memory only) ────────────────────
   selectedVideoFile: File | null = null;
   selectedVideoUrl: string | null = null; // blob URL for preview
+  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
 
   // ── Misc UI ───────────────────────────────────────────────
   isDeleting = false; // Kept for template compatibility
   private saveLock = false;
+  /** Snapshot of form values as of the last successful save — used to detect real changes */
+  private savedSnapshot: { title: string } | null = null;
 
   // ── THE ONE STATE ─────────────────────────────────────────
   snap: UploadSnapshot = initialSnapshot();
@@ -155,9 +164,16 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private lastProgressTime = 0;
   private progressCheckInterval: any = null;
 
+  // ── Transcript Polling ─────────────────────────────────────
+  // private transcriptPollInterval: any = null;
+  // private readonly TRANSCRIPT_POLL_INTERVAL_MS = 5000;
+  // private readonly TRANSCRIPT_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+  // isPollingTranscript = false; // for template binding
+
   // ── Upload State Persistence ───────────────────────────────
   private persistUploadState(): void {
     if (!this.draftId || this.isPermanentlyDeleted) return;
+    if (this.snap.state === 'saved' || this.snap.state === 'idle') return;
     try {
       const snapshot = {
         state: this.snap.state,
@@ -308,15 +324,29 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   }
 
   get hasFormChanges(): boolean {
-    return this.lessonForm.dirty || !!this.selectedVideoFile;
+    // A newly selected video always counts as a change.
+    if (this.selectedVideoFile) return true;
+
+    // No saved snapshot yet (e.g. brand-new lesson, not yet created) —
+    // fall back to dirty-flag behavior so create mode isn't affected.
+    if (!this.savedSnapshot) {
+      return this.lessonForm.dirty;
+    }
+
+    const currentTitle = (this.lessonForm.get('title')?.value || '').trim();
+    const savedTitle = (this.savedSnapshot.title || '').trim();
+
+    return currentTitle !== savedTitle;
   }
 
   get shouldDisableButton(): boolean {
-    // After successful save, allow editing if there are changes (both create & update)
+    if (this.s === 'upload_error' || this.s === 'max_retries_exceeded') {
+      return false;
+    }
     if (this.s === 'saved') {
-      // For update mode: allow if there are form changes
-      // For create mode: allow if video exists (can update later)
-      return !this.hasFormChanges && !this.selectedVideoFile;
+      // Disabled until the user changes something relative to the last save;
+      // re-disabled automatically if they revert back to the saved values.
+      return !this.hasFormChanges;
     }
     if (this.isWorking || this.isDeleting) return true;
     if (this.s === 'save_failed') return false; // retry via save button
@@ -341,8 +371,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
         return 'Try Again';
       case 'max_retries_exceeded':
         return 'Select Video';
-      case 'saved':
-        return this.hasFormChanges ? (this.isUpdateMode ? 'Update Lesson' : 'Create Lesson') : 'Saved ✓';
       default:
         break;
     }
@@ -428,7 +456,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
         retryCount: recoveredState.retryCount || 0,
         videoUrl: draftUrl,
         videoPublicId: draftPublicId,
-        message: 'Upload was in progress. File is no longer available, but you can retry with a new video.'
+        // message: 'Upload was in progress. File is no longer available, but you can retry with a new video.'
       });
       return;
     }
@@ -461,6 +489,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       const isDbSaved = rawId && !rawId.startsWith('draft_');
 
       if (isDbSaved) {
+        this.savedSnapshot = { title: this.lessonForm.get('title')?.value || '' };
         this.setState({ state: 'saved', videoUrl: draftUrl, videoPublicId: draftPublicId });
       } else {
         // Cloudinary success but DB never saved → recover save_failed
@@ -505,6 +534,9 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     this.stopTranscriptPolling();
     this.formDraftInteg.disconnectForm(this.draftId);
     if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+    if (this.s !== 'saved' && !this.isPermanentlyDeleted) {
+      this.clearPersistedUploadState();
+    }
   }
 
   // ─────────────────────────────────────────────────────────
@@ -513,9 +545,32 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-
     const file = input.files[0];
-    this.lessonForm.markAsTouched();
+    // Reset immediately so re-selecting the same file (or any file after rejection)
+    // always triggers a fresh `change` event and the picker opens normally.
+    input.value = '';
+    await this.processSelectedFile(file);
+  }
+
+  private async processSelectedFile(file: File): Promise<void> {
+    this.videoTouched = true;
+
+    // MIME-type and extension check
+    const allowedExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv', '.m4v'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    const isVideoMime = !!(file.type && file.type.startsWith('video/'));
+    const isVideoExtension = allowedExtensions.includes(fileExtension);
+
+    if (!isVideoMime && !isVideoExtension) {
+      this.selectedVideoFile = null;
+      if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+      this.selectedVideoUrl = null;
+      this.setState({
+        state: 'idle',
+        message: 'Please select a valid video file (e.g. MP4, MOV, WEBM). Images and other file types are not supported.',
+      });
+      return;
+    }
 
     // Delete any unsaved Cloudinary asset before replacing
     if (this.snap.videoPublicId && this.s !== 'saved') {
@@ -532,14 +587,28 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     try {
       const duration = await this.getVideoDuration(file);
 
+      if (duration <= 0) {
+        this.selectedVideoFile = null;
+        if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+        this.selectedVideoUrl = null;
+        this.setState({
+          state: 'idle',
+          message: 'Could not read video duration or the file is corrupted. Please try another video file.',
+          videoUrl: null,
+          videoPublicId: null,
+          progress: 0,
+          retryCount: 0,
+        });
+        return;
+      }
+
       if (duration > this.MAX_DURATION) {
         this.selectedVideoFile = null;
         URL.revokeObjectURL(this.selectedVideoUrl!);
         this.selectedVideoUrl = null;
-        input.value = '';
         this.setState({
           state: 'idle',
-          message: 'Video must not exceed 10 minutes',
+          message: 'Video must not exceed 15 minutes',
           videoUrl: null,
           videoPublicId: null,
           progress: 0,
@@ -572,13 +641,34 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       this.selectedVideoFile = null;
       if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
       this.selectedVideoUrl = null;
-      input.value = '';
       this.setState({ state: 'upload_error', message: 'Could not read video file.' });
     }
   }
 
+  onVideoDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingVideo = true;
+  }
+
+  onVideoDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingVideo = false;
+  }
+
+  onVideoDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingVideo = false;
+    const files = event.dataTransfer?.files;
+    if (!files?.length) return;
+    this.processSelectedFile(files[0]);
+  }
+
   removeSelectedVideo() {
     // Clean up Cloudinary video if exists and not saved
+    this.videoTouched = true;
     this.stopTranscriptPolling();
     const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
     if (publicId && this.s !== 'saved') {
@@ -598,6 +688,11 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   saveLesson() {
     if (this.isWorking || this.isDeleting || this.saveLock) return;
 
+    if (this.s === 'upload_error' || this.s === 'max_retries_exceeded') {
+      this.fileInputRef.nativeElement.click();
+      return;
+    }
+
     // Recover from save_failed: skip upload, go straight to DB
     if (this.s === 'save_failed') {
       this.saveLock = true;
@@ -615,6 +710,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
     this.saveLock = true;
     this.lessonForm.markAllAsTouched();
+    this.videoTouched = true;
     if (!this.isFormValid) {
       this.saveLock = false;
       return;
@@ -662,10 +758,16 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     if (this.selectedVideoFile) {
       // Double-check duration before upload
       this.getVideoDuration(this.selectedVideoFile).then((dur) => {
+        if (dur <= 0) {
+          this.selectedVideoFile = null;
+          this.saveLock = false;
+          this.setState({ state: 'idle', message: 'Could not read video duration or the file is corrupted. Please try another video file.' });
+          return;
+        }
         if (dur > this.MAX_DURATION) {
           this.selectedVideoFile = null;
           this.saveLock = false;
-          this.setState({ state: 'idle', message: 'Video must not exceed limit.' });
+          this.setState({ state: 'idle', message: 'Video must not exceed 15 minutes.' });
           return;
         }
         this.startCloudinaryUpload();
@@ -679,6 +781,13 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private startCloudinaryUpload() {
     this.setState({ state: 'uploading', progress: 0, message: '' });
     this.startProgressTracking();
+    this.toastr.warning(
+      'Please stay on this page while the video is uploading. Refreshing, closing the tab, or navigating away may interrupt the upload.',
+      'Uploading video',
+      {
+        toastClass: 'ngx-toastr toast-mauve-warning',
+      }
+    );
 
     this.cloudinaryService
       .uploadVideo(this.selectedVideoFile!, this.courseId, this.sectionId)
@@ -735,6 +844,11 @@ export class LessonCardComponent implements OnInit, OnDestroy {
           this.saveLock = false;
           const title = this.lessonForm.get('title')?.value || 'lesson';
           this.toastr.error(`Video upload failed for "${this.trunc(title)}"`);
+
+          this.selectedVideoFile = null;
+          if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+          this.selectedVideoUrl = null;
+
           this.setState({
             state: 'upload_error',
             progress: 0,
@@ -804,6 +918,12 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
           this.lessonForm.markAsPristine();
           this.lessonForm.markAsUntouched();
+
+          // Capture the just-saved values so future edits are compared against this,
+          // not the one-way `dirty` flag.
+          this.savedSnapshot = {
+            title: this.lessonForm.get('title')?.value || '',
+          };
 
           // Clear persisted upload state on success
           this.clearPersistedUploadState();
@@ -910,19 +1030,22 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // Delete
   // ─────────────────────────────────────────────────────────
   deleteLesson() {
+    console.log('id is:', this.lessonForm.get('id')?.value, 's is:', this.s);
     if (this.isDeleting || this.isPermanentlyDeleted) return;
 
     const rawId = this.lessonForm.get('id')?.value;
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const lessonId = isDraft ? null : rawId;
 
-    const hasNothingToLose =
-      !lessonId &&
-      !this.lessonForm.get('title')?.value &&
-      !this.snap.videoUrl &&
-      !this.selectedVideoFile;
+    const hasAssetOrContent =
+      !!this.snap.videoUrl ||
+      !!this.lessonForm.get('videoUrl')?.value ||
+      !!this.lessonForm.get('title')?.value ||
+      !!this.selectedVideoFile ||
+      this.s === 'save_failed';
 
-    if (hasNothingToLose) {
+    if (!lessonId && !hasAssetOrContent) {
+      // genuinely nothing to lose — safe to skip confirm/cleanup
       this.isPermanentlyDeleted = true;
       this.isDeleting = true;
       this.clearPersistedUploadState();
@@ -936,19 +1059,65 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       return;
     }
 
+
+
     // If no saved lesson, just emit delete and clear draft
     // If no saved lesson, just emit delete and clear draft
     if (!lessonId) {
-      this.isPermanentlyDeleted = true;
-      this.isDeleting = true;
-      this.clearPersistedUploadState();
-      this.clearDraftAfterSave();
-      this.delete.emit();
-      
-      // Reset state without persisting
-      this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
-      this.isDeleting = false;
-      this.cdr.markForCheck();
+      // No real DB row can exist here (forceFail is test-only; in prod a failed
+      // addLesson() means the POST never committed). But a Cloudinary asset or
+      // unsaved content may still exist, so confirm before discarding it.
+      const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
+
+      if (!hasAssetOrContent) {
+        // Nothing to lose at all — shouldn't normally reach here given the
+        // earlier check, but keep this safe no-confirm path just in case.
+        this.isPermanentlyDeleted = true;
+        this.isDeleting = true;
+        this.clearPersistedUploadState();
+        this.clearDraftAfterSave();
+        this.delete.emit();
+        this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
+        this.isDeleting = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      const ref = this.dialog.open(ConfirmDialogComponent, {
+        data: { title: 'Delete Lesson?', message: 'This cannot be undone.' },
+      });
+
+      ref.afterClosed().pipe(take(1)).subscribe((result) => {
+        if (result !== 'confirm') return;
+
+        this.isPermanentlyDeleted = true;
+        this.clearPersistedUploadState();
+        this.setState({ state: 'deleting' });
+        this.isDeleting = true;
+        this.cdr.markForCheck();
+
+        const finish = () => {
+          this.clearPersistedUploadState();
+          this.clearDraftAfterSave();
+          this.delete.emit();
+          this.isDeleting = false;
+          this.snap = { state: 'idle', progress: 0, retryCount: 0, videoUrl: null, videoPublicId: null, message: '' };
+          this.isPermanentlyDeleted = false;
+          this.cdr.markForCheck();
+        };
+
+        if (publicId) {
+          this.cloudinaryService.deleteAsset(publicId, 'video')
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => console.log('[LessonCard] Cloudinary asset deleted:', publicId),
+              error: (err) => console.warn('[LessonCard] Cloudinary delete failed (continuing):', err),
+              complete: () => finish(),
+            });
+        } else {
+          finish();
+        }
+      });
       return;
     }
 
@@ -1093,8 +1262,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       this.s === 'upload_success' ||
       this.s === 'saving' ||
       this.s === 'saving_recovered' ||
-      this.s === 'retrying' ||
-      this.s === 'saved'
+      this.s === 'retrying'
     );
   }
 

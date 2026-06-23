@@ -5,13 +5,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { AdminSidebarComponent } from './admin-sidebar.component';
+import { SidebarComponent } from '../../shared/components/layout/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterOutlet, MatIconModule, AdminSidebarComponent],
+  imports: [CommonModule, RouterOutlet, MatIconModule, SidebarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })

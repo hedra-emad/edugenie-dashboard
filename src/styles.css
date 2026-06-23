@@ -597,13 +597,13 @@ app-filter-bar .chips-container app-sub-button.selected button {
    FAILED STATE INDICATORS
    ======================================== */
 
-/* Save Failed Indicator (Amber/Orange) */
+/* Save Failed Indicator (Red) */
 .save-failed-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F59E0B, #F97316);
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), 0 0 12px rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4), 0 0 12px rgba(239, 68, 68, 0.2);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -617,18 +617,23 @@ app-filter-bar .chips-container app-sub-button.selected button {
   right: -2px;
   bottom: -2px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
-  animation: pulse-glow-amber 2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation: pulse-glow-red 2s ease-in-out infinite;
   z-index: -1;
 }
 
 .save-failed-indicator:hover {
   transform: scale(1.15);
-  background: linear-gradient(135deg, #D97706, #F59E0B);
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6), 0 0 16px rgba(239, 68, 68, 0.3);
 }
 
 @keyframes pulse-glow-amber {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+@keyframes pulse-glow-red {
   0%, 100% { transform: scale(1); opacity: 0.4; }
   50% { transform: scale(1.15); opacity: 0.7; }
 }
@@ -668,15 +673,15 @@ app-filter-bar .chips-container app-sub-button.selected button {
    FAILED STATE PANEL BORDERS
    ======================================== */
 
-/* Lesson Panel Failed State - Soft amber/orange border */
+/* Lesson Panel Failed State - Soft red border */
 .lesson-panel.lesson-failed {
-  border-color: rgba(245, 158, 11, 0.5) !important;
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2), 0 4px 12px rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2), 0 4px 12px rgba(239, 68, 68, 0.1) !important;
 }
 
 .lesson-panel.lesson-failed:hover {
-  border-color: rgba(245, 158, 11, 0.7) !important;
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3), 0 4px 16px rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), 0 4px 16px rgba(239, 68, 68, 0.15) !important;
 }
 
 /* Section with failed lessons - subtle warning border */
@@ -717,4 +722,26 @@ app-filter-bar .chips-container app-sub-button.selected button {
 .section-failed-lessons-indicator:hover {
   transform: scale(1.15);
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+/* ========================================
+   MAUVE WARNING TOAST (upload in progress)
+   ======================================== */
+.toast-mauve-warning {
+  background-image: linear-gradient(135deg, #d8b4f8, #f3e8f5) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+  background-color: transparent !important;
+}
+
+.toast-container .ngx-toastr.toast-mauve-warning {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light)) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
+
+.toast-container .ngx-toastr.toast-mauve-warning .toast-progress {
+  background: rgba(74, 23, 104, 0.25) !important;
 }

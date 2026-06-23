@@ -19,18 +19,11 @@ export class LessonsService {
   private readonly baseUrl = environment.apiUrl;
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
-    const forceFail = false; // ⬅️ set to true only while testing, then back to false
-
-    return this.http
-      .post(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
-      .pipe(
-        mergeMap(res => {
-          if (forceFail) {
-            return throwError(() => new Error('Simulated DB failure'));
-          }
-          return of(res);
-        })
-      );
+    const forceFail = false;
+    if (forceFail) {
+      return throwError(() => new Error('Simulated DB failure'));   // ← returns immediately, http.post() below never runs
+    }
+    return this.http.post(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body);
   }
 
   updateLesson(courseId: string, sectionId: string, lessonId: string, body: Partial<CreateLessonDto>): Observable<any> {
