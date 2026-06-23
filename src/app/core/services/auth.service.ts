@@ -21,7 +21,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
-import { environment } from '../../../environments/environment';
+
 
 @Injectable({
   providedIn: 'root',
@@ -149,6 +149,42 @@ export class AuthService {
       );
   }
 
+  /**
+   * Upload a new avatar image via the backend (signed Cloudinary upload).
+   * Sends a multipart/form-data request to PATCH /users/profile with the
+   * cropped image file. The backend handles Cloudinary upload, deletion of
+   * any previous avatar, and persisting avatar + avatarPublicId.
+   */
+  uploadAvatar(croppedBlob: Blob): Observable<ProfileApiResponse> {
+    const formData = new FormData();
+    formData.append('profileImage', croppedBlob, 'avatar.png');
+    return this.http
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, formData)
+      .pipe(
+        tap((response) => {
+          if (response.success && response.data) {
+            this.setCurrentUser(response.data);
+          }
+        }),
+      );
+  }
+
+  /**
+   * Remove the current avatar. Sends { removeAvatar: true } to the backend
+   * which deletes the Cloudinary asset and clears avatar + avatarPublicId.
+   */
+  removeAvatar(): Observable<ProfileApiResponse> {
+    return this.http
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { removeAvatar: true })
+      .pipe(
+        tap((response) => {
+          if (response.success && response.data) {
+            this.setCurrentUser(response.data);
+          }
+        }),
+      );
+  }
+
   logout(): Observable<void> {
     return this.http
       .post(`${this.authApiUrl}/logout`, {})
@@ -206,6 +242,26 @@ export class AuthService {
   }
 
   getStudentAppRedirectUrl(): string {
-    return environment.studentAppUrl;
+    return import.meta.env.NG_APP_STUDENT_APP_URL;
+  }
+
+  redirectToStudentApp(): Observable<void> {
+    return this.http.post<{ code: string }>(
+      '/auth/handoff-code',
+      {}
+    ).pipe(
+      tap(({ code }) => {
+        const url = `${import.meta.env.NG_APP_STUDENT_APP_URL}/auth/redeem?code=${code}`;
+        window.location.href = url;
+      }),
+      map(() => void 0),
+      catchError((err) => {
+        // If handoff fails, redirect without a code as last resort
+        // — the student app will show its own login page
+        console.error('Handoff code generation failed:', err);
+        window.location.href = import.meta.env.NG_APP_STUDENT_APP_URL;
+        return of(void 0);
+      })
+    );
   }
 }

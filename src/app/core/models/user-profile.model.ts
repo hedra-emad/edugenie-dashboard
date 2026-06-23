@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   avatar?: string;
+  avatarPublicId?: string;
 }
 
 export interface ProfileApiResponse {
