@@ -27,7 +27,7 @@ export const roleGuard: CanActivateFn = (route) => {
       const homeRoute = authService.getHomeRouteForRole(user.role);
 
       if (authService.isExternalRedirect(homeRoute)) {
-        window.location.href = authService.getStudentAppRedirectUrl();
+        authService.redirectToStudentApp().subscribe();
         return false; // block internal navigation, browser is leaving
       }
 

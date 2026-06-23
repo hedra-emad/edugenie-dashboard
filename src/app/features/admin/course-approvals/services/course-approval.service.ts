@@ -21,8 +21,8 @@ export class CourseApprovalService {
   private readonly http   = inject(HttpClient);
   private readonly toastr = inject(ToastrService);
 
-  private readonly coursesApiUrl    = 'https://edugenie-api.vercel.app/courses';
-  private readonly categoriesApiUrl = 'https://edugenie-api.vercel.app/categories';
+  private readonly coursesApiUrl    = '/courses';
+  private readonly categoriesApiUrl = '/categories';
 
   private readonly coursesSubject       = new BehaviorSubject<CourseApproval[]>([]);
   private readonly categoriesSubject    = new BehaviorSubject<Category[]>([]);

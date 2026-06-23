@@ -244,4 +244,24 @@ export class AuthService {
   getStudentAppRedirectUrl(): string {
     return environment.studentAppUrl;
   }
+
+  redirectToStudentApp(): Observable<void> {
+    return this.http.post<{ code: string }>(
+      '/auth/handoff-code',
+      {}
+    ).pipe(
+      tap(({ code }) => {
+        const url = `${environment.studentAppUrl}/auth/redeem?code=${code}`;
+        window.location.href = url;
+      }),
+      map(() => void 0),
+      catchError((err) => {
+        // If handoff fails, redirect without a code as last resort
+        // — the student app will show its own login page
+        console.error('Handoff code generation failed:', err);
+        window.location.href = environment.studentAppUrl;
+        return of(void 0);
+      })
+    );
+  }
 }
