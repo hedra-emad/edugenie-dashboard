@@ -1,0 +1,16 @@
+diff --git a/angular.json b/angular.json
+index 0e7e3bf..f543dd1 100644
+--- a/angular.json
++++ b/angular.json
+@@ -35,11 +35,6 @@
+           },
+           "configurations": {
+             "production": {
+-              "optimization": {
+-                "scripts": true,
+-                "styles": { "minify": true, "inlineCritical": true },
+-                "fonts": { "inline": false }
+-              },
+               "budgets": [
+                 {
+                   "type": "initial",
