@@ -146,7 +146,7 @@ export class CourseApprovalService {
             {
               id: data?._id || data?.id || '',
               name: data?.name || name.trim(),
-              slug: data?.slug || slug?.trim() || '',
+              // slug: data?.slug || slug?.trim() || '',
               courseCount: data?.courseCount || 0,
               order: current.length,
               createdAt: data?.createdAt || new Date().toISOString()
@@ -180,7 +180,7 @@ export class CourseApprovalService {
               ? {
                 ...cat,
                 name: (data?.name) || name.trim(),
-                slug: (data?.slug) || slug?.trim() || cat.slug,
+                // slug: (data?.slug) || slug?.trim() || cat.slug,
                 createdAt: (data?.createdAt) || cat.createdAt
               }
               : cat
@@ -308,7 +308,7 @@ export class CourseApprovalService {
               .map(cat => ({
                 id: cat._id || cat.id,
                 name: cat.name,
-                slug: cat.slug || '',
+                // slug: cat.slug || '',
                 courseCount: cat.courseCount || 0,
                 order: cat.order || 0,
                 createdAt: cat.createdAt || ''
