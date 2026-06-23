@@ -11,7 +11,7 @@ import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../services/course-approval.service';
 import { CourseApproval, AdminStats } from '../models/course-approval.model';
-import { ApprovalsTableComponent } from '../components/approvals-table/approvals-table.component';
+import { ApprovalsTableComponent, FilterType } from '../components/approvals-table/approvals-table.component';
 
 @Component({
   selector: 'app-course-approvals-page',
@@ -29,9 +29,10 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
 
   courses: CourseApproval[] = [];
   /** Tracks the active filter tab in the table so the page can gate the bulk toolbar */
-  activeTableFilter = 'pending';
+  activeTableFilter: FilterType = 'pending';
   stats: AdminStats | null = null;
   loading = false;
+  private initialTabSet = false;
   actionLoading: Record<string, boolean> = {};
 
   // ── Bulk selection ────────────────────────────────────────────────────────
@@ -65,6 +66,12 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
         this.stats        = stats;
         this.loading      = loading;
         this.actionLoading = actionLoading;
+
+        if (stats && !this.initialTabSet) {
+          this.activeTableFilter = stats.underReview > 0 ? 'pending' : 'all';
+          this.initialTabSet = true;
+        }
+
         this.cdr.markForCheck();
       });
   }

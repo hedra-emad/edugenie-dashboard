@@ -11,18 +11,8 @@ import { CourseApprovalService } from '../../course-approvals/services/course-ap
 import { Category } from '../../course-approvals/models/course-approval.model';
 
 type SortOption = 'newest' | 'oldest' | 'az' | 'za';
+type DateFilter = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
 
-const SLUG_PATTERN = /^[a-z0-9-]+$/;
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 @Component({
   selector: 'app-categories-page',
@@ -50,6 +40,11 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
   pageIndex = 0;
   readonly pageSizeOptions = [10, 25, 50];
 
+  // ── Date Filtering ─────────────────────────────────────────────────────────
+  dateFilter: DateFilter = 'all';
+  customDateFrom: string = '';
+  customDateTo: string = '';
+
   // ── Modals ─────────────────────────────────────────────────────────────────
   showCategoryModal  = false;
   modalMode: 'create' | 'edit' = 'create';
@@ -57,10 +52,7 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
   isSubmitting = false;
 
   catName            = '';
-  catSlug            = '';
   catNameTouched     = false;
-  catSlugTouched     = false;
-  slugManuallyEdited = false;
 
   showDeleteModal    = false;
   categoryToDelete: Category | null = null;
@@ -89,6 +81,15 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
   // ── Stats ───────────────────────────────────────────────────────────────────
   get totalCategories(): number { return this.categories.length; }
 
+  get addedToday(): number {
+    const now = new Date();
+    return this.categories.filter(c => {
+      if (!c.createdAt) return false;
+      const d = new Date(c.createdAt);
+      return d.toDateString() === now.toDateString();
+    }).length;
+  }
+
   get addedThisMonth(): number {
     const now = new Date();
     return this.categories.filter(c => {
@@ -98,14 +99,90 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
     }).length;
   }
 
+  get addedThisYear(): number {
+    const now = new Date();
+    return this.categories.filter(c => {
+      if (!c.createdAt) return false;
+      const d = new Date(c.createdAt);
+      return d.getFullYear() === now.getFullYear();
+    }).length;
+  }
+
+  // ── Category Icon Helpers ──────────────────────────────────────────────────
+  getCategoryTheme(name: string): { bg: string, color: string, letter: string } {
+    const cleanName = name.trim();
+    const letter = cleanName.charAt(0).toUpperCase() || '?';
+    
+    const palette = [
+      { bg: '#e0e7ff', color: '#4f46e5' }, // Indigo
+      { bg: '#d1fae5', color: '#059669' }, // Emerald
+      { bg: '#fce7f3', color: '#db2777' }, // Pink
+      { bg: '#ffedd5', color: '#ea580c' }, // Orange
+      { bg: '#cffafe', color: '#0891b2' }, // Cyan
+      { bg: '#ede9fe', color: '#7c3aed' }, // Violet
+      { bg: '#fef3c7', color: '#d97706' }, // Amber
+      { bg: '#ffe4e6', color: '#e11d48' }, // Rose
+      { bg: '#e0f2fe', color: '#0284c7' }, // Sky
+      { bg: '#ecfccb', color: '#65a30d' }  // Lime
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < cleanName.length; i++) {
+      hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const index = Math.abs(hash) % palette.length;
+    return { ...palette[index], letter };
+  }
+
+  isNew(createdAt?: string): boolean {
+    if (!createdAt) return false;
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  }
+
   // ── Computed list ──────────────────────────────────────────────────────────
   get filteredSorted(): Category[] {
     const q = this.searchQuery.trim().toLowerCase();
-    let result = q
-      ? this.categories.filter(c =>
-          c.name.toLowerCase().includes(q) ||
-          (c.slug || '').toLowerCase().includes(q))
-      : [...this.categories];
+    
+    // Base filter
+    let result = this.categories;
+    
+    // Date filter
+    const now = new Date();
+    if (this.dateFilter !== 'all') {
+      result = result.filter(c => {
+        if (!c.createdAt) return false;
+        const d = new Date(c.createdAt);
+        
+        if (this.dateFilter === 'today') {
+          return d.toDateString() === now.toDateString();
+        } else if (this.dateFilter === 'week') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return d >= weekAgo;
+        } else if (this.dateFilter === 'month') {
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        } else if (this.dateFilter === 'year') {
+          return d.getFullYear() === now.getFullYear();
+        } else if (this.dateFilter === 'custom') {
+          if (!this.customDateFrom && !this.customDateTo) return true;
+          const from = this.customDateFrom ? new Date(this.customDateFrom) : new Date(0);
+          const to = this.customDateTo ? new Date(this.customDateTo) : new Date(8640000000000000);
+          // Set to end of day for inclusive filtering
+          to.setHours(23, 59, 59, 999);
+          return d >= from && d <= to;
+        }
+        return true;
+      });
+    }
+
+    // Search query
+    if (q) {
+      result = result.filter(c => c.name.toLowerCase().includes(q));
+    }
 
     switch (this.sortOption) {
       case 'newest': result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()); break;
@@ -139,6 +216,8 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
   }
 
   onSearchChange():              void { this.pageIndex = 0; }
+  setDateFilter(filter: DateFilter): void { this.dateFilter = filter; this.pageIndex = 0; }
+  onCustomDateChange():          void { this.pageIndex = 0; }
   setSort(opt: SortOption):      void { this.sortOption = opt; this.showSortDropdown = false; this.pageIndex = 0; }
   setPage(p: number):            void { if (p >= 0 && p < this.totalPages) this.pageIndex = p; }
   setPageSize(size: number):     void { this.pageSize = size; this.pageIndex = 0; }
@@ -155,10 +234,7 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
     this.modalMode          = 'create';
     this.editingCategory    = null;
     this.catName            = '';
-    this.catSlug            = '';
     this.catNameTouched     = false;
-    this.catSlugTouched     = false;
-    this.slugManuallyEdited = false;
     this.isSubmitting       = false;
     this.showCategoryModal  = true;
   }
@@ -167,10 +243,7 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
     this.modalMode          = 'edit';
     this.editingCategory    = category;
     this.catName            = category.name;
-    this.catSlug            = category.slug || generateSlug(category.name);
     this.catNameTouched     = false;
-    this.catSlugTouched     = false;
-    this.slugManuallyEdited = false;
     this.isSubmitting       = false;
     this.showCategoryModal  = true;
   }
@@ -181,13 +254,8 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
   }
 
   onNameChange(): void {
-    if (!this.slugManuallyEdited) this.catSlug = generateSlug(this.catName);
   }
 
-  onSlugChange(): void {
-    this.slugManuallyEdited = true;
-    this.catSlug = this.catSlug.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  }
 
   get nameError(): string | null {
     if (!this.catNameTouched) return null;
@@ -195,20 +263,12 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  get slugError(): string | null {
-    if (!this.catSlugTouched) return null;
-    if (!this.catSlug.trim()) return 'Slug is required.';
-    if (!SLUG_PATTERN.test(this.catSlug)) return 'Only lowercase letters, numbers and hyphens are allowed.';
-    return null;
-  }
-
   get formValid(): boolean {
-    return !!this.catName.trim() && !!this.catSlug.trim() && SLUG_PATTERN.test(this.catSlug);
+    return !!this.catName.trim();
   }
 
   saveCategory(): void {
     this.catNameTouched = true;
-    this.catSlugTouched = true;
     if (!this.formValid || this.isSubmitting) return;
 
     this.isSubmitting = true;
@@ -216,8 +276,8 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
 
     const isCreate = this.modalMode === 'create';
     const op$ = isCreate
-      ? this.service.addCategory(this.catName.trim(), this.catSlug.trim())
-      : this.service.updateCategory(this.editingCategory!.id, this.catName.trim(), this.catSlug.trim());
+      ? this.service.addCategory(this.catName.trim())
+      : this.service.updateCategory(this.editingCategory!.id, this.catName.trim());
 
     op$.pipe(takeUntil(this.destroy$)).subscribe({
       next: success => {

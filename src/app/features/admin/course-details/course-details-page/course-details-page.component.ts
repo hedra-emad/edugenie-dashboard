@@ -37,6 +37,9 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   approveLoading = false;
   rejectLoading  = false;
 
+  // ── Approve modal ──────────────────────────────────────────────────────────
+  showApproveModal = false;
+
   // ── Reject modal ──────────────────────────────────────────────────────────
   showRejectModal      = false;
   rejectReason         = '';
@@ -106,8 +109,31 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
     );
   }
 
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'under_review': return 'Pending Review';
+      case 'published': return 'Published';
+      case 'rejected': return 'Rejected';
+      case 'draft': return 'Draft';
+      case 'archived': return 'Archived';
+      default: return 'Pending Review';
+    }
+  }
+
   // ── Approve ───────────────────────────────────────────────────────────────
-  approveCourse(): void {
+  openApproveModal(): void {
+    if (this.approveLoading || this.rejectLoading) return;
+    this.showApproveModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeApproveModal(): void {
+    if (this.approveLoading) return;
+    this.showApproveModal = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmApprove(): void {
     if (!this.courseId || this.approveLoading || this.rejectLoading) return;
     this.approveLoading = true;
     this.cdr.markForCheck();
@@ -122,7 +148,8 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
       )
       .subscribe(success => {
         if (success) {
-          this.course = { ...this.course, status: 'approved' };
+          this.showApproveModal = false;
+          this.course = { ...this.course, status: 'published' };
           this.cdr.markForCheck();
         }
       });
@@ -170,7 +197,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
           this.showRejectModal     = false;
           this.rejectReason        = '';
           this.rejectReasonTouched = false;
-          this.course = { ...this.course, status: 'rejected' };
+          this.course = { ...this.course, status: 'rejected', rejectionReason: reason };
           this.cdr.markForCheck();
         }
       });

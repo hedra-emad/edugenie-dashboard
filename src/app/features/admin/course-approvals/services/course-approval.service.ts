@@ -129,11 +129,9 @@ export class CourseApprovalService {
   // ────────────────────────────────────────────────────────────────────────────
   // Category CRUD — all return Observable<boolean> so callers can react
   // ────────────────────────────────────────────────────────────────────────────
-  addCategory(name: string, slug?: string): Observable<boolean> {
+  addCategory(name: string): Observable<boolean> {
     if (!name.trim()) return of(false);
     const payload: any = { name: name.trim() };
-    if (slug?.trim()) payload.slug = slug.trim();
-
     return this.http
       .post<any>(
         this.categoriesApiUrl, payload, { withCredentials: true }
@@ -147,7 +145,6 @@ export class CourseApprovalService {
             {
               id:          data?._id || data?.id || '',
               name:        data?.name        || name.trim(),
-              slug:        data?.slug        || slug?.trim() || '',
               courseCount: data?.courseCount || 0,
               order:       current.length,
               createdAt:   data?.createdAt   || new Date().toISOString()
@@ -163,10 +160,9 @@ export class CourseApprovalService {
       );
   }
 
-  updateCategory(id: string, name: string, slug?: string): Observable<boolean> {
+  updateCategory(id: string, name: string): Observable<boolean> {
     if (!name.trim()) return of(false);
     const payload: any = { name: name.trim() };
-    if (slug?.trim()) payload.slug = slug.trim();
 
     return this.http
       .patch<any>(
@@ -182,7 +178,6 @@ export class CourseApprovalService {
               ? {
                   ...cat,
                   name:      (data?.name)      || name.trim(),
-                  slug:      (data?.slug)       || slug?.trim() || cat.slug,
                   createdAt: (data?.createdAt)  || cat.createdAt
                 }
               : cat
@@ -310,7 +305,6 @@ export class CourseApprovalService {
               .map(cat => ({
                 id:          cat._id || cat.id,
                 name:        cat.name,
-                slug:        cat.slug || '',
                 courseCount: cat.courseCount || 0,
                 order:       cat.order || 0,
                 createdAt:   cat.createdAt || ''
