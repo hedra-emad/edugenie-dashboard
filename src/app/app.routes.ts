@@ -52,8 +52,8 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>
-      import('./features/auth/login-redirect/login-redirect.component')
-        .then(m => m.LoginRedirectComponent)
+      import('./features/auth/login/pages/login.page')
+        .then(m => m.LoginPageComponent)
   },
   {
     path: 'register',
