@@ -39,7 +39,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
-import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';

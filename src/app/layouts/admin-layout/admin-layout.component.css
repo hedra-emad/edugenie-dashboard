@@ -76,3 +76,20 @@
     padding-top: 62px;    /* 40px button + 12px top offset + 10px gap */
   }
 }
+
+.unread-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-surface, #ffffff);
+}

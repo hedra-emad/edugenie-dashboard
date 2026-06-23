@@ -116,6 +116,8 @@ export class CloudinaryService {
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
+        formData.append('raw_convert', raw_convert);
+
 
         return this.http
           .post<CloudinaryUploadResponse>(
@@ -163,11 +165,11 @@ export class CloudinaryService {
 
 
         const req = new HttpRequest(
-  'POST',
-  `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-  formData,
-  { reportProgress: true }
-);
+          'POST',
+          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          formData,
+          { reportProgress: true }
+        );
 
         return this.http.request<CloudinaryUploadResponse>(req).pipe(
           switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {

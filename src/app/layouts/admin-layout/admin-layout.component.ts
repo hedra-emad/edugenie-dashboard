@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { SidebarComponent } from '../../shared/components/layout/sidebar/sidebar.component';
+import { NotificationsService } from '../../core/services/notifications';
 
 @Component({
   selector: 'app-admin-layout',
@@ -17,6 +18,9 @@ import { SidebarComponent } from '../../shared/components/layout/sidebar/sidebar
 })
 export class AdminLayoutComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly notificationsService = inject(NotificationsService);
+
+  readonly unreadCount$ = this.notificationsService.unreadCount$;
 
   sidebarExpanded = true;
   isMobile = false;
@@ -24,6 +28,7 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkScreenSize();
+    this.notificationsService.getNotifications(1, 1);
   }
 
   @HostListener('window:resize')
