@@ -9,7 +9,7 @@ import { AdminUsersService } from './services/admin-users.service';
 import { UserRole } from '../../../core/models/user-profile.model';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
+
 
 @Component({
   selector: 'app-admin-users',
@@ -182,7 +182,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     const avatar = user.avatar || user.profilePicture;
     if (!avatar) return '';
     if (avatar.startsWith('http')) return avatar;
-    return `${environment.apiUrl}/${avatar.replace(/^\//, '')}`;
+    return `${import.meta.env.NG_APP_API_URL}/${avatar.replace(/^\//, '')}`;
   }
 
   nextPage() {

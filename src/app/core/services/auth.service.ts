@@ -21,7 +21,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
-import { environment } from '../../../environments/environment';
+
 
 @Injectable({
   providedIn: 'root',
@@ -242,7 +242,7 @@ export class AuthService {
   }
 
   getStudentAppRedirectUrl(): string {
-    return environment.studentAppUrl;
+    return import.meta.env.NG_APP_STUDENT_APP_URL;
   }
 
   redirectToStudentApp(): Observable<void> {
@@ -251,7 +251,7 @@ export class AuthService {
       {}
     ).pipe(
       tap(({ code }) => {
-        const url = `${environment.studentAppUrl}/auth/redeem?code=${code}`;
+        const url = `${import.meta.env.NG_APP_STUDENT_APP_URL}/auth/redeem?code=${code}`;
         window.location.href = url;
       }),
       map(() => void 0),
@@ -259,7 +259,7 @@ export class AuthService {
         // If handoff fails, redirect without a code as last resort
         // — the student app will show its own login page
         console.error('Handoff code generation failed:', err);
-        window.location.href = environment.studentAppUrl;
+        window.location.href = import.meta.env.NG_APP_STUDENT_APP_URL;
         return of(void 0);
       })
     );

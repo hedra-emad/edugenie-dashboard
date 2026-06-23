@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -13,7 +13,7 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const apiReq = isCloudinary
     ? req
     : req.clone({
-        url: isAbsolute ? req.url : `${environment.apiUrl}${req.url.startsWith('/') ? '' : '/'}${req.url}`,
+        url: isAbsolute ? req.url : `${import.meta.env.NG_APP_API_URL}${req.url.startsWith('/') ? '' : '/'}${req.url}`,
         withCredentials: true,
       });
 
