@@ -1,27 +1,19 @@
-<<<<<<< HEAD
 import { Component, inject, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-=======
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
->>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AdminUsersService } from './services/admin-users.service';
 import { UserRole } from '../../../core/models/user-profile.model';
-<<<<<<< HEAD
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-=======
->>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-<<<<<<< HEAD
   imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule],
   templateUrl: './users.page.html',
   styleUrl: './users.page.css',
@@ -38,6 +30,23 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   currentPage = 1;
   pages: number[] = [1];
   limit = 10;
+  pageSizeOptions = [10, 25, 50];
+
+  get pageIndex(): number {
+    return this.currentPage - 1;
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({length: this.totalPages}, (_, i) => i);
+  }
+
+  get pageFrom(): number {
+    return this.totalUsers === 0 ? 0 : (this.currentPage - 1) * this.limit + 1;
+  }
+
+  get pageTo(): number {
+    return Math.min(this.currentPage * this.limit, this.totalUsers);
+  }
 
   // Filters
   searchQuery = '';
@@ -156,6 +165,26 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  setPage(index: number) {
+    if (index >= 0 && index < this.totalPages && index !== this.pageIndex) {
+      this.currentPage = index + 1;
+      this.loadUsers();
+    }
+  }
+
+  setPageSize(size: number) {
+    this.limit = size;
+    this.currentPage = 1;
+    this.loadUsers();
+  }
+
+  getAvatarUrl(user: any): string {
+    const avatar = user.avatar || user.profilePicture;
+    if (!avatar) return '';
+    if (avatar.startsWith('http')) return avatar;
+    return `${environment.apiUrl}/${avatar.replace(/^\//, '')}`;
+  }
+
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
@@ -237,7 +266,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   confirmDelete() {
     if (!this.deleteReason.trim()) return;
     this.isDeleting = true;
-    // Simulate backend deletion since endpoint is not deployed yet
+    
     setTimeout(() => {
       this.users = this.users.filter(u => u.id !== this.deleteTarget.id);
       this.totalUsers--;
@@ -249,73 +278,3 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 }
-=======
-  imports: [CommonModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule],
-  templateUrl: './users.page.html',
-  styleUrl: './users.page.css',
-})
-export class AdminUsersPageComponent {
-  private readonly adminUsersService = inject(AdminUsersService);
-  private readonly snackBar = inject(MatSnackBar);
-
-  users = [
-    {
-      id: '1',
-      name: 'Sarah Jenkins',
-      joined: 'Joined 2 mos ago',
-      email: 's.jenkins@edu.co',
-      role: 'student' as UserRole,
-      status: 'Active',
-      avatar: 'https://i.pravatar.cc/150?u=sarah'
-    },
-    {
-      id: '2',
-      name: 'Dr. Marcus Chen',
-      joined: 'Joined 1 yr ago',
-      email: 'm.chen@edu.co',
-      role: 'instructor' as UserRole,
-      status: 'Active',
-      avatar: 'https://i.pravatar.cc/150?u=marcus'
-    },
-    {
-      id: '3',
-      name: 'Elena Rodriguez',
-      joined: 'Joined 3 yrs ago',
-      email: 'e.rodriguez@edu.co',
-      role: 'admin' as UserRole,
-      status: 'Inactive',
-      avatar: 'https://i.pravatar.cc/150?u=elena'
-    }
-  ];
-
-  isChangingRole = false;
-
-  changeRole(user: any, newRole: UserRole) {
-    if (user.role === newRole) return;
-
-    const previousRole = user.role;
-    user.role = newRole; // Optimistic update
-    this.isChangingRole = true;
-
-    this.adminUsersService.changeUserRole(user.id, newRole).subscribe({
-      next: () => {
-        this.isChangingRole = false;
-        this.snackBar.open(`Successfully updated role to ${newRole}`, 'Close', {
-          duration: 3000,
-          panelClass: ['bg-green-600', 'text-white']
-        });
-      },
-      error: (err) => {
-        this.isChangingRole = false;
-        user.role = previousRole; // Revert on failure
-        const errorMsg = err?.error?.message || 'Failed to update role';
-        this.snackBar.open(errorMsg, 'Close', {
-          duration: 3000,
-          panelClass: ['bg-red-600', 'text-white']
-        });
-      }
-    });
-  }
-}
-
->>>>>>> b3d05bf3e7bfd1ef7192fc5f101f92ee730b9c56
