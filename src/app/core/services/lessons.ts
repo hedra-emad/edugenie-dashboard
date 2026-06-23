@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { CreateLessonDto } from '../models/dto/create-lesson.dto';
 import { Lesson } from '../models/lesson.model';
 import { Observable, map, mergeMap, of, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+
 
 export interface TranscriptionStatus {
   videoReady: boolean;
@@ -16,7 +16,7 @@ export class LessonsService {
 
   private http = inject(HttpClient);
 
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = import.meta.env.NG_APP_API_URL;
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
     const forceFail = false;

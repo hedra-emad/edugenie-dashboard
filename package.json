@@ -44,6 +44,7 @@
     "@angular/build": "20.3.25",
     "@angular/cli": "20.3.25",
     "@angular/compiler-cli": "20.3.25",
+    "@ngx-env/builder": "^20.1.1",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.5.0",
     "jasmine-core": "~5.9.0",
