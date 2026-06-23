@@ -1,7 +1,7 @@
 export interface Category {
   id: string;
   name: string;
-  slug: string;
+  // slug: string;
   createdAt: string;
   updatedAt: string;
   iconUrl: string;
