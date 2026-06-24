@@ -188,7 +188,7 @@ export class AuthService {
    */
   removeAvatar(): Observable<ProfileApiResponse> {
     return this.http
-      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { removeAvatar: true })
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { avatar: null })
       .pipe(
         tap((response) => {
           if (response.success && response.data) {
