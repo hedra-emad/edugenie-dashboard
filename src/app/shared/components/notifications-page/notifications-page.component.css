@@ -1,0 +1,790 @@
+/* ==========================================================
+   EduGenie Notifications Page Redesign Stylesheet
+   ========================================================== */
+
+.notifications-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+  animation: fadeInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Header ─── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.header-content {
+  flex: 1;
+}
+
+.page-title {
+  margin: 0 0 4px;
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--color-text-primary, #1f2937);
+  letter-spacing: -0.025em;
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+/* Outlined Buttons */
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-primary, #374151);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-mark-all + .btn-clear-all {
+  margin-left: 8px;
+}
+
+.btn-clear-all:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-error, #ef4444);
+}
+
+.btn-outline mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(59, 24, 146, 0.05); /* Subtle purple */
+  border-color: rgba(59, 24, 146, 0.2);
+  color: var(--color-primary, #3b1892);
+}
+
+.btn-outline:focus-visible {
+  outline: 2px solid var(--color-primary, #3b1892);
+  outline-offset: 2px;
+}
+
+.btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Filters ─── */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.filter-chip {
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px; /* Pill shape */
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text-primary, #4b5563);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-chip:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: var(--color-text-primary, #111827);
+}
+
+.filter-chip.active {
+  background: var(--color-primary, #3b1892);
+  color: #ffffff;
+  border-color: var(--color-primary, #3b1892);
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.15);
+}
+
+.filter-chip:focus-visible {
+  outline: 2px solid var(--color-primary, #3b1892);
+  outline-offset: 2px;
+}
+
+/* ─── Notification Container ─── */
+.notifications-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card Wrapper (for swipe tray support) */
+.notification-card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.05));
+  background: var(--color-surface, #ffffff);
+}
+
+/* Mobile Actions Tray (hidden behind card - aligned left for left-to-right swipe) */
+.swipe-actions-tray {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: flex-start;
+  z-index: 1;
+  background: #f3f4f6;
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+
+/* Container for arrow during sliding */
+.swipe-arrow-container {
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.swipe-arrow-icon {
+  color: var(--color-primary, #3b1892);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  animation: slideArrow 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes slideArrow {
+  0% { transform: translateX(0); opacity: 0.5; }
+  100% { transform: translateX(8px); opacity: 1; }
+}
+
+/* Actions Container */
+.swipe-actions-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  transition: opacity 0.15s ease;
+}
+
+.swipe-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 100%;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.swipe-action-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.swipe-action-btn span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.swipe-action-btn.mark-read {
+  background: var(--color-success, #10b981);
+}
+
+.swipe-action-btn.mark-read:hover {
+  background: #059669;
+}
+
+.swipe-action-btn.delete {
+  background: var(--color-error, #ef4444);
+}
+
+.swipe-action-btn.delete:hover {
+  background: #dc2626;
+}
+
+/* Foreground Notification Card */
+.notification-card {
+  position: relative;
+  z-index: 2; /* Sits over the swipe tray */
+  display: flex;
+  gap: 20px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px;
+  box-sizing: border-box;
+  will-change: transform;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Hover effects */
+.notification-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border-color: #d1d5db;
+}
+
+/* Focus State */
+.notification-card:focus-visible {
+  outline: 2px solid var(--color-primary, #3b1892);
+  outline-offset: -2px;
+}
+
+/* Unread Notification Styles */
+.notification-card.unread {
+  background: rgba(59, 24, 146, 0.03); /* Light purple tint */
+  border-left: 4px solid var(--color-primary, #3b1892);
+  box-shadow: 0 4px 14px rgba(59, 24, 146, 0.04);
+}
+
+.notification-card.unread:hover {
+  background: rgba(59, 24, 146, 0.05);
+}
+
+/* Unread dot beside title */
+.unread-dot {
+  color: var(--color-primary, #3b1892);
+  font-size: 0.8rem;
+  margin-right: 6px;
+  vertical-align: middle;
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* Left side: Icon Container with gradient backgrounds */
+.notification-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.notification-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+}
+
+/* Gradients for different notification types */
+.type-approved .notification-icon-container {
+  background: linear-gradient(135deg, var(--color-success, #22c55e), #16a34a);
+}
+
+.type-rejected .notification-icon-container {
+  background: linear-gradient(135deg, var(--color-error, #ef4444), #dc2626);
+}
+
+.type-system .notification-icon-container {
+  background: linear-gradient(135deg, var(--color-primary, #3b1892), var(--color-secondary, #3b82f6));
+}
+
+.type-warning .notification-icon-container {
+  background: linear-gradient(135deg, var(--color-warning, #f59e0b), #ea580c);
+}
+
+.type-info .notification-icon-container {
+  background: var(--color-secondary, #3b82f6);
+}
+
+/* Center Content */
+.notification-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  letter-spacing: -0.01em;
+}
+
+.notification-card:not(.unread) .notification-title {
+  color: var(--color-text-primary, #374151);
+}
+
+.notification-message {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #4b5563);
+}
+
+/* Rejection Reason Box (matches admin rejection textarea style) */
+.rejection-reason-box {
+  margin-top: 4px;
+  margin-bottom: 12px;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rejection-reason-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rejection-reason-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #dc2626;
+}
+
+.rejection-reason-content {
+  padding: 12px 14px;
+  background: #fff5f5;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #7f1d1d;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* CTA Actions Row */
+.notification-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.action-link, .action-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary, #3b1892);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.action-link:hover, .action-link-btn:hover {
+  color: var(--color-secondary, #3b82f6);
+}
+
+.arrow-symbol {
+  transition: transform 0.15s ease;
+}
+
+.action-link:hover .arrow-symbol, .action-link-btn:hover .arrow-symbol {
+  transform: translateX(3px);
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.action-btn.text-primary {
+  color: var(--color-primary, #3b1892);
+}
+
+.action-btn.text-primary:hover {
+  color: var(--color-secondary, #3b82f6);
+  text-decoration: underline;
+}
+
+.action-btn.text-warning {
+  color: var(--color-warning, #f59e0b);
+}
+
+.action-btn.text-warning:hover {
+  color: #ea580c;
+  text-decoration: underline;
+}
+
+/* Right side details (Time + Delete) */
+.notification-right-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.notification-time {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #9ca3af);
+  font-weight: 500;
+}
+
+/* Desktop delete button (Always visible at top-right of every card) */
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #9ca3af);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.delete-btn:hover {
+  background: var(--color-error, #ef4444);
+  color: #ffffff;
+}
+
+.delete-btn:focus-visible {
+  outline: 2px solid var(--color-primary, #3b1892);
+}
+
+/* Load More */
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.load-more-btn {
+  min-width: 140px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+/* ─── Premium Custom Glow Empty State ─── */
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.05));
+  animation: fadeInEmpty 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeInEmpty {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.empty-bell-glow-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+/* Glow Circle Background */
+.empty-bell-glow-circle {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 24, 146, 0.18) 0%, rgba(59, 24, 146, 0) 70%);
+  filter: blur(4px);
+  animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+.empty-bell-glow-inner {
+  position: relative;
+  z-index: 2;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.08);
+}
+
+.empty-bell-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: var(--color-primary, #3b1892);
+}
+
+/* Sleep zZ bubble */
+.sleep-z {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-secondary, #3b82f6);
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  animation: floatZ 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatZ {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-4px) scale(1.05); }
+}
+
+/* Sparkles surrounding */
+.sparkle {
+  position: absolute;
+  color: var(--color-primary, #3b1892);
+  font-size: 1.1rem;
+  opacity: 0.6;
+  animation: flicker Sparkle 2.5s infinite;
+}
+
+.sparkle-1 {
+  top: 24px;
+  left: 20px;
+  animation-delay: 0.2s;
+}
+
+.sparkle-2 {
+  bottom: 24px;
+  right: 20px;
+  animation-delay: 0.7s;
+}
+
+@keyframes flickerSparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.empty-state-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.empty-state-subtitle {
+  margin: 0 0 24px;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #6b7280);
+  max-width: 320px;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--color-primary, #3b1892);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.18);
+  transition: all 0.2s ease;
+}
+
+.btn-refresh mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-refresh:hover {
+  background: var(--color-secondary, #3b82f6);
+  box-shadow: 0 4px 14px rgba(59, 24, 146, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-refresh:focus-visible {
+  outline: 2px solid var(--color-primary, #3b1892);
+  outline-offset: 2px;
+}
+
+/* Error / Loading States */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  background: #fdf2f2;
+  border: 1px dashed var(--color-error, #ef4444);
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--color-error, #ef4444);
+}
+
+.error-message {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+/* ─── Responsive Styles ─── */
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 18px;
+  }
+
+  .btn-mark-all {
+    width: 100%;
+  }
+
+  .filter-row {
+    gap: 6px;
+  }
+
+  .filter-chip {
+    padding: 6px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .notification-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .notification-title {
+    font-size: 0.9375rem;
+  }
+
+  .notification-message {
+    font-size: 0.8125rem;
+    margin-bottom: 10px;
+  }
+
+  .notification-right-column {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .notification-time {
+    font-size: 0.75rem;
+  }
+
+  /* Hide delete button on mobile inside the card because they have the touch-swipe reveal! */
+  .notification-card .delete-btn {
+    display: none;
+  }
+}
+/* Rejection Modal Panel */
+::ng-deep .rejection-modal-panel .mat-mdc-dialog-container {
+  --mdc-dialog-container-shape: 12px;
+}
