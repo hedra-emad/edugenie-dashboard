@@ -34,6 +34,7 @@
             ]
           },
           "configurations": {
+            "production": {
               "budgets": [
                 {
                   "type": "initial",
@@ -63,7 +64,7 @@
               "buildTarget": "edugenie-dashboard:build:production"
             },
             "development": {
-              "buildTarget": "edugenie-dashboard:build:development",
+              "buildTarget": "edugenie-dashboard:build:development"
             }
           },
           "defaultConfiguration": "development"
