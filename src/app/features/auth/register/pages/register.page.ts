@@ -326,9 +326,10 @@ export class RegisterPageComponent implements OnInit {
       return;
     }
 
+    const rawLevel = this.profileSetup.value?.level;
     const payload = {
       ...this.buildBasePayload(),
-      level: this.profileSetup.value?.level || undefined,
+      level: rawLevel ? rawLevel.toLowerCase() : undefined,
       interests: this.profileSetup.value?.interests || [],
     };
 

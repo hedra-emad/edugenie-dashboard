@@ -1,3 +1,5 @@
 export const environment = {
-  studentAppUrl: 'https://edugenie-student-web.vercel.app'
+  production: false,
+  apiUrl: 'http://localhost:3001/api',
+  studentAppUrl: 'http://localhost:3000',
 };
