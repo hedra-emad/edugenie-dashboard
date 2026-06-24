@@ -21,25 +21,26 @@ export class RedeemComponent implements OnInit {
   private authService = inject(AuthService);
 
   ngOnInit() {
-    this.route.queryParams.subscribe(async (params) => {
+    this.route.queryParams.subscribe((params) => {
       const code = params['code'];
       if (!code) {
         this.router.navigate(['/login']);
         return;
       }
 
-      try {
-        const result = await this.authService.redeemCode(code).toPromise();
-        if (result) {
-          // Force auth state refresh before navigation
-          await this.authService.initializeAuth().toPromise();
-          // Now navigate — auth guard will see authenticated user
-          const route = this.authService.getHomeRouteForRole(result.userRole);
-          this.router.navigate([route]);
+      this.authService.redeemCode(code).subscribe({
+        next: (result) => {
+          if (result) {
+            this.authService.initializeAuth().subscribe(() => {
+              const route = this.authService.getHomeRouteForRole(result.userRole);
+              this.router.navigate([route]);
+            });
+          }
+        },
+        error: () => {
+          this.router.navigate(['/login'], { queryParams: { error: 'session_expired' } });
         }
-      } catch (error) {
-        this.router.navigate(['/login'], { queryParams: { error: 'session_expired' } });
-      }
+      });
     });
   }
 }

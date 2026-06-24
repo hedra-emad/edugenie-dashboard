@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 import {
   BehaviorSubject,
@@ -259,19 +260,16 @@ export class AuthService {
 
   redirectToStudentApp(): Observable<void> {
     return this.http.post<{ code: string }>(
-      '/auth/handoff-code',
-      {}
+      '/auth/handoff-code', {}
     ).pipe(
       tap(({ code }) => {
-        const url = `${import.meta.env.NG_APP_STUDENT_APP_URL}/auth/redeem?code=${code}`;
-        window.location.href = url;
+        window.location.href =
+          `${environment.studentAppUrl}/auth/redeem?code=${code}`;
       }),
       map(() => void 0),
       catchError((err) => {
-        // If handoff fails, redirect without a code as last resort
-        // — the student app will show its own login page
         console.error('Handoff code generation failed:', err);
-        window.location.href = import.meta.env.NG_APP_STUDENT_APP_URL;
+        window.location.href = environment.studentAppUrl;
         return of(void 0);
       })
     );
