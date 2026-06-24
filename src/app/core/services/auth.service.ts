@@ -199,20 +199,15 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http
-      .post(`${this.authApiUrl}/logout`, {})
-      .pipe(
-        tap(() => {
-          this.clearCurrentUser();
-          this.router.navigate(['/login']);
-        }),
-        map(() => void 0),
-        catchError((error) => {
-          this.clearCurrentUser();
-          this.router.navigate(['/login']);
-          return throwError(() => error);
-        }),
-      );
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => {
+        this.clearCurrentUser();
+        const nextjsUrl = environment.studentAppUrl;
+        window.location.href = `${nextjsUrl}/api/logout`;
+      }),
+      map(() => void 0),
+    );
   }
 
   setCurrentUser(user: UserProfile | null): void {
