@@ -16,7 +16,7 @@ export class LessonsService {
 
   private http = inject(HttpClient);
 
-  private readonly baseUrl = import.meta.env.NG_APP_API_URL;
+  private readonly baseUrl = ''; // intercepted by api.interceptor.ts
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
     const forceFail = false;

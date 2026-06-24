@@ -29,7 +29,7 @@ export interface VideoUploadEvent {
 export class CloudinaryService {
   private http = inject(HttpClient);
 
-  private readonly apiBase = import.meta.env.NG_APP_API_URL; // e.g. 'http://localhost:3000'
+  private readonly apiBase = ''; // intercepted by api.interceptor.ts
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend
