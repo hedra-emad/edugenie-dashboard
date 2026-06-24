@@ -29,7 +29,7 @@ export interface QuizConfigResponse {
 @Injectable({ providedIn: 'root' })
 export class QuizzesService {
   private http = inject(HttpClient);
-  private base = `${import.meta.env.NG_APP_API_URL}/quizzes`;
+  private base = '/quizzes';
 
   generateQuizConfig(dto: CreateQuizDto): Observable<QuizConfigResponse> {
     return this.http.post<QuizConfigResponse>(`${this.base}/generate`, dto, { withCredentials: true });
