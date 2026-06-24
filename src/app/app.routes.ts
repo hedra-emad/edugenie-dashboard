@@ -50,10 +50,11 @@ export const routes: Routes = [
 
   {
     path: 'login',
-    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/login-redirect/login-redirect.component')
         .then(m => m.LoginRedirectComponent)
+    // No guestGuard — even authenticated users who land here
+    // by mistake should be sent to Next.js, not blocked
   },
   {
     path: 'register',
