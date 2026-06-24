@@ -261,7 +261,7 @@ export class AuthService {
   redirectToStudentApp(): Observable<void> {
     // Students should never be in the Angular app.
     // Just redirect them directly — no handoff code needed.
-    window.location.href = environment.studentAppUrl || 'http://localhost:3000';
+    window.location.href = import.meta.env['NG_APP_STUDENT_APP_URL'] || 'http://localhost:3000';
     return of(void 0);
   }
 }
