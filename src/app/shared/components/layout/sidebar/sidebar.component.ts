@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationsService } from '../../../../core/services/notifications';
 
 interface NavItem {
   icon: string;
@@ -17,9 +18,16 @@ interface NavItem {
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly notificationsService = inject(NotificationsService);
+
+  readonly unreadCount$ = this.notificationsService.unreadCount$;
+
+  ngOnInit(): void {
+    this.notificationsService.getNotifications(1, 1);
+  }
 
   @Input() isMobile = false;
   @Input() isTablet = false;
@@ -38,6 +46,7 @@ export class SidebarComponent {
   readonly instructorNavItems: NavItem[] = [
     { icon: 'menu_book',  label: 'My Courses', route: '/my-courses' },
     { icon: 'analytics',  label: 'Analytics',  route: '/analytics' },
+    { icon: 'notifications', label: 'Notifications', route: '/notifications' },
     { icon: 'settings',   label: 'Settings',   route: '/settings' },
   ];
 
@@ -49,13 +58,15 @@ export class SidebarComponent {
   readonly instructorBottomItems: NavItem[] = [];
 
   get navItems(): NavItem[] {
-    return this.user?.role === 'admin'
+    const role = this.user?.role;
+    return (role === 'admin' || role === 'superadmin')
       ? this.adminNavItems
       : this.instructorNavItems;
   }
 
   get bottomItems(): NavItem[] {
-    return this.user?.role === 'admin'
+    const role = this.user?.role;
+    return (role === 'admin' || role === 'superadmin')
       ? this.adminBottomItems
       : this.instructorBottomItems;
   }

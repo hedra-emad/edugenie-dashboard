@@ -85,6 +85,11 @@
             @if (showLabel) {
               <span class="nav-label">{{ item.label }}</span>
             }
+            @if (item.route.endsWith('notifications')) {
+              @if ((unreadCount$ | async)! > 0) {
+                <span class="nav-unread-badge">{{ unreadCount$ | async }}</span>
+              }
+            }
           </a>
         </li>
       }

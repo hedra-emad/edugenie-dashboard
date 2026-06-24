@@ -145,7 +145,7 @@ export const routes: Routes = [
         path: 'notifications',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./features/admin/notifications/notifications-page/notifications-page.component')
+          import('./shared/components/notifications-page/notifications-page.component')
             .then(m => m.NotificationsPageComponent)
       },
 
@@ -197,7 +197,7 @@ export const routes: Routes = [
       {
         path: 'notifications',
         loadComponent: () =>
-          import('./features/admin/notifications/notifications-page/notifications-page.component').then((m) => m.NotificationsPageComponent)
+          import('./shared/components/notifications-page/notifications-page.component').then((m) => m.NotificationsPageComponent)
       },
       {
         path: 'reports',
@@ -216,7 +216,7 @@ export const routes: Routes = [
       }
     ]
   },
-  
+
   // 404 Catch-all route - MUST be last
   {
     path: '**',

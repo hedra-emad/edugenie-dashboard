@@ -11,39 +11,40 @@ type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published
 
 export interface PendingPage {
   courses: CourseApproval[];
-  total:   number;
-  page:    number;
-  limit:   number;
+  total: number;
+  page: number;
+  limit: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class CourseApprovalService {
-  private readonly http   = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly toastr = inject(ToastrService);
 
-  private readonly coursesApiUrl    = '/courses';
-  private readonly categoriesApiUrl = '/categories';
+  private readonly coursesApiUrl = 'https://edugenie-api.vercel.app/courses';
+  private readonly adminCoursesApiUrl = 'https://edugenie-api.vercel.app/admin/courses';
+  private readonly categoriesApiUrl = 'https://edugenie-api.vercel.app/categories';
 
-  private readonly coursesSubject       = new BehaviorSubject<CourseApproval[]>([]);
-  private readonly categoriesSubject    = new BehaviorSubject<Category[]>([]);
-  private readonly statsSubject         = new BehaviorSubject<AdminStats | null>(null);
-  private readonly loadingSubject       = new BehaviorSubject<boolean>(false);
+  private readonly coursesSubject = new BehaviorSubject<CourseApproval[]>([]);
+  private readonly categoriesSubject = new BehaviorSubject<Category[]>([]);
+  private readonly statsSubject = new BehaviorSubject<AdminStats | null>(null);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   private readonly actionLoadingSubject = new BehaviorSubject<Record<string, boolean>>({});
-  private readonly errorSubject         = new BehaviorSubject<string | null>(null);
-  private readonly successSubject       = new BehaviorSubject<string | null>(null);
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  private readonly successSubject = new BehaviorSubject<string | null>(null);
 
   /** Emits the latest pending-page metadata (total, page, limit) */
   private readonly pendingPageSubject = new BehaviorSubject<Omit<PendingPage, 'courses'>>({
     total: 0, page: 1, limit: 10
   });
 
-  readonly courses$     = this.coursesSubject.asObservable();
-  readonly categories$  = this.categoriesSubject.asObservable();
-  readonly stats$       = this.statsSubject.asObservable();
-  readonly loading$     = this.loadingSubject.asObservable();
+  readonly courses$ = this.coursesSubject.asObservable();
+  readonly categories$ = this.categoriesSubject.asObservable();
+  readonly stats$ = this.statsSubject.asObservable();
+  readonly loading$ = this.loadingSubject.asObservable();
   readonly actionLoading$ = this.actionLoadingSubject.asObservable();
-  readonly error$       = this.errorSubject.asObservable();
-  readonly success$     = this.successSubject.asObservable();
+  readonly error$ = this.errorSubject.asObservable();
+  readonly success$ = this.successSubject.asObservable();
   readonly pendingPage$ = this.pendingPageSubject.asObservable();
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ export class CourseApprovalService {
       this.http.get<any>(url, { withCredentials: true }).pipe(
         map(res => {
           let courses: any[] = [];
-          if (Array.isArray(res?.data))        courses = res.data;
+          if (Array.isArray(res?.data)) courses = res.data;
           else if (Array.isArray(res?.data?.data)) courses = res.data.data;
           return courses.map(c => this.mapCourseApproval(c, forcedStatus));
         }),
@@ -68,14 +69,14 @@ export class CourseApprovalService {
     const pendingUrl = `${this.coursesApiUrl}/pending-review?page=1&limit=10`;
 
     forkJoin({
-      pending:   this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
+      pending: this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
         map(res => {
           // Backend may return { data: [...], total, page, limit } or { data: { data:[...], total } }
-          const raw    = res?.data;
-          const list   = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-          const total  = raw?.total ?? res?.total ?? list.length;
-          const page   = raw?.page  ?? res?.page  ?? 1;
-          const limit  = raw?.limit ?? res?.limit ?? 10;
+          const raw = res?.data;
+          const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+          const total = raw?.total ?? res?.total ?? list.length;
+          const page = raw?.page ?? res?.page ?? 1;
+          const limit = raw?.limit ?? res?.limit ?? 10;
           this.pendingPageSubject.next({ total, page, limit });
           return list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         }),
@@ -87,7 +88,7 @@ export class CourseApprovalService {
     ).subscribe(({ pending, published }) => {
       const map = new Map<string, CourseApproval>();
       (published as CourseApproval[]).forEach(c => map.set(c.id, c));
-      (pending   as CourseApproval[]).forEach(c => map.set(c.id, c));
+      (pending as CourseApproval[]).forEach(c => map.set(c.id, c));
       this.coursesSubject.next(Array.from(map.values()));
     });
 
@@ -108,8 +109,8 @@ export class CourseApprovalService {
       finalize(() => this.loadingSubject.next(false))
     ).subscribe({
       next: res => {
-        const raw   = res?.data;
-        const list  = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+        const raw = res?.data;
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
         const total = raw?.total ?? res?.total ?? list.length;
 
         this.pendingPageSubject.next({ total, page, limit });
@@ -117,8 +118,8 @@ export class CourseApprovalService {
         // Replace only the 'pending' courses in the master list; keep others intact
         const newPending = list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         const rest = this.coursesSubject.value.filter(c => c.status !== 'pending');
-        const map  = new Map<string, CourseApproval>();
-        rest.forEach(c      => map.set(c.id, c));
+        const map = new Map<string, CourseApproval>();
+        rest.forEach(c => map.set(c.id, c));
         newPending.forEach((c: CourseApproval) => map.set(c.id, c));
         this.coursesSubject.next(Array.from(map.values()));
       },
@@ -138,16 +139,17 @@ export class CourseApprovalService {
       )
       .pipe(
         tap(res => {
-          const data    = res?.data ?? res;
+          const data = res?.data ?? res;
           const current = this.categoriesSubject.value;
           this.categoriesSubject.next([
             ...current,
             {
-              id:          data?._id || data?.id || '',
-              name:        data?.name        || name.trim(),
+              id: data?._id || data?.id || '',
+              name: data?.name || name.trim(),
+              // slug: data?.slug || slug?.trim() || '',
               courseCount: data?.courseCount || 0,
-              order:       current.length,
-              createdAt:   data?.createdAt   || new Date().toISOString()
+              order: current.length,
+              createdAt: data?.createdAt || new Date().toISOString()
             }
           ]);
           this.toastr.success('Category created successfully.');
@@ -176,10 +178,11 @@ export class CourseApprovalService {
           const updated = this.categoriesSubject.value.map(cat =>
             cat.id === id
               ? {
-                  ...cat,
-                  name:      (data?.name)      || name.trim(),
-                  createdAt: (data?.createdAt)  || cat.createdAt
-                }
+                ...cat,
+                name: (data?.name) || name.trim(),
+                // slug: (data?.slug) || slug?.trim() || cat.slug,
+                createdAt: (data?.createdAt) || cat.createdAt
+              }
               : cat
           );
           this.categoriesSubject.next(updated);
@@ -201,7 +204,7 @@ export class CourseApprovalService {
       .pipe(
         tap(() => {
           // Update local state immediately on any non-error response
-          const cat     = this.categoriesSubject.value.find(c => c.id === id);
+          const cat = this.categoriesSubject.value.find(c => c.id === id);
           const ordered = this.categoriesSubject.value
             .filter(c => c.id !== id)
             .map((c, i) => ({ ...c, order: i }));
@@ -236,7 +239,7 @@ export class CourseApprovalService {
     this.setActionLoading(courseId, true);
     return this.http
       .patch<{ success: boolean }>(
-        `${this.coursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
+        `${this.adminCoursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
       )
       .pipe(
         tap(res => {
@@ -259,7 +262,7 @@ export class CourseApprovalService {
     this.setActionLoading(courseId, true);
     return this.http
       .patch<{ success: boolean }>(
-        `${this.coursesApiUrl}/${courseId}/reject`, { reason }, { withCredentials: true }
+        `${this.adminCoursesApiUrl}/${courseId}/reject`, { rejectionReason: reason }, { withCredentials: true }
       )
       .pipe(
         tap(res => {
@@ -303,11 +306,12 @@ export class CourseApprovalService {
           if (res.success && res.data) {
             const mapped = res.data
               .map(cat => ({
-                id:          cat._id || cat.id,
-                name:        cat.name,
+                id: cat._id || cat.id,
+                name: cat.name,
+                // slug: cat.slug || '',
                 courseCount: cat.courseCount || 0,
-                order:       cat.order || 0,
-                createdAt:   cat.createdAt || ''
+                order: cat.order || 0,
+                createdAt: cat.createdAt || ''
               }))
               .sort((a, b) => (a.order || 0) - (b.order || 0));
             this.categoriesSubject.next(mapped);
@@ -320,35 +324,35 @@ export class CourseApprovalService {
   private setActionLoading(courseId: string, isLoading: boolean): void {
     const current = { ...this.actionLoadingSubject.value };
     if (isLoading) { current[courseId] = true; }
-    else            { delete current[courseId]; }
+    else { delete current[courseId]; }
     this.actionLoadingSubject.next(current);
   }
 
   private mapCourseApproval(c: any, forceStatus?: ApprovalStatus): CourseApproval {
     const instructor = c.instructor || {};
-    const rawStatus  = c.status || c.courseStatus || 'pending';
+    const rawStatus = c.status || c.courseStatus || 'pending';
     return {
-      _id:          c._id,
-      id:           c._id || c.id,
-      title:        c.title,
-      description:  c.description,
-      category:     c.category?.name || c.category || 'Uncategorized',
-      level:        c.level,
-      price:        c.price,
-      totalHours:   c.totalHours,
+      _id: c._id,
+      id: c._id || c.id,
+      title: c.title,
+      description: c.description,
+      category: c.category?.name || c.category || 'Uncategorized',
+      level: c.level,
+      price: c.price,
+      totalHours: c.totalHours,
       totalLessons: c.totalLessons,
       sectionsCount: c.sections?.length || 0,
-      goals:        c.goals        || [],
+      goals: c.goals || [],
       requirements: c.requirements || [],
-      createdAt:    c.createdAt,
+      createdAt: c.createdAt,
       instructorName: instructor.firstName
         ? `${instructor.firstName} ${instructor.lastName}`.trim()
         : (instructor.name || 'Unknown Instructor'),
-      instructorEmail:  instructor.email,
+      instructorEmail: instructor.email,
       instructorAvatar: instructor.avatar,
       videoDuration: c.totalHours ? `${c.totalHours}h` : '0h',
-      thumbnail:    c.thumbnail?.url || c.thumbnail || 'video_library',
-      status:       forceStatus ?? rawStatus,
+      thumbnail: c.thumbnail?.url || c.thumbnail || 'video_library',
+      status: forceStatus ?? rawStatus,
       exceedsLimit: false
     };
   }
@@ -359,5 +363,5 @@ export class CourseApprovalService {
   }
 
   clearSuccess(): void { this.successSubject.next(null); }
-  clearError():   void { this.errorSubject.next(null); }
+  clearError(): void { this.errorSubject.next(null); }
 }
