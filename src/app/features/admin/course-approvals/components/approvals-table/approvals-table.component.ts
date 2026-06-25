@@ -7,11 +7,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import { CourseApproval } from '../../models/course-approval.model';
 import { ApprovalRowComponent } from '../approval-row/approval-row.component';
 import { CourseApprovalService } from '../../services/course-approval.service';
+import { CourseApproval } from '../../models/course-approval.model';
 
-export type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
+export type FilterType = 'all' | 'pending' | 'published' | 'rejected';
 
 @Component({
   selector: 'app-approvals-table',
@@ -68,6 +68,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
    * For all other tabs, total is computed from the local filtered list.
    */
   private pendingTotal = 0;   // populated from pendingPage$ subscription
+  private rejectedTotal = 0;  // populated from stats$ subscription
 
   ngOnInit(): void {
     // Debounced search
@@ -89,6 +90,16 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
       .subscribe(meta => {
         this.pendingTotal = meta.total;
         this.cdr.markForCheck();
+      });
+
+    // Track backend stats for rejected total
+    this.service.stats$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(stats => {
+        if (stats) {
+          this.rejectedTotal = stats.rejected;
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -135,14 +146,14 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
 
   // ── Filter counts (from full in-memory list) ──────────────────────────────
   get pendingCount():  number { return this.courses.filter(c => c.status === 'pending').length; }
-  get approvedCount(): number { return this.courses.filter(c => c.status === 'approved').length; }
-  get rejectedCount(): number { return this.courses.filter(c => c.status === 'rejected').length; }
+  get publishedCount(): number { return this.courses.filter(c => c.status === 'published').length; }
+  get rejectedCount(): number { return this.rejectedTotal; }
   get totalCount():    number { return this.courses.length; }
 
   get badgeCount(): number {
     switch (this.currentFilter) {
       case 'pending':  return this.pendingTotal || this.pendingCount;
-      case 'approved': return this.approvedCount;
+      case 'published': return this.publishedCount;
       case 'rejected': return this.rejectedCount;
       default:         return this.totalCount;
     }
@@ -151,7 +162,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   get cardTitle(): string {
     switch (this.currentFilter) {
       case 'pending':  return 'Pending Review';
-      case 'approved': return 'Approved Courses';
+      case 'published': return 'Published Courses';
       case 'rejected': return 'Rejected Courses';
       default:         return 'All Courses';
     }

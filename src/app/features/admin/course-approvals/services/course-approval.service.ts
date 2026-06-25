@@ -66,7 +66,8 @@ export class CourseApprovalService {
       );
 
     // Pending uses the paginated endpoint (page 1, limit 10 initially)
-    const pendingUrl = `${this.coursesApiUrl}/pending-review?page=1&limit=10`;
+    const pendingUrl = `${this.adminCoursesApiUrl}/pending-review?page=1&limit=10`;
+    const rejectedUrl = `${this.adminCoursesApiUrl}/rejected?page=1&limit=10`;
 
     forkJoin({
       pending: this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
@@ -82,14 +83,24 @@ export class CourseApprovalService {
         }),
         catchError(() => of([] as CourseApproval[]))
       ),
-      published: safeFetch(`${this.coursesApiUrl}`, 'approved'),
+      published: safeFetch(`${this.coursesApiUrl}`, 'published'),
+      rejected: safeFetch(rejectedUrl, 'rejected'),
     }).pipe(
       finalize(() => this.loadingSubject.next(false))
-    ).subscribe(({ pending, published }) => {
+    ).subscribe(({ pending, published, rejected }) => {
       const map = new Map<string, CourseApproval>();
       (published as CourseApproval[]).forEach(c => map.set(c.id, c));
+      (rejected as CourseApproval[]).forEach(c => map.set(c.id, c));
       (pending as CourseApproval[]).forEach(c => map.set(c.id, c));
-      this.coursesSubject.next(Array.from(map.values()));
+      
+      const allCourses = Array.from(map.values());
+      
+      console.log('Pending Courses', pending);
+      console.log('Published Courses', published);
+      console.log('Rejected Courses', rejected);
+      console.log('All Tab Data', allCourses);
+      
+      this.coursesSubject.next(allCourses);
     });
 
     this.refreshStats();
@@ -102,7 +113,7 @@ export class CourseApprovalService {
   loadPendingPage(page: number, limit: number, search = ''): void {
     this.loadingSubject.next(true);
 
-    let url = `${this.coursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
+    let url = `${this.adminCoursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
     this.http.get<any>(url, { withCredentials: true }).pipe(
@@ -332,8 +343,8 @@ export class CourseApprovalService {
     const instructor = c.instructor || {};
     const rawStatus = c.status || c.courseStatus || 'pending';
     return {
-      _id: c._id,
-      id: c._id || c.id,
+      _id: c._id || c.courseId,
+      id: c._id || c.id || c.courseId,
       title: c.title,
       description: c.description,
       category: c.category?.name || c.category || 'Uncategorized',
@@ -345,15 +356,20 @@ export class CourseApprovalService {
       goals: c.goals || [],
       requirements: c.requirements || [],
       createdAt: c.createdAt,
-      instructorName: instructor.firstName
+      instructorName: c.instructorName || (instructor.firstName
         ? `${instructor.firstName} ${instructor.lastName}`.trim()
-        : (instructor.name || 'Unknown Instructor'),
+        : (instructor.name || 'Unknown Instructor')),
       instructorEmail: instructor.email,
       instructorAvatar: instructor.avatar,
       videoDuration: c.totalHours ? `${c.totalHours}h` : '0h',
       thumbnail: c.thumbnail?.url || c.thumbnail || 'video_library',
       status: forceStatus ?? rawStatus,
-      exceedsLimit: false
+      exceedsLimit: false,
+      rejectionReason: c.rejectionReason,
+      rejectedBy: c.rejectedBy?.firstName 
+        ? `${c.rejectedBy.firstName} ${c.rejectedBy.lastName}`.trim()
+        : c.rejectedBy?.name || c.rejectedBy || 'Unknown',
+      rejectedAt: c.rejectedAt
     };
   }
 

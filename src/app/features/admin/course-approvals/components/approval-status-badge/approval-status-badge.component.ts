@@ -39,12 +39,12 @@ import { ApprovalStatus } from '../../models/course-approval.model';
       background-color: #f59e0b;
     }
 
-    /* Approved styling */
-    .status-badge.approved {
+    /* Published styling */
+    .status-badge.published {
       background-color: rgba(34, 197, 94, 0.1);
       color: #15803d;
     }
-    .status-badge.approved .status-dot {
+    .status-badge.published .status-dot {
       background-color: #22c55e;
     }
 
