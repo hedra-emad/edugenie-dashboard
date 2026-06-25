@@ -99,30 +99,6 @@ export class AdminCategoriesComponent {}
 export class AdminReportsComponent {}
 
 @Component({
-  selector: 'app-admin-admins-placeholder',
-  standalone: true,
-  imports: [CommonModule, MatIconModule],
-  template: `
-    <div class="p-6 max-w-4xl mx-auto">
-      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-6">
-          <mat-icon class="scale-125">shield_person</mat-icon>
-        </div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Admin Accounts</h1>
-        <p class="text-gray-500 max-w-md mb-6">
-          Manage system administrator access rights, security logs, MFA tokens, and platform roles.
-        </p>
-        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-semibold">
-          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-          Scheduled for Phase 2 Implementation
-        </span>
-      </div>
-    </div>
-  `
-})
-export class AdminAdminsComponent {}
-
-@Component({
   selector: 'app-admin-support-placeholder',
   standalone: true,
   imports: [CommonModule, MatIconModule],

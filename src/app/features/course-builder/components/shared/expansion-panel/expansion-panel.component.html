@@ -2,14 +2,7 @@
   #panel="matExpansionPanel"
   [expanded]="expanded"
   [class.mat-expansion-panel-deleting]="isDeleting"
-  [ngClass]="[
-    panelClass, 
-    highlight ? 'highlight-border' : '',
-    currentDraftType === 'unsaved' ? 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]' : '',
-    currentDraftType === 'modified' ? 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]' : '',
-    currentDraftType === 'uploaded_unsaved' ? 'border-emerald-500 !shadow-[0_0_8px_rgba(16,185,129,0.2)]' : '',
-    !currentDraftType ? 'border-[var(--color-border)]' : ''
-  ]"
+  [ngClass]="[panelClass, highlight ? 'highlight-border' : '', panelBorderClass]"
   [hideToggle]="true"
   class="border rounded-2xl shadow-sm transition-colors duration-300"
   (opened)="onOpened()"
@@ -145,7 +138,7 @@
         </div>
 
         <!-- Mobile actions: three-dot mat-menu (section mode) -->
-        <div *ngIf="showMobileMenu" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
+        <div *ngIf="showMobileMenu && (showLessonsButton || showQuizButton)" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
           <button type="button"
             [matMenuTriggerFor]="mobileMenu"
             [disabled]="isDeleting"
@@ -153,6 +146,17 @@
             class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="More options">
             <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block">more_vert</mat-icon>
+          </button>
+        </div>
+
+        <!-- Mobile direct delete action (lesson mode) -->
+        <div *ngIf="showMobileMenu && showDeleteButton && !showLessonsButton && !showQuizButton" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
+          <button type="button"
+            (click)="onDeleteClicked($event)"
+            [disabled]="isDeleting"
+            class="w-9 h-9 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Delete">
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">delete</mat-icon>
           </button>
         </div>
 
@@ -177,7 +181,7 @@
   <mat-menu #mobileMenu="matMenu" class="mobile-section-menu">
     <button *ngIf="showDeleteButton" mat-menu-item (click)="onDeleteClicked($event)" [disabled]="isDeleting">
       <mat-icon class="!text-[16px]">delete</mat-icon>
-      <span>{{ isDeleting ? 'Deleting...' : 'Delete Section' }}</span>
+      <span>{{ isDeleting ? 'Deleting...' : 'Delete' }}</span>
     </button>
     <button *ngIf="showLessonsButton" mat-menu-item (click)="onLessonsClicked($event)" [disabled]="lessonsButtonDisabled">
       <mat-icon class="!text-[16px]">menu_book</mat-icon>

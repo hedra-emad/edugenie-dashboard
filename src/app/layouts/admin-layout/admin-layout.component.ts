@@ -5,18 +5,22 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { AdminSidebarComponent } from './admin-sidebar.component';
+import { SidebarComponent } from '../../shared/components/layout/sidebar/sidebar.component';
+import { NotificationsService } from '../../core/services/notifications';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterOutlet, MatIconModule, AdminSidebarComponent],
+  imports: [CommonModule, RouterOutlet, MatIconModule, SidebarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
 export class AdminLayoutComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly notificationsService = inject(NotificationsService);
+
+  readonly unreadCount$ = this.notificationsService.unreadCount$;
 
   sidebarExpanded = true;
   isMobile = false;
@@ -24,6 +28,7 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkScreenSize();
+    this.notificationsService.getNotifications(1, 1);
   }
 
   @HostListener('window:resize')

@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 import {
   BehaviorSubject,
@@ -21,7 +22,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
-import { environment } from '../../../environments/environment';
+
 
 @Injectable({
   providedIn: 'root',
@@ -112,6 +113,18 @@ export class AuthService {
       );
   }
 
+  redeemCode(code: string): Observable<{ userId: string; userRole: UserRole }> {
+    return this.http
+      .post<{ success: boolean; data: { userId: string; userRole: UserRole } }>(
+        `${this.authApiUrl}/redeem-code`,
+        { code },
+        { withCredentials: true }
+      )
+      .pipe(
+        map((response) => response.data)
+      );
+  }
+
   register(data: Record<string, unknown>): Observable<unknown> {
     return this.http.post(`${this.authApiUrl}/register`, data);
   }
@@ -175,7 +188,7 @@ export class AuthService {
    */
   removeAvatar(): Observable<ProfileApiResponse> {
     return this.http
-      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { removeAvatar: true })
+      .patch<ProfileApiResponse>(`${this.usersApiUrl}/profile`, { avatar: null })
       .pipe(
         tap((response) => {
           if (response.success && response.data) {
@@ -186,20 +199,15 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http
-      .post(`${this.authApiUrl}/logout`, {})
-      .pipe(
-        tap(() => {
-          this.clearCurrentUser();
-          this.router.navigate(['/login']);
-        }),
-        map(() => void 0),
-        catchError((error) => {
-          this.clearCurrentUser();
-          this.router.navigate(['/login']);
-          return throwError(() => error);
-        }),
-      );
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => {
+        this.clearCurrentUser();
+        const nextjsUrl = environment.studentAppUrl;
+        window.location.href = `${nextjsUrl}/api/logout`;
+      }),
+      map(() => void 0),
+    );
   }
 
   setCurrentUser(user: UserProfile | null): void {
@@ -242,6 +250,13 @@ export class AuthService {
   }
 
   getStudentAppRedirectUrl(): string {
-    return environment.studentAppUrl;
+    return import.meta.env.NG_APP_STUDENT_APP_URL;
+  }
+
+  redirectToStudentApp(): Observable<void> {
+    // Students should never be in the Angular app.
+    // Just redirect them directly — no handoff code needed.
+    window.location.href = import.meta.env['NG_APP_STUDENT_APP_URL'] || 'http://localhost:3000';
+    return of(void 0);
   }
 }

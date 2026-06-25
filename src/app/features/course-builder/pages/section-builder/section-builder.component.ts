@@ -41,7 +41,7 @@ export function extractId(val: any): string | null {
   if (typeof val._id === 'string') return val._id;
 
   const buf = val.buffer || val;
-  
+
   // Node.js Buffer JSON serialization
   if (buf && buf.type === 'Buffer' && Array.isArray(buf.data)) {
     return buf.data.map((b: number) => b.toString(16).padStart(2, '0')).join('');
@@ -49,11 +49,11 @@ export function extractId(val: any): string | null {
 
   // Uint8Array or Buffer object
   if (buf instanceof Uint8Array || (buf && typeof buf.byteLength === 'number' && typeof buf.slice === 'function')) {
-     return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2, '0')).join('');
   }
-  
+
   if (val.toString && typeof val.toString === 'function' && val.toString() !== '[object Object]') {
-      return val.toString();
+    return val.toString();
   }
 
   return null;
@@ -123,20 +123,42 @@ export class SectionBuilderComponent implements OnInit {
 
     this.courseId = id;
 
-
-    const highlight = this.route.snapshot.queryParamMap.get('highlight');
-    const expand = this.route.snapshot.queryParamMap.get('expand');
-
-    this.highlightSectionId = highlight;
-    this.expandedSectionId = expand;
-
     this.loadSections();
 
+    // Subscribe to query params so that navigating back from lesson-builder
+    // (which passes ?expand=sectionId&highlight=sectionId) works even when
+    // this component is already mounted and ngOnInit would not re-fire.
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const highlight = params['highlight'] ?? null;
+        const expand = params['expand'] ?? null;
 
-    this.router.navigate([], {
-      queryParams: {},
-      replaceUrl: true
-    });
+        if (expand) {
+          this.expandedSectionId = expand;
+        }
+        if (highlight) {
+          this.highlightSectionId = highlight;
+          // Clear highlight glow after 5 seconds
+          setTimeout(() => { this.highlightSectionId = null; }, 5000);
+        }
+
+        // Scroll to expanded section after DOM updates
+        if (expand) {
+          setTimeout(() => {
+            const idx = this.sections.findIndex(s => s.get('id')?.value === expand);
+            if (idx !== -1) {
+              const el = document.getElementById('section-card-' + idx);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 150);
+        }
+
+        // Clear query params from the URL so a future refresh doesn't re-expand
+        if (highlight || expand) {
+          this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        }
+      });
   }
 
   ngAfterViewInit() {
@@ -180,6 +202,14 @@ export class SectionBuilderComponent implements OnInit {
     this.sectionsArray.push(section);
 
     this.expandedSectionId = draftId;
+    this.cdr.detectChanges();
+    const newIndex = this.sectionsArray.length - 1;
+    setTimeout(() => {
+      const element = document.getElementById('section-card-' + newIndex);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   }
 
   onSectionDeleted(index: number) {
@@ -251,9 +281,11 @@ export class SectionBuilderComponent implements OnInit {
       next: (course: Course) => {
         const sections = course.sections || [];
         this.sectionsArray.clear();
+        console.log('expandedSectionId from route:', this.expandedSectionId);
 
         sections.forEach((section: Section) => {
           const sectionId = extractId((section as any)._id || section.id || section) || '';
+                  console.log('loaded section id:', sectionId);
           const sectionGroup = this.fb.group({
             title: [section.title || '', [Validators.required, Validators.minLength(3)]],
             description: [section.description || '', [Validators.minLength(10)]],
@@ -276,9 +308,9 @@ export class SectionBuilderComponent implements OnInit {
         // Load new draft sections (ID starts with 'draft_')
         const draftSections = this.draftStateService.getDraftsByParent(this.courseId)
           .filter(draft => draft.type === 'section' && this.draftStateService.isDraftId(draft.id));
-
         draftSections.forEach(draft => {
-          const sectionGroup = this.fb.group({
+
+          const sectionGroup = this.fb.group({   
             id: [draft.id],
             title: [draft.data?.title || '', [Validators.required, Validators.minLength(3)]],
             description: [draft.data?.description || '', [Validators.minLength(10)]],

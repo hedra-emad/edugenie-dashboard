@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npx ng build --configuration production",
+  "outputDirectory": "dist/edugenie-dashboard/browser",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -66,7 +66,7 @@
 
       <!-- Section list -->
       <div *ngIf="sections.length > 0" cdkDropList (cdkDropListDropped)="onSectionDropped($event)" class="space-y-3">
-        <div cdkDrag *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection">
+        <div cdkDrag *ngFor="let sectionGroup of sections; let sectionIdx = index; trackBy: trackBySection" [id]="'section-card-' + sectionIdx">
           <div class="cdk-drag-placeholder" *cdkDragPlaceholder></div>
           <app-section-card [sectionForm]="sectionGroup" [index]="sectionIdx" [courseId]="courseId"
             [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
@@ -74,6 +74,15 @@
             (delete)="onSectionDeleted(sectionIdx)">
           </app-section-card>
         </div>
+      </div>
+
+      <!-- Secondary Add Section button under the section list -->
+      <div *ngIf="sections.length > 0" class="flex justify-center mt-3 mb-5">
+        <button type="button" (click)="addSection()"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold uppercase hover:bg-[var(--color-primary)] hover:text-white transition duration-150">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">add</mat-icon>
+          <span>Add another section</span>
+        </button>
       </div>
     </ng-container>
 

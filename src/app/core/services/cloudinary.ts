@@ -2,7 +2,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, switchMap, catchError, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
 
 interface SignatureResponse {
   signature: string;
@@ -30,7 +29,7 @@ export interface VideoUploadEvent {
 export class CloudinaryService {
   private http = inject(HttpClient);
 
-  private readonly apiBase = environment.apiUrl; // e.g. 'http://localhost:3000'
+  private readonly apiBase = ''; // intercepted by api.interceptor.ts
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend
@@ -116,6 +115,8 @@ export class CloudinaryService {
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
+        formData.append('raw_convert', raw_convert);
+
 
         return this.http
           .post<CloudinaryUploadResponse>(
@@ -163,11 +164,11 @@ export class CloudinaryService {
 
 
         const req = new HttpRequest(
-  'POST',
-  `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-  formData,
-  { reportProgress: true }
-);
+          'POST',
+          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          formData,
+          { reportProgress: true }
+        );
 
         return this.http.request<CloudinaryUploadResponse>(req).pipe(
           switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {
