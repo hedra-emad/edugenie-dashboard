@@ -9,7 +9,7 @@ export interface Category {
   createdAt?: string;
 }
 
-export interface UnifiedCourse {
+export interface CourseApproval {
   _id?: string;
   id: string;
   title: string;
@@ -23,10 +23,6 @@ export interface UnifiedCourse {
   goals?: string[];
   requirements?: string[];
   createdAt?: string;
-  
-  rejectionReason?: string;
-  rejectedBy?: string;
-  rejectedAt?: string;
 
   instructorName: string;
   instructorEmail?: string;
@@ -36,26 +32,10 @@ export interface UnifiedCourse {
   thumbnail: string;
   status: ApprovalStatus;
   exceedsLimit: boolean;
-}
-
-/** Dedicated model for the rejected-courses endpoint response */
-export interface RejectedCourse {
-  courseId: string;
-  title: string;
-  instructorId: string;
-  instructorName: string;
-  rejectionReason: string;
-  rejectedBy: string;
-  rejectedAt: string;
-}
-
-export interface PageMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+  
+  rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
 }
 
 export interface AdminStats {
@@ -66,4 +46,3 @@ export interface AdminStats {
   draft: number;
   archived: number;
 }
-

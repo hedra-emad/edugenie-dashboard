@@ -4,16 +4,16 @@ import {
   BehaviorSubject, Observable, catchError, finalize,
   forkJoin, map, of, tap
 } from 'rxjs';
-import { UnifiedCourse, Category, AdminStats, RejectedCourse, PageMeta } from '../models/course-approval.model';
+import { CourseApproval, Category, AdminStats } from '../models/course-approval.model';
 import { ToastrService } from 'ngx-toastr';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published' | 'archived';
 
 export interface PendingPage {
-  courses: UnifiedCourse[];
-  total:   number;
-  page:    number;
-  limit:   number;
+  courses: CourseApproval[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,32 +21,31 @@ export class CourseApprovalService {
   private readonly http = inject(HttpClient);
   private readonly toastr = inject(ToastrService);
 
-  private readonly coursesApiUrl    = 'https://edugenie-api.vercel.app/courses';
-  private readonly adminApiUrl      = 'https://edugenie-api.vercel.app/admin/courses';
-  private readonly categoriesApiUrl = 'https://edugenie-api.vercel.app/categories';
+  private readonly coursesApiUrl = '/courses';
+  private readonly adminCoursesApiUrl = '/admin/courses';
+  private readonly categoriesApiUrl = '/categories';
 
-  private readonly coursesSubject         = new BehaviorSubject<UnifiedCourse[]>([]);
-  private readonly categoriesSubject      = new BehaviorSubject<Category[]>([]);
-  private readonly statsSubject           = new BehaviorSubject<AdminStats | null>(null);
-  private readonly loadingSubject         = new BehaviorSubject<boolean>(false);
-  private readonly actionLoadingSubject   = new BehaviorSubject<Record<string, boolean>>({});
-  private readonly errorSubject           = new BehaviorSubject<string | null>(null);
-  private readonly successSubject         = new BehaviorSubject<string | null>(null);
-  private readonly pendingPageSubject     = new BehaviorSubject<Omit<PendingPage, 'courses'>>({ total: 0, page: 1, limit: 10 });
+  private readonly coursesSubject = new BehaviorSubject<CourseApproval[]>([]);
+  private readonly categoriesSubject = new BehaviorSubject<Category[]>([]);
+  private readonly statsSubject = new BehaviorSubject<AdminStats | null>(null);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly actionLoadingSubject = new BehaviorSubject<Record<string, boolean>>({});
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  private readonly successSubject = new BehaviorSubject<string | null>(null);
 
-  private readonly rejectedPageSubject    = new BehaviorSubject<PageMeta>({
-    total: 0, page: 1, limit: 10, totalPages: 1, hasNextPage: false, hasPrevPage: false
+  /** Emits the latest pending-page metadata (total, page, limit) */
+  private readonly pendingPageSubject = new BehaviorSubject<Omit<PendingPage, 'courses'>>({
+    total: 0, page: 1, limit: 10
   });
 
-  readonly courses$          = this.coursesSubject.asObservable();
-  readonly categories$       = this.categoriesSubject.asObservable();
-  readonly stats$            = this.statsSubject.asObservable();
-  readonly loading$          = this.loadingSubject.asObservable();
-  readonly actionLoading$    = this.actionLoadingSubject.asObservable();
-  readonly error$            = this.errorSubject.asObservable();
-  readonly success$          = this.successSubject.asObservable();
-  readonly pendingPage$      = this.pendingPageSubject.asObservable();
-  readonly rejectedPage$     = this.rejectedPageSubject.asObservable();
+  readonly courses$ = this.coursesSubject.asObservable();
+  readonly categories$ = this.categoriesSubject.asObservable();
+  readonly stats$ = this.statsSubject.asObservable();
+  readonly loading$ = this.loadingSubject.asObservable();
+  readonly actionLoading$ = this.actionLoadingSubject.asObservable();
+  readonly error$ = this.errorSubject.asObservable();
+  readonly success$ = this.successSubject.asObservable();
+  readonly pendingPage$ = this.pendingPageSubject.asObservable();
 
   // ────────────────────────────────────────────────────────────────────────────
   // Initial load — pending (page 1) + published in parallel
@@ -63,11 +62,12 @@ export class CourseApprovalService {
           else if (Array.isArray(res?.data?.data)) courses = res.data.data;
           return courses.map(c => this.mapCourseApproval(c, forcedStatus));
         }),
-        catchError(err => { console.error(`Failed to fetch ${url}`, err); return of([] as UnifiedCourse[]); })
+        catchError(err => { console.error(`Failed to fetch ${url}`, err); return of([] as CourseApproval[]); })
       );
 
     // Pending uses the paginated endpoint (page 1, limit 10 initially)
-    const pendingUrl = `${this.coursesApiUrl}/pending-review?page=1&limit=10`;
+    const pendingUrl = `${this.adminCoursesApiUrl}/pending-review?page=1&limit=10`;
+    const rejectedUrl = `${this.adminCoursesApiUrl}/rejected?page=1&limit=10`;
 
     forkJoin({
       pending: this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
@@ -81,43 +81,26 @@ export class CourseApprovalService {
           this.pendingPageSubject.next({ total, page, limit });
           return list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         }),
-        catchError(() => of([] as UnifiedCourse[]))
+        catchError(() => of([] as CourseApproval[]))
       ),
-      published: safeFetch(`${this.coursesApiUrl}`, 'approved'),
-      rejected: this.http.get<any>(`${this.adminApiUrl}/rejected?page=1&limit=50`, { withCredentials: true }).pipe(
-        map(res => {
-          const list = res?.data ?? [];
-          return list.map((c: any) => ({
-            id: c.courseId,
-            title: c.title,
-            instructorName: c.instructorName,
-            instructorId: c.instructorId,
-            status: 'rejected',
-            rejectionReason: c.rejectionReason,
-            rejectedBy: c.rejectedBy,
-            rejectedAt: c.rejectedAt,
-            category: 'Uncategorized',
-            videoDuration: '0h',
-            thumbnail: 'video_library',
-            exceedsLimit: false
-          } as UnifiedCourse));
-        }),
-        catchError(() => of([] as UnifiedCourse[]))
-      )
+      published: safeFetch(`${this.coursesApiUrl}`, 'published'),
+      rejected: safeFetch(rejectedUrl, 'rejected'),
     }).pipe(
       finalize(() => this.loadingSubject.next(false))
     ).subscribe(({ pending, published, rejected }) => {
-      const map = new Map<string, UnifiedCourse>();
-      (published as UnifiedCourse[]).forEach(c => map.set(c.id, c));
-      (pending   as UnifiedCourse[]).forEach(c => map.set(c.id, c));
-      (rejected  as UnifiedCourse[]).forEach(c => map.set(c.id, c));
-      const merged = Array.from(map.values());
-      merged.sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.rejectedAt || 0).getTime();
-        const dateB = new Date(b.createdAt || b.rejectedAt || 0).getTime();
-        return dateB - dateA;
-      });
-      this.coursesSubject.next(merged);
+      const map = new Map<string, CourseApproval>();
+      (published as CourseApproval[]).forEach(c => map.set(c.id, c));
+      (rejected as CourseApproval[]).forEach(c => map.set(c.id, c));
+      (pending as CourseApproval[]).forEach(c => map.set(c.id, c));
+      
+      const allCourses = Array.from(map.values());
+      
+      console.log('Pending Courses', pending);
+      console.log('Published Courses', published);
+      console.log('Rejected Courses', rejected);
+      console.log('All Tab Data', allCourses);
+      
+      this.coursesSubject.next(allCourses);
     });
 
     this.refreshStats();
@@ -130,7 +113,7 @@ export class CourseApprovalService {
   loadPendingPage(page: number, limit: number, search = ''): void {
     this.loadingSubject.next(true);
 
-    let url = `${this.coursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
+    let url = `${this.adminCoursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
     this.http.get<any>(url, { withCredentials: true }).pipe(
@@ -146,9 +129,9 @@ export class CourseApprovalService {
         // Replace only the 'pending' courses in the master list; keep others intact
         const newPending = list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         const rest = this.coursesSubject.value.filter(c => c.status !== 'pending');
-        const map  = new Map<string, UnifiedCourse>();
-        rest.forEach(c      => map.set(c.id, c));
-        newPending.forEach((c: UnifiedCourse) => map.set(c.id, c));
+        const map = new Map<string, CourseApproval>();
+        rest.forEach(c => map.set(c.id, c));
+        newPending.forEach((c: CourseApproval) => map.set(c.id, c));
         this.coursesSubject.next(Array.from(map.values()));
       },
       error: err => console.error('Failed to load pending page', err)
@@ -156,57 +139,8 @@ export class CourseApprovalService {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Backend pagination for the Rejected tab — lazy, only loads when tab is opened
-  // GET /admin/courses/rejected?page=X&limit=Y
+  // Category CRUD — all return Observable<boolean> so callers can react
   // ────────────────────────────────────────────────────────────────────────────
-  loadRejectedPage(page: number, limit: number): void {
-    this.loadingSubject.next(true);
-
-    const url = `${this.adminApiUrl}/rejected?page=${page}&limit=${limit}`;
-
-    this.http.get<any>(url, { withCredentials: true }).pipe(
-      finalize(() => this.loadingSubject.next(false))
-    ).subscribe({
-      next: res => {
-        const data = res?.data ?? [];
-        const meta: PageMeta = res?.meta ?? {
-          total: data.length, page, limit,
-          totalPages: Math.ceil(data.length / limit),
-          hasNextPage: false, hasPrevPage: false
-        };
-        
-        const mappedRejected = data.map((c: any) => ({
-          id: c.courseId,
-          title: c.title,
-          instructorName: c.instructorName,
-          instructorId: c.instructorId,
-          status: 'rejected',
-          rejectionReason: c.rejectionReason,
-          rejectedBy: c.rejectedBy,
-          rejectedAt: c.rejectedAt,
-          category: 'Uncategorized',
-          videoDuration: '0h',
-          thumbnail: 'video_library',
-          exceedsLimit: false
-        } as UnifiedCourse));
-
-        this.rejectedPageSubject.next(meta);
-        
-        // Merge into courses map
-        const map = new Map<string, UnifiedCourse>();
-        this.coursesSubject.value.filter(c => c.status !== 'rejected').forEach(c => map.set(c.id, c));
-        mappedRejected.forEach((c: UnifiedCourse) => map.set(c.id, c));
-        const merged = Array.from(map.values());
-        merged.sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.rejectedAt || 0).getTime();
-          const dateB = new Date(b.createdAt || b.rejectedAt || 0).getTime();
-          return dateB - dateA;
-        });
-        this.coursesSubject.next(merged);
-      },
-      error: err => console.error('Failed to load rejected courses', err)
-    });
-  }
   addCategory(name: string): Observable<boolean> {
     if (!name.trim()) return of(false);
     const payload: any = { name: name.trim() };
@@ -316,7 +250,7 @@ export class CourseApprovalService {
     this.setActionLoading(courseId, true);
     return this.http
       .patch<{ success: boolean }>(
-        `${this.coursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
+        `${this.adminCoursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
       )
       .pipe(
         tap(res => {
@@ -339,7 +273,7 @@ export class CourseApprovalService {
     this.setActionLoading(courseId, true);
     return this.http
       .patch<{ success: boolean }>(
-        `${this.coursesApiUrl}/${courseId}/reject`, { rejectionReason: reason }, { withCredentials: true }
+        `${this.adminCoursesApiUrl}/${courseId}/reject`, { rejectionReason: reason }, { withCredentials: true }
       )
       .pipe(
         tap(res => {
@@ -405,13 +339,12 @@ export class CourseApprovalService {
     this.actionLoadingSubject.next(current);
   }
 
-  private mapCourseApproval(c: any, forceStatus?: ApprovalStatus): UnifiedCourse {
+  private mapCourseApproval(c: any, forceStatus?: ApprovalStatus): CourseApproval {
     const instructor = c.instructor || {};
-    let rawStatus  = c.status || c.courseStatus || 'pending';
-    if (rawStatus === 'under_review') rawStatus = 'pending';
+    const rawStatus = c.status || c.courseStatus || 'pending';
     return {
-      _id: c._id,
-      id: c._id || c.id,
+      _id: c._id || c.courseId,
+      id: c._id || c.id || c.courseId,
       title: c.title,
       description: c.description,
       category: c.category?.name || c.category || 'Uncategorized',
@@ -423,15 +356,20 @@ export class CourseApprovalService {
       goals: c.goals || [],
       requirements: c.requirements || [],
       createdAt: c.createdAt,
-      instructorName: instructor.firstName
+      instructorName: c.instructorName || (instructor.firstName
         ? `${instructor.firstName} ${instructor.lastName}`.trim()
-        : (instructor.name || 'Unknown Instructor'),
+        : (instructor.name || 'Unknown Instructor')),
       instructorEmail: instructor.email,
       instructorAvatar: instructor.avatar,
       videoDuration: c.totalHours ? `${c.totalHours}h` : '0h',
       thumbnail: c.thumbnail?.url || c.thumbnail || 'video_library',
       status: forceStatus ?? rawStatus,
-      exceedsLimit: false
+      exceedsLimit: false,
+      rejectionReason: c.rejectionReason,
+      rejectedBy: c.rejectedBy?.firstName 
+        ? `${c.rejectedBy.firstName} ${c.rejectedBy.lastName}`.trim()
+        : c.rejectedBy?.name || c.rejectedBy || 'Unknown',
+      rejectedAt: c.rejectedAt
     };
   }
 

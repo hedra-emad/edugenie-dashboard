@@ -6,7 +6,7 @@ import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, withLatestFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../../course-approvals/services/course-approval.service';
@@ -69,9 +69,19 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
     this.error   = false;
     this.cdr.markForCheck();
 
-    this.service.getCourseById(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: data => {
-        this.course = data;
+    this.service.getCourseById(id).pipe(
+      withLatestFrom(this.service.courses$),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ([data, courses]) => {
+        const cached = courses.find(c => c.id === id);
+        this.course = { 
+          ...data, 
+          status: cached?.status || data.status || 'pending',
+          rejectionReason: cached?.rejectionReason || data.rejectionReason,
+          rejectedBy: cached?.rejectedBy || data.rejectedBy,
+          rejectedAt: cached?.rejectedAt || data.rejectedAt
+        };
         if (this.course?.sections?.length > 0) {
           this.expandedSections[0] = true;
         }

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { UnifiedCourse } from '../../models/course-approval.model';
+import { CourseApproval } from '../../models/course-approval.model';
 
 @Component({
   selector: '[app-approval-row]',
@@ -148,8 +148,8 @@ import { UnifiedCourse } from '../../models/course-approval.model';
     .status-pill.status-pending  { background: rgba(245,158,11,0.1);  color: #d97706; }
     .status-pill.status-pending  .status-dot { background: #f59e0b; }
 
-    .status-pill.status-approved { background: rgba(34,197,94,0.1);   color: #15803d; }
-    .status-pill.status-approved .status-dot { background: #22c55e; }
+    .status-pill.status-published { background: rgba(34,197,94,0.1);   color: #15803d; }
+    .status-pill.status-published .status-dot { background: #22c55e; }
 
     .status-pill.status-rejected { background: rgba(239,68,68,0.1);   color: #b91c1c; }
     .status-pill.status-rejected .status-dot { background: #ef4444; }
@@ -342,7 +342,7 @@ import { UnifiedCourse } from '../../models/course-approval.model';
   `]
 })
 export class ApprovalRowComponent {
-  @Input() course!: UnifiedCourse;
+  @Input() course!: CourseApproval;
   /** True when THIS course's approve action is in progress */
   @Input() approveLoading = false;
   /** True when THIS course's reject action is in progress */
