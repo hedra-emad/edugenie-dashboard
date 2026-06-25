@@ -35,24 +35,24 @@ export class SidebarComponent implements OnInit {
   @Output() toggle = new EventEmitter<void>();
 
   readonly adminNavItems: NavItem[] = [
-    { icon: 'grid_view',             label: 'Overview',      route: '/admin/analytics' },
-    { icon: 'fact_check',            label: 'Approvals',     route: '/admin/course-approvals' },
-    { icon: 'group',                 label: 'Users',         route: '/admin/users' },
-    { icon: 'category',              label: 'Categories',    route: '/admin/categories' },
-    { icon: 'bar_chart',             label: 'Reports',       route: '/admin/reports' },
-    { icon: 'notifications',         label: 'Notifications', route: '/admin/notifications' },
+    { icon: 'grid_view', label: 'Overview', route: '/admin/analytics' },
+    { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
+    { icon: 'group', label: 'Users', route: '/admin/users' },
+    { icon: 'category', label: 'Categories', route: '/admin/categories' },
+    { icon: 'bar_chart', label: 'Reports', route: '/admin/reports' },
+    { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
   readonly instructorNavItems: NavItem[] = [
-    { icon: 'menu_book',  label: 'My Courses', route: '/my-courses' },
-    { icon: 'analytics',  label: 'Analytics',  route: '/analytics' },
+    { icon: 'menu_book', label: 'My Courses', route: '/my-courses' },
+    { icon: 'analytics', label: 'Analytics', route: '/analytics' },
     { icon: 'notifications', label: 'Notifications', route: '/notifications' },
-    { icon: 'settings',   label: 'Settings',   route: '/settings' },
+    { icon: 'settings', label: 'Settings', route: '/settings' },
   ];
 
   readonly adminBottomItems: NavItem[] = [
     { icon: 'help_outline', label: 'Support Center', route: '/admin/support' },
-    { icon: 'settings',     label: 'Settings',       route: '/admin/settings' },
+    { icon: 'settings', label: 'Settings', route: '/admin/settings' },
   ];
 
   readonly instructorBottomItems: NavItem[] = [];
@@ -98,9 +98,6 @@ export class SidebarComponent implements OnInit {
   }
 
   onLogout(): void {
-    this.authService.logout().subscribe({
-      next:  () => this.router.navigate(['/login']),
-      error: () => this.router.navigate(['/login'])
-    });
+    this.authService.logout().subscribe();
   }
 }
