@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import { CourseApproval } from '../../models/course-approval.model';
+import { UnifiedCourse } from '../../models/course-approval.model';
 import { ApprovalRowComponent } from '../approval-row/approval-row.component';
 import { CourseApprovalService } from '../../services/course-approval.service';
 
@@ -27,7 +27,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   private readonly service = inject(CourseApprovalService);
   private readonly destroy$ = new Subject<void>();
 
-  @Input() courses: CourseApproval[] = [];
+  @Input() courses: UnifiedCourse[] = [];
 
   @Input() set actionLoading(val: Record<string, boolean>) {
     this._actionLoading = val;
@@ -46,7 +46,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
 
   @Input() selectedIds = new Set<string>();
 
-  @Output() viewDetails    = new EventEmitter<CourseApproval>();
+  @Output() viewDetails    = new EventEmitter<UnifiedCourse>();
   @Output() approve        = new EventEmitter<string>();
   @Output() reject         = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<Set<string>>();
@@ -68,6 +68,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
    * For all other tabs, total is computed from the local filtered list.
    */
   private pendingTotal = 0;   // populated from pendingPage$ subscription
+  private rejectedTotal = 0;  // populated from stats$ subscription
 
   ngOnInit(): void {
     // Debounced search
@@ -90,6 +91,16 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
         this.pendingTotal = meta.total;
         this.cdr.markForCheck();
       });
+
+    // Track backend stats for rejected total
+    this.service.stats$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(stats => {
+        if (stats) {
+          this.rejectedTotal = stats.rejected;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -109,7 +120,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
     this.searchSubject.next('');
   }
 
-  onRowClick(course: CourseApproval): void {
+  onRowClick(course: UnifiedCourse): void {
     this.router.navigate(['/admin/courses', course.id]);
   }
 
@@ -136,7 +147,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   // ── Filter counts (from full in-memory list) ──────────────────────────────
   get pendingCount():  number { return this.courses.filter(c => c.status === 'pending').length; }
   get approvedCount(): number { return this.courses.filter(c => c.status === 'approved').length; }
-  get rejectedCount(): number { return this.courses.filter(c => c.status === 'rejected').length; }
+  get rejectedCount(): number { return this.rejectedTotal; }
   get totalCount():    number { return this.courses.length; }
 
   get badgeCount(): number {
@@ -158,7 +169,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   }
 
   // ── Local filtered list (non-pending tabs + frontend search) ──────────────
-  get filteredCourses(): CourseApproval[] {
+  get filteredCourses(): UnifiedCourse[] {
     let result = this.courses;
     if (this.currentFilter !== 'all') {
       result = result.filter(c => c.status === this.currentFilter);
@@ -190,7 +201,7 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
    * For pending tab: the service already delivers the correct page slice into courses$.
    * For other tabs: slice locally.
    */
-  get pagedCourses(): CourseApproval[] {
+  get pagedCourses(): UnifiedCourse[] {
     if (this.currentFilter === 'pending') {
       // The service puts exactly the current page's pending courses into courses$
       return this.courses.filter(c => c.status === 'pending');
@@ -275,5 +286,5 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
     this.selectionChange.emit(newSelection);
   }
 
-  trackByCourseId(_index: number, course: CourseApproval): string { return course.id; }
+  trackByCourseId(_index: number, course: UnifiedCourse): string { return course.id; }
 }

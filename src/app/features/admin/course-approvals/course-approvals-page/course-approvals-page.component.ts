@@ -10,7 +10,7 @@ import { Subject, takeUntil, combineLatest, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../services/course-approval.service';
-import { CourseApproval, AdminStats } from '../models/course-approval.model';
+import { UnifiedCourse, AdminStats } from '../models/course-approval.model';
 import { ApprovalsTableComponent, FilterType } from '../components/approvals-table/approvals-table.component';
 
 @Component({
@@ -27,7 +27,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   private readonly router  = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
-  courses: CourseApproval[] = [];
+  courses: UnifiedCourse[] = [];
   /** Tracks the active filter tab in the table so the page can gate the bulk toolbar */
   activeTableFilter: FilterType = 'pending';
   stats: AdminStats | null = null;
@@ -82,7 +82,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Single actions ────────────────────────────────────────────────────────
-  onViewCourse(course: CourseApproval): void {
+  onViewCourse(course: UnifiedCourse): void {
     this.router.navigate(['/admin/courses', course.id]);
   }
 
@@ -173,7 +173,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  get selectedCourses(): CourseApproval[] {
+  get selectedCourses(): UnifiedCourse[] {
     return this.courses.filter(c => this.selectedCourseIds.has(c.id));
   }
 

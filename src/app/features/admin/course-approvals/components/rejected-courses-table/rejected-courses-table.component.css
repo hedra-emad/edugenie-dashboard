@@ -1,0 +1,172 @@
+.rejected-card {
+  position: relative;
+  background: var(--color-surface, #fff);
+  overflow: hidden;
+  min-height: 120px;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(59,24,146,0.12);
+  border-top-color: var(--color-primary, #3b1892);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state {
+  padding: 56px 24px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.empty-icon { font-size: 48px; width: 48px; height: 48px; color: #d1d5db; }
+.empty-text  { font-size: 0.9375rem; font-weight: 500; color: #6b7280; margin: 0; }
+
+/* Table container */
+.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; min-width: 700px; }
+
+thead tr { background: #f9fafb; }
+
+th {
+  padding: 11px 16px;
+  color: var(--color-text-secondary, #6b7280);
+  font-weight: 600; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  white-space: nowrap;
+}
+
+th.actions-th { text-align: center; width: 72px; }
+
+/* Rows */
+.rejected-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rejected-row:hover td { background: #fef2f2; }
+.rejected-row:focus-visible { outline: 2px solid var(--color-primary, #3b1892); outline-offset: -2px; }
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+  color: #1f2937;
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+
+/* Course cell */
+.course-cell { display: flex; align-items: center; gap: 12px; }
+
+.course-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #b91c1c;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.course-icon mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.course-title {
+  font-weight: 600; color: #1f2937;
+  max-width: 220px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Instructor & Rejected By */
+.instructor-name, .rejected-by {
+  font-weight: 500; color: #374151; white-space: nowrap;
+}
+
+/* Date */
+.rejected-date { display: block; font-weight: 500; color: #374151; white-space: nowrap; }
+.rejected-time { display: block; font-size: 0.75rem; color: #9ca3af; white-space: nowrap; margin-top: 2px; }
+
+/* Reason — clamped to 2 lines */
+.reason-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  max-width: 260px;
+  cursor: help;
+}
+
+/* Actions column */
+.actions-col { text-align: center; }
+
+.view-btn {
+  width: 34px; height: 34px; border-radius: 8px; border: none;
+  background: transparent; color: #9ca3af; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.view-btn:hover { background: #fee2e2; color: #b91c1c; }
+.view-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+/* Pagination */
+.pagination-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-top: 1px solid var(--color-border, #e5e7eb);
+  background: #f9fafb; gap: 12px; flex-wrap: wrap;
+}
+.pagination-info { font-size: 0.8125rem; color: #6b7280; white-space: nowrap; }
+.pagination-controls { display: flex; align-items: center; gap: 4px; }
+
+.page-btn {
+  min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px;
+  border: 1px solid var(--color-border, #e5e7eb); background: white;
+  font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--color-primary-light, #5b3db8);
+  color: var(--color-primary, #3b1892); background: #f5f3ff;
+}
+.page-btn--active { background: var(--color-primary, #3b1892); color: white; border-color: var(--color-primary, #3b1892); }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.page-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.page-size-wrapper { display: flex; align-items: center; gap: 6px; }
+.page-size-label { font-size: 0.8125rem; color: #6b7280; white-space: nowrap; }
+.page-size-btn {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid var(--color-border, #e5e7eb);
+  background: white; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.15s;
+}
+.page-size-btn:hover { border-color: var(--color-primary-light, #5b3db8); color: var(--color-primary, #3b1892); }
+.page-size-btn--active { background: var(--color-primary, #3b1892); color: white; border-color: var(--color-primary, #3b1892); }
+
+/* Mobile */
+@media (max-width: 767px) {
+  .table-container { padding: 12px; background: #f9fafb; }
+  table, thead, tbody, tr, th, td { display: block; }
+  thead { display: none; }
+  tr { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px; background: white; }
+  td { display: flex; align-items: flex-start; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; gap: 8px; }
+  td:last-child { border-bottom: none; }
+  td::before { content: attr(data-label); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; color: #9ca3af; flex-shrink: 0; min-width: 80px; padding-top: 2px; }
+  td.actions-col { justify-content: flex-start; }
+  .reason-cell { max-width: none; }
+  .course-title { max-width: none; white-space: normal; }
+  .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .pagination-controls { justify-content: center; }
+  .page-size-wrapper { justify-content: center; }
+  .pagination-info { text-align: center; }
+}

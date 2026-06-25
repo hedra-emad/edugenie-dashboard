@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { CourseApproval } from '../../models/course-approval.model';
+import { UnifiedCourse } from '../../models/course-approval.model';
 
 @Component({
   selector: '[app-approval-row]',
@@ -342,7 +342,7 @@ import { CourseApproval } from '../../models/course-approval.model';
   `]
 })
 export class ApprovalRowComponent {
-  @Input() course!: CourseApproval;
+  @Input() course!: UnifiedCourse;
   /** True when THIS course's approve action is in progress */
   @Input() approveLoading = false;
   /** True when THIS course's reject action is in progress */

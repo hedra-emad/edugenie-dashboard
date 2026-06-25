@@ -49,9 +49,9 @@
 
           <div class="course-header-info">
             <div class="badges-row">
-                <span class="status-badge" [ngClass]="'status-' + (course.courseStatus || 'pending')">
+                <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
                 <span class="status-dot"></span>
-                  {{ (course.courseStatus || 'Pending') | titlecase }}
+                  {{ getStatusLabel(course.status) }}
               </span>
               <span class="date-badge">
                 <mat-icon>calendar_today</mat-icon>
@@ -308,7 +308,7 @@
                 <h3>Ready to make a decision?</h3>
                 <p>Review all course content carefully before approving or rejecting.</p>
               </div> -->
-        @if (course.status === 'under_review') {
+        @if (course.status === 'pending' || course.status === 'under_review') {
         <div class="actions-buttons">
           <button class="btn-reject" (click)="openRejectModal()" [disabled]="approveLoading || rejectLoading">
             <mat-icon>cancel</mat-icon>
@@ -340,19 +340,17 @@
     </div>
     }
     @if (course.status === 'rejected') {
-    <div class="status-banner rejected-banner">
-      <mat-icon>cancel</mat-icon>
-      <span>This course has already been rejected.</span>
-    </div>
-    @if (course.rejectionReason) {
-    <div class="card content-card" style="margin-top: 1rem;">
-      <h2 class="card-title" style="color: #d32f2f;">
-        <mat-icon class="card-title-icon" style="color: #d32f2f;">error_outline</mat-icon>
-        Rejection Reason
+    <div class="card content-card rejected-info-card" style="margin-top: 1.5rem; border: 1px solid #fca5a5; background: #fef2f2;">
+      <h2 class="card-title" style="color: #b91c1c; border-bottom: 1px solid #fecaca; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+        <mat-icon class="card-title-icon" style="color: #b91c1c;">error_outline</mat-icon>
+        Rejected Information
       </h2>
-      <p>{{ course.rejectionReason }}</p>
+      <div class="rejected-details" style="color: #7f1d1d; display: flex; flex-direction: column; gap: 8px;">
+        <p style="margin: 0;"><strong>Reason:</strong> <br/>{{ course.rejectionReason || 'No reason provided.' }}</p>
+        <p style="margin: 0;"><strong>Rejected By:</strong> <br/>{{ course.rejectedBy || 'System' }}</p>
+        <p style="margin: 0;"><strong>Rejected At:</strong> <br/>{{ (course.rejectedAt | date:'d MMM y • hh:mm a') || 'N/A' }}</p>
+      </div>
     </div>
-    }
     }
     @if (course.status === 'draft') {
     <div class="status-banner"

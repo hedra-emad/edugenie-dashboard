@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from 
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { CourseApproval } from '../../models/course-approval.model';
+import { UnifiedCourse } from '../../models/course-approval.model';
 import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-status-badge.component';
 
 @Component({
@@ -14,7 +14,7 @@ import { ApprovalStatusBadgeComponent } from '../approval-status-badge/approval-
   styleUrl: './course-details-drawer.component.css'
 })
 export class CourseDetailsDrawerComponent {
-  @Input() course!: CourseApproval;
+  @Input() course!: UnifiedCourse;
   @Input() isOpen = false;
   @Input() actionLoading: Record<string, boolean> = {};
 

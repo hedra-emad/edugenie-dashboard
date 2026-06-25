@@ -111,7 +111,8 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case 'under_review': return 'Pending Review';
+      case 'pending': return 'Pending Review';
+      case 'under_review': return 'Pending Review'; // fallback
       case 'published': return 'Published';
       case 'rejected': return 'Rejected';
       case 'draft': return 'Draft';
