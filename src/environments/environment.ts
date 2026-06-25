@@ -4,4 +4,6 @@ export const environment = {
   lessonUploadPreset: 'lessons',
   thumbnailUploadPreset: 'course_thumbnails',
   studentAppUrl: 'http://localhost:3000',
+  pusherKey: '3a59a972cbaf38e1fb97',
+  pusherCluster: 'us2',
 };
