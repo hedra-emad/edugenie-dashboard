@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
@@ -13,6 +13,7 @@ import { AppLoader } from '../add-loader/app-loader';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { RejectionReasonModalComponent } from '../rejection-reason-modal/rejection-reason-modal.component';
+
 
 export interface UiNotification {
   id: string;
@@ -42,6 +43,7 @@ export interface UiNotification {
 export class NotificationsPageComponent implements OnInit {
   private readonly notificationsService = inject(NotificationsService);
   private readonly dialog = inject(MatDialog);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly unreadCount$: Observable<number> = this.notificationsService.unreadCount$;
   readonly loading$: Observable<boolean> = this.notificationsService.loading$;

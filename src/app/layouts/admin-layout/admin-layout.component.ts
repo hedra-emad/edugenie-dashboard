@@ -1,5 +1,5 @@
 import {
-  Component, HostListener, OnInit,
+  Component, HostListener, OnInit, OnDestroy,
   ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,7 @@ import { NotificationsService } from '../../core/services/notifications';
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly notificationsService = inject(NotificationsService);
 
@@ -28,7 +28,15 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkScreenSize();
-    this.notificationsService.getNotifications(1, 1);
+    // Load initial unread count. Real-time updates come via
+    // NotificationsService.connectPusher() which was already called by
+    // AuthService.setCurrentUser() during the login/redeem flow.
+    this.notificationsService.getNotifications(1, 10);
+  }
+
+  ngOnDestroy(): void {
+    // NotificationsService is a root singleton — Pusher stays alive
+    // across navigation. Only disconnect on logout (handled by clearCurrentUser).
   }
 
   @HostListener('window:resize')
@@ -44,7 +52,6 @@ export class AdminLayoutComponent implements OnInit {
     this.isMobile = w < 768;
     this.isTablet = w >= 768 && w < 1024;
 
-    // Only reset state when crossing a breakpoint
     if (this.isMobile !== wasMobile || this.isTablet !== wasTablet) {
       if (this.isMobile || this.isTablet) {
         this.sidebarExpanded = false;
@@ -66,4 +73,4 @@ export class AdminLayoutComponent implements OnInit {
       this.cdr.markForCheck();
     }
   }
-}
+}

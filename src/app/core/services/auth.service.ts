@@ -22,6 +22,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
+import { NotificationsService } from './notifications';
 
 
 @Injectable({
@@ -30,6 +31,7 @@ import {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly notificationsService = inject(NotificationsService);
 
   private readonly authApiUrl = '/auth';
   private readonly usersApiUrl = '/users';
@@ -53,11 +55,19 @@ export class AuthService {
             if (response.success && response.data) {
               this.setCurrentUser(response.data);
             } else {
-              this.clearCurrentUser();
+              // Only clear if nobody else has already set a user
+              // (e.g. RedeemComponent ran getProfile() before this resolved)
+              if (!this.currentUserSubject.value) {
+                this.clearCurrentUser();
+              }
             }
           }),
           catchError(() => {
-            this.clearCurrentUser();
+            // The GET was fired before the JWT cookie was set (redeem handoff).
+            // Only wipe state if no user has been authenticated by another path.
+            if (!this.currentUserSubject.value) {
+              this.clearCurrentUser();
+            }
             return of(null);
           }),
           map(() => void 0),
@@ -210,14 +220,22 @@ export class AuthService {
     );
   }
 
-  setCurrentUser(user: UserProfile | null): void {
-    this.currentUserSubject.next(user);
-    this.currentUserSignal.set(user);
-  }
+  // auth.service.ts
 
-  clearCurrentUser(): void {
-    this.setCurrentUser(null);
+setCurrentUser(user: UserProfile | null): void {
+  this.currentUserSubject.next(user);
+  this.currentUserSignal.set(user);
+
+  if (user?.id) {
+    this.notificationsService.connectPusher(user.id);
   }
+}
+
+clearCurrentUser(): void {
+  this.notificationsService.disconnectPusher();
+  this.currentUserSubject.next(null);
+  this.currentUserSignal.set(null);
+}
 
   getCurrentUser(): UserProfile | null {
     return this.currentUserSubject.value;
