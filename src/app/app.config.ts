@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
+import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 import { NotificationsService } from './core/services/notifications';
 
 function initializeAuth(authService: AuthService, notificationsService: NotificationsService) {
@@ -39,7 +40,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([apiInterceptor])),
+    provideHttpClient(withInterceptors([apiInterceptor, authErrorInterceptor])),
     provideAnimations(),
     provideToastr({
       positionClass: 'toast-bottom-left',

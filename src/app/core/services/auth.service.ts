@@ -139,6 +139,33 @@ export class AuthService {
     return this.http.post(`${this.authApiUrl}/register`, data);
   }
 
+  /** Looks up the invitee details for an admin invite token. */
+  validateInvite(token: string): Observable<{
+    email: string;
+    firstName: string;
+    lastName: string;
+  }> {
+    return this.http
+      .post<{
+        success: boolean;
+        data: { email: string; firstName: string; lastName: string };
+      }>(`${this.authApiUrl}/validate-invite`, { token })
+      .pipe(map((response) => response.data));
+  }
+
+  /** Accepts an admin invite, sets the session cookie, and populates state. */
+  acceptInvite(token: string, password: string): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.authApiUrl}/accept-invite`, { token, password })
+      .pipe(
+        tap((response) => {
+          if (response.data && response.data.user) {
+            this.setCurrentUser(response.data.user);
+          }
+        }),
+      );
+  }
+
   getProfile(): Observable<ProfileApiResponse> {
     return this.http
       .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`)
@@ -268,13 +295,17 @@ clearCurrentUser(): void {
   }
 
   getStudentAppRedirectUrl(): string {
-    return import.meta.env.NG_APP_STUDENT_APP_URL;
+    return environment.studentAppUrl;
   }
 
-  redirectToStudentApp(): Observable<void> {
-    // Students should never be in the Angular app.
-    // Just redirect them directly — no handoff code needed.
-    window.location.href = import.meta.env['NG_APP_STUDENT_APP_URL'] || 'http://localhost:3000';
+  redirectToStudentApp(exchangeToken?: string): Observable<void> {
+    // Students belong on the Next.js app, which lives on a different domain and
+    // can't read this app's API cookie. Hand the session off via a short-lived
+    // exchange token so the student app can mint its own first-party cookie.
+    const base = environment.studentAppUrl || 'http://localhost:3000';
+    window.location.href = exchangeToken
+      ? `${base}/auth-callback?token=${encodeURIComponent(exchangeToken)}`
+      : base;
     return of(void 0);
   }
 }
