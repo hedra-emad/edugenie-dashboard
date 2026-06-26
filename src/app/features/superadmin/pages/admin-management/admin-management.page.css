@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+.table-card {
+  @apply bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden relative;
+}
+
+.activity-modal-overlay {
+  @apply fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200;
+}
+
+.activity-modal-container {
+  @apply bg-white w-full max-w-[600px] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh];
+}
+
+.timeline-container {
+  @apply relative pl-6 border-l-2 border-slate-100 py-4;
+}
+
+.timeline-item {
+  @apply relative mb-6 last:mb-0;
+}
+
+.timeline-dot {
+  @apply absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-violet-500 shadow-[0_0_0_4px_white];
+}
+
+.timeline-content {
+  @apply bg-slate-50 rounded-xl p-4 border border-slate-100;
+}
+
+.timeline-time {
+  @apply text-xs font-semibold text-slate-400 mb-1 block;
+}
+
+.timeline-action {
+  @apply text-sm font-bold text-slate-700;
+}
+
+.timeline-resource {
+  @apply text-xs text-slate-500 mt-1;
+}
+
+.pagination-controls {
+  @apply flex items-center gap-1;
+}
+
+.page-btn {
+  @apply w-8 h-8 flex items-center justify-center rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.page-btn--active {
+  @apply bg-violet-50 text-violet-700 hover:bg-violet-100;
+}

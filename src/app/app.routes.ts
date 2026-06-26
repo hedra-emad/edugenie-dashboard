@@ -168,6 +168,46 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'course-approvals', pathMatch: 'full' },
       {
+        path: 'command-center',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['superadmin'] },
+        loadComponent: () =>
+          import('./features/superadmin/pages/command-center/command-center.page')
+            .then(m => m.CommandCenterPageComponent)
+      },
+      {
+        path: 'admins',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['superadmin'] },
+        loadComponent: () =>
+          import('./features/superadmin/pages/admin-management/admin-management.page')
+            .then(m => m.AdminManagementPageComponent)
+      },
+      {
+        path: 'payouts',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['superadmin'] },
+        loadComponent: () =>
+          import('./features/superadmin/pages/payouts/payouts.page')
+            .then(m => m.PayoutsPageComponent)
+      },
+      {
+        path: 'platform-config',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['superadmin'] },
+        loadComponent: () =>
+          import('./features/superadmin/pages/platform-config/platform-config.page')
+            .then(m => m.PlatformConfigPageComponent)
+      },
+      {
+        path: 'audit-logs',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['superadmin'] },
+        loadComponent: () =>
+          import('./features/superadmin/pages/audit-logs/audit-logs.page')
+            .then(m => m.AuditLogsPageComponent)
+      },
+      {
         path: 'analytics',
         loadComponent: () =>
           import('./features/instructor-analytics/instructor-analytics.page').then(
