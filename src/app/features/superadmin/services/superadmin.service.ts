@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { UserRole } from '../../../core/models/user-profile.model';
 import {
   SuperAdminDashboardOverviewResponse,
   AdminListItem,
@@ -11,7 +10,9 @@ import {
   PlatformConfigResponse,
   UpdatePlatformConfigDto,
   AuditLogPaginatedResponse,
-  SystemHealthResponse
+  SystemHealthResponse,
+  InviteAdminPayload,
+  InviteAdminResponse
 } from '../models/superadmin.models';
 
 @Injectable({
@@ -31,6 +32,27 @@ export class SuperadminService {
 
   getAdmins(): Observable<AdminListItem[]> {
     return this.http.get<AdminListItem[]>(`${this.baseUrl}/admins`);
+  }
+
+  /** Invite a new administrator by email (sends a one-time acceptance link). */
+  inviteAdmin(payload: InviteAdminPayload): Observable<InviteAdminResponse> {
+    return this.http.post<InviteAdminResponse>(`${this.baseUrl}/admins`, payload);
+  }
+
+  /** Revoke an admin's access (deactivate; reversible). */
+  revokeAdmin(adminId: string): Observable<{ id: string; status: string }> {
+    return this.http.patch<{ id: string; status: string }>(
+      `${this.baseUrl}/admins/${adminId}/revoke`,
+      {}
+    );
+  }
+
+  /** Restore a previously-revoked admin's access. */
+  unrevokeAdmin(adminId: string): Observable<{ id: string; status: string }> {
+    return this.http.patch<{ id: string; status: string }>(
+      `${this.baseUrl}/admins/${adminId}/unrevoke`,
+      {}
+    );
   }
 
   getAdminActivity(id: string, page: number = 1, limit: number = 10): Observable<AdminActivityPaginatedResponse> {
@@ -72,11 +94,4 @@ export class SuperadminService {
     return this.http.get<AuditLogPaginatedResponse>(`${this.baseUrl}/audit-logs`, { params });
   }
 
-  changeUserRole(userId: string, newRole: UserRole | string, confirmSuperAdminChange?: boolean): Observable<any> {
-    const payload: any = { newRole };
-    if (confirmSuperAdminChange !== undefined) {
-      payload.confirmSuperAdminChange = confirmSuperAdminChange;
-    }
-    return this.http.patch(`/users/${userId}/role`, payload);
-  }
 }

@@ -32,8 +32,23 @@ export interface AdminListItem {
   name: string;
   email: string;
   role: string;
+  status: string; // 'active' | 'deactivated'
   lastActiveAt: string | null;
   actionsThisMonth: number;
+}
+
+export interface InviteAdminPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface InviteAdminResponse {
+  message: string;
+  email: string;
+  expiresAt: string;
+  emailSent: boolean;
+  inviteUrl?: string;
 }
 
 export interface AdminActivityItem {
