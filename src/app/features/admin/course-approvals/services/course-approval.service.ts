@@ -352,7 +352,7 @@ export class CourseApprovalService {
       price: c.price,
       totalHours: c.totalHours,
       totalLessons: c.totalLessons,
-      sectionsCount: c.sections?.length || 0,
+      sectionsCount: c.totalSections ?? c.sectionsCount ?? c.sections?.length ?? 0,
       goals: c.goals || [],
       requirements: c.requirements || [],
       createdAt: c.createdAt,
