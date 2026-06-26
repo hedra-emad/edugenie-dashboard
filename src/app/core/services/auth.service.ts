@@ -204,7 +204,7 @@ export class AuthService {
       tap(() => {
         this.clearCurrentUser();
         const nextjsUrl = environment.studentAppUrl;
-        window.location.href = `${nextjsUrl}`;
+        window.location.href = `${nextjsUrl}/api/logout`;
       }),
       map(() => void 0),
     );
