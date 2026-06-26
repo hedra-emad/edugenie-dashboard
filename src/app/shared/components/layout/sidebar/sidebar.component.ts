@@ -57,18 +57,33 @@ export class SidebarComponent implements OnInit {
 
   readonly instructorBottomItems: NavItem[] = [];
 
+  readonly superadminNavItems: NavItem[] = [
+    { icon: 'dashboard',        label: 'Command Center',   route: '/admin/command-center' },
+    { icon: 'admin_panel_settings', label: 'Admins',       route: '/admin/admins' },
+    { icon: 'payments',         label: 'Payouts',          route: '/admin/payouts' },
+    { icon: 'tune',             label: 'Platform Config',  route: '/admin/platform-config' },
+    { icon: 'history',          label: 'Audit Logs',       route: '/admin/audit-logs' },
+    { icon: 'group',            label: 'Users',            route: '/admin/users' },
+    { icon: 'fact_check',       label: 'Approvals',        route: '/admin/course-approvals' },
+    { icon: 'notifications',    label: 'Notifications',    route: '/admin/notifications' },
+  ];
+
+  readonly superadminBottomItems: NavItem[] = [
+    { icon: 'settings', label: 'Settings', route: '/admin/settings' },
+  ];
+
   get navItems(): NavItem[] {
     const role = this.user?.role;
-    return (role === 'admin' || role === 'superadmin')
-      ? this.adminNavItems
-      : this.instructorNavItems;
+    if (role === 'superadmin') return this.superadminNavItems;
+    if (role === 'admin') return this.adminNavItems;
+    return this.instructorNavItems;
   }
 
   get bottomItems(): NavItem[] {
     const role = this.user?.role;
-    return (role === 'admin' || role === 'superadmin')
-      ? this.adminBottomItems
-      : this.instructorBottomItems;
+    if (role === 'superadmin') return this.superadminBottomItems;
+    if (role === 'admin') return this.adminBottomItems;
+    return this.instructorBottomItems;
   }
 
   get isOverlay(): boolean {
