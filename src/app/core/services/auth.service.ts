@@ -199,7 +199,7 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post(`${this.authApiUrl}/auth/logout`, {}).pipe(
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
       tap(() => {
         this.clearCurrentUser();
