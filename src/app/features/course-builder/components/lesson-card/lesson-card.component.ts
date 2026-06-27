@@ -31,6 +31,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { ToastrService } from 'ngx-toastr';
+import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
+import { AttachmentParentType } from '../../../../core/models/attachment.model';
 
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all upload/save lifecycle states
@@ -90,6 +92,7 @@ function initialSnapshot(): UploadSnapshot {
     ExpansionPanelComponent,
     AppLoader,
     SubButtonComponent,
+    AttachmentManagerComponent,
   ],
   templateUrl: './lesson-card.component.html',
   styleUrl: './lesson-card.component.css',
@@ -118,6 +121,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private formDraftInteg = inject(FormDraftIntegrationService);
   private fileDraftService = inject(FileDraftService);
   private toastr = inject(ToastrService);
+  AttachmentParentType = AttachmentParentType;
 
   private destroy$ = new Subject<void>();
   private ignoreRestore = false;

@@ -45,6 +45,8 @@ import { MainButtonComponent } from '../../../../shared/components/main-button/m
 import { extractId } from '../../pages/section-builder/section-builder.component';
 import { PreviewVideoUploadComponent } from "../preview-video-upload/preview-video-upload.component";
 import { CloudinaryService } from '../../../../core/services/cloudinary';
+import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
+import { AttachmentParentType } from '../../../../core/models/attachment.model';
 @Component({
   selector: 'app-section-card',
   standalone: true,
@@ -58,7 +60,8 @@ import { CloudinaryService } from '../../../../core/services/cloudinary';
     DragDropModule,
     MatDialogModule,
     ExpansionPanelComponent,
-    PreviewVideoUploadComponent
+    PreviewVideoUploadComponent,
+    AttachmentManagerComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
@@ -95,6 +98,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   isSaving = false;
   isDeleting = false;
   showDeleteConfirm = false;
+  AttachmentParentType = AttachmentParentType;
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog);
 

@@ -98,6 +98,13 @@
     <app-preview-video-upload *ngIf="courseId" resourceType="course" [ownerId]="courseId"
       [parentForm]="courseForm" ></app-preview-video-upload>
 
+    <!-- Course Attachments -->
+    <app-attachment-manager
+      *ngIf="courseId"
+      [parentType]="AttachmentParentType.COURSE"
+      [courseId]="courseId">
+    </app-attachment-manager>
+
     <!-- Course Details -->
 
     <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-4 space-y-4">

@@ -25,7 +25,6 @@ import { AuthService } from '../../core/services/auth.service';
     SalesTableComponent,
     BaseChartDirective,
     PageSkeletonComponent,
-    ButtonLoadingComponent
   ],
   templateUrl: './instructor-analytics.page.html',
   styleUrl: './instructor-analytics.page.css'
