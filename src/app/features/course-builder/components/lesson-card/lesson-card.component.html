@@ -316,6 +316,15 @@
 
     </div><!-- /VIDEO -->
 
+    <!-- Lesson Attachments -->
+    <app-attachment-manager
+      *ngIf="isUpdateMode"
+      [parentType]="AttachmentParentType.LESSON"
+      [courseId]="courseId"
+      [sectionId]="sectionId"
+      [lessonId]="lessonForm.get('id')?.value">
+    </app-attachment-manager>
+
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">
       <div class="pt-4">

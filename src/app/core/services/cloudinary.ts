@@ -195,6 +195,55 @@ export class CloudinaryService {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // PUBLIC: upload attachment file (signed, resource_type: auto)
+  // Attachments are arbitrary documents (PDF, DOCX, ZIP, etc.)
+  // so we use 'auto' which reliably accepts any file type.
+  // ─────────────────────────────────────────────────────────────
+  uploadAttachment(
+    file: File,
+    folder: string,
+  ): Observable<{
+    secure_url: string;
+    public_id: string;
+    bytes: number;
+    format?: string;
+    original_filename: string;
+  }> {
+    return this.getSignature(folder).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folder);
+        formData.append('timestamp', String(timestamp));
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
+
+        return this.http.post<{
+          secure_url: string;
+          public_id: string;
+          bytes: number;
+          format?: string;
+          original_filename: string;
+        }>(
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+          formData,
+        );
+      }),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PUBLIC: delete an auto-uploaded attachment asset
+  // Cloudinary's destroy API uses 'raw' for non-image/non-video
+  // files uploaded via resource_type 'auto'. Best-effort cleanup.
+  // ─────────────────────────────────────────────────────────────
+  deleteAttachmentAsset(publicId: string): Observable<any> {
+    return this.deleteOldAsset(publicId, 'image').pipe(
+      catchError(() => of(null)),
+    );
+  }
+
   uploadPreviewVideo(
     file: File,
     resourceType: 'course' | 'section',
