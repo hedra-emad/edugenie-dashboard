@@ -3,20 +3,33 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, withLatestFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../../course-approvals/services/course-approval.service';
 import { ToastrService } from 'ngx-toastr';
+import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
+import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 
 @Component({
   selector: 'app-course-details-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, FormsModule, DatePipe, TitleCasePipe],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    MatIconModule,
+    MatTabsModule,
+    FormsModule, 
+    DatePipe, 
+    TitleCasePipe,
+    ApproveCourseDialogComponent,
+    RejectCourseDialogComponent
+  ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'
 })
@@ -42,8 +55,6 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
 
   // ── Reject modal ──────────────────────────────────────────────────────────
   showRejectModal      = false;
-  rejectReason         = '';
-  rejectReasonTouched  = false;
 
   expandedSections: Record<number, boolean> = {};
   playingVideoLessonId: string | null = null;
@@ -77,7 +88,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
         const cached = courses.find(c => c.id === id);
         this.course = { 
           ...data, 
-          status: cached?.status || data.status || 'pending',
+          status: cached?.status || this.service.normalizeStatus(data),
           rejectionReason: cached?.rejectionReason || data.rejectionReason,
           rejectedBy: cached?.rejectedBy || data.rejectedBy,
           rejectedAt: cached?.rejectedAt || data.rejectedAt
@@ -171,8 +182,6 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   /** Open modal — no loading starts here */
   openRejectModal(): void {
     if (this.approveLoading || this.rejectLoading) return;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.showRejectModal     = true;
     this.cdr.markForCheck();
   }
@@ -181,16 +190,12 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   closeRejectModal(): void {
     if (this.rejectLoading) return;
     this.showRejectModal     = false;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.cdr.markForCheck();
   }
 
   /** Confirm rejection — loading starts only here, after admin submits */
-  confirmReject(): void {
-    this.rejectReasonTouched = true;
-    const reason = this.rejectReason.trim();
-    if (!reason || !this.courseId || this.rejectLoading) return;
+  confirmReject(reason: string): void {
+    if (!this.courseId || this.rejectLoading) return;
 
     this.rejectLoading = true;
     this.cdr.markForCheck();
@@ -205,9 +210,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
       )
       .subscribe(success => {
         if (success) {
-          this.showRejectModal     = false;
-          this.rejectReason        = '';
-          this.rejectReasonTouched = false;
+          this.showRejectModal = false;
           this.course = { ...this.course, status: 'rejected', rejectionReason: reason };
           this.cdr.markForCheck();
         }
