@@ -39,7 +39,6 @@ export class SidebarComponent implements OnInit {
     { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
     { icon: 'group', label: 'Users', route: '/admin/users' },
     { icon: 'category', label: 'Categories', route: '/admin/categories' },
-    { icon: 'bar_chart', label: 'Reports', route: '/admin/reports' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
@@ -51,7 +50,6 @@ export class SidebarComponent implements OnInit {
   ];
 
   readonly adminBottomItems: NavItem[] = [
-    { icon: 'help_outline', label: 'Support Center', route: '/admin/support' },
     { icon: 'settings', label: 'Settings', route: '/admin/settings' },
   ];
 

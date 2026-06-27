@@ -125,8 +125,6 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   }
 
   onApprove(courseId: string): void {
-    this._approveLoading[courseId] = true;
-    this.cdr.markForCheck();
     this.approve.emit(courseId);
   }
 
@@ -137,6 +135,13 @@ export class ApprovalsTableComponent implements OnInit, OnDestroy {
   @Input() set rejectConfirmedId(id: string | null) {
     if (id) {
       this._rejectLoading[id] = true;
+      this.cdr.markForCheck();
+    }
+  }
+
+  @Input() set approveConfirmedId(id: string | null) {
+    if (id) {
+      this._approveLoading[id] = true;
       this.cdr.markForCheck();
     }
   }

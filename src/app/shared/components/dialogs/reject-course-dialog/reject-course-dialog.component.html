@@ -1,0 +1,59 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header reject-header">
+      <div class="modal-header-icon reject-icon">
+        <mat-icon>cancel</mat-icon>
+      </div>
+      <div class="modal-header-text">
+        <h3>{{ isBulkMode ? 'Reject Selected Courses' : 'Reject Course' }}</h3>
+        @if (!isBulkMode && courseTitle) {
+        <p class="modal-subtitle">"{{ courseTitle }}"</p>
+        }
+        @if (isBulkMode) {
+        <p class="modal-subtitle">{{ selectedCount }} course{{ selectedCount !== 1 ? 's' : '' }} will be rejected</p>
+        }
+      </div>
+      <button class="modal-close" (click)="cancel.emit()" [disabled]="isLoading" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="dialog-description">
+        Please provide a reason for rejection. This feedback will help the instructor improve the course.
+      </p>
+      <div class="field-group">
+        <label class="field-label" for="rejectReason">
+          Reason of Rejection <span class="field-required">*</span>
+        </label>
+        <textarea id="rejectReason" class="reject-textarea"
+          [class.field-error]="rejectReasonTouched && !rejectReason.trim()" [(ngModel)]="rejectReason"
+          (blur)="rejectReasonTouched = true"
+          placeholder="e.g. Course description is incomplete. Please add detailed module outlines and learning objectives."
+          rows="4" [disabled]="isLoading">
+          </textarea>
+        @if (rejectReasonTouched && !rejectReason.trim()) {
+        <span class="field-error-msg">
+          <mat-icon>error_outline</mat-icon>
+          Rejection reason is required.
+        </span>
+        }
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cancel.emit()" [disabled]="isLoading">
+        Cancel
+      </button>
+      <button class="btn-confirm-reject" (click)="onConfirm()" [disabled]="isLoading || !rejectReason.trim()">
+        @if (isLoading) {
+        <span class="btn-spinner-sm"></span>
+        Rejecting...
+        } @else {
+        <mat-icon>cancel</mat-icon>
+        {{ isBulkMode ? 'Reject Selected' : 'Reject Course' }}
+        }
+      </button>
+    </div>
+  </div>
+</div>

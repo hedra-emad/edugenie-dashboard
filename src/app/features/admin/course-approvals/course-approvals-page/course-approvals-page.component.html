@@ -80,8 +80,8 @@
       </button>
     </div>
     <div class="bulk-actions">
-      <!-- Approve All — only this button loads on approve -->
-      <button class="bulk-approve-btn" (click)="bulkApprove()" [disabled]="bulkApproveLoading || bulkRejectLoading">
+      <!-- Approve All — opens modal, only this button loads on approve -->
+      <button class="bulk-approve-btn" (click)="bulkApproveRequest()" [disabled]="bulkApproveLoading || bulkRejectLoading">
         @if (bulkApproveLoading) { <span class="btn-spinner"></span> }
         @else { <mat-icon>check_circle</mat-icon> }
         Approve All
@@ -105,7 +105,8 @@
     <app-approvals-table [courses]="courses" [actionLoading]="actionLoading" [selectedIds]="selectedCourseIds"
       [currentFilter]="activeTableFilter" (filterChange)="activeTableFilter = $event"
       [rejectConfirmedId]="isRejectLoading && !isBulkRejectMode ? rejectTargetId : null"
-      (viewDetails)="onViewCourse($event)" (approve)="onApprove($event)" (reject)="onRejectRequest($event)"
+      [approveConfirmedId]="isApproveLoading && !isBulkApproveMode ? approveTargetId : null"
+      (viewDetails)="onViewCourse($event)" (approve)="onApproveRequest($event)" (reject)="onRejectRequest($event)"
       (selectionChange)="onSelectionChange($event)">
     </app-approvals-table>
   </div>
@@ -114,71 +115,31 @@
 </div>
 
 <!-- =============================================
+     APPROVE COURSE MODAL (single + bulk)
+     ============================================= -->
+@if (showApproveModal) {
+<app-approve-course-dialog
+  [courseTitle]="approveTargetTitle"
+  [isBulkMode]="isBulkApproveMode"
+  [selectedCount]="selectedCourseIds.size"
+  [isLoading]="isApproveLoading"
+  (confirm)="confirmApprove()"
+  (cancel)="closeApproveModal()">
+</app-approve-course-dialog>
+}
+
+<!-- =============================================
      REJECT COURSE MODAL  (single + bulk)
      ============================================= -->
 @if (showRejectModal) {
-<div class="modal-overlay" (click)="closeRejectModal()">
-  <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
-
-    <div class="modal-header reject-modal-header">
-      <div class="modal-header-icon">
-        <mat-icon>cancel</mat-icon>
-      </div>
-      <div class="modal-header-text">
-        <h3>{{ isBulkRejectMode ? 'Reject Selected Courses' : 'Reject Course' }}</h3>
-        @if (!isBulkRejectMode && rejectTargetTitle) {
-        <p class="modal-subtitle">"{{ rejectTargetTitle }}"</p>
-        }
-        @if (isBulkRejectMode) {
-        <p class="modal-subtitle">{{ selectedCourseIds.size }} course{{ selectedCourseIds.size !== 1 ? 's' : '' }} will
-          be rejected</p>
-        }
-      </div>
-      <button class="modal-close" (click)="closeRejectModal()" [disabled]="isRejectLoading" aria-label="Close">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <p class="reject-description">
-        Please provide a reason for rejection. This feedback will help the instructor improve the course.
-      </p>
-      <div class="field-group">
-        <label class="field-label" for="rejectReason">
-          Reason of Rejection <span class="field-required">*</span>
-        </label>
-        <textarea id="rejectReason" class="reject-textarea"
-          [class.field-error]="rejectReasonTouched && !rejectReason.trim()" [(ngModel)]="rejectReason"
-          (blur)="rejectReasonTouched = true"
-          placeholder="e.g. Course description is incomplete. Please add detailed module outlines and learning objectives."
-          rows="4" [disabled]="isRejectLoading">
-          </textarea>
-        @if (rejectReasonTouched && !rejectReason.trim()) {
-        <span class="field-error-msg">
-          <mat-icon>error_outline</mat-icon>
-          Rejection reason is required.
-        </span>
-        }
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="isRejectLoading">
-        Cancel
-      </button>
-      <button class="btn-confirm-reject" (click)="confirmReject()" [disabled]="isRejectLoading || !rejectReason.trim()">
-        @if (isRejectLoading) {
-        <span class="btn-spinner-sm"></span>
-        Rejecting...
-        } @else {
-        <mat-icon>cancel</mat-icon>
-        {{ isBulkRejectMode ? 'Reject Selected' : 'Reject Course' }}
-        }
-      </button>
-    </div>
-
-  </div>
-</div>
+<app-reject-course-dialog
+  [courseTitle]="rejectTargetTitle"
+  [isBulkMode]="isBulkRejectMode"
+  [selectedCount]="selectedCourseIds.size"
+  [isLoading]="isRejectLoading"
+  (confirm)="confirmReject($event)"
+  (cancel)="closeRejectModal()">
+</app-reject-course-dialog>
 }
 
 <!-- =============================================
@@ -234,7 +195,7 @@
         [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
         <mat-icon>cancel</mat-icon> Reject All
       </button>
-      <button class="modal-bulk-approve-btn" (click)="bulkApprove(); closeSelectedModal()"
+      <button class="modal-bulk-approve-btn" (click)="bulkApproveRequest(); closeSelectedModal()"
         [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
         <mat-icon>check_circle</mat-icon> Approve All
       </button>

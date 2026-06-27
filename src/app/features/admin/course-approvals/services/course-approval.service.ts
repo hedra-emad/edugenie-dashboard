@@ -7,7 +7,7 @@ import {
 import { CourseApproval, Category, AdminStats } from '../models/course-approval.model';
 import { ToastrService } from 'ngx-toastr';
 
-type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published' | 'archived';
+type ApprovalStatus = 'pending' | 'published' | 'rejected' | 'draft' | 'archived';
 
 export interface PendingPage {
   courses: CourseApproval[];
@@ -249,20 +249,18 @@ export class CourseApprovalService {
   approveCourse(courseId: string): Observable<boolean> {
     this.setActionLoading(courseId, true);
     return this.http
-      .patch<{ success: boolean }>(
+      .patch<any>(
         `${this.adminCoursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
       )
       .pipe(
-        tap(res => {
-          if (res.success) {
-            this.updateCourseStatus(courseId, 'approved');
-            this.toastr.success('Course approved successfully');
-            this.refreshStats();
-          }
+        tap(() => {
+          // Any non-error HTTP response means success
+          this.updateCourseStatus(courseId, 'published');
+          this.refreshStats();
         }),
-        map(res => res.success),
+        map(() => true),
         catchError(err => {
-          this.toastr.error(err.error?.message || 'Failed to approve course');
+          this.toastr.error(err.error?.message || 'Failed to publish course');
           return of(false);
         }),
         finalize(() => this.setActionLoading(courseId, false))
@@ -272,18 +270,16 @@ export class CourseApprovalService {
   rejectCourse(courseId: string, reason: string): Observable<boolean> {
     this.setActionLoading(courseId, true);
     return this.http
-      .patch<{ success: boolean }>(
+      .patch<any>(
         `${this.adminCoursesApiUrl}/${courseId}/reject`, { rejectionReason: reason }, { withCredentials: true }
       )
       .pipe(
-        tap(res => {
-          if (res.success) {
-            this.updateCourseStatus(courseId, 'rejected');
-            this.toastr.success('Course rejected successfully');
-            this.refreshStats();
-          }
+        tap(() => {
+          // Any non-error HTTP response means success
+          this.updateCourseStatus(courseId, 'rejected');
+          this.refreshStats();
         }),
-        map(res => res.success),
+        map(() => true),
         catchError(err => {
           this.toastr.error(err.error?.message || 'Failed to reject course');
           return of(false);
@@ -297,6 +293,14 @@ export class CourseApprovalService {
       c.id === courseId ? { ...c, status } : c
     );
     this.coursesSubject.next(updated);
+
+    // If it's no longer pending, update pending page total so UI badges update immediately
+    if (status !== 'pending') {
+      const current = this.pendingPageSubject.value;
+      if (current.total > 0) {
+        this.pendingPageSubject.next({ ...current, total: current.total - 1 });
+      }
+    }
   }
 
   refreshStats(): void {
@@ -339,9 +343,23 @@ export class CourseApprovalService {
     this.actionLoadingSubject.next(current);
   }
 
+  public normalizeStatus(course: any, forceStatus?: string): ApprovalStatus {
+    if (forceStatus) return forceStatus as ApprovalStatus;
+
+    const cs = course.courseStatus || course.status;
+    if (cs === 'rejected' || course.rejectionReason) return 'rejected';
+    if (cs === 'published' || cs === 'approved') return 'published';
+    if (cs === 'under_review' || cs === 'pending') return 'pending';
+    if (cs === 'draft') return 'draft';
+    if (cs === 'archived') return 'archived';
+
+    return (cs || 'pending') as ApprovalStatus;
+  }
+
   private mapCourseApproval(c: any, forceStatus?: ApprovalStatus): CourseApproval {
     const instructor = c.instructor || {};
-    const rawStatus = c.status || c.courseStatus || 'pending';
+    const status = this.normalizeStatus(c, forceStatus);
+    
     return {
       _id: c._id || c.courseId,
       id: c._id || c.id || c.courseId,
@@ -362,8 +380,8 @@ export class CourseApprovalService {
       instructorEmail: instructor.email,
       instructorAvatar: instructor.avatar,
       videoDuration: c.totalHours ? `${c.totalHours}h` : '0h',
-      thumbnail: c.thumbnail?.url || c.thumbnail || 'video_library',
-      status: forceStatus ?? rawStatus,
+      thumbnail: c.thumbnail?.url || c.thumbnail || c.thumbnailUrl || c.coverImage?.url || c.coverImage || c.image?.url || c.image || 'video_library',
+      status: status,
       exceedsLimit: false,
       rejectionReason: c.rejectionReason,
       rejectedBy: c.rejectedBy?.firstName 

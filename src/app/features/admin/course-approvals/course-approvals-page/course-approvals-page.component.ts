@@ -12,12 +12,15 @@ import { finalize } from 'rxjs/operators';
 import { CourseApprovalService } from '../services/course-approval.service';
 import { CourseApproval, AdminStats } from '../models/course-approval.model';
 import { ApprovalsTableComponent, FilterType } from '../components/approvals-table/approvals-table.component';
+import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
+import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-course-approvals-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent, ApproveCourseDialogComponent, RejectCourseDialogComponent],
   templateUrl: './course-approvals-page.component.html',
   styleUrl: './course-approvals-page.component.css'
 })
@@ -25,6 +28,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   private readonly service = inject(CourseApprovalService);
   private readonly cdr     = inject(ChangeDetectorRef);
   private readonly router  = inject(Router);
+  private readonly toastr  = inject(ToastrService);
   private readonly destroy$ = new Subject<void>();
 
   courses: CourseApproval[] = [];
@@ -41,12 +45,17 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   bulkRejectLoading  = false;   // independent flag for Reject All button
   showSelectedModal  = false;
 
+  // ── Approve modal (shared by single-course AND bulk approve) ──────────────
+  showApproveModal    = false;
+  approveTargetId:    string | null = null;
+  approveTargetTitle  = '';
+  isApproveLoading    = false;
+  isBulkApproveMode   = false;
+
   // ── Reject modal (shared by single-course AND bulk reject) ────────────────
   showRejectModal     = false;
   rejectTargetId:      string | null = null;  // null when bulk
   rejectTargetTitle    = '';
-  rejectReason         = '';
-  rejectReasonTouched  = false;
   isRejectLoading      = false;
   /** true → modal is operating on all selected courses, not a single one */
   isBulkRejectMode     = false;
@@ -86,8 +95,14 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/courses', course.id]);
   }
 
-  onApprove(courseId: string): void {
-    this.service.approveCourse(courseId).pipe(takeUntil(this.destroy$)).subscribe();
+  /** Table approve button → open modal (no loading yet) */
+  onApproveRequest(courseId: string): void {
+    const course = this.courses.find(c => c.id === courseId);
+    this.approveTargetId    = courseId;
+    this.approveTargetTitle = course?.title ?? '';
+    this.isBulkApproveMode  = false;
+    this.showApproveModal   = true;
+    this.cdr.markForCheck();
   }
 
   /** Table reject button → open modal (no loading yet) */
@@ -95,11 +110,67 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
     const course = this.courses.find(c => c.id === courseId);
     this.rejectTargetId     = courseId;
     this.rejectTargetTitle  = course?.title ?? '';
-    this.rejectReason       = '';
-    this.rejectReasonTouched = false;
     this.isBulkRejectMode   = false;
     this.showRejectModal    = true;
     this.cdr.markForCheck();
+  }
+
+  // ── Approve modal shared logic ────────────────────────────────────────────
+  closeApproveModal(): void {
+    if (this.isApproveLoading) return;
+    this.showApproveModal   = false;
+    this.approveTargetId    = null;
+    this.isBulkApproveMode  = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmApprove(): void {
+    if (this.isApproveLoading) return;
+    if (!this.isBulkApproveMode && !this.approveTargetId) return;
+
+    this.isApproveLoading = true;
+    this.cdr.markForCheck();
+
+    if (this.isBulkApproveMode) {
+      const ids = Array.from(this.selectedCourseIds);
+      forkJoin(ids.map(id => this.service.approveCourse(id)))
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.isApproveLoading = false;
+            this.bulkApproveLoading = false;
+            this.approveTargetId = null;
+            this.cdr.markForCheck();
+          })
+        )
+        .subscribe(success => {
+          if (success) {
+            this.showApproveModal = false;
+            this.isBulkApproveMode  = false;
+            this.closeSelectedModal();
+            this.toastr.success('All selected courses published successfully.');
+            this.cdr.markForCheck();
+          }
+        });
+    } else {
+      const courseId = this.approveTargetId!;
+      this.service.approveCourse(courseId)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.isApproveLoading = false;
+            this.approveTargetId  = null;
+            this.cdr.markForCheck();
+          })
+        )
+        .subscribe(success => {
+          if (success) {
+            this.showApproveModal = false;
+            this.toastr.success('Course published successfully.');
+            this.cdr.markForCheck();
+          }
+        });
+    }
   }
 
   // ── Reject modal shared logic ─────────────────────────────────────────────
@@ -107,16 +178,12 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
     if (this.isRejectLoading) return;          // block close while in-flight
     this.showRejectModal     = false;
     this.rejectTargetId      = null;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.isBulkRejectMode    = false;
     this.cdr.markForCheck();
   }
 
-  confirmReject(): void {
-    this.rejectReasonTouched = true;
-    const reason = this.rejectReason.trim();
-    if (!reason || this.isRejectLoading) return;
+  confirmReject(reason: string): void {
+    if (this.isRejectLoading) return;
     if (!this.isBulkRejectMode && !this.rejectTargetId) return;
 
     this.isRejectLoading = true;
@@ -135,14 +202,14 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
             this.cdr.markForCheck();
           })
         )
-        .subscribe(() => {
-          this.selectedCourseIds = new Set();
-          this.showRejectModal    = false;
-          this.rejectReason       = '';
-          this.rejectReasonTouched = false;
-          this.isBulkRejectMode   = false;
-          this.closeSelectedModal();
-          this.cdr.markForCheck();
+        .subscribe(success => {
+          if (success) {
+            this.showRejectModal    = false;
+            this.isBulkRejectMode   = false;
+            this.closeSelectedModal();
+            this.toastr.success('Selected courses rejected successfully.');
+            this.cdr.markForCheck();
+          }
         });
     } else {
       // ── Single reject path ────────────────────────────────────────────────
@@ -158,9 +225,8 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
         )
         .subscribe(success => {
           if (success) {
-            this.showRejectModal     = false;
-            this.rejectReason        = '';
-            this.rejectReasonTouched = false;
+            this.showRejectModal = false;
+            this.toastr.success('Course rejected successfully.');
             this.cdr.markForCheck();
           }
         });
@@ -202,22 +268,13 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Bulk actions ──────────────────────────────────────────────────────────
-  bulkApprove(): void {
+  bulkApproveRequest(): void {
     if (this.selectedCourseIds.size === 0) return;
-    this.bulkApproveLoading = true;
+    this.approveTargetId     = null;
+    this.approveTargetTitle  = '';
+    this.isBulkApproveMode   = true;
+    this.showApproveModal    = true;
     this.cdr.markForCheck();
-
-    forkJoin(Array.from(this.selectedCourseIds).map(id => this.service.approveCourse(id)))
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.bulkApproveLoading = false;
-          this.selectedCourseIds  = new Set();
-          this.closeSelectedModal();
-          this.cdr.markForCheck();
-        })
-      )
-      .subscribe();
   }
 
   /**
@@ -226,8 +283,6 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
    */
   bulkRejectRequest(): void {
     if (this.selectedCourseIds.size === 0) return;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.rejectTargetId      = null;
     this.rejectTargetTitle   = '';
     this.isBulkRejectMode    = true;
