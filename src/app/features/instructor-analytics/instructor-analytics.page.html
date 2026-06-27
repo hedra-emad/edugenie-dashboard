@@ -1,11 +1,10 @@
-﻿<div class="min-h-screen font-sans antialiased"
-    style="background:linear-gradient(135deg,#f5f0ff 0%,#ede9fe 30%,#fce7f3 70%,#f0f4ff 100%);">
+﻿<div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
 
-    <!-- â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ ADMIN VIEW â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+
     <ng-container *ngIf="isAdmin">
         <div class="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-6">
 
-            <!-- â”€â”€ Header â”€â”€ -->
+
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight"
@@ -23,7 +22,7 @@
 
             <div *ngIf="adminStatsLoading" class="flex flex-col items-center justify-center py-20 gap-3">
                 <mat-spinner diameter="36"></mat-spinner>
-                <p class="text-[12px] text-slate-400 font-medium">Loading analyticsâ€¦</p>
+                <p class="text-[12px] text-slate-400 font-medium">Loading analytics</p>
             </div>
 
             <ng-container *ngIf="!adminStatsLoading">
@@ -31,9 +30,8 @@
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-4 border border-white/80
-                      hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                        style="box-shadow:0 2px 12px rgba(59,24,146,0.1);">
+                    <div class="bg-white rounded-2xl px-5 py-4 flex items-center gap-4 border border-slate-100 shadow-sm
+                      hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
                             style="background:linear-gradient(135deg,rgba(59,24,146,0.12),rgba(124,58,237,0.08));">
                             <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#3B1892;">payments</mat-icon>
@@ -46,9 +44,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-4 border border-white/80
-                      hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                        style="box-shadow:0 2px 12px rgba(245,158,11,0.12);">
+                    <div class="bg-white rounded-2xl px-5 py-4 flex items-center gap-4 border border-slate-100 shadow-sm
+                      hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div class="w-10 h-10 rounded-xl bg-amber-50 shrink-0 flex items-center justify-center">
                             <mat-icon class="!text-amber-500 !text-[20px] !w-5 !h-5">pending_actions</mat-icon>
                         </div>
@@ -60,9 +57,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-4 border border-white/80
-                      hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                        style="box-shadow:0 2px 12px rgba(16,185,129,0.12);">
+                    <div class="bg-white rounded-2xl px-5 py-4 flex items-center gap-4 border border-slate-100 shadow-sm
+                      hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div class="w-10 h-10 rounded-xl bg-emerald-50 shrink-0 flex items-center justify-center">
                             <mat-icon class="!text-emerald-500 !text-[20px] !w-5 !h-5">group_add</mat-icon>
                         </div>
@@ -74,9 +70,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-4 border border-white/80
-                      hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                        style="box-shadow:0 2px 12px rgba(244,63,94,0.12);">
+                    <div class="bg-white rounded-2xl px-5 py-4 flex items-center gap-4 border border-slate-100 shadow-sm
+                      hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div class="w-10 h-10 rounded-xl bg-rose-50 shrink-0 flex items-center justify-center">
                             <mat-icon class="!text-rose-500 !text-[20px] !w-5 !h-5">report_problem</mat-icon>
                         </div>
@@ -139,8 +134,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/80 overflow-hidden"
-                        style="box-shadow:0 2px 12px rgba(59,24,146,0.08);">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                         <div class="px-6 py-4 border-b border-slate-100/80">
                             <p class="text-[15px] font-bold text-slate-800">User Breakdown</p>
                             <p class="text-[11px] text-slate-400 mt-0.5">Platform users by role</p>
@@ -212,8 +206,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/80 overflow-hidden"
-                        style="box-shadow:0 2px 12px rgba(59,24,146,0.08);">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                         <div class="px-6 py-4 border-b border-slate-100/80 flex items-center justify-between">
                             <div>
                                 <p class="text-[15px] font-bold text-slate-800">Top Instructors</p>
@@ -247,8 +240,7 @@
                     </div>
 
 
-                    <div class="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/80 overflow-hidden"
-                        style="box-shadow:0 2px 12px rgba(59,24,146,0.08);">
+                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                         <div
                             class="px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100/80">
                             <div class="flex items-center gap-3">
@@ -271,7 +263,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full min-w-[400px] border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-100" style="background:rgba(248,250,252,0.8);">
+                                    <tr class="border-b border-slate-100 bg-slate-50">
                                         <th
                                             class="text-left px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.06em]">
                                             Content</th>
@@ -358,8 +350,8 @@
                             </table>
                         </div>
 
-                        <div class="px-6 py-3 flex items-center justify-between border-t border-slate-100/80"
-                            style="background:rgba(248,250,252,0.6);">
+                        <div
+                            class="px-6 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/80">
                             <p class="text-[11px] text-slate-400"><span class="font-bold text-slate-600">{{
                                     flaggedContent.length || 0 }}</span> open reports</p>
                             <nav class="flex items-center gap-1">
@@ -398,14 +390,11 @@
                 <p class="text-slate-400 text-[12px] md:text-sm font-medium mt-0.5">Track your course performance and
                     payouts.</p>
             </div>
-            <button mat-button
-                class="!bg-white !text-[var(--color-text-primary)] !rounded-xl !px-4 !py-2.5 border border-slate-200 shadow-sm active:scale-95 shrink-0 w-fit">
-                <div class="flex items-center gap-2">
-                    <mat-icon class="!text-[18px] opacity-40">account_balance_wallet</mat-icon>
-                    <span class="font-bold text-[9px] uppercase tracking-widest hidden md:inline">Withdraw Funds</span>
-                    <span class="font-bold text-[9px] uppercase tracking-widest md:hidden">Withdraw</span>
-                </div>
-            </button>
+            <!-- Withdraw button removed per request -->
+            <div class="flex items-center gap-2">
+                <button mat-flat-button (click)="exportCsv()" class="!rounded-xl !px-4 !py-2"
+                    style="background:var(--color-primary); color:#fff;">Export CSV</button>
+            </div>
         </header>
         @if (isLoading) {
         <div class="flex justify-center items-center py-20"><mat-spinner diameter="40"></mat-spinner></div>
@@ -416,19 +405,118 @@
             <p class="text-sm opacity-80 mt-1">Please try again later.</p>
         </div>
         } @else if (analyticsData) {
-        <app-stats-cards [stats]="analyticsData.stats"></app-stats-cards>
-        <section class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 overflow-hidden relative"
-            style="box-shadow:var(--shadow-card);">
-            <div class="flex justify-between items-center mb-5">
-                <h2 class="text-[11px] sm:text-base font-black uppercase tracking-wider"
-                    style="color:var(--color-primary);">Revenue Flow</h2>
-                <div
-                    class="bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-[8px] font-black uppercase text-slate-400 whitespace-nowrap">
-                    Last 30 Days</div>
+        <app-stats-cards [stats]="analyticsData"></app-stats-cards>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div
+                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#f8fafc] flex items-center justify-center shrink-0">
+                        <mat-icon class="text-[#3B1892]">menu_book</mat-icon>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Courses</span>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+                        analyticsData.totalCourses | number }}</h3>
+                    <p class="text-[11px] text-slate-400 mt-2">Active courses for your account</p>
+                </div>
             </div>
-            <app-revenue-chart [revenueChart]="analyticsData.revenueChart"></app-revenue-chart>
-        </section>
-        <app-sales-table [recentSales]="analyticsData.recentSales"></app-sales-table>
+
+            <div
+                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#f7fee7] flex items-center justify-center shrink-0">
+                        <mat-icon class="text-emerald-600">star_rate</mat-icon>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Average Rating</span>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+                        analyticsData.averageRating | number:'1.1-1' }}</h3>
+                    <p class="text-[11px] text-slate-400 mt-2">From all course reviews</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#eff6ff] flex items-center justify-center shrink-0">
+                        <mat-icon class="text-sky-600">history</mat-icon>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">New Students</span>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+                        analyticsData.newStudentsThisWeek | number }}</h3>
+                    <p class="text-[11px] text-slate-400 mt-2">This week</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center shrink-0">
+                            <mat-icon class="text-amber-600">trending_up</mat-icon>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Earnings Change</p>
+                            <p class="text-[11px] text-slate-400">Previous vs current</p>
+                        </div>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-full text-sm font-semibold"
+                        [ngClass]="analyticsData.earningsChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'">
+                        {{ analyticsData.earningsChangePercent >= 0 ? '+' : '' }}{{ analyticsData.earningsChangePercent
+                        | number:'1.0-0' }}%
+                    </div>
+                </div>
+                <div class="w-full h-28">
+                    <canvas baseChart [data]="instructorEarningsChangeData" [options]="instructorEarningsChangeOptions"
+                        [type]="'bar'"></canvas>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-3">Compared to previous 30 days</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+                <p class="text-sm font-bold text-slate-700 mb-3">Payouts</p>
+                <div class="relative w-full h-48">
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 flex-col">
+                        <p class="text-xs text-slate-500">Total Earnings</p>
+                        <p class="text-lg font-black text-slate-800">${{ analyticsData.totalEarnings | number:'1.0-0' }}
+                        </p>
+                        <p *ngIf="instructorPayoutHasData" class="text-xs text-slate-500 mt-1">Pending: ${{
+                            analyticsData.pendingPayouts | number:'1.0-0' }}</p>
+                        <p *ngIf="!instructorPayoutHasData" class="text-xs text-slate-400 mt-1">No payout data</p>
+                    </div>
+                    <div class="w-full h-full">
+                        <canvas baseChart [data]="instructorPayoutDonutData" [options]="instructorChartOptions"
+                            [type]="'doughnut'"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-[#eef2ff] flex items-center justify-center shrink-0">
+                            <mat-icon class="text-[#3B1892]">people</mat-icon>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Students</span>
+                    </div>
+                    <div class="text-sm font-semibold text-slate-700">{{ analyticsData.totalStudents | number }}</div>
+                </div>
+                <div class="w-full h-40">
+                    <canvas baseChart [data]="instructorStudentsBarData" [options]="instructorStudentsOptions"
+                        [type]="'bar'"></canvas>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-3">New this week: {{ analyticsData.newStudentsThisWeek | number
+                    }}</p>
+            </div>
+
+        </div>
+
+        <app-sales-table [recentSales]="recentSalesData"></app-sales-table>
         }
     </div>
 

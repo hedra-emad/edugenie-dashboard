@@ -3,8 +3,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatChipsModule } from '@angular/material/chips';
-import { InstructorAnalyticsResponse } from '../../models/instructor-analytics.model';
 
+export interface RecentSale {
+  student?: string;
+  course?: string;
+  date?: string | Date;
+  amount?: number;
+  status?: 'COMPLETED' | 'REFUNDED' | string;
+}
 
 @Component({
   selector: 'app-sales-table',
@@ -13,5 +19,5 @@ import { InstructorAnalyticsResponse } from '../../models/instructor-analytics.m
   styleUrl: './sales-table.component.css',
 })
 export class SalesTableComponent {
-  @Input() recentSales: InstructorAnalyticsResponse['recentSales'] | undefined = [];
+  @Input() recentSales: RecentSale[] | undefined = [];
 }
