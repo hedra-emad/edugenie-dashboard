@@ -17,8 +17,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
-import { takeUntil, finalize, take } from 'rxjs/operators';
+import { Subject, timer, of } from 'rxjs';
+import { takeUntil, finalize, take, switchMap, takeWhile, filter, catchError } from 'rxjs/operators';
 
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
@@ -135,7 +135,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private transcriptPollInterval: any = null;
   private transcriptPollStartTime = 0;
   private readonly TRANSCRIPT_POLL_INTERVAL_MS = 5000;
-  private readonly TRANSCRIPT_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+  // No timeout - poll indefinitely until transcript is ready
   isPollingTranscript = false; // For template binding
 
   // ── Video drop-zone flags ─────────────────────────────────
@@ -238,7 +238,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private setState(patch: Partial<UploadSnapshot>, forceSkipPersist = false): void {
     // Prevent ANY state persistence after permanent delete
     if (this.isPermanentlyDeleted && !forceSkipPersist) {
-      console.log('[STATE] Blocked write after delete:', patch.state);
+      // console.log('[STATE] Blocked write after delete:', patch.state);
       // Still update in-memory state for UI, but don't persist
       this.snap = { ...this.snap, ...patch };
       this.cdr.markForCheck();
@@ -247,13 +247,13 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
     const oldState = this.snap.state;
     this.snap = { ...this.snap, ...patch };
-    console.log(
-      '[STATE]',
-      oldState,
-      '→',
-      this.snap.state,
-      patch
-    );
+    // console.log(
+    //   '[STATE]',
+    //   oldState,
+    //   '→',
+    //   this.snap.state,
+    //   patch
+    // );
     this.persistUploadState();
     this.cdr.markForCheck();
   }
@@ -383,6 +383,20 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────────────────
   ngOnInit() {
     this.initDraft();
+
+    this.lessonForm.get('videoPublicId')?.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      filter(v => !!v),
+      take(1),
+    ).subscribe(() => {
+      const rawId = this.lessonForm.get('id')?.value as string | null;
+      const isRealLesson = !!rawId && !rawId.startsWith('draft_');
+      const transcript = this.lessonForm.get('transcript')?.value as string | null;
+
+      if (isRealLesson && !transcript) {
+        this.startTranscriptPolling(rawId!);
+      }
+    });
   }
   ngOnDestroy() {
     this.teardown();
@@ -461,11 +475,11 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log(
-      'RESTORING',
-      this.draftId,
-      this.draftStateService.getDraft(this.draftId)
-    );
+    // console.log(
+    //   'RESTORING',
+    //   this.draftId,
+    //   this.draftStateService.getDraft(this.draftId)
+    // );
 
     // CASE B: Save was in progress/recovered
     if (recoveredState &&
@@ -574,7 +588,9 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
     // Delete any unsaved Cloudinary asset before replacing
     if (this.snap.videoPublicId && this.s !== 'saved') {
-      this.cloudinaryService.deleteAsset(this.snap.videoPublicId).subscribe();
+      this.cloudinaryService.deleteAsset(this.snap.videoPublicId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }
 
     // Reset form Cloudinary fields
@@ -672,8 +688,15 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     this.stopTranscriptPolling();
     const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
     if (publicId && this.s !== 'saved') {
-      this.cloudinaryService.deleteAsset(publicId, 'video').subscribe();
+      this.cloudinaryService.deleteAsset(publicId, 'video')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }
+
+    // Reset form to use draft ID (no placeholder to delete)
+    const newDraftId = this.formDraftInteg.generateDraftId('lesson', this.sectionId);
+    this.lessonForm.patchValue({ id: newDraftId });
+    this.draftId = newDraftId;
 
     this.selectedVideoFile = null;
     if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
@@ -737,7 +760,9 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
   private handleMaxRetriesExceeded() {
     if (this.snap.videoPublicId) {
-      this.cloudinaryService.deleteAsset(this.snap.videoPublicId).subscribe();
+      this.cloudinaryService.deleteAsset(this.snap.videoPublicId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }
     this.selectedVideoFile = null;
     if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
@@ -770,6 +795,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
           this.setState({ state: 'idle', message: 'Video must not exceed 15 minutes.' });
           return;
         }
+        // Directly upload video - lesson will be created after upload completes
         this.startCloudinaryUpload();
       });
     } else {
@@ -778,6 +804,10 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Uploads video to Cloudinary directly without creating a placeholder first.
+   * The lesson will be created in MongoDB only after the upload completes successfully.
+   */
   private startCloudinaryUpload() {
     this.setState({ state: 'uploading', progress: 0, message: '' });
     this.startProgressTracking();
@@ -789,8 +819,11 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       }
     );
 
+    // No placeholder lesson ID - lesson will be created after upload completes
+    // We don't pass lessonId to Cloudinary since there's no placeholder to update
+
     this.cloudinaryService
-      .uploadVideo(this.selectedVideoFile!, this.courseId, this.sectionId)
+      .uploadVideo(this.selectedVideoFile!, this.courseId, this.sectionId, undefined)
       .subscribe({
         next: ({ progress, response }) => {
           if (progress !== undefined) {
@@ -841,9 +874,15 @@ export class LessonCardComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.stopProgressTracking();
           console.error('[LessonCard] Cloudinary upload failed:', err);
-          this.saveLock = false;
+
           const title = this.lessonForm.get('title')?.value || 'lesson';
           this.toastr.error(`Video upload failed for "${this.trunc(title)}"`);
+
+          // No placeholder to clean up - lesson is only created after upload succeeds
+          // Just reset the form to use draft ID
+          const newDraftId = this.formDraftInteg.generateDraftId('lesson', this.sectionId);
+          this.lessonForm.patchValue({ id: newDraftId });
+          this.draftId = newDraftId;
 
           this.selectedVideoFile = null;
           if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
@@ -898,21 +937,20 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           this.ignoreRestore = true;
-          const currentSection = res.find((s: any) => s._id === this.sectionId);
-          const lessons = currentSection?.lessons || [];
           let newId: string | null = null;
 
           if (!lessonId) {
-            const created = lessons[lessons.length - 1];
-            newId = created?._id || null;
+            newId = res.createdLessonId ?? null;
+
             if (newId) {
               this.lessonForm.patchValue({ id: newId });
-              console.log(
-                '---------------------------[SAVE SUCCESS] new lesson id:',
-                newId
-              );
+
               this.lessonForm.get('id')?.updateValueAndValidity();
-              this.lessonCreated.emit({ index: this.index, id: newId });
+
+              this.lessonCreated.emit({
+                index: this.index,
+                id: newId,
+              });
             }
           }
 
@@ -926,8 +964,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
           };
 
           // Clear persisted upload state on success
-          this.clearPersistedUploadState();
-
           // Success — full progress + terminal saved state
           this.setState({
             state: 'saved',
@@ -945,7 +981,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
             this.startTranscriptPolling(finalLessonId);
           }
 
-          this.clearPersistedUploadState();
           this.clearDraftAfterSave();
 
           // Reconnect form for future editing (for create mode, draftId now has real lesson ID)
@@ -1030,7 +1065,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // Delete
   // ─────────────────────────────────────────────────────────
   deleteLesson() {
-    console.log('id is:', this.lessonForm.get('id')?.value, 's is:', this.s);
+    // console.log('id is:', this.lessonForm.get('id')?.value, 's is:', this.s);
     if (this.isDeleting || this.isPermanentlyDeleted) return;
 
     const rawId = this.lessonForm.get('id')?.value;
@@ -1369,38 +1404,42 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
   // transcript
   // ─────────────────────────────────────────────────────────
-  // Transcript Polling
+  // Transcript Polling (RxJS-based)
   // ─────────────────────────────────────────────────────────
   private startTranscriptPolling(lessonId: string): void {
     this.stopTranscriptPolling(); // safety: clear any existing poll
     this.isPollingTranscript = true;
-    this.transcriptPollStartTime = Date.now();
     this.cdr.markForCheck();
 
-    this.transcriptPollInterval = setInterval(() => {
-      if (Date.now() - this.transcriptPollStartTime > this.TRANSCRIPT_POLL_TIMEOUT_MS) {
-        console.warn('[LessonCard] Transcript polling timed out for lesson', lessonId);
-        this.stopTranscriptPolling();
-        return;
-      }
-
-      this.lessonsService
-        .getTranscriptionStatus(this.courseId, this.sectionId, lessonId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (status) => {
-            if (status.transcriptReady && status.transcript) {
-              this.lessonForm.patchValue({ transcript: status.transcript }, { emitEvent: false });
-              this.stopTranscriptPolling();
-              this.toastr.success('Transcript generated successfully');
-              this.cdr.markForCheck();
-            }
-          },
-          error: (err) => {
-            console.warn('[LessonCard] Transcript poll failed (will retry):', err);
-          },
-        });
-    }, this.TRANSCRIPT_POLL_INTERVAL_MS);
+    timer(0, this.TRANSCRIPT_POLL_INTERVAL_MS).pipe(
+      takeUntil(this.destroy$),
+      switchMap(() =>
+        this.lessonsService.getTranscriptionStatus(this.courseId, this.sectionId, lessonId).pipe(
+          catchError((err) => {
+            console.error('[Transcript Poll] HTTP error', err.status, err.error, {
+              courseId: this.courseId,
+              sectionId: this.sectionId,
+              lessonId,
+            });
+            return of({ videoReady: true, transcriptReady: false, transcript: null });
+          })
+        )
+      ),
+      takeWhile(status => !status.transcriptReady || !status.transcript, true),
+      filter(status => status.transcriptReady && !!status.transcript),
+    ).subscribe({
+      next: (status) => {
+        if (status.transcript) {
+          this.lessonForm.patchValue({ transcript: status.transcript }, { emitEvent: false });
+          this.stopTranscriptPolling();
+          this.toastr.success('Transcript generated successfully');
+          this.cdr.markForCheck();
+        }
+      },
+      error: (err) => {
+        console.warn('[LessonCard] Transcript poll failed (will retry):', err);
+      },
+    });
   }
 
   private stopTranscriptPolling(): void {
