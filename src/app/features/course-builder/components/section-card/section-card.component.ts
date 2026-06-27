@@ -20,7 +20,7 @@ import {
   Validators
 } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Draft system imports
@@ -43,7 +43,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
-
+import { PreviewVideoUploadComponent } from "../preview-video-upload/preview-video-upload.component";
+import { CloudinaryService } from '../../../../core/services/cloudinary';
 @Component({
   selector: 'app-section-card',
   standalone: true,
@@ -56,7 +57,8 @@ import { extractId } from '../../pages/section-builder/section-builder.component
     MatMenuModule,
     DragDropModule,
     MatDialogModule,
-    ExpansionPanelComponent
+    ExpansionPanelComponent,
+    PreviewVideoUploadComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
@@ -69,7 +71,10 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private sectionsService = inject(SectionsService);
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
-  
+  private cloudinaryService = inject(CloudinaryService);
+
+  @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
+
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -137,7 +142,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       sectionId = this.formDraftIntegration.generateDraftId('section', this.courseId);
       this.sectionForm.get('id')?.setValue(sectionId, { emitEvent: false });
     }
-    
+
     this.draftId = sectionId;
 
     // Check if there's existing draft data for this section
@@ -197,7 +202,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const sectionId = isDraft ? null : extractId(rawId);
 
-    const payload = {
+    const payload: any = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
       expectedOutcomes: this.expectedOutcomesArray.value
@@ -206,60 +211,109 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       order: this.index
     };
 
-
     this.isSaving = true;
+    this.cdr.markForCheck();
 
-    const request = sectionId
-      ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
-      : this.sectionsService.addSection(this.courseId, payload);
+    const previewComp = this.previewVideoUploadComponent;
+    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
 
-    request.subscribe({
-      next: (res: any) => {
-        this.isSaving = false;
+    previewUpload$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (videoRes) => {
+        if (videoRes) {
+          payload.previewVideoUrl = videoRes.url;
+          payload.previewVideoPublicId = videoRes.publicId;
 
-        const isNewSection = !sectionId;
+          form.patchValue({
+            previewVideoUrl: videoRes.url,
+            previewVideoPublicId: videoRes.publicId
+          }, { emitEvent: false });
+        } else if (previewComp?.markedForDeletion()) {
+          // User removed the video — send nulls now
+          payload.previewVideoUrl = null;
+          payload.previewVideoPublicId = null;
+        } else {
+          payload.previewVideoUrl = form.get('previewVideoUrl')?.value || null;
+          payload.previewVideoPublicId = form.get('previewVideoPublicId')?.value || null;
+        }
 
-        if (isNewSection) {
-          const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
+        const request = sectionId
+          ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
+          : this.sectionsService.addSection(this.courseId, payload);
 
-          const incomingId = extractId(createdSection);
+        request.subscribe({
+          next: (res: any) => {
+            this.isSaving = false;
 
-          if (incomingId) {
-            if (!form.contains('id')) {
-              form.addControl('id', new FormControl(incomingId));
-            } else {
-              form.get('id')?.setValue(incomingId);
+            const isNewSection = !sectionId;
+
+            // Reset preview video component and handle deferred Cloudinary deletion
+            if (this.previewVideoUploadComponent) {
+              const comp = this.previewVideoUploadComponent;
+
+              // Commit null values into the form if the user removed the video
+              if (comp.markedForDeletion()) {
+                form.patchValue(
+                  { previewVideoUrl: null, previewVideoPublicId: null },
+                  { emitEvent: false }
+                );
+              }
+
+              // Delete the old asset now that the DB save succeeded
+              if (comp.pendingDeletePublicId) {
+                this.cloudinaryService.deleteAsset(comp.pendingDeletePublicId, 'video').subscribe();
+              }
+
+              comp.resetAfterSave();
             }
 
-            form.get('id')?.updateValueAndValidity();
+            if (isNewSection) {
+              const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
+
+              const incomingId = extractId(createdSection);
+
+              if (incomingId) {
+                if (!form.contains('id')) {
+                  form.addControl('id', new FormControl(incomingId));
+                } else {
+                  form.get('id')?.setValue(incomingId);
+                }
+
+                form.get('id')?.updateValueAndValidity();
+              }
+            }
+
+            const sectionTitle = form.get('title')?.value || 'Section';
+            const truncatedTitle = this.truncateName(sectionTitle);
+            if (!sectionId) {
+              this.toastr.success(`"${truncatedTitle}" created successfully`);
+            } else {
+              this.toastr.success(`"${truncatedTitle}" updated successfully`);
+            }
+
+            // Clear draft state after successful save
+            this.clearDraftAfterSave();
+
+            // Disconnect old draft ID explicitly
+            this.formDraftIntegration.disconnectForm(this.draftId);
+
+            // Re-initialize draft system with the new real ID
+            this.initializeDraftSystem();
+
+            form.markAsPristine();
+            form.updateValueAndValidity();
+            this.cdr.markForCheck();
+          },
+
+          error: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
           }
-        }
-
-        const sectionTitle = form.get('title')?.value || 'Section';
-        const truncatedTitle = this.truncateName(sectionTitle);
-        if (!sectionId) {
-          this.toastr.success(`"${truncatedTitle}" created successfully`);
-        } else {
-          this.toastr.success(`"${truncatedTitle}" updated successfully`);
-        }
-
-        // Clear draft state after successful save
-        this.clearDraftAfterSave();
-
-        // Disconnect old draft ID explicitly
-        this.formDraftIntegration.disconnectForm(this.draftId);
-
-        // Re-initialize draft system with the new real ID
-        this.initializeDraftSystem();
-
-        form.markAsPristine();
-        form.updateValueAndValidity();
-        this.cdr.markForCheck();
+        });
       },
-
-      error: () => {
+      error: (err) => {
         this.isSaving = false;
         this.cdr.markForCheck();
+        console.error('Section preview video upload failed:', err);
       }
     });
   }
@@ -297,10 +351,10 @@ export class SectionCardComponent implements OnInit, OnDestroy {
         next: () => {
           this.isDeleting = false;
           this.cdr.markForCheck();
-          
+
           // Clear draft state after successful delete
           this.clearDraftAfterSave();
-          
+
           this.delete.emit(this.index);
         },
         error: (err) => {
@@ -454,5 +508,9 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     if (h > 0) return `${h}h ${m}m`;
     if (m > 0) return `${m}m ${s}s`;
     return `${s}s`;
+  }
+
+  get sectionId(): string {
+    return extractId(this.sectionForm.get('id')?.value) ?? '';
   }
 }

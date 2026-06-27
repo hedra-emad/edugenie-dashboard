@@ -155,7 +155,7 @@ export class CloudinaryService {
   ): Observable<VideoUploadEvent> {
     const folder = `edugenie/courses/videos/${courseId}/sections/${sectionId}`;
     // Include lessonId in context if provided (helps webhook find the lesson)
-    const context = lessonId 
+    const context = lessonId
       ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
       : `courseId=${courseId}|sectionId=${sectionId}`;
 
@@ -192,6 +192,54 @@ export class CloudinaryService {
           }),
         );
       }),
+    );
+  }
+
+  uploadPreviewVideo(
+    file: File,
+    resourceType: 'course' | 'section',
+    ownerId: string,
+    oldPublicId?: string | null,
+  ): Observable<VideoUploadEvent> {
+    const folder = `edugenie/courses/previews/${resourceType}/${ownerId}`;
+
+    return this.getSignature(folder).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folder);
+        formData.append('timestamp', String(timestamp));
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
+
+        const req = new HttpRequest(
+          'POST',
+          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          formData,
+          { reportProgress: true }
+        );
+
+        return this.http.request<CloudinaryUploadResponse>(req).pipe(
+          switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              return of({ progress: Math.round((100 * event.loaded) / event.total) } as VideoUploadEvent);
+            }
+            if (event.type === HttpEventType.Response) {
+              return of({ progress: 100, response: event.body as CloudinaryUploadResponse } as VideoUploadEvent);
+            }
+            return of({} as VideoUploadEvent);
+          }),
+          switchMap((uploadEvent) => {
+            // After completion, delete old asset if provided
+            if (uploadEvent.response && oldPublicId) {
+              return this.deleteOldAsset(oldPublicId, 'video').pipe(
+                switchMap(() => of(uploadEvent))
+              );
+            }
+            return of(uploadEvent);
+          })
+        );
+      })
     );
   }
 }
