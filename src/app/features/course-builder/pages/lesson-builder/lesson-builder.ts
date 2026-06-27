@@ -285,7 +285,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   get hasSavedLessons(): boolean {
     return this.lessonsArray.controls.some(lesson => {
       const id = lesson.get('id')?.value;
-      return id && id !== null;
+      return id && id !== null && !this.draftStateService.isDraftId(String(id));
     });
   }
 

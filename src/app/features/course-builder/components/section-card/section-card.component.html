@@ -4,7 +4,7 @@
   [index]="index" [highlight]="highlight" panelClass="section-panel" [showDragHandle]="true" [showDeleteButton]="true"
   [isDeleting]="isDeleting" [showLessonsButton]="true" [lessonsButtonDisabled]="!isExistingSection"
   [showMobileMenu]="true" [hideMobileExpansionIndicator]="true" (deleteClicked)="requestDelete()"
-  [showQuizButton]="true" [quizButtonDisabled]="!isExistingSection" (lessonsClicked)="onGoToLessons()"
+  [showQuizButton]="true" [quizButtonDisabled]="!isExistingSection || !hasCreatedLessons" (lessonsClicked)="onGoToLessons()"
   (quizClicked)="onGoToQuiz()" 
   [draftId]="draftId" 
   [autoDetectDraftState]="true">
@@ -169,7 +169,7 @@
       </button>
 
       <!-- Desktop: Generate Quiz (secondary action) -->
-      <button type="button" (click)="onGoToQuiz()" [disabled]="!isExistingSection || isDeleting"
+      <button type="button" (click)="onGoToQuiz()" [disabled]="!isExistingSection || !hasCreatedLessons || isDeleting"
         class="hidden sm:block text-[10px] font-bold uppercase tracking-wider transition-all
          hover:bg-[var(--color-primary)] hover:text-white px-3 py-1.5
          rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)]

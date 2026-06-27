@@ -2,6 +2,7 @@ import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoursesService } from '../../../../core/services/courses';
 import { ToastrService } from 'ngx-toastr';
+import { CourseStatus } from '../../../../core/enums/course-status';
 
 @Component({
   selector: 'app-publish-course-button',
@@ -29,6 +30,10 @@ export class PublishCourseButtonComponent {
         this.loading.set(false);
 
         this.toastr.success('Your course has been sent for review and will be available once approved.');
+        
+        if (this.courseId) {
+          this.coursesService.notifyCourseStatusChanged(this.courseId, CourseStatus.UNDER_REVIEW);
+        }
       },
       error: (err) => {
         this.loading.set(false);
