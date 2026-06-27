@@ -9,390 +9,355 @@
   </div>
 
   <!-- Loading State -->
-  @if (loading) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Loading course details...</p>
-    </div>
-  }
+  <app-page-skeleton *ngIf="loading"></app-page-skeleton>
 
   <!-- Error State -->
   @if (error && !loading) {
-    <div class="error-state">
-      <mat-icon>error_outline</mat-icon>
-      <h3>Course Not Found</h3>
-      <p>The requested course could not be loaded. It may have been deleted.</p>
-      <button class="btn-primary" (click)="goBack()">Return to Approvals</button>
-    </div>
+  <div class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Course Not Found</h3>
+    <p>The requested course could not be loaded. It may have been deleted.</p>
+    <button class="btn-primary" (click)="goBack()">Return to Approvals</button>
+  </div>
   }
 
   <!-- Main Content -->
   @if (!loading && !error && course) {
-    <div class="content-wrapper">
+  <div class="content-wrapper">
 
-      <div class="grid-layout">
+    <div class="grid-layout">
 
-        <!-- LEFT COLUMN: Course Info + Content -->
-        <div class="main-column">
+      <!-- LEFT COLUMN: Course Info + Content -->
+      <div class="main-column">
 
-          <!-- Course Overview Card -->
-          <div class="card overview-card">
-            <div class="course-thumbnail">
-              @if (course.thumbnail?.url || (course.thumbnail && course.thumbnail.startsWith('http'))) {
-                <img [src]="course.thumbnail?.url || course.thumbnail" alt="Course Thumbnail" />
-              } @else {
-                <div class="placeholder-thumb">
-                  <mat-icon>video_library</mat-icon>
-                </div>
-              }
-            </div>
-
-            <div class="course-header-info">
-              <div class="badges-row">
-                <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
-                  <span class="status-dot"></span>
-                  {{ (course.status || 'Pending') | titlecase }}
-                </span>
-                <span class="date-badge">
-                  <mat-icon>calendar_today</mat-icon>
-                  Submitted: {{ (course.createdAt | date:'mediumDate') || 'N/A' }}
-                </span>
-              </div>
-              <h1 class="course-title">{{ course.title }}</h1>
-              <p class="course-description">{{ course.description || 'No description provided.' }}</p>
-            </div>
-          </div>
-
-          <!-- Goals -->
-          <div class="card content-card">
-            <h2 class="card-title">
-              <mat-icon class="card-title-icon">emoji_objects</mat-icon>
-              What Students Will Learn
-            </h2>
-            @if (course.goals && course.goals.length > 0) {
-              <div class="tags-container">
-                @for (goal of course.goals; track goal) {
-                  <div class="goal-tag">
-                    <mat-icon>check_circle</mat-icon>
-                    <span>{{ goal }}</span>
-                  </div>
-                }
-              </div>
+        <!-- Course Overview Card -->
+        <div class="card overview-card">
+          <div class="course-thumbnail">
+            @if (course.thumbnail?.url || (course.thumbnail && course.thumbnail.startsWith('http'))) {
+            <img [src]="course.thumbnail?.url || course.thumbnail" alt="Course Thumbnail" />
             } @else {
-              <p class="empty-text">No learning goals specified.</p>
+            <div class="placeholder-thumb">
+              <mat-icon>video_library</mat-icon>
+            </div>
             }
           </div>
 
-          <!-- Requirements -->
-          <div class="card content-card">
-            <h2 class="card-title">
-              <mat-icon class="card-title-icon">checklist</mat-icon>
-              Requirements
-            </h2>
-            @if (course.requirements && course.requirements.length > 0) {
-              <div class="tags-container">
-                @for (req of course.requirements; track req) {
-                  <div class="req-tag">
-                    <mat-icon>arrow_right</mat-icon>
-                    <span>{{ req }}</span>
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="empty-text">No requirements specified.</p>
-            }
-          </div>
-
-          <!-- Course Content / Sections Accordion -->
-          <div class="card content-card">
-            <div class="card-header-flex">
-              <h2 class="card-title">
-                <mat-icon class="card-title-icon">menu_book</mat-icon>
-                Course Content
-              </h2>
-              <span class="meta-info">
-                {{ course.sections?.length || 0 }} sections
-                &bull;
-                {{ course.totalLessons || getTotalLessons() }} lessons
+          <div class="course-header-info">
+            <div class="badges-row">
+              <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
+                <span class="status-dot"></span>
+                {{ getStatusLabel(course.status) }}
+              </span>
+              <span class="date-badge">
+                <mat-icon>calendar_today</mat-icon>
+                Submitted: {{ (course.createdAt | date:'mediumDate') || 'N/A' }}
               </span>
             </div>
+            <h1 class="course-title">{{ course.title }}</h1>
+            <p class="course-description">{{ course.description || 'No description provided.' }}</p>
+          </div>
+        </div>
 
-            @if (course.sections && course.sections.length > 0) {
-              <div class="sections-container">
-                @for (section of course.sections; track section.title; let i = $index) {
-                  <div class="accordion-item">
-                    <button class="accordion-header"
-                            (click)="toggleSection(i)"
-                            [attr.aria-expanded]="!!expandedSections[i]">
-                      <div class="section-title-wrap">
-                        <mat-icon class="expand-icon" [class.rotated]="expandedSections[i]">
-                          expand_more
-                        </mat-icon>
-                        <div class="section-title-block">
-                          <span class="section-number">Section {{ i + 1 }}</span>
-                          <span class="section-name">{{ section.title }}</span>
-                        </div>
-                      </div>
-                      <span class="section-meta">{{ section.lessons?.length || 0 }} lessons</span>
-                    </button>
-
-                    @if (expandedSections[i]) {
-                      <div class="accordion-content">
-
-                        <!-- Section Description -->
-                        @if (section.description) {
-                          <div class="section-description">
-                            <mat-icon>info_outline</mat-icon>
-                            <p>{{ section.description }}</p>
-                          </div>
-                        }
-
-                        <!-- Section Price (if not a basic section) -->
-                        @if (section.price != null && !section.isBasicSection) {
-                          <div class="section-price-badge">
-                            <mat-icon>attach_money</mat-icon>
-                            <span>Section Price: {{ section.price > 0 ? ('$' + section.price) : 'Free' }}</span>
-                          </div>
-                        }
-
-                        <!-- Expected Outcomes -->
-                        @if (section.expectedOutcomes && section.expectedOutcomes.length > 0) {
-                          <div class="outcomes-block">
-                            <h5 class="outcomes-title">Expected Outcomes</h5>
-                            <ul class="outcomes-list">
-                              @for (outcome of section.expectedOutcomes; track outcome) {
-                                <li>
-                                  <mat-icon>check</mat-icon>
-                                  <span>{{ outcome }}</span>
-                                </li>
-                              }
-                            </ul>
-                          </div>
-                        }
-
-                        <!-- Lessons -->
-                        @if (section.lessons && section.lessons.length > 0) {
-                          <div class="lessons-list">
-                            @for (lesson of section.lessons; track lesson.title; let j = $index) {
-                              <div class="lesson-item-wrapper">
-                                <div class="lesson-item"
-                                     [class.clickable-lesson]="lesson.videoUrl"
-                                     (click)="lesson.videoUrl ? toggleVideoPreview(i + '-' + j) : null">
-
-                                  <div class="lesson-icon">
-                                    @if (lesson.type === 'article') {
-                                      <mat-icon>article</mat-icon>
-                                    } @else if (lesson.type === 'quiz') {
-                                      <mat-icon>quiz</mat-icon>
-                                    } @else {
-                                      <mat-icon>play_circle_outline</mat-icon>
-                                    }
-                                  </div>
-
-                                  <div class="lesson-info">
-                                    <span class="lesson-title">{{ lesson.title }}</span>
-                                    @if (lesson.description) {
-                                      <span class="lesson-description">{{ lesson.description }}</span>
-                                    }
-                                    @if (lesson.videoUrl) {
-                                      <span class="badge-preview">Preview</span>
-                                    }
-                                  </div>
-
-                                  <div class="lesson-right">
-                                    @if (lesson.videoDuration) {
-                                      <span class="lesson-duration">
-                                        <mat-icon>schedule</mat-icon>
-                                        {{ lesson.videoDuration }}
-                                      </span>
-                                    }
-                                    @if (lesson.videoUrl) {
-                                      <mat-icon class="play-toggle-icon"
-                                               [class.is-playing]="playingVideoLessonId === (i + '-' + j)">
-                                        {{ playingVideoLessonId === (i + '-' + j) ? 'expand_less' : 'play_arrow' }}
-                                      </mat-icon>
-                                    }
-                                  </div>
-
-                                </div>
-
-                                <!-- HTML5 Video Player -->
-                                @if (playingVideoLessonId === (i + '-' + j) && lesson.videoUrl) {
-                                  <div class="video-preview-container">
-                                    <video controls preload="metadata" class="preview-video" autoplay>
-                                      <source [src]="lesson.videoUrl" type="video/mp4">
-                                      Your browser does not support the video tag.
-                                    </video>
-                                  </div>
-                                }
-                              </div>
-                            }
-                          </div>
-                        } @else {
-                          <p class="empty-text sm">No lessons in this section.</p>
-                        }
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="empty-text">No sections or curriculum added yet.</p>
+        <!-- Goals -->
+        <div class="card content-card">
+          <h2 class="card-title">
+            <mat-icon class="card-title-icon">emoji_objects</mat-icon>
+            What Students Will Learn
+          </h2>
+          @if (course.goals && course.goals.length > 0) {
+          <div class="tags-container">
+            @for (goal of course.goals; track goal) {
+            <div class="goal-tag">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ goal }}</span>
+            </div>
             }
           </div>
-
+          } @else {
+          <p class="empty-text">No learning goals specified.</p>
+          }
         </div>
-        <!-- END LEFT COLUMN -->
 
-        <!-- RIGHT COLUMN: Instructor + Details -->
-        <div class="sidebar-column">
+        <!-- Requirements -->
+        <div class="card content-card">
+          <h2 class="card-title">
+            <mat-icon class="card-title-icon">checklist</mat-icon>
+            Requirements
+          </h2>
+          @if (course.requirements && course.requirements.length > 0) {
+          <div class="tags-container">
+            @for (req of course.requirements; track req) {
+            <div class="req-tag">
+              <mat-icon>arrow_right</mat-icon>
+              <span>{{ req }}</span>
+            </div>
+            }
+          </div>
+          } @else {
+          <p class="empty-text">No requirements specified.</p>
+          }
+        </div>
 
-          <!-- Instructor Profile -->
-          <div class="card instructor-card">
-            <h2 class="card-title sm">Instructor Profile</h2>
-            <div class="instructor-profile">
-              <div class="inst-avatar">
-                @if (course.instructor?.avatar) {
-                  <img [src]="course.instructor.avatar" alt="Instructor Avatar" />
+        <!-- Course Content / Sections Accordion -->
+        <div class="card content-card">
+          <div class="card-header-flex">
+            <h2 class="card-title">
+              <mat-icon class="card-title-icon">menu_book</mat-icon>
+              Course Content
+            </h2>
+            <span class="meta-info">
+              {{ course.sections?.length || 0 }} sections
+              &bull;
+              {{ course.totalLessons || getTotalLessons() }} lessons
+            </span>
+          </div>
+
+          @if (course.sections && course.sections.length > 0) {
+          <div class="sections-container">
+            @for (section of course.sections; track section.title; let i = $index) {
+            <div class="accordion-item">
+              <button class="accordion-header" (click)="toggleSection(i)" [attr.aria-expanded]="!!expandedSections[i]">
+                <div class="section-title-wrap">
+                  <mat-icon class="expand-icon" [class.rotated]="expandedSections[i]">
+                    expand_more
+                  </mat-icon>
+                  <div class="section-title-block">
+                    <span class="section-number">Section {{ i + 1 }}</span>
+                    <span class="section-name">{{ section.title }}</span>
+                  </div>
+                </div>
+                <span class="section-meta">{{ section.lessons?.length || 0 }} lessons</span>
+              </button>
+
+              @if (expandedSections[i]) {
+              <div class="accordion-content">
+
+                <!-- Section Description -->
+                @if (section.description) {
+                <div class="section-description">
+                  <mat-icon>info_outline</mat-icon>
+                  <p>{{ section.description }}</p>
+                </div>
+                }
+
+                <!-- Section Price (if not a basic section) -->
+                @if (section.price != null && !section.isBasicSection) {
+                <div class="section-price-badge">
+                  <mat-icon>attach_money</mat-icon>
+                  <span>Section Price: {{ section.price > 0 ? ('$' + section.price) : 'Free' }}</span>
+                </div>
+                }
+
+                <!-- Expected Outcomes -->
+                @if (section.expectedOutcomes && section.expectedOutcomes.length > 0) {
+                <div class="outcomes-block">
+                  <h5 class="outcomes-title">Expected Outcomes</h5>
+                  <ul class="outcomes-list">
+                    @for (outcome of section.expectedOutcomes; track outcome) {
+                    <li>
+                      <mat-icon>check</mat-icon>
+                      <span>{{ outcome }}</span>
+                    </li>
+                    }
+                  </ul>
+                </div>
+                }
+
+                <!-- Lessons -->
+                @if (section.lessons && section.lessons.length > 0) {
+                <div class="lessons-list">
+                  @for (lesson of section.lessons; track lesson.title; let j = $index) {
+                  <div class="lesson-item-wrapper">
+                    <div class="lesson-item" [class.clickable-lesson]="lesson.videoUrl"
+                      (click)="lesson.videoUrl ? toggleVideoPreview(i + '-' + j) : null">
+
+                      <div class="lesson-icon">
+                        @if (lesson.type === 'article') {
+                        <mat-icon>article</mat-icon>
+                        } @else if (lesson.type === 'quiz') {
+                        <mat-icon>quiz</mat-icon>
+                        } @else {
+                        <mat-icon>play_circle_outline</mat-icon>
+                        }
+                      </div>
+
+                      <div class="lesson-info">
+                        <span class="lesson-title">{{ lesson.title }}</span>
+                        @if (lesson.description) {
+                        <span class="lesson-description">{{ lesson.description }}</span>
+                        }
+                        @if (lesson.videoUrl) {
+                        <span class="badge-preview">Preview</span>
+                        }
+                      </div>
+
+                      <div class="lesson-right">
+                        @if (lesson.videoDuration) {
+                        <span class="lesson-duration">
+                          <mat-icon>schedule</mat-icon>
+                          {{ lesson.videoDuration }}s
+                        </span>
+                        }
+                        @if (lesson.videoUrl) {
+                        <mat-icon class="play-toggle-icon" [class.is-playing]="playingVideoLessonId === (i + '-' + j)">
+                          {{ playingVideoLessonId === (i + '-' + j) ? 'expand_less' : 'play_arrow' }}
+                        </mat-icon>
+                        }
+                      </div>
+
+                    </div>
+
+                    <!-- HTML5 Video Player -->
+                    @if (playingVideoLessonId === (i + '-' + j) && lesson.videoUrl) {
+                    <div class="video-preview-container">
+                      <video controls preload="metadata" class="preview-video" autoplay>
+                        <source [src]="lesson.videoUrl" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                    }
+                  </div>
+                  }
+                </div>
                 } @else {
-                  <div class="inst-initials">{{ getInstructorInitials() }}</div>
+                <p class="empty-text sm">No lessons in this section.</p>
                 }
               </div>
-              <div class="inst-details">
-                <h3 class="inst-name">{{ getInstructorName() }}</h3>
-                <p class="inst-email">{{ course.instructor?.email || 'No email provided' }}</p>
-                <span class="inst-role">{{ (course.instructor?.role || 'Instructor') | titlecase }}</span>
-              </div>
+              }
             </div>
+            }
           </div>
-
-          <!-- Course Details -->
-          <div class="card details-card">
-            <h2 class="card-title sm">Course Details</h2>
-            <ul class="details-list">
-              <li>
-                <span class="detail-label">Category</span>
-                <span class="detail-value">{{ course.category?.name || course.category || 'Uncategorized' }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Level</span>
-                <span class="detail-value">{{ (course.level || 'All Levels') | titlecase }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Price</span>
-                <span class="detail-value font-bold">{{ course.price > 0 ? ('$' + course.price) : 'Free' }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Total Duration</span>
-                <span class="detail-value">{{ course.totalHours ? (course.totalHours + ' Hours') : 'N/A' }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Total Lessons</span>
-                <span class="detail-value">{{ course.totalLessons || getTotalLessons() }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Sections</span>
-                <span class="detail-value">{{ course.sections?.length || 0 }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Submitted</span>
-                <span class="detail-value">{{ (course.createdAt | date:'mediumDate') || 'N/A' }}</span>
-              </li>
-            </ul>
-          </div>
-
+          } @else {
+          <p class="empty-text">No sections or curriculum added yet.</p>
+          }
         </div>
-        <!-- END RIGHT COLUMN -->
 
       </div>
+      <!-- END LEFT COLUMN -->
 
-      <!-- ================================================
-           APPROVAL ACTIONS — sticky bar at the bottom
-           Shown for courses that are still pending/draft
-           ================================================ -->
-      @if (course.status === 'pending' || course.status === 'draft') {
-        <div class="actions-panel">
-          <div class="actions-inner">
-            <div class="actions-text">
-              <h3>Ready to make a decision?</h3>
-              <p>Review all course content carefully before approving or rejecting.</p>
+      <!-- RIGHT COLUMN: Instructor + Details -->
+      <div class="sidebar-column">
+
+        <!-- Instructor Profile -->
+        <div class="card instructor-card">
+          <h2 class="card-title sm">Instructor Profile</h2>
+          <div class="instructor-profile">
+            <div class="inst-avatar">
+              @if (course.instructor?.avatar) {
+              <img [src]="course.instructor.avatar" alt="Instructor Avatar" />
+              } @else {
+              <div class="inst-initials">{{ getInstructorInitials() }}</div>
+              }
             </div>
-            <div class="actions-buttons">
-              <button class="btn-reject" (click)="openRejectModal()" [disabled]="actionLoading">
-                <mat-icon>cancel</mat-icon>
-                Reject Course
-              </button>
-              <button class="btn-approve" (click)="approveCourse()" [disabled]="actionLoading">
-                @if (actionLoading) {
-                  <div class="btn-spinner"></div>
-                } @else {
-                  <mat-icon>check_circle</mat-icon>
-                }
-                Approve Course
-              </button>
+            <div class="inst-details">
+              <h3 class="inst-name">{{ getInstructorName() }}</h3>
+              <p class="inst-email">{{ getInstructorEmail() }}</p>
+              <span class="inst-role">{{ (course.instructor?.role || 'Instructor') | titlecase }}</span>
             </div>
           </div>
         </div>
-      }
 
-      <!-- Already reviewed banner -->
-      @if (course.status === 'approved') {
-        <div class="status-banner approved-banner">
-          <mat-icon>check_circle</mat-icon>
-          <span>This course has been <strong>approved</strong> and is live.</span>
+        <!-- Course Details -->
+        <div class="card details-card">
+          <h2 class="card-title sm">Course Details</h2>
+          <ul class="details-list">
+            <li>
+              <span class="detail-label">Category</span>
+              <span class="detail-value">{{ course.category?.name || course.category || 'Uncategorized' }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Level</span>
+              <span class="detail-value">{{ (course.level || 'All Levels') | titlecase }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Price</span>
+              <span class="detail-value font-bold">{{ course.price > 0 ? ('$' + course.price) : 'Free' }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Total Duration</span>
+              <span class="detail-value">{{ course.totalHours ? (course.totalHours + ' Hours') : 'N/A' }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Total Lessons</span>
+              <span class="detail-value">{{ course.totalLessons || getTotalLessons() }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Sections</span>
+              <span class="detail-value">{{ course.sections?.length || 0 }}</span>
+            </li>
+            <li>
+              <span class="detail-label">Submitted</span>
+              <span class="detail-value">{{ (course.createdAt | date:'mediumDate') || 'N/A' }}</span>
+            </li>
+          </ul>
         </div>
-      }
-      @if (course.status === 'rejected') {
-        <div class="status-banner rejected-banner">
-          <mat-icon>cancel</mat-icon>
-          <span>This course has been <strong>rejected</strong>.</span>
+
+        <!-- ================================================
+               APPROVAL ACTIONS — sticky bar at the bottom
+               Shown for courses that are still pending/draft
+               ================================================ -->
+        <!-- Approval Actions -->
+        <!-- <div class="actions-panel">
+            <div class="actions-inner">
+              <div class="actions-text">
+                <h3>Ready to make a decision?</h3>
+                <p>Review all course content carefully before approving or rejecting.</p>
+              </div> -->
+        @if (course.status === 'pending') {
+        <div class="actions-buttons">
+          <button class="btn-approve" (click)="openApproveModal()" [disabled]="approveLoading || rejectLoading">
+            <app-button-loading [loading]="approveLoading">
+              <mat-icon *ngIf="!approveLoading">check_circle</mat-icon>
+              Approve
+            </app-button-loading>
+          </button>
+          <button class="btn-reject" (click)="openRejectModal()" [disabled]="approveLoading || rejectLoading">
+            <app-button-loading [loading]="rejectLoading">
+              <mat-icon *ngIf="!rejectLoading">cancel</mat-icon>
+              Reject
+            </app-button-loading>
+          </button>
         </div>
-      }
+        }
+        <!-- </div>
+          </div> -->
+        @if (course.status === 'rejected') {
+        <div class="card content-card rejected-info-card"
+          style="margin-top: 1.5rem; border: 1px solid #fca5a5; background: #fef2f2;">
+          <h2 class="card-title"
+            style="color: #b91c1c; border-bottom: 1px solid #fecaca; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <mat-icon class="card-title-icon" style="color: #b91c1c;">error_outline</mat-icon>
+            Rejected Information
+          </h2>
+          <div class="rejected-details" style="color: #7f1d1d; display: flex; flex-direction: column; gap: 8px;">
+            <p style="margin: 0;"><strong>Reason:</strong> <br />{{ course.rejectionReason || 'No reason provided.' }}
+            </p>
+            <p style="margin: 0;"><strong>Rejected By:</strong> <br />{{ course.rejectedBy || 'System' }}</p>
+            <p style="margin: 0;"><strong>Rejected At:</strong> <br />{{ (course.rejectedAt | date:'d MMM y • hh:mm a')
+              || 'N/A' }}</p>
+          </div>
+        </div>
+        }
+      </div>
+      <!-- END RIGHT COLUMN -->
 
     </div>
+
+
+
+  </div>
   }
 
 </div>
 
-<!-- =============================================
-     REJECT MODAL
-     ============================================= -->
+@if (showApproveModal) {
+<app-approve-course-dialog [courseTitle]="course?.title || null" [isLoading]="approveLoading"
+  (confirm)="confirmApprove()" (cancel)="closeApproveModal()">
+</app-approve-course-dialog>
+}
+
 @if (showRejectModal) {
-  <div class="modal-overlay" (click)="closeRejectModal()">
-    <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header reject-header">
-        <h3>Reject Course</h3>
-        <button class="modal-close" (click)="closeRejectModal()" aria-label="Close">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p class="reject-description">
-          Please provide a reason for rejecting
-          <strong>{{ course?.title }}</strong>.
-          The instructor will receive this feedback to make necessary adjustments.
-        </p>
-        <textarea
-          [(ngModel)]="rejectReason"
-          placeholder="Enter rejection reason (required)..."
-          rows="4"
-          class="reject-textarea"
-          [disabled]="actionLoading"
-          autofocus></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="actionLoading">
-          Cancel
-        </button>
-        <button class="btn-confirm-reject"
-                (click)="confirmReject()"
-                [disabled]="!rejectReason.trim() || actionLoading">
-          @if (actionLoading) {
-            <span class="btn-spinner red-spinner"></span>
-          }
-          {{ actionLoading ? 'Processing...' : 'Confirm Rejection' }}
-        </button>
-      </div>
-    </div>
-  </div>
+<app-reject-course-dialog [courseTitle]="course?.title || null" [isLoading]="rejectLoading"
+  (confirm)="confirmReject($event)" (cancel)="closeRejectModal()">
+</app-reject-course-dialog>
 }

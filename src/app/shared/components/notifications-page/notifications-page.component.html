@@ -1,0 +1,214 @@
+<div class="notifications-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Notifications</h1>
+      <p class="page-subtitle">Stay updated on platform activity and important alerts.</p>
+    </div>
+    @if ((unreadCount$ | async)! > 0) {
+      <button class="btn-outline btn-mark-all" (click)="markAllAsRead()" aria-label="Mark all notifications as read">
+        <mat-icon>done_all</mat-icon>
+        Mark all as read
+      </button>
+      <button class="btn-outline btn-clear-all" (click)="deleteAllNotifications()" aria-label="Clear all notifications">
+        <mat-icon>delete_sweep</mat-icon>
+        Clear all
+      </button>
+    }
+  </div>
+
+  <!-- Filter Row (Simplified to All, Unread, Read) -->
+  @if (activeFilter$ | async; as currentFilter) {
+    <div class="filter-row">
+      <button class="filter-chip"
+              [class.active]="currentFilter === 'all'"
+              (click)="setFilter('all')"
+              aria-label="Show all notifications">
+        All
+      </button>
+      <button class="filter-chip"
+              [class.active]="currentFilter === 'unread'"
+              [class.has-badge]="(unreadCount$ | async)! > 0"
+              (click)="setFilter('unread')"
+              aria-label="Show unread notifications">
+        Unread
+      </button>
+      <button class="filter-chip"
+              [class.active]="currentFilter === 'read'"
+              (click)="setFilter('read')"
+              aria-label="Show read notifications">
+        Read
+      </button>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error$ | async; as errorMsg) {
+    <div class="error-state">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p class="error-message">{{ errorMsg }}</p>
+      <button class="btn-outline" (click)="retry()" aria-label="Retry loading notifications">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  }
+
+  <!-- Loading state (only when list is empty) -->
+  @if ((loading$ | async) && !(filteredNotifications$ | async)?.length) {
+    <app-loading text="Loading notifications..."></app-loading>
+  }
+
+  <!-- Notification List -->
+  @if (!(loading$ | async) || (filteredNotifications$ | async)?.length) {
+    @if ((filteredNotifications$ | async); as notifications) {
+      @if (notifications.length) {
+        <div class="notifications-container">
+          @for (notification of notifications; track notification.id) {
+            <div class="notification-card-wrapper"
+                 (touchstart)="onTouchStart($event, notification.id)"
+                 (touchmove)="onTouchMove($event, notification.id, notification)"
+                 (touchend)="onTouchEnd($event, notification.id, notification)"
+                 (mousedown)="onMouseDown($event, notification.id)"
+                 (mousemove)="onMouseMove($event, notification.id, notification)"
+                 (mouseup)="onMouseUp($event, notification.id, notification)"
+                 (mouseleave)="onMouseLeave(notification.id)"
+                 [style.cursor]="getCursorStyle(notification.id)">
+
+              <!-- Mobile Swipe Actions Tray (hidden behind card - aligned left for left-to-right swipe) -->
+              <div class="swipe-actions-tray">
+                <!-- Helper Arrow (appears during sliding/dragging) -->
+                <div class="swipe-arrow-container"
+                     [style.opacity]="getArrowOpacity(notification.id, notification)">
+                  <mat-icon class="swipe-arrow-icon">arrow_forward</mat-icon>
+                </div>
+
+                <!-- Actions Container (appears when fully/near-fully snapped open) -->
+                <div class="swipe-actions-container"
+                     [style.opacity]="getActionsOpacity(notification.id, notification)">
+                  <button *ngIf="!notification.isRead"
+                          class="swipe-action-btn mark-read"
+                          (click)="markAsRead(notification.id); resetSwipe(notification.id)"
+                          aria-label="Mark notification as read">
+                    <mat-icon>check</mat-icon>
+                    <span>Mark read</span>
+                  </button>
+                  <button class="swipe-action-btn delete"
+                          (click)="deleteNotification(notification.id); resetSwipe(notification.id)"
+                          aria-label="Delete notification">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Foreground Card -->
+              <div class="notification-card"
+                   [style.transform]="getCardTransform(notification.id)"
+                   [style.transition]="getCardTransition(notification.id)"
+                   [class.unread]="!notification.isRead"
+                   [ngClass]="'type-' + notification.type"
+                   (click)="onCardClick($event, notification)"
+                   (keydown)="onCardKeydown($event, notification)"
+                   tabindex="0"
+                   role="article"
+                   [attr.aria-label]="(notification.isRead ? 'Read' : 'Unread') + ' notification: ' + notification.title">
+
+                <!-- Left side: Icon Container -->
+                <div class="notification-icon-container" aria-hidden="true">
+                  <mat-icon class="notification-icon">{{ notification.icon }}</mat-icon>
+                </div>
+
+                <!-- Center: Content Area -->
+                <div class="notification-content">
+                  <div class="notification-title-row">
+                    <h3 class="notification-title">
+                      <span *ngIf="!notification.isRead" class="unread-dot" aria-hidden="true">●</span>
+                      {{ notification.title }}
+                    </h3>
+                  </div>
+
+                  <p class="notification-message">{{ notification.message }}</p>
+
+                  <!-- CTA Actions -->
+                  <div class="notification-actions" *ngIf="notification.hasCta || !notification.isRead || (notification.type === 'rejected' && notification.reason)">
+                    <a *ngIf="notification.linkText"
+                       [routerLink]="notification.link"
+                       (click)="markAsReadAndNavigate(notification.id); $event.stopPropagation()"
+                       class="action-link">
+                      {{ notification.linkText }} <span class="arrow-symbol">→</span>
+                    </a>
+                    <button *ngIf="notification.type === 'rejected' && notification.reason"
+                            class="action-btn text-warning"
+                            (click)="openRejectionReasonModal(notification); $event.stopPropagation()"
+                            aria-label="Know why">
+                      Know Why
+                    </button>
+                    <button *ngIf="!notification.isRead"
+                            class="action-btn text-primary"
+                            (click)="markAsRead(notification.id); $event.stopPropagation()"
+                            aria-label="Mark as read">
+                      Mark as read
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Right side: Timestamp & Delete button -->
+                <div class="notification-right-column">
+                  <span class="notification-time" [attr.title]="notification.tooltipDate">
+                    {{ notification.relativeTime }}
+                  </span>
+                  <button class="delete-btn"
+                          (click)="deleteNotification(notification.id); $event.stopPropagation()"
+                          aria-label="Delete notification">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Load more button -->
+        @if (hasNextPage$ | async) {
+          <div class="load-more-wrapper">
+            <button class="btn-outline load-more-btn"
+                    (click)="loadMore()"
+                    [disabled]="(loadingMore$ | async)!"
+                    aria-label="Load more notifications">
+              @if (loadingMore$ | async) {
+                <mat-icon class="spin-icon">sync</mat-icon>
+                Loading…
+              } @else {
+                <mat-icon>expand_more</mat-icon>
+                Load more
+              }
+            </button>
+          </div>
+        }
+      }
+    }
+  }
+
+  <!-- Custom Glow Empty State -->
+  @if (!(loading$ | async) && !(error$ | async) && !(filteredNotifications$ | async)?.length) {
+    <div class="empty-state-container">
+      <div class="empty-bell-glow-wrapper">
+        <div class="empty-bell-glow-circle"></div>
+        <div class="empty-bell-glow-inner">
+          <mat-icon class="empty-bell-icon">notifications</mat-icon>
+          <span class="sleep-z">zZ</span>
+        </div>
+        <div class="sparkle sparkle-1">✦</div>
+        <div class="sparkle sparkle-2">✦</div>
+      </div>
+      <h2 class="empty-state-title">You're all caught up!</h2>
+      <p class="empty-state-subtitle">There are no notifications to review at this time.</p>
+      <button class="btn-refresh" (click)="retry()" aria-label="Refresh notifications">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  }
+</div>

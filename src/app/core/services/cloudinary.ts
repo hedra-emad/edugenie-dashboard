@@ -1,20 +1,25 @@
 
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, switchMap, catchError, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
 
 interface SignatureResponse {
   signature: string;
   timestamp: number;
   apiKey: string;
   cloudName: string;
+  raw_convert: string;
 }
 
 export interface CloudinaryUploadResponse {
   secure_url: string;
   public_id: string;
   duration?: number;
+}
+
+export interface VideoUploadEvent {
+  progress?: number;                  // 0-100, present during upload
+  response?: CloudinaryUploadResponse; // present only on final completion
 }
 
 @Injectable({
@@ -24,7 +29,7 @@ export interface CloudinaryUploadResponse {
 export class CloudinaryService {
   private http = inject(HttpClient);
 
-  private readonly apiBase = environment.apiUrl; // e.g. 'http://localhost:3000'
+  private readonly apiBase = ''; // intercepted by api.interceptor.ts
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend
@@ -59,6 +64,13 @@ export class CloudinaryService {
         withCredentials: true
       })
       .pipe(catchError(() => of(null))); // never block the upload flow
+  }
+
+  deleteAsset(
+    publicId: string,
+    resourceType: 'image' | 'video' = 'video'
+  ): Observable<any> {
+    return this.deleteOldAsset(publicId, resourceType);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -96,13 +108,15 @@ export class CloudinaryService {
       : 'edugenie/courses/thumbnails/pending';
 
     return this.getSignature(folder).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
+        // formData.append('raw_convert', raw_convert);
+
 
         return this.http
           .post<CloudinaryUploadResponse>(
@@ -128,18 +142,25 @@ export class CloudinaryService {
   // PUBLIC: upload lesson video (signed)
   // Videos are stored in the section folder:
   // edugenie/courses/videos/{courseId}/sections/{sectionId}
+  //
+  // Note: lessonId is optional. When provided, it's included in the
+  // Cloudinary context for webhook reference. The new architecture
+  // creates lessons AFTER upload completes, so this may be undefined.
   // ─────────────────────────────────────────────────────────────
   uploadVideo(
     file: File,
     courseId: string,
     sectionId: string,
-  ): Observable<CloudinaryUploadResponse> {
+    lessonId?: string,
+  ): Observable<VideoUploadEvent> {
     const folder = `edugenie/courses/videos/${courseId}/sections/${sectionId}`;
-
-    const context = `courseId=${courseId}|sectionId=${sectionId}`;
+    // Include lessonId in context if provided (helps webhook find the lesson)
+    const context = lessonId 
+      ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
+      : `courseId=${courseId}|sectionId=${sectionId}`;
 
     return this.getSignature(folder, context).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -147,10 +168,28 @@ export class CloudinaryService {
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
+        // formData.append('raw_convert', raw_convert);
 
-        return this.http.post<CloudinaryUploadResponse>(
+
+        const req = new HttpRequest(
+          'POST',
           `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
           formData,
+          { reportProgress: true }
+        );
+
+        return this.http.request<CloudinaryUploadResponse>(req).pipe(
+          switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              const progress = Math.round((100 * event.loaded) / event.total);
+              return of({ progress } as VideoUploadEvent);
+            }
+            if (event.type === HttpEventType.Response) {
+              return of({ progress: 100, response: event.body as CloudinaryUploadResponse } as VideoUploadEvent);
+            }
+            // Ignore Sent, ResponseHeader, etc.
+            return of({} as VideoUploadEvent);
+          }),
         );
       }),
     );

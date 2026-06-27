@@ -1,190 +1,330 @@
 <app-expansion-panel [expanded]="isExpanded()" (expandedChange)="setExpanded($event)"
   [title]="lessonForm.get('title')?.value || 'Untitled Lesson'"
   [subtitle]="'(' + formatDuration(lessonForm.get('videoDuration')?.value || 0) + ' min)'" icon="play_circle_outline"
-  [index]="index" panelClass="lesson-panel" [showDragHandle]="true" [showMoveButtons]="true" [isFirst]="isFirst"
-  [isLast]="isLast" [showDeleteButton]="true" [showLessonsButton]="false" [showMobileMenu]="false"
-  [hideMobileExpansionIndicator]="false" (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()"
-  (moveDownClicked)="moveDown.emit()">
+  [index]="index" panelClass="lesson-panel"
+  [panelClass]="(s === 'save_failed' || s === 'upload_error') ? 'lesson-panel lesson-failed' : 'lesson-panel'"
+  [showDragHandle]="true" [showMoveButtons]="false" [isFirst]="isFirst" [isLast]="isLast" [showDeleteButton]="true"
+  [showLessonsButton]="false" [showMobileMenu]="true" [hideMobileExpansionIndicator]="false"
+  (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()" (moveDownClicked)="moveDown.emit()"
+  [draftId]="draftId" [autoDetectDraftState]="true" [isDeleting]="isDeleting" [hasSaveFailed]="s === 'save_failed'"
+  [hasUploadError]="s === 'upload_error'">
 
-  <!-- ================= CONTENT ================= -->
+  <!-- =================== CONTENT =================== -->
   <div [formGroup]="lessonForm" class="space-y-5">
 
     <div class="sm:hidden text-xs text-slate-500 mb-2">
       Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min
     </div>
-    <!-- TITLE -->
-    <div class="space-y-2">
-      <label class="text-xs font-bold uppercase text-gray-700">
-        Lesson Title *
-      </label>
 
-      <input type="text" 
-             formControlName="title" 
-             placeholder="Enter lesson title..."
-             class="w-full px-4 py-2.5 rounded-lg border
-                    focus:outline-none
-                    focus:ring-2 focus:ring-[var(--color-primary)]
-                    focus:border-[var(--color-primary)]
-                    transition-all duration-200" 
-             [ngClass]="{
-               'border-red-500 bg-red-50': lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
-               'border-green-500': lessonForm.get('title')?.valid && lessonForm.get('title')?.touched,
-               'border-gray-300': lessonForm.get('title')?.untouched
-             }" />
+    <!-- ── TITLE ────────────────────────────────────── -->
+    <div class="space-y-2">
+      <label class="text-xs font-bold uppercase text-gray-700">Lesson Title *</label>
+
+      <input type="text" formControlName="title" placeholder="Enter lesson title…" class="w-full px-4 py-2.5 rounded-lg border focus:outline-none
+               focus:ring-2 focus:ring-[var(--color-primary)]
+               focus:border-[var(--color-primary)] transition-all duration-200" [ngClass]="{
+          'border-red-500 bg-red-50':      lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
+          'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]':   lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty && !isUpdateMode,
+          'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]': lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty &&  isUpdateMode,
+          'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) && !lessonForm.get('title')?.dirty
+        }" />
 
       @if (lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) {
-        @if (lessonForm.get('title')?.hasError('required')) {
-          <span class="text-xs text-red-500 flex items-center gap-1">
-            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
-            Title is required
-          </span>
-        }
-        @if (lessonForm.get('title')?.hasError('pattern')) {
-          <span class="text-xs text-red-500 flex items-center gap-1">
-            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
-            Title cannot be empty spaces
-          </span>
-        }
+      @if (lessonForm.get('title')?.hasError('required')) {
+      <span class="text-xs text-red-500 flex items-center gap-1">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+        Title is required
+      </span>
+      }
+      @if (lessonForm.get('title')?.hasError('pattern')) {
+      <span class="text-xs text-red-500 flex items-center gap-1">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+        Title cannot be empty spaces
+      </span>
+      }
       } @else if (lessonForm.get('title')?.valid && lessonForm.get('title')?.touched) {
-        <span class="text-xs text-green-600 flex items-center gap-1">
-          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
-          Title looks good
-        </span>
+      <span class="text-xs text-green-600 flex items-center gap-1">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check_circle</mat-icon>
+        Title looks good
+      </span>
       } @else {
-        <p class="text-xs text-[var(--color-text-secondary)]">
-          Enter a descriptive title for this lesson
-        </p>
+      <p class="text-xs text-[var(--color-text-secondary)]">Enter a descriptive title for this lesson</p>
       }
     </div>
 
 
-    <!-- VIDEO -->
+    <!-- ── VIDEO ─────────────────────────────────────── -->
     <div class="space-y-4">
-      <label class="text-xs font-bold uppercase text-gray-700">
-        Lesson Video *
-      </label>
+      <label class="text-xs font-bold uppercase text-gray-700">Lesson Video *</label>
+      <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
 
-      <!-- NO VIDEO -->
-      <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile"
-        class="p-8 border-2 border-dashed rounded-[var(--radius-lg)] text-center bg-white hover:border-[var(--color-primary-light)] transition cursor-pointer flex flex-col items-center justify-center"
-        [ngClass]="{
-          'border-red-300 bg-red-50': lessonForm.touched && !isVideoValid,
-          'border-[var(--color-border)]': !lessonForm.touched || isVideoValid
-        }"
-        (click)="fileInput.click()">
+      <!-- (A) DROP ZONE – no file selected, no uploaded URL -->
+      <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile" class="p-8 border-2 border-dashed rounded-[var(--radius-lg)] text-center bg-white
+               hover:border-[var(--color-primary-light)] transition cursor-pointer
+               flex flex-col items-center justify-center" [ngClass]="{
+          'border-red-300 bg-red-50':          videoTouched && !isVideoValid,
+          'border-[var(--color-border)]': !videoTouched || isVideoValid,
+          'border-[var(--color-primary)] bg-[var(--color-primary)]/5': isDraggingVideo
+        }" (click)="fileInput.click()" (dragover)="onVideoDragOver($event)" (dragleave)="onVideoDragLeave($event)"
+        (drop)="onVideoDrop($event)">
 
-        <mat-icon class="text-5xl" 
-          [ngClass]="{
-            'text-red-400': lessonForm.touched && !isVideoValid,
-            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
-          }">
-          cloud_upload
-        </mat-icon>
+        <mat-icon class="text-5xl" [ngClass]="{
+            'text-red-400':                          videoTouched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !videoTouched || isVideoValid
+          }">cloud_upload</mat-icon>
 
-        <div class="text-sm mt-3"
-          [ngClass]="{
-            'text-red-600': lessonForm.touched && !isVideoValid,
-            'text-[var(--color-text-secondary)]': !lessonForm.touched || isVideoValid
+        <div class="text-sm mt-3" [ngClass]="{
+            'text-red-600':                          videoTouched && !isVideoValid,
+            'text-[var(--color-text-secondary)]': !videoTouched || isVideoValid
           }">
           Drag &amp; drop or click to upload lesson video
         </div>
 
-        <div class="mt-3 text-sm font-medium"
-          [ngClass]="{
-            'text-red-600': lessonForm.touched && !isVideoValid,
-            'text-[var(--color-primary)]': !lessonForm.touched || isVideoValid
+        <div class="mt-3 text-sm font-medium" [ngClass]="{
+            'text-red-600':                  videoTouched && !isVideoValid,
+            'text-[var(--color-primary)]': !videoTouched || isVideoValid
           }">
           Browse video
         </div>
 
-        <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
       </div>
 
-      @if (lessonForm.touched && !isVideoValid && !selectedVideoFile) {
-        <span class="text-xs text-red-500 flex items-center gap-1">
-          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
-          Video is required for this lesson
-        </span>
+      @if (videoTouched && !isVideoValid && !selectedVideoFile && !snap.message) {
+      <span class="text-xs text-red-500 flex items-center gap-1">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+        Video is required for this lesson
+      </span>
       }
 
-      <!-- SELECTED FILE + PREVIEW -->
+      <!-- (B) LOCAL FILE SELECTED – preview before upload -->
       <div *ngIf="selectedVideoFile"
-        class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 text-sm text-center">
+        class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border text-sm text-center transition-all duration-300"
+        [ngClass]="{
+          'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]':   !isUpdateMode,
+          'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]':  isUpdateMode
+        }">
 
-        <!-- X BUTTON -->
+        <!-- Remove -->
         <button type="button" (click)="removeSelectedVideo()" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-[var(--color-border)]
-         shadow-sm flex items-center justify-center
-         hover:bg-[var(--color-background)] transition">
+                 shadow-sm flex items-center justify-center hover:bg-[var(--color-background)] transition">
           <mat-icon class="!text-[16px] text-[var(--color-error)]">close</mat-icon>
         </button>
 
-        <!-- VIDEO -->
-        <video [src]="selectedVideoUrl" class="w-full rounded-lg border mb-2" controls>
-        </video>
+        <video [src]="selectedVideoUrl" class="w-full rounded-lg border mb-2" controls></video>
 
-        <!-- FILE INFO -->
-        <div class="font-medium text-[var(--color-text-primary)]">
+        <div class="font-medium text-[var(--color-text-primary)] truncate block w-full px-2">
           {{ selectedVideoFile.name }}
         </div>
-
         <div class="text-xs text-[var(--color-text-secondary)] mt-1">
           Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }}
         </div>
-
       </div>
 
-
-      <!-- UPLOADED VIDEO -->
+      <!-- (C) UPLOADED VIDEO – has Cloudinary URL, no local file -->
       <div *ngIf="lessonForm.get('videoUrl')?.value && !selectedVideoFile"
-        class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 text-sm text-center">
+        class="relative p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/10 border text-sm text-center"
+        [ngClass]="{
+          'border-red-400 shadow-[0_0_8px_rgba(239,68,68,0.2)]': s === 'save_failed',
+          'border-[var(--color-warning)]/30':                      s !== 'save_failed'
+        }">
 
-        <video [src]="lessonForm.get('videoUrl')?.value" controls class="w-full rounded-xl border bg-black">
-        </video>
+        <video [src]="lessonForm.get('videoUrl')?.value" controls class="w-full rounded-xl border bg-black"></video>
 
-        <!-- Replace -->
+        <!-- Save-failed inline UI -->
+        <div *ngIf="showRetryBlock"
+          class="mt-3 p-3 rounded-lg bg-red-50 border border-red-200 flex flex-col items-center gap-2">
+
+          <div class="flex items-center gap-1.5 text-xs text-red-600 font-medium">
+            @if (snap.message && s === 'idle' && !lessonForm.get('videoUrl')?.value && !selectedVideoFile) {
+            <span class="text-xs text-red-500 flex items-center gap-1">
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
+              {{ snap.message }}
+            </span>
+            }
+
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button *ngIf="canRetry" type="button" (click)="retrySave()" [disabled]="isWorking" class="px-3 py-1.5 bg-[#3B1892] hover:bg-[#2c126e]
+         disabled:opacity-50 disabled:cursor-not-allowed
+         text-white text-[11px] font-bold rounded-lg
+         transition-colors duration-150 shadow-sm flex items-center gap-1">
+              <mat-icon *ngIf="s !== 'retrying'" class="!text-[12px] !w-[12px] !h-[12px]">replay</mat-icon>
+              <app-loading *ngIf="s === 'retrying'" [size]="12" color="#ffffff"></app-loading>
+              {{ s === 'retrying' ? 'Retrying…' : 'Retry Save' }}
+            </button>
+
+            <span *ngIf="!canRetry" class="text-[11px] text-red-500 font-medium">
+              Max retries reached — cleaning up…
+            </span>
+          </div>
+
+          <div class="text-[10px] text-gray-400">
+            Video is safe on Cloudinary
+          </div>
+        </div>
+
+        <!-- Replace / Change button — always visible so the user can swap the file in any state -->
         <div class="flex justify-center mt-2">
           <input #replaceInput hidden type="file" accept="video/*" (change)="onFileChange($event)">
-          <app-sub-button [label]="'Replace Video'" [icon]="'upload'" (action)="replaceInput.click()">
+
+          <!-- Normal state: plain Replace Video -->
+          <app-sub-button *ngIf="s !== 'save_failed'" label="Replace Video" icon="upload"
+            (action)="replaceInput.click()">
           </app-sub-button>
+
+          <!-- save_failed state: Change Video (always shown so user isn't stuck) -->
+          <button *ngIf="s === 'save_failed'" type="button" (click)="replaceInput.click()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300
+                   text-[11px] font-semibold text-gray-600 bg-white hover:bg-gray-50
+                   transition-colors duration-150 shadow-sm">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">swap_horiz</mat-icon>
+            Change Video instead
+          </button>
+        </div>
+      </div>
+
+      <!-- (D) Generic message (file unavailable, duration error, upload_error, max_retries) -->
+      <!-- Upload Error State (Cloudinary failed) -->
+      <div *ngIf="s === 'upload_error'" class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+        <div class="flex items-center justify-center gap-2 text-red-700 font-semibold text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
+          Video upload failed
+        </div>
+        <div class="mt-1.5 text-red-600 text-xs leading-relaxed">
+          {{ snap.message }}
+        </div>
+        <button type="button" (click)="fileInput.click()"
+          class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors duration-150 shadow-sm mx-auto">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">video_file</mat-icon>
+          Try Again — Select Video
+        </button>
+      </div>
+
+      <!-- Max Retries Exceeded State -->
+      <div *ngIf="s === 'max_retries_exceeded'" class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+        <div class="flex items-center justify-center gap-2 text-red-700 font-semibold text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
+          Couldn't save lesson
+        </div>
+        <div class="mt-1.5 text-red-600 text-xs leading-relaxed">
+          {{ snap.message }}
+        </div>
+        <button type="button" (click)="fileInput.click()"
+          class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors duration-150 shadow-sm mx-auto">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">video_file</mat-icon>
+          Select Video
+        </button>
+      </div>
+
+      <!-- Generic message (other errors) -->
+      <div *ngIf="snap.message && !showRetryBlock && s !== 'upload_error' && s !== 'max_retries_exceeded'"
+        class="text-xs text-red-500 text-center">
+        {{ snap.message }}
+      </div>
+
+      <!-- (D2) Recovery message for interrupted uploads -->
+      <!-- (D2) Recovery message for interrupted uploads -->
+      <div *ngIf="isRecoveredState"
+        class="text-xs text-center bg-red-50 border border-red-300 rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-center gap-2 text-red-600 font-semibold text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
+          {{ s === 'uploading_recovered' ? 'Upload was interrupted' : 'Save was interrupted' }}
+        </div>
+        <div class="mt-1.5 text-red-500 leading-relaxed">
+          {{ snap.message }}
         </div>
 
       </div>
 
-      <div *ngIf="videoErrorMessage" class="text-xs text-red-500 text-center">
-        {{ videoErrorMessage }}
+      <!-- (E) PROGRESS PANEL – upload → save pipeline -->
+      <!-- (E) PROGRESS PANEL – upload → save pipeline -->
+      <div class="mt-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm space-y-4"
+        *ngIf="showUploadingPanel && !isRecoveredState">
+
+        <!-- Upload stalled warning -->
+        <div *ngIf="s === 'upload_stalled'"
+          class="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-0.5 flex-shrink-0">warning_amber</mat-icon>
+          <span>
+            {{ progressLabel }}
+          </span>
+        </div>
+
+        <!-- Steps -->
+        <div class="flex items-center justify-between text-xs font-semibold">
+
+          <!-- Step 1: Upload Video -->
+          <div class="flex items-center gap-2" [ngClass]="{
+        'text-[#3B1892]':  s === 'uploading' || s === 'uploading_recovered',
+        'text-green-600':  s === 'upload_success' || s === 'saving' || s === 'retrying' || s === 'saved' || s === 'save_failed' || s === 'saving_recovered',
+        'text-gray-400':   s === 'idle' || s === 'video_selected'
+      }">
+            <span class="flex items-center justify-center">
+              <app-loading *ngIf="s === 'uploading'" [size]="16" color="#00B0FF"></app-loading>
+              <mat-icon *ngIf="s === 'uploading_recovered'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-amber-500">pause_circle</mat-icon>
+              <mat-icon *ngIf="s !== 'uploading' && s !== 'uploading_recovered'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-green-500">check_circle</mat-icon>
+            </span>
+            <span>Upload Video</span>
+          </div>
+
+          <div class="flex-1 mx-3 h-px bg-gray-200"></div>
+
+          <!-- Step 2: Save Lesson -->
+          <div class="flex items-center gap-2" [ngClass]="{
+        'text-gray-400':   s === 'uploading' || s === 'upload_success' || s === 'uploading_recovered' || s === 'video_selected',
+        'text-[#3B1892]':  s === 'saving' || s === 'retrying' || s === 'saving_recovered',
+        'text-green-600':  s === 'saved',
+        'text-red-500':    s === 'save_failed'
+      }">
+            <span class="flex items-center justify-center">
+              <mat-icon
+                *ngIf="s === 'uploading' || s === 'upload_success' || s === 'uploading_recovered' || s === 'video_selected'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-gray-300">radio_button_unchecked</mat-icon>
+              <mat-icon *ngIf="s === 'saving_recovered'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-amber-500">pause_circle</mat-icon>
+              <app-loading *ngIf="s === 'saving' || s === 'retrying'" [size]="16" color="#00B0FF"></app-loading>
+              <mat-icon *ngIf="s === 'saved'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-green-500">check_circle</mat-icon>
+              <mat-icon *ngIf="s === 'save_failed'"
+                class="!text-[16px] !w-[16px] !h-[16px] text-red-500">error</mat-icon>
+            </span>
+            <span>Save Lesson</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
+          <div class="h-full rounded-full transition-all duration-300 shadow-sm" [ngClass]="progressBarClass"
+            [style.width.%]="snap.progress">
+          </div>
+        </div>
+
+        <!-- Status label -->
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-medium" [ngClass]="{
+        'text-gray-600':   s === 'uploading' || s === 'upload_success' || s === 'saving' || s === 'retrying',
+        'text-amber-600':  s === 'uploading_recovered' || s === 'saving_recovered' || s === 'upload_stalled',
+        'text-green-600':  s === 'saved',
+        'text-red-500':    s === 'save_failed' || s === 'upload_error' || s === 'max_retries_exceeded'
+      }">
+            {{ progressLabel }}
+          </span>
+        </div>
       </div>
 
+    </div><!-- /VIDEO -->
 
-      <!-- UPLOADING -->
-      <div class="mt-3">
-
-        <app-loading *ngIf="isUploading" [size]="24" color="#2563eb" text="Uploading..."></app-loading>
-      </div>
-
-      <!-- ERROR -->
-      <div *ngIf="uploadError" class="text-xs text-red-500 text-center">
-        Upload failed
-      </div>
-
-    </div>
-
-
-    <!-- FOOTER -->
+    <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">
-
       <div class="pt-4">
-        <app-action-bar 
-          [actionLabel]="getButtonLabel()" 
-          [actionIcon]="'save'"
-          [loading]="isSaving" 
-          [disabled]="shouldDisableButton" 
-          (action)="saveLesson()">
+        <app-action-bar [actionLabel]="getButtonLabel()" [actionIcon]="'save'"
+          [loading]="s === 'saving' || s === 'retrying'" [disabled]="shouldDisableButton" (action)="saveLesson()">
         </app-action-bar>
       </div>
-
-
     </div>
 
-  </div>
+  </div><!-- /formGroup -->
 
 </app-expansion-panel>

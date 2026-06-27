@@ -81,3 +81,31 @@
 ::ng-deep .mat-expansion-panel-header .active\:cursor-grabbing:active {
   cursor: grabbing !important;
 }
+
+/* ===== Deleting Overlay and Fading ===== */
+::ng-deep .mat-expansion-panel-deleting {
+  position: relative !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+::ng-deep .mat-expansion-panel-deleting .mat-expansion-panel-header,
+::ng-deep .mat-expansion-panel-deleting .mat-expansion-panel-content {
+  opacity: 0.45 !important;
+}
+
+.deleting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-surface) 65%, transparent);
+  z-index: 50;
+  border-radius: inherit;
+  pointer-events: auto !important;
+  cursor: not-allowed !important;
+}

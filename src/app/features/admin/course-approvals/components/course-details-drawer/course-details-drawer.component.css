@@ -139,6 +139,34 @@
 }
 
 /* Details Grid */
+.rejection-info {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+  padding: 16px;
+  border-radius: 8px;
+}
+.rejection-title {
+  color: #b91c1c !important;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+  border-bottom: 1px solid #fecaca !important;
+}
+.rejection-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rejection-field .label {
+  font-weight: 600;
+  color: #7f1d1d;
+  margin-right: 8px;
+}
+.rejection-field .value {
+  color: #991b1b;
+}
+
+/* Details Grid */
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

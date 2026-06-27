@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   avatar?: string;
+  avatarPublicId?: string;
 }
 
 export interface ProfileApiResponse {
@@ -19,6 +20,7 @@ export interface LoginResponse {
   data: {
     message: string;
     user: UserProfile;
+    exchangeToken?: string;
   };
 }
 

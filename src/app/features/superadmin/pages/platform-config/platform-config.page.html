@@ -1,0 +1,181 @@
+<div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
+  <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div>
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">tune</mat-icon>
+          Super Admin
+        </div>
+        <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight mb-2" style="color:#3B1892;">
+          Platform Configuration
+        </h1>
+        <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
+          Manage global platform settings that affect all users and transactions.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3">
+        @if (isDirty) {
+        <button
+          class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors bg-white shadow-sm"
+          (click)="discardChanges()">
+          Discard Changes
+        </button>
+        }
+        <button
+          class="px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm flex items-center gap-2"
+          [ngClass]="isDirty ? 'bg-violet-600 hover:bg-violet-700 hover:shadow-md' : 'bg-slate-300 cursor-not-allowed'"
+          [disabled]="!isDirty" (click)="openConfirmModal()">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">save</mat-icon>
+          Save Configuration
+        </button>
+      </div>
+    </div>
+
+    <!-- Config Card -->
+    <div class="config-card max-w-3xl">
+      @if (isLoading) {
+      <div class="flex flex-col gap-6 animate-pulse">
+        <div class="h-16 bg-slate-200 rounded-xl w-full"></div>
+        <div class="h-16 bg-slate-200 rounded-xl w-full"></div>
+        <div class="h-16 bg-slate-200 rounded-xl w-full"></div>
+      </div>
+      } @else {
+      <div class="grid grid-cols-1 gap-8">
+
+        <!-- Platform Fee -->
+        <div class="form-group">
+          <label class="form-label">Platform Fee Percentage</label>
+          <p class="text-xs text-slate-500 mb-3">The percentage of each course sale taken by the platform.</p>
+          <div class="relative max-w-xs">
+            <input type="number" min="0" max="100" class="form-input pr-10"
+              [(ngModel)]="formConfig.platformFeePercent" />
+            <mat-icon
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">percent</mat-icon>
+          </div>
+        </div>
+
+        <!-- Instructor Share Percentage -->
+        <div class="form-group">
+          <label class="form-label">Instructor Share Percentage</label>
+          <p class="text-xs text-slate-500 mb-3">The percentage of each course sale given to the instructor.</p>
+          <div class="relative max-w-xs">
+            <input type="number" min="0" max="100" class="form-input pr-10"
+              [(ngModel)]="formConfig.instructorSharePercent" />
+            <mat-icon
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">percent</mat-icon>
+          </div>
+        </div>
+
+        <!-- Minimum Payout Threshold -->
+        <div class="form-group">
+          <label class="form-label">Minimum Payout Threshold</label>
+          <p class="text-xs text-slate-500 mb-3">Instructors must reach this amount before they can be paid out.</p>
+          <div class="relative max-w-xs">
+            <mat-icon
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">attach_money</mat-icon>
+            <input type="number" min="0" class="form-input pl-10" [(ngModel)]="formConfig.minimumPayoutThreshold" />
+          </div>
+        </div>
+
+        <div class="h-px bg-slate-100 my-2"></div>
+
+        <!-- Maintenance Mode -->
+        <div class="form-group">
+          <div class="toggle-container" [ngClass]="{'border-amber-200 bg-amber-50/50': formConfig.maintenanceMode}">
+            <div>
+              <label class="form-label !mb-1 flex items-center gap-2">
+                Maintenance Mode
+                @if (formConfig.maintenanceMode) {
+                <span
+                  class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-700 uppercase">Active</span>
+                }
+              </label>
+              <p class="text-xs text-slate-500 max-w-md">
+                When active, non-admins will see a maintenance screen and will not be able to access the platform.
+              </p>
+            </div>
+            <button type="button" class="toggle-switch shrink-0" role="switch"
+              [attr.aria-checked]="formConfig.maintenanceMode" (click)="toggleMaintenanceMode()">
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      }
+    </div>
+
+    <!-- Confirm Modal -->
+    @if (showConfirmModal) {
+    <div class="modal-overlay" (click)="closeConfirmModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+              <mat-icon>warning</mat-icon>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Apply Changes</h2>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-5">
+            You are about to change global platform settings. These changes take effect immediately across the entire
+            platform.
+          </p>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+            <ul class="text-sm text-slate-700 font-medium space-y-2">
+              @if (originalConfig?.platformFeePercent !== formConfig.platformFeePercent) {
+              <li class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">Platform Fee:</span>
+                <span class="line-through text-slate-400 mr-2">{{ originalConfig?.platformFeePercent }}%</span>
+                <span class="text-violet-600 font-bold ml-auto">{{ formConfig.platformFeePercent }}%</span>
+              </li>
+              }
+              @if (originalConfig?.minimumPayoutThreshold !== formConfig.minimumPayoutThreshold) {
+              <li class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">Payout Threshold:</span>
+                <span class="line-through text-slate-400 mr-2">${{ originalConfig?.minimumPayoutThreshold }}</span>
+                <span class="text-violet-600 font-bold ml-auto">${{ formConfig.minimumPayoutThreshold }}</span>
+              </li>
+              }
+              @if (originalConfig?.maintenanceMode !== formConfig.maintenanceMode) {
+              <li class="flex justify-between pt-1">
+                <span class="text-slate-500">Maintenance Mode:</span>
+                <span class="text-amber-600 font-bold uppercase ml-auto">
+                  {{ formConfig.maintenanceMode ? 'Enabled' : 'Disabled' }}
+                </span>
+              </li>
+              }
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-end gap-3">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              (click)="closeConfirmModal()" [disabled]="isSaving">
+              Cancel
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              (click)="saveConfig()" [disabled]="isSaving">
+              @if (isSaving) {
+              <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+              Saving...
+              } @else {
+              <mat-icon class="!w-4 !h-4 !text-[16px]">check_circle</mat-icon>
+              Confirm Save
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+  </div>
+</div>

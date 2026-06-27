@@ -18,6 +18,14 @@ export const guestGuard: CanActivateFn = () => {
         ? authService.getHomeRouteForRole(user.role)
         : '/settings';
 
+      if (authService.isExternalRedirect(homeRoute)) {
+        // If a student lands on the dashboard login page but is already authenticated,
+        // it means they logged out of the Next.js app but the dashboard API still has their cookie.
+        // We log them out here so they can actually see the login page and get a fresh token.
+        authService.logout().subscribe();
+        return true;
+      }
+
       return router.createUrlTree([homeRoute]);
     }),
   );

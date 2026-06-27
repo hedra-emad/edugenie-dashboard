@@ -1,6 +1,6 @@
 <div class="drawer-overlay" [class.open]="isOpen" (click)="onClose()">
   <div class="drawer-container" [class.open]="isOpen" (click)="$event.stopPropagation()">
-    
+
     <!-- Drawer Header -->
     <div class="drawer-header">
       <h2>Course Details</h2>
@@ -13,7 +13,9 @@
     <div class="drawer-content" *ngIf="course">
       <div class="course-thumbnail-section">
         <div class="thumbnail-wrapper">
-          <img *ngIf="course.thumbnail && course.thumbnail !== 'image' && course.thumbnail !== 'video_library' && !course.thumbnail.includes('http'); else iconThumb" [src]="course.thumbnail" alt="Thumbnail" />
+          <img
+            *ngIf="course.thumbnail && course.thumbnail !== 'image' && course.thumbnail !== 'video_library' && !course.thumbnail.includes('http'); else iconThumb"
+            [src]="course.thumbnail" alt="Thumbnail" />
           <ng-template #iconThumb>
             <mat-icon class="fallback-icon">{{ course.thumbnail || 'video_library' }}</mat-icon>
           </ng-template>
@@ -21,6 +23,24 @@
         <div class="course-basic">
           <h3>{{ course.title }}</h3>
           <app-approval-status-badge [status]="course.status"></app-approval-status-badge>
+        </div>
+      </div>
+
+      <div class="details-section rejection-info" *ngIf="course.status === 'rejected'">
+        <h4 class="rejection-title">Rejection Information</h4>
+        <div class="rejection-card">
+          <div class="rejection-field">
+            <span class="label">Reason:</span>
+            <span class="value">{{ course.rejectionReason || 'No reason provided.' }}</span>
+          </div>
+          <div class="rejection-field">
+            <span class="label">Rejected By:</span>
+            <span class="value">{{ course.rejectedBy || 'System' }}</span>
+          </div>
+          <div class="rejection-field">
+            <span class="label">Rejected At:</span>
+            <span class="value">{{ (course.rejectedAt | date:'medium') || 'N/A' }}</span>
+          </div>
         </div>
       </div>
 
@@ -59,7 +79,8 @@
       <div class="details-section">
         <h4>Instructor Information</h4>
         <div class="instructor-card">
-          <img *ngIf="course.instructorAvatar; else defaultAvatar" [src]="course.instructorAvatar" class="inst-avatar" />
+          <img *ngIf="course.instructorAvatar; else defaultAvatar" [src]="course.instructorAvatar"
+            class="inst-avatar" />
           <ng-template #defaultAvatar>
             <div class="inst-avatar-placeholder"><mat-icon>person</mat-icon></div>
           </ng-template>
@@ -100,12 +121,8 @@
     <div class="reject-modal" (click)="$event.stopPropagation()">
       <h3>Reject Course</h3>
       <p>Please provide a reason for rejecting this course. The instructor will receive this feedback.</p>
-      
-      <textarea 
-        [(ngModel)]="rejectReason" 
-        placeholder="Enter rejection reason here..." 
-        rows="4"
-        class="reject-textarea"
+
+      <textarea [(ngModel)]="rejectReason" placeholder="Enter rejection reason here..." rows="4" class="reject-textarea"
         [disabled]="isLoading">
       </textarea>
 

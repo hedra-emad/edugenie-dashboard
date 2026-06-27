@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/services/auth.service';
 import { UserProfile } from '../../core/models/user-profile.model';
+import { NotificationsService } from '../../core/services/notifications';
 
 @Component({
   selector: 'app-admin-header',
@@ -13,6 +14,9 @@ import { UserProfile } from '../../core/models/user-profile.model';
 })
 export class AdminHeaderComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly notificationsService = inject(NotificationsService);
+
+  readonly unreadCount$ = this.notificationsService.unreadCount$;
 
   @Output() toggleSidebar = new EventEmitter<void>();
 
@@ -32,6 +36,7 @@ export class AdminHeaderComponent implements OnInit {
     this.authService.waitForAuthInit().subscribe(() => {
       this.adminUser = this.authService.getCurrentUser();
     });
+    this.notificationsService.getNotifications(1, 1);
   }
 
   get adminInitials(): string {

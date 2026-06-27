@@ -6,4 +6,5 @@ export interface CreateLessonDto {
   duration?: number;
   videoDuration?: number;
   isFree?: boolean;
+  transcript?: string;
 }

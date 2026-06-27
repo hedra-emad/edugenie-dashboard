@@ -10,11 +10,433 @@
   border-radius: var(--radius-md);
   background-color: transparent !important;
 }
+
 .toast-container .ngx-toastr.toast-success {
   background: var(--toast-success-gradient) !important;
   color: #fff !important;
   box-shadow: var(--shadow-card);
   border-radius: var(--radius-md);
+}
+
+/* Custom toastr styling for better width and compactness */
+.toast-container .ngx-toastr {
+  min-width: 350px !important;
+  max-width: 450px !important;
+  width: auto !important;
+  padding: 12px 16px !important;
+  line-height: 1.4 !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  position: relative !important;
+}
+
+.toast-container .toast-message {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+.toast-container .ngx-toastr.toast-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
+
+/* Slide-in animation from left */
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToLeft {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* Apply slide-in animation to toastr */
+.toast-container .ngx-toastr.slide-in-left {
+  animation: slideInFromLeft 0.4s ease-out forwards;
+}
+
+/* Animation for removal */
+.toast-container .ngx-toastr.toast-exit-active {
+  animation: slideOutToLeft 0.3s ease-in forwards;
+}
+
+/* Progress bar positioning and styling */
+.toast-container .ngx-toastr .toast-progress {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+  z-index: 1 !important;
+}
+
+/* Success toast progress bar */
+.toast-container .ngx-toastr.toast-success .toast-progress {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Error toast progress bar */
+.toast-container .ngx-toastr.toast-error .toast-progress {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Info toast progress bar */
+.toast-container .ngx-toastr.toast-info .toast-progress {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Warning toast progress bar */
+.toast-container .ngx-toastr.toast-warning .toast-progress {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Responsive toastr styling for mobile devices */
+@media (max-width: 480px) {
+  .toast-container .ngx-toastr {
+    min-width: 280px !important;
+    max-width: 320px !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+  }
+  
+  /* Faster animation on mobile for better performance */
+  .toast-container .ngx-toastr.slide-in-left {
+    animation: slideInFromLeft 0.3s ease-out forwards;
+  }
+}
+
+/* Enhanced toast container positioning for left slide */
+.toast-container.toast-bottom-left {
+  left: 20px !important;
+  bottom: 20px !important;
+}
+
+/* Ensure proper stacking of multiple toasts */
+.toast-container .ngx-toastr:not(:first-child) {
+  margin-top: 8px !important;
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM SCROLLBAR FOR TEXTAREAS
+═══════════════════════════════════════ */
+
+/* Custom scrollbar for all textareas in course-builder */
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+/* Webkit scrollbar styling for textareas */
+textarea::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent !important;
+  border-radius: 50px !important;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
+  border-radius: 50px !important;
+  border: none !important;
+  min-height: 20px !important;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)) !important;
+  cursor: pointer !important;
+}
+
+textarea::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary)) !important;
+}
+
+/* Scrollbar corner */
+textarea::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Specific styling for course-builder textareas */
+.course-builder textarea,
+app-section-card textarea,
+app-lesson-card textarea,
+[formControlName="description"] {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--color-primary) transparent !important;
+}
+
+/* Enhanced styling for focused textareas */
+textarea:focus::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
+  box-shadow: 0 2px 4px rgba(59, 24, 146, 0.3) !important;
+}
+
+/* Very compact scrollbar for mobile */
+@media (max-width: 768px) {
+  textarea::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+  }
+  
+  textarea::-webkit-scrollbar-thumb {
+    min-height: 15px !important;
+  }
+}
+
+/* ═══════════════════════════════════════
+   TEXTAREA SPECIFIC ENHANCEMENTS
+═══════════════════════════════════════ */
+
+/* Ensure textarea has consistent styling with scrollbar */
+textarea {
+  resize: vertical !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Custom styling for textareas in forms */
+.mat-mdc-form-field textarea,
+.form-control textarea,
+textarea[formControlName] {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(59, 24, 146, 0.8) transparent !important;
+}
+
+/* Hide scrollbar when not needed but keep functionality */
+textarea:not(:hover):not(:focus)::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(59, 24, 146, 0.5), rgba(0, 176, 255, 0.5)) !important;
+}
+
+/* Smooth scroll behavior for textareas */
+textarea {
+  scroll-behavior: smooth !important;
+}
+
+/* ═══════════════════════════════════════
+   SPECIFIC COURSE BUILDER TEXTAREAS
+═══════════════════════════════════════ */
+
+/* Target specific textareas in course-builder components */
+app-section-card textarea[formControlName="description"],
+app-course-basic-info textarea[formControlName="description"],
+.course-builder textarea[formControlName="description"] {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--color-primary) transparent !important;
+}
+
+/* Webkit specific for course builder textareas */
+app-section-card textarea[formControlName="description"]::-webkit-scrollbar,
+app-course-basic-info textarea[formControlName="description"]::-webkit-scrollbar,
+.course-builder textarea[formControlName="description"]::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+app-section-card textarea[formControlName="description"]::-webkit-scrollbar-track,
+app-course-basic-info textarea[formControlName="description"]::-webkit-scrollbar-track,
+.course-builder textarea[formControlName="description"]::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.3) !important;
+  border-radius: 50px !important;
+  margin: 2px !important;
+}
+
+app-section-card textarea[formControlName="description"]::-webkit-scrollbar-thumb,
+app-course-basic-info textarea[formControlName="description"]::-webkit-scrollbar-thumb,
+.course-builder textarea[formControlName="description"]::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
+  border-radius: 50px !important;
+  border: none !important;
+  min-height: 15px !important;
+  transition: all 0.2s ease !important;
+}
+
+app-section-card textarea[formControlName="description"]::-webkit-scrollbar-thumb:hover,
+app-course-basic-info textarea[formControlName="description"]::-webkit-scrollbar-thumb:hover,
+.course-builder textarea[formControlName="description"]::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary)) !important;
+  transform: scaleX(1.1) !important;
+}
+
+/* ═══════════════════════════════════════
+   UNSAVED SECTION INDICATOR
+═══════════════════════════════════════ */
+
+/* Base unsaved indicator dot */
+.unsaved-indicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563EB;
+  background: linear-gradient(135deg, #2563EB, #3B82F6);
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4), 0 0 12px rgba(37, 99, 235, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Subtle breathing animation */
+.unsaved-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
+  animation: pulse-glow 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Hover effects */
+.unsaved-indicator:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.6), 0 0 16px rgba(37, 99, 235, 0.3);
+}
+
+.unsaved-indicator:hover::before {
+  animation-duration: 1s;
+  opacity: 1;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .unsaved-indicator {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 4px rgba(37, 99, 235, 0.4), 0 0 8px rgba(37, 99, 235, 0.2);
+  }
+  
+  .unsaved-indicator:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.5), 0 0 12px rgba(37, 99, 235, 0.25);
+  }
+}
+
+/* Integration with expansion panel header */
+.mat-expansion-panel-header .unsaved-indicator {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+/* Ensure proper z-index in expansion panel */
+.mat-expansion-panel-header-title .unsaved-indicator {
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════
+   MODIFIED SECTION INDICATOR (AMBER)
+═══════════════════════════════════════ */
+
+/* Base modified indicator dot */
+.modified-indicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F59E0B;
+  background: linear-gradient(135deg, #F59E0B, #F97316);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), 0 0 12px rgba(245, 158, 11, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Subtle breathing animation for modified state */
+.modified-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
+  animation: pulse-glow-amber 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Pulse animation for amber (slightly different timing) */
+@keyframes pulse-glow-amber {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+/* Hover effects for modified indicator */
+.modified-indicator:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #D97706, #F59E0B);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+.modified-indicator:hover::before {
+  animation-duration: 1s;
+  opacity: 0.9;
+}
+
+/* Mobile optimization for modified indicator */
+@media (max-width: 768px) {
+  .modified-indicator {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.4), 0 0 8px rgba(245, 158, 11, 0.2);
+  }
+  
+  .modified-indicator:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.5), 0 0 12px rgba(245, 158, 11, 0.25);
+  }
+}
+
+/* Integration with expansion panel header for modified indicator */
+.mat-expansion-panel-header .modified-indicator {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+/* Ensure proper z-index in expansion panel for modified indicator */
+.mat-expansion-panel-header-title .modified-indicator {
+  z-index: 2;
 }
 
 :root {
@@ -170,4 +592,156 @@ app-filter-bar .chips-container app-sub-button.selected button {
   background: var(--color-secondary) !important;
   color: white !important;
   border-color: var(--color-secondary) !important;
+}
+/* ========================================
+   FAILED STATE INDICATORS
+   ======================================== */
+
+/* Save Failed Indicator (Red) */
+.save-failed-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4), 0 0 12px rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.save-failed-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation: pulse-glow-red 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+.save-failed-indicator:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6), 0 0 16px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes pulse-glow-amber {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+/* Upload Error Indicator (Red) */
+.upload-error-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4), 0 0 12px rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.upload-error-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation: pulse-glow-red 1.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+.upload-error-indicator:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6), 0 0 16px rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================
+   FAILED STATE PANEL BORDERS
+   ======================================== */
+
+/* Lesson Panel Failed State - Soft red border */
+.lesson-panel.lesson-failed {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2), 0 4px 12px rgba(239, 68, 68, 0.1) !important;
+}
+
+.lesson-panel.lesson-failed:hover {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), 0 4px 16px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Section with failed lessons - subtle warning border */
+.section-panel.section-has-failed-lessons {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15) !important;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .save-failed-indicator,
+  .upload-error-indicator {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .save-failed-indicator:hover,
+  .upload-error-indicator:hover {
+    transform: scale(1.1);
+  }
+}
+/* Section has failed lessons indicator */
+.section-failed-lessons-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #F97316);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), 0 0 12px rgba(245, 158, 11, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  animation: pulse-glow-amber 2s ease-in-out infinite;
+}
+
+.section-failed-lessons-indicator:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+/* ========================================
+   MAUVE WARNING TOAST (upload in progress)
+   ======================================== */
+.toast-mauve-warning {
+  background-image: linear-gradient(135deg, #d8b4f8, #f3e8f5) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+  background-color: transparent !important;
+}
+
+.toast-container .ngx-toastr.toast-mauve-warning {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light)) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
+
+.toast-container .ngx-toastr.toast-mauve-warning .toast-progress {
+  background: rgba(74, 23, 104, 0.25) !important;
 }

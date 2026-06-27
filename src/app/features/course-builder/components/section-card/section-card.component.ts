@@ -5,7 +5,9 @@ import {
   EventEmitter,
   inject,
   ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  OnInit,
+  OnDestroy
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -18,6 +20,12 @@ import {
   Validators
 } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+// Draft system imports
+import { DraftStateService } from '../../../../core/services/draft-state.service';
+import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 
 import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,7 +39,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
-import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
@@ -48,18 +56,22 @@ import { extractId } from '../../pages/section-builder/section-builder.component
     MatMenuModule,
     DragDropModule,
     MatDialogModule,
-    ExpansionPanelComponent,
-
+    ExpansionPanelComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SectionCardComponent {
+export class SectionCardComponent implements OnInit, OnDestroy {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private sectionsService = inject(SectionsService);
+  private draftStateService = inject(DraftStateService);
+  private formDraftIntegration = inject(FormDraftIntegrationService);
+  
+  // Lifecycle management
+  private destroy$ = new Subject<void>();
 
   // ================= Inputs =================
   @Input({ required: true }) sectionForm!: FormGroup;
@@ -81,6 +93,16 @@ export class SectionCardComponent {
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog);
 
+  // ================= Draft State =================
+  draftId: string = '';
+  hasDraftData = false;
+
+  // Utility function to truncate names for toastr messages
+  private truncateName(name: string, maxLength: number = 40): string {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  }
+
   @ViewChild('panel') panel!: MatExpansionPanel;
 
 
@@ -91,6 +113,14 @@ export class SectionCardComponent {
   }
 
   // ================= Lifecycle =================
+  ngOnInit() {
+    this.initializeDraftSystem();
+  }
+
+  ngOnDestroy() {
+    this.cleanup();
+  }
+
   ngOnChanges() {
     if (this.expanded) {
       setTimeout(() => {
@@ -100,17 +130,72 @@ export class SectionCardComponent {
     }
   }
 
+  private initializeDraftSystem() {
+    // Generate or get draft ID
+    let sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId) {
+      sectionId = this.formDraftIntegration.generateDraftId('section', this.courseId);
+      this.sectionForm.get('id')?.setValue(sectionId, { emitEvent: false });
+    }
+    
+    this.draftId = sectionId;
+
+    // Check if there's existing draft data for this section
+    const existingDraft = this.draftStateService.getDraft(this.draftId);
+    const hasExistingDraft = !!(existingDraft && existingDraft.data);
+
+    // Connect form to draft system
+    this.formDraftIntegration.connectForm(this.sectionForm, {
+      draftId: this.draftId,
+      type: 'section',
+      parentId: this.courseId,
+      excludeFields: ['id', 'order'], // Don't save these fields
+      autoSave: true,
+      autoSaveDelay: 1000
+    });
+
+    // If there's existing draft data, ensure form is marked as dirty
+    if (hasExistingDraft && existingDraft.data) {
+      this.sectionForm.markAsDirty();
+      this.cdr.markForCheck();
+    }
+
+    // Monitor draft changes
+    this.draftStateService.getDraftChanges()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.updateDraftState();
+      });
+
+    // Initial draft state update
+    this.updateDraftState();
+  }
+
+  private updateDraftState() {
+    this.hasDraftData = this.formDraftIntegration.hasDraftData(this.draftId);
+    this.cdr.markForCheck();
+  }
+
+  private cleanup() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.formDraftIntegration.disconnectForm(this.draftId);
+  }
+
   private cdr = inject(ChangeDetectorRef);
 
   // ================= SAVE (CREATE / UPDATE) =================
   saveSection() {
+    if (this.isDeleting) return;
     if (this.sectionForm.invalid) {
       this.sectionForm.markAllAsTouched();
       return;
     }
     const form = this.sectionForm;
 
-    const sectionId = extractId(form.get('id')?.value);
+    const rawId = form.get('id')?.value;
+    const isDraft = rawId && String(rawId).startsWith('draft_');
+    const sectionId = isDraft ? null : extractId(rawId);
 
     const payload = {
       title: form.get('title')?.value,
@@ -148,11 +233,24 @@ export class SectionCardComponent {
 
             form.get('id')?.updateValueAndValidity();
           }
-
-          this.toastr.success('Section created successfully');
-        } else {
-          this.toastr.success('Section updated successfully');
         }
+
+        const sectionTitle = form.get('title')?.value || 'Section';
+        const truncatedTitle = this.truncateName(sectionTitle);
+        if (!sectionId) {
+          this.toastr.success(`"${truncatedTitle}" created successfully`);
+        } else {
+          this.toastr.success(`"${truncatedTitle}" updated successfully`);
+        }
+
+        // Clear draft state after successful save
+        this.clearDraftAfterSave();
+
+        // Disconnect old draft ID explicitly
+        this.formDraftIntegration.disconnectForm(this.draftId);
+
+        // Re-initialize draft system with the new real ID
+        this.initializeDraftSystem();
 
         form.markAsPristine();
         form.updateValueAndValidity();
@@ -181,25 +279,37 @@ export class SectionCardComponent {
 
   confirmDelete() {
     const rawId = this.sectionForm.get('id')?.value;
-    const sectionId = extractId(rawId);
+    const isDraft = rawId && String(rawId).startsWith('draft_');
+    const sectionId = isDraft ? null : extractId(rawId);
 
     if (!sectionId) {
+      // Clear draft state after successful delete
+      this.clearDraftAfterSave();
       this.delete.emit(this.index);
       return;
     }
 
     this.isDeleting = true;
+    this.cdr.markForCheck();
 
     this.sectionsService.deleteSection(this.courseId, String(sectionId))
       .subscribe({
         next: () => {
           this.isDeleting = false;
+          this.cdr.markForCheck();
+          
+          // Clear draft state after successful delete
+          this.clearDraftAfterSave();
+          
           this.delete.emit(this.index);
         },
         error: (err) => {
           console.error('Delete error:', err);
           this.isDeleting = false;
-          this.toastr.error('Delete failed');
+          this.cdr.markForCheck();
+          const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
+          const truncatedTitle = this.truncateName(sectionTitle);
+          this.toastr.error(`Failed to delete "${truncatedTitle}"`);
         }
       });
   }
@@ -212,6 +322,8 @@ export class SectionCardComponent {
 
   // ================= NAVIGATION =================
   onGoToLessons() {
+    if (this.isDeleting) return;
+    if (!this.isExistingSection) return;
     const rawId = this.sectionForm.get('id')?.value;
     const sectionId = extractId(rawId);
     if (!sectionId || !this.courseId) return;
@@ -226,6 +338,8 @@ export class SectionCardComponent {
   }
 
   onGoToQuiz() {
+    if (this.isDeleting) return;
+    if (!this.isExistingSection) return;
     const rawId = this.sectionForm.get('id')?.value;
     const sectionId = extractId(rawId);
     if (!sectionId || !this.courseId) return;
@@ -277,12 +391,48 @@ export class SectionCardComponent {
   }
 
   get isExistingSection(): boolean {
-    return !!this.sectionForm.get('id')?.value;
+    const id = this.sectionForm.get('id')?.value;
+    return !!id && !String(id).startsWith('draft_');
+  }
+
+  get isUnsavedSection(): boolean {
+    return !this.isExistingSection;
+  }
+
+  get isModifiedSection(): boolean {
+    return this.isExistingSection && this.sectionForm.dirty;
+  }
+
+  // ================= Draft State Methods =================
+  clearDraftAfterSave() {
+    this.formDraftIntegration.clearDraft({
+      draftId: this.draftId,
+      type: 'section',
+      parentId: this.courseId
+    });
+    this.hasDraftData = false;
+  }
+
+  getDraftIndicatorType(): 'unsaved' | 'modified' {
+    if (this.isUnsavedSection) {
+      return 'unsaved';
+    } else if (this.isModifiedSection) {
+      return 'modified';
+    }
+    return 'unsaved'; // fallback
   }
 
 
 
 
+
+  get hasCreatedLessons(): boolean {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    return lessons.some((lesson: any) => {
+      const id = lesson?.id;
+      return id && id !== null && !this.draftStateService.isDraftId(String(id));
+    });
+  }
 
   get totalSectionDuration(): number {
     const lessons = this.sectionForm.get('lessons')?.value || [];

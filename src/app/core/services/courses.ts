@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, Subject, map } from 'rxjs';
 import { CourseLevel } from '../enums/course-level.enum';
 import { Course, CreateCoursePayload } from '../models/course.model';
 import { CourseStatus } from '../enums/course-status';
@@ -10,6 +10,13 @@ import { CourseStatus } from '../enums/course-status';
 export class CoursesService {
   private http = inject(HttpClient);
   private baseUrl = '/courses';
+
+  private courseStatusChangedSource = new Subject<{ courseId: string; status: CourseStatus }>();
+  courseStatusChanged$ = this.courseStatusChangedSource.asObservable();
+
+  notifyCourseStatusChanged(courseId: string, status: CourseStatus) {
+    this.courseStatusChangedSource.next({ courseId, status });
+  }
 
   createCourse(payload: CreateCoursePayload): Observable<Course> {
     return this.http

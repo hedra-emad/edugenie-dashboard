@@ -1,16 +1,18 @@
-<!-- Checkbox -->
+<!-- Checkbox — hidden on read-only tabs (Approved / Rejected) -->
+@if (!readonly) {
 <td data-label="Select" class="checkbox-cell" (click)="$event.stopPropagation()">
   <input type="checkbox" class="custom-checkbox" [checked]="isSelected" (change)="toggleSelection.emit(course.id)" />
 </td>
+}
 
 <!-- Course Title & Category -->
 <td data-label="Course">
   <div class="course-info">
     <div class="thumbnail-container">
       @if (course.thumbnail && course.thumbnail.startsWith('http')) {
-        <img [src]="course.thumbnail" [alt]="course.title" class="thumb-img" />
+      <img [src]="course.thumbnail" [alt]="course.title" class="thumb-img" />
       } @else {
-        <mat-icon class="thumbnail-icon">video_library</mat-icon>
+      <mat-icon class="thumbnail-icon">video_library</mat-icon>
       }
     </div>
     <div class="course-details">
@@ -24,9 +26,9 @@
 <td data-label="Instructor">
   <div class="instructor-container">
     @if (course.instructorAvatar) {
-      <img [src]="course.instructorAvatar" [alt]="course.instructorName" class="instructor-avatar" />
+    <img [src]="course.instructorAvatar" [alt]="course.instructorName" class="instructor-avatar" />
     } @else {
-      <div class="instructor-initials">{{ instructorInitials }}</div>
+    <div class="instructor-initials">{{ instructorInitials }}</div>
     }
     <span class="instructor-name">{{ course.instructorName }}</span>
   </div>
@@ -43,48 +45,36 @@
 <!-- Video Duration -->
 <td data-label="Duration">
   @if (course.exceedsLimit) {
-    <div class="warning-badge" title="Video length exceeds allowed platform limits.">
-      <mat-icon class="warning-icon">warning</mat-icon>
-      <span>{{ course.videoDuration }}</span>
-    </div>
+  <div class="warning-badge" title="Video length exceeds allowed platform limits.">
+    <mat-icon class="warning-icon">warning</mat-icon>
+    <span>{{ course.videoDuration }}</span>
+  </div>
   } @else {
-    <span class="duration-text">{{ course.videoDuration }}</span>
+  <span class="duration-text">{{ course.videoDuration }}</span>
   }
 </td>
 
-<!-- Actions -->
+<!-- Actions — hidden on read-only tabs, replaced with a view arrow -->
 <td data-label="Actions">
   <div class="actions-cell">
-    @if (course.status === 'pending') {
-      <!-- Reject -->
-      <button
-        (click)="onReject($event)"
-        [disabled]="actionLoading"
-        class="action-btn reject-btn"
-        title="Reject Course">
-        @if (actionLoading) {
-          <div class="spinner reject-spinner"></div>
-        } @else {
-          <mat-icon>close</mat-icon>
-        }
-      </button>
-      <!-- Approve -->
-      <button
-        (click)="onApprove($event)"
-        [disabled]="actionLoading"
-        class="action-btn approve-btn"
-        title="Approve Course">
-        @if (actionLoading) {
-          <div class="spinner"></div>
-        } @else {
-          <mat-icon>check</mat-icon>
-        }
-      </button>
+    @if (!readonly && course.status === 'pending') {
+    <!-- Reject -->
+    <button (click)="onReject($event)" [disabled]="anyLoading" class="action-btn reject-btn" title="Reject Course">
+      <app-button-loading [loading]="rejectLoading">
+        <mat-icon *ngIf="!rejectLoading">close</mat-icon>
+      </app-button-loading>
+    </button>
+    <!-- Approve -->
+    <button (click)="onApprove($event)" [disabled]="anyLoading" class="action-btn approve-btn" title="Approve Course">
+      <app-button-loading [loading]="approveLoading">
+        <mat-icon *ngIf="!approveLoading">check</mat-icon>
+      </app-button-loading>
+    </button>
     } @else {
-      <!-- View Details Link -->
-      <span class="view-link" title="View Details">
-        <mat-icon>arrow_forward</mat-icon>
-      </span>
+    <!-- Read-only: just navigate to course detail -->
+    <span class="view-link" title="View Details">
+      <mat-icon>arrow_forward</mat-icon>
+    </span>
     }
   </div>
 </td>

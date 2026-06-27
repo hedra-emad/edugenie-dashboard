@@ -1,4 +1,4 @@
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published' | 'archived';
 
 export interface Category {
   _id?: string;
@@ -6,6 +6,7 @@ export interface Category {
   name: string;
   courseCount?: number;
   order?: number;
+  createdAt?: string;
 }
 
 export interface CourseApproval {
@@ -21,16 +22,20 @@ export interface CourseApproval {
   sectionsCount?: number;
   goals?: string[];
   requirements?: string[];
-  createdAt?: string; // Submission Date
+  createdAt?: string;
 
   instructorName: string;
   instructorEmail?: string;
   instructorAvatar?: string;
 
-  videoDuration: string; // e.g. "24:15", "12:30"
-  thumbnail: string; // e.g. placeholder, material icon name, or path
+  videoDuration: string;
+  thumbnail: string;
   status: ApprovalStatus;
-  exceedsLimit: boolean; // Computed or flags if exceedsallowed limit (e.g. 20 hours)
+  exceedsLimit: boolean;
+  
+  rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
 }
 
 export interface AdminStats {
@@ -39,4 +44,5 @@ export interface AdminStats {
   published: number;
   rejected: number;
   draft: number;
+  archived: number;
 }
