@@ -91,36 +91,7 @@
        TABLE CARD
   ═══════════════════════════════════════════ -->
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden relative">
-      <div *ngIf="isLoading" class="w-full flex flex-col gap-4 p-6 animate-pulse" aria-busy="true"
-        aria-label="Loading users">
-        <div *ngFor="let s of [1,2,3,4,5]" class="flex items-center gap-6 pb-4 border-b border-slate-100 last:border-0">
-          <!-- Avatar & Name -->
-          <div class="flex items-center gap-4 flex-1">
-            <div class="w-10 h-10 rounded-full bg-slate-200 shrink-0"></div>
-            <div class="flex flex-col gap-2 w-full max-w-[150px]">
-              <div class="h-3 bg-slate-200 rounded-full w-full"></div>
-              <div class="h-2 bg-slate-100 rounded-full w-2/3"></div>
-            </div>
-          </div>
-          <!-- Email -->
-          <div class="flex-1">
-            <div class="h-3 bg-slate-100 rounded-full w-3/4"></div>
-          </div>
-          <!-- Role -->
-          <div class="w-[120px]">
-            <div class="h-6 bg-slate-100 rounded-lg w-full"></div>
-          </div>
-          <!-- Status -->
-          <div class="w-[100px]">
-            <div class="h-6 bg-slate-100 rounded-full w-full"></div>
-          </div>
-          <!-- Actions -->
-          <div class="w-[80px] flex gap-2 justify-center">
-            <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
-            <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
-          </div>
-        </div>
-      </div>
+      <app-page-skeleton *ngIf="isLoading"></app-page-skeleton>
 
       <!-- Table — overflow-x-auto so it scrolls on mobile instead of overflowing -->
       <div *ngIf="!isLoading" class="overflow-x-auto w-full animate-fade-in">
@@ -310,8 +281,9 @@
             <button
               class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               (click)="confirmBlock()" [disabled]="!blockReason.trim() || isBlocking">
-              <mat-icon *ngIf="isBlocking" class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-              {{ isBlocking ? 'Suspending...' : 'Suspend User' }}
+              <app-button-loading [loading]="isBlocking">
+                {{ isBlocking ? 'Suspending...' : 'Suspend User' }}
+              </app-button-loading>
             </button>
           </div>
         </div>
@@ -357,8 +329,9 @@
             <button
               class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               (click)="confirmDelete()" [disabled]="!deleteReason.trim() || isDeleting">
-              <mat-icon *ngIf="isDeleting" class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              <app-button-loading [loading]="isDeleting">
+                {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              </app-button-loading>
             </button>
           </div>
         </div>

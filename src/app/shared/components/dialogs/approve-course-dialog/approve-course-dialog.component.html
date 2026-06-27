@@ -29,13 +29,10 @@
         Cancel
       </button>
       <button class="btn-approve" (click)="confirm.emit()" [disabled]="isLoading">
-        @if (isLoading) {
-        <span class="btn-spinner-sm"></span>
-        Publishing...
-        } @else {
-        <mat-icon>check_circle</mat-icon>
-        Publish Course{{ isBulkMode && selectedCount > 1 ? 's' : '' }}
-        }
+        <app-button-loading [loading]="isLoading">
+          <mat-icon *ngIf="!isLoading">check_circle</mat-icon>
+          {{ isLoading ? 'Publishing...' : ('Publish Course' + (isBulkMode && selectedCount > 1 ? 's' : '')) }}
+        </app-button-loading>
       </button>
     </div>
   </div>

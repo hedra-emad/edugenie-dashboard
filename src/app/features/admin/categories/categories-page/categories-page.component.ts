@@ -6,6 +6,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 import { CourseApprovalService } from '../../course-approvals/services/course-approval.service';
 import { Category } from '../../course-approvals/models/course-approval.model';
@@ -18,7 +19,7 @@ type DateFilter = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
   selector: 'app-categories-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, FormsModule, DatePipe],
+  imports: [CommonModule, MatIconModule, FormsModule, DatePipe, PageSkeletonComponent, ButtonLoadingComponent],
   templateUrl: './categories-page.component.html',
   styleUrl: './categories-page.component.css'
 })

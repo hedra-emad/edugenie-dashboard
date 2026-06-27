@@ -9,12 +9,7 @@
   </div>
 
   <!-- Loading State -->
-  @if (loading) {
-  <div class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading course details...</p>
-  </div>
-  }
+  <app-page-skeleton *ngIf="loading"></app-page-skeleton>
 
   <!-- Error State -->
   @if (error && !loading) {
@@ -311,16 +306,16 @@
         @if (course.status === 'pending') {
         <div class="actions-buttons">
           <button class="btn-approve" (click)="openApproveModal()" [disabled]="approveLoading || rejectLoading">
-            @if (approveLoading) {
-            <div class="btn-spinner"></div>
-            } @else {
-            <mat-icon>check_circle</mat-icon>
-            }
-            Approve
+            <app-button-loading [loading]="approveLoading">
+              <mat-icon *ngIf="!approveLoading">check_circle</mat-icon>
+              Approve
+            </app-button-loading>
           </button>
           <button class="btn-reject" (click)="openRejectModal()" [disabled]="approveLoading || rejectLoading">
-            <mat-icon>cancel</mat-icon>
-            Reject
+            <app-button-loading [loading]="rejectLoading">
+              <mat-icon *ngIf="!rejectLoading">cancel</mat-icon>
+              Reject
+            </app-button-loading>
           </button>
         </div>
         }

@@ -1,4 +1,6 @@
-<div class="p-8 md:p-12 lg:p-16 relative" *ngIf="!isLoadingProfile; else loadingTemplate">
+<app-page-skeleton *ngIf="isLoadingProfile"></app-page-skeleton>
+
+<div class="p-8 md:p-12 lg:p-16 relative" *ngIf="!isLoadingProfile">
   <div class="max-w-4xl">
     <!-- Header -->
     <div class="mb-12">

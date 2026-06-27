@@ -14,6 +14,7 @@ import { CourseApprovalService } from '../../course-approvals/services/course-ap
 import { ToastrService } from 'ngx-toastr';
 import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-course-details-page',
@@ -28,7 +29,9 @@ import { RejectCourseDialogComponent } from '../../../../shared/components/dialo
     DatePipe,
     TitleCasePipe,
     ApproveCourseDialogComponent,
-    RejectCourseDialogComponent
+    RejectCourseDialogComponent,
+    PageSkeletonComponent,
+    ButtonLoadingComponent
   ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'

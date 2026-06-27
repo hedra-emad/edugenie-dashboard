@@ -46,13 +46,10 @@
         Cancel
       </button>
       <button class="btn-confirm-reject" (click)="onConfirm()" [disabled]="isLoading || !rejectReason.trim()">
-        @if (isLoading) {
-        <span class="btn-spinner-sm"></span>
-        Rejecting...
-        } @else {
-        <mat-icon>cancel</mat-icon>
-        {{ isBulkMode ? 'Reject Selected' : 'Reject Course' }}
-        }
+        <app-button-loading [loading]="isLoading">
+          <mat-icon *ngIf="!isLoading">cancel</mat-icon>
+          {{ isLoading ? 'Rejecting...' : (isBulkMode ? 'Reject Selected' : 'Reject Course') }}
+        </app-button-loading>
       </button>
     </div>
   </div>

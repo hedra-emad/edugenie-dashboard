@@ -45,22 +45,9 @@
   </div>
 
   <!-- Loading Skeleton -->
-  @if (loading) {
-  <div class="skeleton-layout">
-    <div class="skeleton-card">
-      <div class="skeleton-line skeleton-title"></div>
-      @for (i of [1,2,3,4,5]; track i) {
-      <div class="skeleton-row">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-lines">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line skeleton-short"></div>
-        </div>
-      </div>
-      }
-    </div>
-  </div>
-  } @else {
+  <app-page-skeleton *ngIf="loading"></app-page-skeleton>
+
+  <ng-container *ngIf="!loading">
 
   <!-- Main Card -->
   <div class="main-card">
@@ -253,7 +240,7 @@
     }
 
   </div>
-  }
+  </ng-container>
 
 </div>
 
@@ -293,10 +280,9 @@
         Cancel
       </button>
       <button class="btn-confirm" (click)="saveCategory()" [disabled]="isSubmitting || !catName.trim()">
-        @if (isSubmitting) {
-        <span class="btn-spinner"></span>
-        }
-        {{ modalMode === 'create' ? 'Create Category' : 'Save Changes' }}
+        <app-button-loading [loading]="isSubmitting">
+          {{ modalMode === 'create' ? 'Create Category' : 'Save Changes' }}
+        </app-button-loading>
       </button>
     </div>
 
@@ -330,8 +316,9 @@
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
       <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
-        @if (isDeleting) { <span class="btn-spinner"></span> }
-        Delete Category
+        <app-button-loading [loading]="isDeleting">
+          Delete Category
+        </app-button-loading>
       </button>
     </div>
 

@@ -60,19 +60,15 @@
     @if (!readonly && course.status === 'pending') {
     <!-- Reject -->
     <button (click)="onReject($event)" [disabled]="anyLoading" class="action-btn reject-btn" title="Reject Course">
-      @if (rejectLoading) {
-      <div class="spinner reject-spinner"></div>
-      } @else {
-      <mat-icon>close</mat-icon>
-      }
+      <app-button-loading [loading]="rejectLoading">
+        <mat-icon *ngIf="!rejectLoading">close</mat-icon>
+      </app-button-loading>
     </button>
     <!-- Approve -->
     <button (click)="onApprove($event)" [disabled]="anyLoading" class="action-btn approve-btn" title="Approve Course">
-      @if (approveLoading) {
-      <div class="spinner"></div>
-      } @else {
-      <mat-icon>check</mat-icon>
-      }
+      <app-button-loading [loading]="approveLoading">
+        <mat-icon *ngIf="!approveLoading">check</mat-icon>
+      </app-button-loading>
     </button>
     } @else {
     <!-- Read-only: just navigate to course detail -->

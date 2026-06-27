@@ -7,11 +7,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserProfile } from '../../../../core/models/user-profile.model';
 import { ToastrService } from 'ngx-toastr';
+import { PageSkeletonComponent } from '../../../../shared/components/loading/page-skeleton.component';
 
 @Component({
   selector: 'app-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageSkeletonComponent],
   templateUrl: './account-settings.page.html',
   styleUrls: ['./account-settings.page.css']
 })

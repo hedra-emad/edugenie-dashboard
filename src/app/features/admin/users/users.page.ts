@@ -10,12 +10,13 @@ import { UserRole } from '../../../core/models/user-profile.model';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../shared/components/loading';
 
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule, PageSkeletonComponent, ButtonLoadingComponent],
   templateUrl: './users.page.html',
   styleUrl: './users.page.css',
 })

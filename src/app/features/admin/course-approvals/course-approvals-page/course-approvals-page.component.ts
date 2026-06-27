@@ -15,12 +15,13 @@ import { ApprovalsTableComponent, FilterType } from '../components/approvals-tab
 import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { ToastrService } from 'ngx-toastr';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-course-approvals-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent, ApproveCourseDialogComponent, RejectCourseDialogComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent, ApproveCourseDialogComponent, RejectCourseDialogComponent, PageSkeletonComponent, ButtonLoadingComponent],
   templateUrl: './course-approvals-page.component.html',
   styleUrl: './course-approvals-page.component.css'
 })
