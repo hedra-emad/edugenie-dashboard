@@ -115,7 +115,7 @@ export class CloudinaryService {
         formData.append('timestamp', String(timestamp));
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
-        formData.append('raw_convert', raw_convert);
+        // formData.append('raw_convert', raw_convert);
 
 
         return this.http
@@ -142,14 +142,22 @@ export class CloudinaryService {
   // PUBLIC: upload lesson video (signed)
   // Videos are stored in the section folder:
   // edugenie/courses/videos/{courseId}/sections/{sectionId}
+  //
+  // Note: lessonId is optional. When provided, it's included in the
+  // Cloudinary context for webhook reference. The new architecture
+  // creates lessons AFTER upload completes, so this may be undefined.
   // ─────────────────────────────────────────────────────────────
   uploadVideo(
     file: File,
     courseId: string,
     sectionId: string,
+    lessonId?: string,
   ): Observable<VideoUploadEvent> {
     const folder = `edugenie/courses/videos/${courseId}/sections/${sectionId}`;
-    const context = `courseId=${courseId}|sectionId=${sectionId}`;
+    // Include lessonId in context if provided (helps webhook find the lesson)
+    const context = lessonId 
+      ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
+      : `courseId=${courseId}|sectionId=${sectionId}`;
 
     return this.getSignature(folder, context).pipe(
       switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
@@ -160,7 +168,7 @@ export class CloudinaryService {
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
-        formData.append('raw_convert', raw_convert);
+        // formData.append('raw_convert', raw_convert);
 
 
         const req = new HttpRequest(

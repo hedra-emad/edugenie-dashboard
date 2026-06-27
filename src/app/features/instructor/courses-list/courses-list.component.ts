@@ -234,6 +234,10 @@ export class CoursesListComponent implements OnInit {
     }
   }
 
+  formatTotalHours(totalHours: number): string {
+    return this.coursesService.formatTotalHours(totalHours);
+  }
+
   getResultsText(): string {
     const total = this.courses().length;
     const filtered = this.filteredCourses().length;
