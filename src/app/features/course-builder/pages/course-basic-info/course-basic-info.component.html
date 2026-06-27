@@ -96,8 +96,7 @@
 
     <!-- Course Preview Video (optional, collapsed by default) -->
     <app-preview-video-upload *ngIf="courseId" resourceType="course" [ownerId]="courseId"
-      [existingUrl]="coursePreviewVideoUrl" [existingPublicId]="coursePreviewVideoPublicId"
-      (uploaded)="onPreviewVideoUploaded($event)" (removed)="onPreviewVideoRemoved()"></app-preview-video-upload>
+      [parentForm]="courseForm" ></app-preview-video-upload>
 
     <!-- Course Details -->
 

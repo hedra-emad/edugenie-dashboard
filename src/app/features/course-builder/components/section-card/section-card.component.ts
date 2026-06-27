@@ -20,7 +20,7 @@ import {
   Validators
 } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Draft system imports
@@ -73,8 +73,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private cloudinaryService = inject(CloudinaryService);
 
-  sectionPreviewVideoUrl: string | null = null;
-  sectionPreviewVideoPublicId: string | null = null;
+  @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
 
   // Lifecycle management
   private destroy$ = new Subject<void>();
@@ -121,43 +120,6 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   // ================= Lifecycle =================
   ngOnInit() {
     this.initializeDraftSystem();
-    const existing = this.sectionForm.getRawValue();
-    if (existing.previewVideoUrl) {
-      this.sectionPreviewVideoUrl = existing.previewVideoUrl;
-      this.sectionPreviewVideoPublicId = existing.previewVideoPublicId ?? null;
-    }
-  }
-
-  onPreviewVideoUploaded(event: { url: string; publicId: string }) {
-    this.sectionPreviewVideoUrl = event.url;
-    this.sectionPreviewVideoPublicId = event.publicId;
-
-    this.sectionsService.updateSection(this.courseId, this.sectionId, {
-      previewVideoUrl: event.url,
-      previewVideoPublicId: event.publicId
-    }).subscribe({
-      next: () => this.toastr.success('Preview video saved'),
-      error: () => this.toastr.error('Failed to save preview video')
-    });
-  }
-
-  onPreviewVideoRemoved() {
-    const oldPublicId = this.sectionPreviewVideoPublicId;
-    this.sectionPreviewVideoUrl = null;
-    this.sectionPreviewVideoPublicId = null;
-
-    this.sectionsService.updateSection(this.courseId, this.sectionId, {
-      previewVideoUrl: null,
-      previewVideoPublicId: null
-    }).subscribe({
-      next: () => {
-        this.toastr.success('Preview video removed');
-        if (oldPublicId) {
-          this.cloudinaryService.deleteAsset(oldPublicId, 'video').subscribe();
-        }
-      },
-      error: () => this.toastr.error('Failed to remove preview video')
-    });
   }
 
   ngOnDestroy() {
@@ -240,7 +202,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const sectionId = isDraft ? null : extractId(rawId);
 
-    const payload = {
+    const payload: any = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
       expectedOutcomes: this.expectedOutcomesArray.value
@@ -249,60 +211,109 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       order: this.index
     };
 
-
     this.isSaving = true;
+    this.cdr.markForCheck();
 
-    const request = sectionId
-      ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
-      : this.sectionsService.addSection(this.courseId, payload);
+    const previewComp = this.previewVideoUploadComponent;
+    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
 
-    request.subscribe({
-      next: (res: any) => {
-        this.isSaving = false;
+    previewUpload$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (videoRes) => {
+        if (videoRes) {
+          payload.previewVideoUrl = videoRes.url;
+          payload.previewVideoPublicId = videoRes.publicId;
 
-        const isNewSection = !sectionId;
+          form.patchValue({
+            previewVideoUrl: videoRes.url,
+            previewVideoPublicId: videoRes.publicId
+          }, { emitEvent: false });
+        } else if (previewComp?.markedForDeletion()) {
+          // User removed the video — send nulls now
+          payload.previewVideoUrl = null;
+          payload.previewVideoPublicId = null;
+        } else {
+          payload.previewVideoUrl = form.get('previewVideoUrl')?.value || null;
+          payload.previewVideoPublicId = form.get('previewVideoPublicId')?.value || null;
+        }
 
-        if (isNewSection) {
-          const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
+        const request = sectionId
+          ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
+          : this.sectionsService.addSection(this.courseId, payload);
 
-          const incomingId = extractId(createdSection);
+        request.subscribe({
+          next: (res: any) => {
+            this.isSaving = false;
 
-          if (incomingId) {
-            if (!form.contains('id')) {
-              form.addControl('id', new FormControl(incomingId));
-            } else {
-              form.get('id')?.setValue(incomingId);
+            const isNewSection = !sectionId;
+
+            // Reset preview video component and handle deferred Cloudinary deletion
+            if (this.previewVideoUploadComponent) {
+              const comp = this.previewVideoUploadComponent;
+
+              // Commit null values into the form if the user removed the video
+              if (comp.markedForDeletion()) {
+                form.patchValue(
+                  { previewVideoUrl: null, previewVideoPublicId: null },
+                  { emitEvent: false }
+                );
+              }
+
+              // Delete the old asset now that the DB save succeeded
+              if (comp.pendingDeletePublicId) {
+                this.cloudinaryService.deleteAsset(comp.pendingDeletePublicId, 'video').subscribe();
+              }
+
+              comp.resetAfterSave();
             }
 
-            form.get('id')?.updateValueAndValidity();
+            if (isNewSection) {
+              const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
+
+              const incomingId = extractId(createdSection);
+
+              if (incomingId) {
+                if (!form.contains('id')) {
+                  form.addControl('id', new FormControl(incomingId));
+                } else {
+                  form.get('id')?.setValue(incomingId);
+                }
+
+                form.get('id')?.updateValueAndValidity();
+              }
+            }
+
+            const sectionTitle = form.get('title')?.value || 'Section';
+            const truncatedTitle = this.truncateName(sectionTitle);
+            if (!sectionId) {
+              this.toastr.success(`"${truncatedTitle}" created successfully`);
+            } else {
+              this.toastr.success(`"${truncatedTitle}" updated successfully`);
+            }
+
+            // Clear draft state after successful save
+            this.clearDraftAfterSave();
+
+            // Disconnect old draft ID explicitly
+            this.formDraftIntegration.disconnectForm(this.draftId);
+
+            // Re-initialize draft system with the new real ID
+            this.initializeDraftSystem();
+
+            form.markAsPristine();
+            form.updateValueAndValidity();
+            this.cdr.markForCheck();
+          },
+
+          error: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
           }
-        }
-
-        const sectionTitle = form.get('title')?.value || 'Section';
-        const truncatedTitle = this.truncateName(sectionTitle);
-        if (!sectionId) {
-          this.toastr.success(`"${truncatedTitle}" created successfully`);
-        } else {
-          this.toastr.success(`"${truncatedTitle}" updated successfully`);
-        }
-
-        // Clear draft state after successful save
-        this.clearDraftAfterSave();
-
-        // Disconnect old draft ID explicitly
-        this.formDraftIntegration.disconnectForm(this.draftId);
-
-        // Re-initialize draft system with the new real ID
-        this.initializeDraftSystem();
-
-        form.markAsPristine();
-        form.updateValueAndValidity();
-        this.cdr.markForCheck();
+        });
       },
-
-      error: () => {
+      error: (err) => {
         this.isSaving = false;
         this.cdr.markForCheck();
+        console.error('Section preview video upload failed:', err);
       }
     });
   }

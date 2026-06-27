@@ -1,63 +1,122 @@
 import {
-    Component, Input, Output, EventEmitter,
-    signal, inject, OnDestroy, ChangeDetectionStrategy,
-    ChangeDetectorRef
+    Component, Input, OnInit, OnDestroy, signal, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject } from 'rxjs';
+import { FormGroup, AbstractControl } from '@angular/forms';
+import { Subject, Observable, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CloudinaryService, VideoUploadEvent } from '../../../../core/services/cloudinary';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
-
-export interface PreviewVideoResult {
-    url: string;
-    publicId: string;
-}
+import { FileDraftService } from '../../../../core/services/file-draft.service';
+import {
+    PreviewVideoUploadSnapshot,
+    initialSnapshot,
+} from './preview-video-upload.model';
 
 @Component({
     selector: 'app-preview-video-upload',
     standalone: true,
-    imports: [CommonModule, MatIconModule, AppLoader],
+    imports: [CommonModule, MatIconModule],
     templateUrl: './preview-video-upload.component.html',
-    styleUrl: './preview-video-upload.component.css',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    styleUrl: './preview-video-upload.component.css'
 })
-export class PreviewVideoUploadComponent implements OnDestroy {
+export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
+    /** 'course' or 'section' — determines the Cloudinary folder */
     @Input({ required: true }) resourceType!: 'course' | 'section';
+    /** The courseId or sectionId (used as draftId as well) */
     @Input({ required: true }) ownerId!: string;
-    @Input() existingUrl: string | null = null;
-    @Input() existingPublicId: string | null = null;
-
-    /** Emitted when a file is selected (before upload) — parent marks form dirty */
-    @Output() fileSelected = new EventEmitter<File>();
-    /** Emitted after a successful Cloudinary upload */
-    @Output() uploaded = new EventEmitter<PreviewVideoResult>();
-    /** Emitted when the user removes the existing/uploaded preview */
-    @Output() removed = new EventEmitter<void>();
+    /** Parent form containing previewVideoUrl and previewVideoPublicId controls */
+    @Input({ required: true }) parentForm!: FormGroup;
 
     private cloudinaryService = inject(CloudinaryService);
-    private cdr = inject(ChangeDetectorRef);
+    private fileDraftService = inject(FileDraftService);
     private destroy$ = new Subject<void>();
 
     expanded = signal(false);
-
-    // Upload state (mirrors lesson-card pattern)
-    uploadState: 'idle' | 'uploading' | 'upload_error' | 'done' = 'idle';
-    uploadProgress = 0;
-    uploadError: string | null = null;
     videoError: string | null = null;
 
-    // Selected file (not yet uploaded)
+    // Local state / file
     selectedFile: File | null = null;
-    selectedFileUrl: string | null = null; // blob preview URL
+    localPreviewUrl: string | null = null;
 
-    get hasVideo(): boolean {
-        return !!this.existingUrl;
+    /**
+     * Tracks the public ID of the OLD video that should be deleted from Cloudinary
+     * AFTER a successful save. Populated when the user replaces or removes a video.
+     * The parent component reads this after its API call succeeds.
+     */
+    pendingDeletePublicId: string | null = null;
+
+    /**
+     * Pure UI flag: the user clicked "Remove Video" but the form has NOT been saved yet.
+     * When true, the video player is shown greyed-out with an undo option.
+     * The form controls are NOT touched — only the parent save flow reads this flag
+     * to decide whether to send null in the payload.
+     */
+    markedForDeletion = signal(false);
+
+    // State machine snapshot
+    private snapshotState = signal<PreviewVideoUploadSnapshot>(initialSnapshot());
+
+    get snapshot(): PreviewVideoUploadSnapshot {
+        return this.snapshotState();
     }
 
-    get isUploading(): boolean {
-        return this.uploadState === 'uploading';
+    get previewVideoUrlControl(): AbstractControl | null {
+        return this.parentForm?.get('previewVideoUrl');
+    }
+
+    get previewVideoPublicIdControl(): AbstractControl | null {
+        return this.parentForm?.get('previewVideoPublicId');
+    }
+
+    get hasVideo(): boolean {
+        return !!this.previewVideoUrlControl?.value || !!this.selectedFile;
+    }
+
+    /** The URL to display in the video player (local blob or remote URL). */
+    get previewUrl(): string | null {
+        if (this.localPreviewUrl) return this.localPreviewUrl;
+        return this.previewVideoUrlControl?.value || null;
+    }
+
+    ngOnInit() {
+        const url = this.previewVideoUrlControl?.value;
+        const publicId = this.previewVideoPublicIdControl?.value;
+
+        // Restore from draft system (file selected before saving)
+        const draftFile = this.fileDraftService.getFileFromDraft(this.ownerId, 'previewVideo');
+        if (draftFile) {
+            this.selectedFile = draftFile;
+            this.localPreviewUrl = URL.createObjectURL(draftFile);
+            this.updateSnapshot({ state: 'video_selected', message: 'Local video draft restored' });
+
+            // Mark the URL control dirty so the parent "Update" button activates
+            this.previewVideoUrlControl?.setValue(draftFile.name);
+            this.previewVideoUrlControl?.markAsDirty();
+            this.previewVideoUrlControl?.updateValueAndValidity();
+
+            if (publicId) {
+                this.pendingDeletePublicId = publicId;
+            }
+        } else if (url) {
+            this.updateSnapshot({ state: 'saved' });
+        } else {
+            this.updateSnapshot({ state: 'idle' });
+        }
+
+        // React to external form value changes (e.g. form population from API)
+        if (this.previewVideoUrlControl) {
+            this.previewVideoUrlControl.valueChanges
+                .pipe(takeUntil(this.destroy$))
+                .subscribe((newUrl) => {
+                    // Only transition if we aren't managing the state ourselves
+                    if (newUrl && this.snapshot.state === 'idle' && !this.markedForDeletion()) {
+                        this.updateSnapshot({ state: 'saved' });
+                    } else if (!newUrl && this.snapshot.state === 'saved' && !this.markedForDeletion()) {
+                        this.updateSnapshot({ state: 'idle' });
+                    }
+                });
+        }
     }
 
     toggle() {
@@ -66,112 +125,169 @@ export class PreviewVideoUploadComponent implements OnDestroy {
 
     onFileSelected(event: Event) {
         const file = (event.target as HTMLInputElement).files?.[0];
-        (event.target as HTMLInputElement).value = ''; // reset so same file can be re-selected
         if (!file) return;
         this.handleFile(file);
+        (event.target as HTMLInputElement).value = '';
     }
 
     private handleFile(file: File) {
         this.videoError = null;
-        this.uploadError = null;
-        this.uploadState = 'idle';
 
         if (!file.type.startsWith('video/')) {
-            this.videoError = 'Please upload a valid video file (MP4, MOV…)';
-            this.cdr.markForCheck();
+            this.videoError = 'Please upload a valid video file.';
             return;
         }
 
-        const maxSize = 200 * 1024 * 1024;
+        const maxSize = 200 * 1024 * 1024; // 200 MB
         if (file.size > maxSize) {
-            this.videoError = 'Video must be less than 200MB';
-            this.cdr.markForCheck();
+            this.videoError = 'Video must be less than 200 MB.';
             return;
         }
 
-        // Release old blob URL
-        if (this.selectedFileUrl) URL.revokeObjectURL(this.selectedFileUrl);
+        // Revoke previous local preview
+        if (this.localPreviewUrl) {
+            URL.revokeObjectURL(this.localPreviewUrl);
+        }
+
         this.selectedFile = file;
-        this.selectedFileUrl = URL.createObjectURL(file);
+        this.localPreviewUrl = URL.createObjectURL(file);
 
-        // Notify parent to mark form dirty — actual upload happens on save
-        this.fileSelected.emit(file);
-        this.cdr.markForCheck();
-    }
+        // If user was in "remove" state, cancel it — they chose a new file instead
+        this.markedForDeletion.set(false);
 
-    removeFile() {
-        if (this.selectedFileUrl) URL.revokeObjectURL(this.selectedFileUrl);
-        this.selectedFile = null;
-        this.selectedFileUrl = null;
-        this.uploadState = 'idle';
-        this.uploadError = null;
-        this.videoError = null;
-        this.cdr.markForCheck();
-    }
+        // Track old public ID for deferred Cloudinary deletion
+        const currentPublicId = this.previewVideoPublicIdControl?.value;
+        if (currentPublicId) {
+            this.pendingDeletePublicId = currentPublicId;
+        }
 
-    removeExisting() {
-        this.removed.emit();
+        // Persist file in draft system so it survives a page refresh
+        this.fileDraftService.addFileToDraft(this.ownerId, 'previewVideo', file, {
+            maxSize: 200 * 1024 * 1024,
+            allowedTypes: ['video']
+        }).subscribe();
+
+        this.updateSnapshot({ state: 'video_selected', progress: 0, message: 'Video selected' });
+
+        // Set a placeholder value and mark dirty so the parent "Update" button activates
+        this.previewVideoUrlControl?.setValue(file.name);
+        this.previewVideoUrlControl?.markAsDirty();
+        this.previewVideoUrlControl?.updateValueAndValidity();
     }
 
     /**
-     * Called by the PARENT (course-basic-info / section-card) on save.
-     * Returns a Promise that resolves with the upload result or null if no file.
+     * Marks the video for removal WITHOUT touching the form controls.
+     * The actual payload (null values) is set by the parent at save time.
+     * The Cloudinary DELETE call is also deferred to after a successful save.
      */
-    uploadIfNeeded(): Promise<PreviewVideoResult | null> {
-        if (!this.selectedFile) return Promise.resolve(null);
+    removeVideo() {
+        // Record the public ID to be deleted later (after save)
+        const currentPublicId = this.previewVideoPublicIdControl?.value;
+        if (currentPublicId) {
+            this.pendingDeletePublicId = currentPublicId;
+        }
 
-        return new Promise((resolve, reject) => {
-            this.uploadState = 'uploading';
-            this.uploadProgress = 0;
-            this.uploadError = null;
-            this.cdr.markForCheck();
+        // Clear any local draft file
+        if (this.selectedFile) {
+            this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
+            this.selectedFile = null;
+        }
+        if (this.localPreviewUrl) {
+            URL.revokeObjectURL(this.localPreviewUrl);
+            this.localPreviewUrl = null;
+        }
 
+        // Mark the FORM dirty so the "Update" button activates,
+        // but keep the actual values intact — they'll only be cleared
+        // in the payload at save time, not in the form itself.
+        this.previewVideoUrlControl?.markAsDirty();
+        this.previewVideoUrlControl?.updateValueAndValidity();
+
+        this.markedForDeletion.set(true);
+        this.updateSnapshot({ state: 'saved' });
+    }
+
+    /** Undo a pending removal before the user hits Save. */
+    undoRemoveVideo() {
+        this.pendingDeletePublicId = null;
+        this.markedForDeletion.set(false);
+
+        // No need to restore controls — they were never cleared
+        this.previewVideoUrlControl?.markAsPristine();
+        this.previewVideoUrlControl?.updateValueAndValidity();
+    }
+
+    /**
+     * Called by the parent AFTER a successful save.
+     * Clears transient state so the component reflects the newly persisted data.
+     */
+    resetAfterSave() {
+        this.markedForDeletion.set(false);
+        this.pendingDeletePublicId = null;
+
+        const url = this.previewVideoUrlControl?.value;
+        this.updateSnapshot({ state: url ? 'saved' : 'idle' });
+    }
+
+    /**
+     * Uploads the selected file to Cloudinary.
+     * Returns an Observable that emits { url, publicId } on success, or null if
+     * no upload is needed (no file selected, or marked for deletion).
+     * Called by the parent just before it sends the save/update API request.
+     */
+    upload(): Observable<{ url: string; publicId: string } | null> {
+        if (!this.selectedFile) {
+            return of(null);
+        }
+
+        this.updateSnapshot({ state: 'uploading', progress: 0, message: 'Uploading preview video...' });
+
+        return new Observable<{ url: string; publicId: string } | null>((subscriber) => {
             this.cloudinaryService.uploadPreviewVideo(
                 this.selectedFile!,
                 this.resourceType,
                 this.ownerId,
-                this.existingPublicId
+                this.pendingDeletePublicId || undefined
             )
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                    next: (event: VideoUploadEvent) => {
-                        if (event.progress !== undefined) {
-                            this.uploadProgress = event.progress;
-                            this.cdr.markForCheck();
-                        }
-                        if (event.response) {
-                            this.uploadState = 'done';
-                            this.uploadProgress = 100;
-
-                            // Release blob URL
-                            if (this.selectedFileUrl) URL.revokeObjectURL(this.selectedFileUrl);
-                            this.selectedFile = null;
-                            this.selectedFileUrl = null;
-
-                            const result: PreviewVideoResult = {
-                                url: event.response.secure_url,
-                                publicId: event.response.public_id,
-                            };
-
-                            this.existingUrl = result.url;
-                            this.existingPublicId = result.publicId;
-                            this.uploaded.emit(result);
-                            this.cdr.markForCheck();
-                            resolve(result);
-                        }
-                    },
-                    error: () => {
-                        this.uploadState = 'upload_error';
-                        this.uploadError = 'Preview video upload failed. Please try again.';
-                        this.cdr.markForCheck();
-                        reject(new Error(this.uploadError!));
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (event: VideoUploadEvent) => {
+                    if (event.progress !== undefined) {
+                        this.updateSnapshot({ progress: event.progress });
                     }
-                });
+                    if (event.response) {
+                        const url = event.response.secure_url;
+                        const publicId = event.response.public_id;
+
+                        this.updateSnapshot({ state: 'saved', progress: 100, message: 'Upload Complete' });
+
+                        this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
+                        this.selectedFile = null;
+                        if (this.localPreviewUrl) {
+                            URL.revokeObjectURL(this.localPreviewUrl);
+                            this.localPreviewUrl = null;
+                        }
+
+                        subscriber.next({ url, publicId });
+                        subscriber.complete();
+                    }
+                },
+                error: (err) => {
+                    this.updateSnapshot({ state: 'upload_error', message: 'Upload failed. Please try again.' });
+                    subscriber.error(err);
+                }
+            });
         });
     }
 
+    private updateSnapshot(changes: Partial<PreviewVideoUploadSnapshot>) {
+        this.snapshotState.update(current => ({ ...current, ...changes }));
+    }
+
     ngOnDestroy() {
-        if (this.selectedFileUrl) URL.revokeObjectURL(this.selectedFileUrl);
+        if (this.localPreviewUrl) {
+            URL.revokeObjectURL(this.localPreviewUrl);
+        }
         this.destroy$.next();
         this.destroy$.complete();
     }

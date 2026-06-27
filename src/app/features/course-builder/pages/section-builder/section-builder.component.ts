@@ -197,6 +197,8 @@ export class SectionBuilderComponent implements OnInit {
 
       isSaving: [false],
       isDeleting: [false],
+      previewVideoUrl: [null as string | null],
+      previewVideoPublicId: [null as string | null]
     });
 
     this.sectionsArray.push(section);
@@ -299,6 +301,8 @@ export class SectionBuilderComponent implements OnInit {
             id: [sectionId],
             isSaving: [false],
             isDeleting: [false],
+            previewVideoUrl: [section.previewVideoUrl || null],
+            previewVideoPublicId: [section.previewVideoPublicId || null]
           });
 
           this.populateLessonsForSection(sectionGroup, sectionId, section.lessons || []);
@@ -322,7 +326,9 @@ export class SectionBuilderComponent implements OnInit {
             ),
             lessons: this.fb.array([]),
             isSaving: [false],
-            isDeleting: [false]
+            isDeleting: [false],
+            previewVideoUrl: [draft.data?.previewVideoUrl || null],
+            previewVideoPublicId: [draft.data?.previewVideoPublicId || null]
           });
 
           this.populateLessonsForSection(sectionGroup, draft.id, []);
