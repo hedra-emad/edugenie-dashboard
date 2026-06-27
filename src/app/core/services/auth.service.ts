@@ -235,6 +235,10 @@ export class AuthService {
       );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.patch<any>(`${this.usersApiUrl}/change-password`, { currentPassword, newPassword });
+  }
+
   logout(): Observable<void> {
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
