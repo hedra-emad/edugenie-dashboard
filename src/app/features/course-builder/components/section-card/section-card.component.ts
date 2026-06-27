@@ -426,6 +426,14 @@ export class SectionCardComponent implements OnInit, OnDestroy {
 
 
 
+  get hasCreatedLessons(): boolean {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    return lessons.some((lesson: any) => {
+      const id = lesson?.id;
+      return id && id !== null && !this.draftStateService.isDraftId(String(id));
+    });
+  }
+
   get totalSectionDuration(): number {
     const lessons = this.sectionForm.get('lessons')?.value || [];
     return lessons.reduce((sum: number, lesson: any) => {
