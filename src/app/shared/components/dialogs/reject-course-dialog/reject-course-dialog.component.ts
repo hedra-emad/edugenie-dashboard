@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { ButtonLoadingComponent } from '../../loading';
 
 @Component({
   selector: 'app-reject-course-dialog',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule, ButtonLoadingComponent],
   templateUrl: './reject-course-dialog.component.html',
   styleUrl: './reject-course-dialog.component.css'
 })

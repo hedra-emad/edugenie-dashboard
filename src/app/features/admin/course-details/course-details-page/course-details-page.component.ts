@@ -14,47 +14,50 @@ import { CourseApprovalService } from '../../course-approvals/services/course-ap
 import { ToastrService } from 'ngx-toastr';
 import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-course-details-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, 
+    CommonModule,
     RouterModule,
     MatIconModule,
     MatTabsModule,
-    FormsModule, 
-    DatePipe, 
+    FormsModule,
+    DatePipe,
     TitleCasePipe,
     ApproveCourseDialogComponent,
-    RejectCourseDialogComponent
+    RejectCourseDialogComponent,
+    PageSkeletonComponent,
+    ButtonLoadingComponent
   ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'
 })
 export class CourseDetailsPageComponent implements OnInit, OnDestroy {
-  private readonly route   = inject(ActivatedRoute);
-  private readonly router  = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly service = inject(CourseApprovalService);
-  private readonly cdr     = inject(ChangeDetectorRef);
-  private readonly toastr  = inject(ToastrService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly toastr = inject(ToastrService);
   private readonly destroy$ = new Subject<void>();
 
   courseId: string | null = null;
-  course:   any = null;
-  loading  = true;
-  error    = false;
+  course: any = null;
+  loading = true;
+  error = false;
 
   // ── Per-button loading — independent flags ────────────────────────────────
   approveLoading = false;
-  rejectLoading  = false;
+  rejectLoading = false;
 
   // ── Approve modal ──────────────────────────────────────────────────────────
   showApproveModal = false;
 
   // ── Reject modal ──────────────────────────────────────────────────────────
-  showRejectModal      = false;
+  showRejectModal = false;
 
   expandedSections: Record<number, boolean> = {};
   playingVideoLessonId: string | null = null;
@@ -77,7 +80,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
 
   private loadCourse(id: string): void {
     this.loading = true;
-    this.error   = false;
+    this.error = false;
     this.cdr.markForCheck();
 
     this.service.getCourseById(id).pipe(
@@ -86,8 +89,8 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: ([data, courses]) => {
         const cached = courses.find(c => c.id === id);
-        this.course = { 
-          ...data, 
+        this.course = {
+          ...data,
           status: cached?.status || this.service.normalizeStatus(data),
           rejectionReason: cached?.rejectionReason || data.rejectionReason,
           rejectedBy: cached?.rejectedBy || data.rejectedBy,
@@ -100,7 +103,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: () => {
-        this.error   = true;
+        this.error = true;
         this.loading = false;
         this.toastr.error('Failed to load course details');
         this.cdr.markForCheck();
@@ -182,14 +185,14 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   /** Open modal — no loading starts here */
   openRejectModal(): void {
     if (this.approveLoading || this.rejectLoading) return;
-    this.showRejectModal     = true;
+    this.showRejectModal = true;
     this.cdr.markForCheck();
   }
 
   /** Close modal — allowed any time unless API is in-flight */
   closeRejectModal(): void {
     if (this.rejectLoading) return;
-    this.showRejectModal     = false;
+    this.showRejectModal = false;
     this.cdr.markForCheck();
   }
 
@@ -220,7 +223,7 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   getInstructorInitials(): string {
     if (!this.course?.instructor) return 'I';
     const first = this.course.instructor.firstName?.charAt(0) || '';
-    const last  = this.course.instructor.lastName?.charAt(0)  || '';
+    const last = this.course.instructor.lastName?.charAt(0) || '';
     return (first + last).toUpperCase() || 'I';
   }
 
@@ -234,11 +237,11 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   getInstructorEmail(): string {
-    if(!this.course?.instructor) return 'Unknown Instructor';
+    if (!this.course?.instructor) return 'Unknown Instructor';
     const { email } = this.course.instructor;
     console.log(this.course);
     console.log(this.course.instructor);
-    if(email) return email
+    if (email) return email
     return 'No email provided';
   }
 }

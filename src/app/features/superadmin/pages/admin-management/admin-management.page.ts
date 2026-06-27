@@ -26,7 +26,7 @@ export class AdminManagementPageComponent implements OnInit {
   // Modal State
   showActivityModal = false;
   selectedAdmin: AdminListItem | null = null;
-  
+
   // Activity Pagination
   isActivityLoading = false;
   activities: AdminActivityItem[] = [];
@@ -110,7 +110,7 @@ export class AdminManagementPageComponent implements OnInit {
   }
 
   get activityPageNumbers(): number[] {
-    return Array.from({length: this.activityTotalPages}, (_, i) => i + 1);
+    return Array.from({ length: this.activityTotalPages }, (_, i) => i + 1);
   }
 
   setActivityPage(page: number) {

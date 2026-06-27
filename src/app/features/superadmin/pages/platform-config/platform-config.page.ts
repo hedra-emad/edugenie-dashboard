@@ -58,9 +58,9 @@ export class PlatformConfigPageComponent implements OnInit {
   get isDirty(): boolean {
     if (!this.originalConfig) return false;
     return this.originalConfig.platformFeePercent !== this.formConfig.platformFeePercent ||
-           this.originalConfig.instructorSharePercent !== this.formConfig.instructorSharePercent ||
-           this.originalConfig.maintenanceMode !== this.formConfig.maintenanceMode ||
-           this.originalConfig.minimumPayoutThreshold !== this.formConfig.minimumPayoutThreshold;
+      this.originalConfig.instructorSharePercent !== this.formConfig.instructorSharePercent ||
+      this.originalConfig.maintenanceMode !== this.formConfig.maintenanceMode ||
+      this.originalConfig.minimumPayoutThreshold !== this.formConfig.minimumPayoutThreshold;
   }
 
   toggleMaintenanceMode() {

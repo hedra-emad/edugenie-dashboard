@@ -1,323 +1,341 @@
 <div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
-<div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
+  <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
 
-  <!-- ═══════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════
        HEADER
   ═══════════════════════════════════════════ -->
-  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-    <div>
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
-        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">admin_panel_settings</mat-icon>
-        Administration
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div>
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">admin_panel_settings</mat-icon>
+          Administration
+        </div>
+        <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight mb-2" style="color:#3B1892;">
+          User Management
+        </h1>
+        <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
+          Manage platform accounts, enforce roles, and oversee user access statuses across the entire ecosystem.
+        </p>
       </div>
-      <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight mb-2" style="color:#3B1892;">
-        User Management
-      </h1>
-      <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
-        Manage platform accounts, enforce roles, and oversee user access statuses across the entire ecosystem.
-      </p>
-    </div>
-    
-    <button mat-flat-button class="!rounded-xl !px-6 !h-10 !text-[13px] !font-semibold !text-white shrink-0 w-full sm:w-auto" style="background-color:#3B1892;box-shadow:0 4px 14px rgba(59,24,146,0.35);">
-      Export Report
-    </button>
-  </div>
 
-  <!-- ═══════════════════════════════════════════
+      <button mat-flat-button
+        class="!rounded-xl !px-6 !h-10 !text-[13px] !font-semibold !text-white shrink-0 w-full sm:w-auto"
+        style="background-color:#3B1892;box-shadow:0 4px 14px rgba(59,24,146,0.35);">
+        Export Report
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
        FILTERS CARD
   ═══════════════════════════════════════════ -->
-  <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4">
+    <div
+      class="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4">
 
-    <!-- Search -->
-    <div class="relative w-full lg:flex-1">
-      <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">search</mat-icon>
-      <input type="text" placeholder="Search by name, email, or ID…" 
-             class="w-full pl-11 pr-4 py-3 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
-             [ngModel]="searchQuery" (input)="onSearchChange($event)" />
-    </div>
+      <!-- Search -->
+      <div class="relative w-full lg:flex-1">
+        <mat-icon
+          class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">search</mat-icon>
+        <input type="text" placeholder="Search by name, email, or ID…"
+          class="w-full pl-11 pr-4 py-3 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+          [ngModel]="searchQuery" (input)="onSearchChange($event)" />
+      </div>
 
-    <!-- Role + Status dropdowns -->
-    <div class="flex flex-wrap sm:flex-nowrap gap-3 w-full lg:w-auto">
-      
-      <!-- Role Filter -->
-      <button [matMenuTriggerFor]="roleFilterMenu" 
-              class="flex-1 sm:flex-none inline-flex items-center justify-between gap-2 px-4 py-3 bg-white border border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 rounded-xl text-sm font-semibold text-slate-700 transition-all shadow-sm">
-        {{ selectedRole ? (selectedRole | titlecase) : 'All Roles' }}
-        <mat-icon class="text-slate-400 !text-[18px] !w-[18px] !h-[18px]">expand_more</mat-icon>
-      </button>
-      <mat-menu #roleFilterMenu="matMenu" class="!rounded-xl !mt-1 !min-w-[160px] !shadow-xl !shadow-slate-200/60 !border !border-slate-100">
-        <button mat-menu-item (click)="setRoleFilter('')" class="!text-sm !font-medium !text-slate-700">All Roles</button>
-        <button mat-menu-item (click)="setRoleFilter('student')" class="!text-sm !font-medium !text-slate-700">Student</button>
-        <button mat-menu-item (click)="setRoleFilter('instructor')" class="!text-sm !font-medium !text-slate-700">Instructor</button>
-      </mat-menu>
+      <!-- Role + Status dropdowns -->
+      <div class="flex flex-wrap sm:flex-nowrap gap-3 w-full lg:w-auto">
 
-      <!-- Status Filter -->
-      <button [matMenuTriggerFor]="statusFilterMenu" 
-              class="flex-1 sm:flex-none inline-flex items-center justify-between gap-2 px-4 py-3 bg-white border border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 rounded-xl text-sm font-semibold text-slate-700 transition-all shadow-sm">
-        {{ selectedStatus ? (selectedStatus | titlecase) : 'All Statuses' }}
-        <mat-icon class="text-slate-400 !text-[18px] !w-[18px] !h-[18px]">expand_more</mat-icon>
-      </button>
-      <mat-menu #statusFilterMenu="matMenu" class="!rounded-xl !mt-1 !min-w-[160px] !shadow-xl !shadow-slate-200/60 !border !border-slate-100">
-        <button mat-menu-item (click)="setStatusFilter('')" class="!text-sm !font-medium !text-slate-700">All Statuses</button>
-        <button mat-menu-item (click)="setStatusFilter('active')" class="!text-sm !font-medium !text-slate-700">Active</button>
-        <button mat-menu-item (click)="setStatusFilter('deactivated')" class="!text-sm !font-medium !text-slate-700">Deactivated</button>
-      </mat-menu>
-      
-    </div>
+        <!-- Role Filter -->
+        <button [matMenuTriggerFor]="roleFilterMenu"
+          class="flex-1 sm:flex-none inline-flex items-center justify-between gap-2 px-4 py-3 bg-white border border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 rounded-xl text-sm font-semibold text-slate-700 transition-all shadow-sm">
+          {{ selectedRole ? (selectedRole | titlecase) : 'All Roles' }}
+          <mat-icon class="text-slate-400 !text-[18px] !w-[18px] !h-[18px]">expand_more</mat-icon>
+        </button>
+        <mat-menu #roleFilterMenu="matMenu"
+          class="!rounded-xl !mt-1 !min-w-[160px] !shadow-xl !shadow-slate-200/60 !border !border-slate-100">
+          <button mat-menu-item (click)="setRoleFilter('')" class="!text-sm !font-medium !text-slate-700">All
+            Roles</button>
+          <button mat-menu-item (click)="setRoleFilter('student')"
+            class="!text-sm !font-medium !text-slate-700">Student</button>
+          <button mat-menu-item (click)="setRoleFilter('instructor')"
+            class="!text-sm !font-medium !text-slate-700">Instructor</button>
+        </mat-menu>
 
-    <!-- Results count -->
-    <div class="hidden xl:flex items-center justify-center px-4 py-2 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
-      <span class="text-xs font-bold text-slate-500">
-        <span class="text-violet-600">{{ users.length }}</span> / {{ totalUsers }} users
-      </span>
-    </div>
-  </div>
+        <!-- Status Filter -->
+        <button [matMenuTriggerFor]="statusFilterMenu"
+          class="flex-1 sm:flex-none inline-flex items-center justify-between gap-2 px-4 py-3 bg-white border border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 rounded-xl text-sm font-semibold text-slate-700 transition-all shadow-sm">
+          {{ selectedStatus ? (selectedStatus | titlecase) : 'All Statuses' }}
+          <mat-icon class="text-slate-400 !text-[18px] !w-[18px] !h-[18px]">expand_more</mat-icon>
+        </button>
+        <mat-menu #statusFilterMenu="matMenu"
+          class="!rounded-xl !mt-1 !min-w-[160px] !shadow-xl !shadow-slate-200/60 !border !border-slate-100">
+          <button mat-menu-item (click)="setStatusFilter('')" class="!text-sm !font-medium !text-slate-700">All
+            Statuses</button>
+          <button mat-menu-item (click)="setStatusFilter('active')"
+            class="!text-sm !font-medium !text-slate-700">Active</button>
+          <button mat-menu-item (click)="setStatusFilter('deactivated')"
+            class="!text-sm !font-medium !text-slate-700">Deactivated</button>
+        </mat-menu>
 
-  <!-- ═══════════════════════════════════════════
-       TABLE CARD
-  ═══════════════════════════════════════════ -->
-  <div class="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden relative">
-    <div *ngIf="isLoading" class="w-full flex flex-col gap-4 p-6 animate-pulse" aria-busy="true" aria-label="Loading users">
-      <div *ngFor="let s of [1,2,3,4,5]" class="flex items-center gap-6 pb-4 border-b border-slate-100 last:border-0">
-        <!-- Avatar & Name -->
-        <div class="flex items-center gap-4 flex-1">
-          <div class="w-10 h-10 rounded-full bg-slate-200 shrink-0"></div>
-          <div class="flex flex-col gap-2 w-full max-w-[150px]">
-            <div class="h-3 bg-slate-200 rounded-full w-full"></div>
-            <div class="h-2 bg-slate-100 rounded-full w-2/3"></div>
-          </div>
-        </div>
-        <!-- Email -->
-        <div class="flex-1">
-          <div class="h-3 bg-slate-100 rounded-full w-3/4"></div>
-        </div>
-        <!-- Role -->
-        <div class="w-[120px]">
-          <div class="h-6 bg-slate-100 rounded-lg w-full"></div>
-        </div>
-        <!-- Status -->
-        <div class="w-[100px]">
-          <div class="h-6 bg-slate-100 rounded-full w-full"></div>
-        </div>
-        <!-- Actions -->
-        <div class="w-[80px] flex gap-2 justify-center">
-          <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
-          <div class="w-8 h-8 rounded-xl bg-slate-100"></div>
-        </div>
+      </div>
+
+      <!-- Results count -->
+      <div
+        class="hidden xl:flex items-center justify-center px-4 py-2 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
+        <span class="text-xs font-bold text-slate-500">
+          <span class="text-violet-600">{{ users.length }}</span> / {{ totalUsers }} users
+        </span>
       </div>
     </div>
 
-    <!-- Table — overflow-x-auto so it scrolls on mobile instead of overflowing -->
-    <div *ngIf="!isLoading" class="overflow-x-auto w-full animate-fade-in">
-      <table class="w-full text-left border-collapse min-w-[800px]">
-        <thead class="bg-[#f9fafb] border-b border-slate-200 sticky top-0 z-10">
-          <tr>
-            <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">User Details</th>
-            <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Contact Info</th>
-            <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">System Role</th>
-            <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Account Status</th>
-            <th scope="col" class="px-6 py-4 text-center text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider w-[120px]">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of users; let i = index" class="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150 group bg-white last:border-0">
+    <!-- ═══════════════════════════════════════════
+       TABLE CARD
+  ═══════════════════════════════════════════ -->
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden relative">
+      <app-page-skeleton *ngIf="isLoading"></app-page-skeleton>
 
-            <!-- Name + Avatar -->
-            <td class="px-6 py-4 align-middle">
-              <div class="flex items-center gap-3">
-                <img [src]="getAvatarUrl(user) || '/avatar.jpg'" 
-                     onerror="this.src='/avatar.jpg'; this.onerror=null;"
-                     class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0" alt="Avatar" />
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{user.name || user.firstName + ' ' + user.lastName}}</span>
-                  <span class="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Joined {{user.createdAt | date}}</span>
+      <!-- Table — overflow-x-auto so it scrolls on mobile instead of overflowing -->
+      <div *ngIf="!isLoading" class="overflow-x-auto w-full animate-fade-in">
+        <table class="w-full text-left border-collapse min-w-[800px]">
+          <thead class="bg-[#f9fafb] border-b border-slate-200 sticky top-0 z-10">
+            <tr>
+              <th scope="col"
+                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">User
+                Details</th>
+              <th scope="col"
+                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Contact
+                Info</th>
+              <th scope="col"
+                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">System
+                Role</th>
+              <th scope="col"
+                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Account
+                Status</th>
+              <th scope="col"
+                class="px-6 py-4 text-center text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider w-[120px]">
+                Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users; let i = index"
+              class="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150 group bg-white last:border-0">
+
+              <!-- Name + Avatar -->
+              <td class="px-6 py-4 align-middle">
+                <div class="flex items-center gap-3">
+                  <img [src]="getAvatarUrl(user) || '/avatar.jpg'" onerror="this.src='/avatar.jpg'; this.onerror=null;"
+                    class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0"
+                    alt="Avatar" />
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{user.name || user.firstName +
+                      ' ' + user.lastName}}</span>
+                    <span class="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Joined {{user.createdAt |
+                      date}}</span>
+                  </div>
                 </div>
-              </div>
-            </td>
+              </td>
 
-            <!-- Email -->
-            <td class="px-6 py-4 align-middle">
-              <span class="text-[13px] font-medium text-slate-500 whitespace-nowrap">{{user.email}}</span>
-            </td>
+              <!-- Email -->
+              <td class="px-6 py-4 align-middle">
+                <span class="text-[13px] font-medium text-slate-500 whitespace-nowrap">{{user.email}}</span>
+              </td>
 
-            <!-- Role Badge -->
-            <td class="px-6 py-4 align-middle">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold capitalize border shadow-sm"
-                   [ngClass]="{
+              <!-- Role Badge -->
+              <td class="px-6 py-4 align-middle">
+                <div
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold capitalize border shadow-sm"
+                  [ngClass]="{
                      'bg-blue-50 text-blue-700 border-blue-200': user.role === 'instructor',
                      'bg-violet-50 text-violet-700 border-violet-200': user.role === 'student'
                    }">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0"
-                          *ngIf="user.role === 'instructor'">workspace_premium</mat-icon>
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0"
-                          *ngIf="user.role === 'student'">school</mat-icon>
-                <span>{{user.role}}</span>
-              </div>
-            </td>
+                  <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0"
+                    *ngIf="user.role === 'instructor'">workspace_premium</mat-icon>
+                  <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0"
+                    *ngIf="user.role === 'student'">school</mat-icon>
+                  <span>{{user.role}}</span>
+                </div>
+              </td>
 
-            <td class="px-6 py-4 align-middle">
-              <span *ngIf="user.status === 'active'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.2)] animate-pulse shrink-0"></span>
-                Active
-              </span>
-              <span *ngIf="user.status === 'deactivated'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
-                Deactivated
-              </span>
-            </td>
+              <td class="px-6 py-4 align-middle">
+                <span *ngIf="user.status === 'active'"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
+                  <span
+                    class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.2)] animate-pulse shrink-0"></span>
+                  Active
+                </span>
+                <span *ngIf="user.status === 'deactivated'"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                  Deactivated
+                </span>
+              </td>
 
-            <!-- Actions -->
-            <td class="px-6 py-4 align-middle">
-              <!-- Action Dropdown -->
-              <div class="flex items-center justify-end pr-2">
-                <button [matMenuTriggerFor]="actionMenu"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-                  title="Actions">
-                  <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">more_vert</mat-icon>
-                </button>
-                
-                <mat-menu #actionMenu="matMenu" class="!rounded-xl !min-w-[150px] !shadow-lg !border !border-slate-100 !py-1">
-                  <!-- Block / Reactivate -->
-                  <ng-container *ngIf="canBlock(user)">
-                    <button *ngIf="user.status !== 'deactivated'" mat-menu-item (click)="blockUser(user)" class="!flex !items-center !gap-2 !text-slate-700 hover:!bg-slate-50">
-                      <mat-icon class="!text-slate-400 !mr-0">block</mat-icon>
-                      Block User
-                    </button>
-                    <button *ngIf="user.status === 'deactivated'" mat-menu-item (click)="reactivateUser(user)" class="!flex !items-center !gap-2 !text-emerald-600 hover:!bg-emerald-50">
-                      <mat-icon class="!text-emerald-500 !mr-0">check_circle</mat-icon>
-                      Reactivate
-                    </button>
-                  </ng-container>
-
-                  <!-- Delete -->
-                  <button mat-menu-item (click)="deleteUser(user)" class="!flex !items-center !gap-2 !text-rose-600 hover:!bg-rose-50">
-                    <mat-icon class="!text-rose-500 !mr-0">delete_outline</mat-icon>
-                    Delete User
+              <!-- Actions -->
+              <td class="px-6 py-4 align-middle">
+                <!-- Action Dropdown -->
+                <div class="flex items-center justify-end pr-2">
+                  <button [matMenuTriggerFor]="actionMenu"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                    title="Actions">
+                    <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">more_vert</mat-icon>
                   </button>
-                </mat-menu>
-              </div>
-            </td>
 
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                  <mat-menu #actionMenu="matMenu"
+                    class="!rounded-xl !min-w-[150px] !shadow-lg !border !border-slate-100 !py-1">
+                    <!-- Block / Reactivate -->
+                    <ng-container *ngIf="canBlock(user)">
+                      <button *ngIf="user.status !== 'deactivated'" mat-menu-item (click)="blockUser(user)"
+                        class="!flex !items-center !gap-2 !text-slate-700 hover:!bg-slate-50">
+                        <mat-icon class="!text-slate-400 !mr-0">block</mat-icon>
+                        Block User
+                      </button>
+                      <button *ngIf="user.status === 'deactivated'" mat-menu-item (click)="reactivateUser(user)"
+                        class="!flex !items-center !gap-2 !text-emerald-600 hover:!bg-emerald-50">
+                        <mat-icon class="!text-emerald-500 !mr-0">check_circle</mat-icon>
+                        Reactivate
+                      </button>
+                    </ng-container>
 
-    <!-- Empty state -->
-    <div *ngIf="users.length === 0 && !isLoading" class="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-        <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px]">group_off</mat-icon>
+                    <!-- Delete -->
+                    <button mat-menu-item (click)="deleteUser(user)"
+                      class="!flex !items-center !gap-2 !text-rose-600 hover:!bg-rose-50">
+                      <mat-icon class="!text-rose-500 !mr-0">delete_outline</mat-icon>
+                      Delete User
+                    </button>
+                  </mat-menu>
+                </div>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p class="text-lg font-bold text-slate-700">No users found</p>
-      <p class="text-sm text-slate-500 mt-1 max-w-sm">We couldn't find any users matching your current search criteria or filters.</p>
-    </div>
 
-    <!-- ─── Pagination ──────────────────────────────────────────── -->
-    <div *ngIf="totalPages > 1" class="pagination-bar" style="justify-content: center;">
-      <div class="pagination-controls">
-        <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0" aria-label="Previous page">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-
-        <button *ngFor="let p of pageNumbers"
-                class="page-btn"
-                [class.page-btn--active]="p === pageIndex"
-                (click)="setPage(p)">
-          {{ p + 1 }}
-        </button>
-
-        <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1" aria-label="Next page">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
+      <!-- Empty state -->
+      <div *ngIf="users.length === 0 && !isLoading"
+        class="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+          <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px]">group_off</mat-icon>
+        </div>
+        <p class="text-lg font-bold text-slate-700">No users found</p>
+        <p class="text-sm text-slate-500 mt-1 max-w-sm">We couldn't find any users matching your current search criteria
+          or filters.</p>
       </div>
-    </div>
 
-  </div><!-- /um-table-card -->
+      <!-- ─── Pagination ──────────────────────────────────────────── -->
+      <div *ngIf="totalPages > 1" class="pagination-bar" style="justify-content: center;">
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0"
+            aria-label="Previous page">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
 
-  <!-- ═══════════════════════════════════════════
+          <button *ngFor="let p of pageNumbers" class="page-btn" [class.page-btn--active]="p === pageIndex"
+            (click)="setPage(p)">
+            {{ p + 1 }}
+          </button>
+
+          <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1"
+            aria-label="Next page">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /um-table-card -->
+
+    <!-- ═══════════════════════════════════════════
        BLOCK USER MODAL
   ═══════════════════════════════════════════ -->
-  <div *ngIf="showBlockModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200" (click)="cancelBlock()">
-    <div class="bg-white w-full max-w-[400px] rounded-2xl shadow-2xl overflow-hidden" (click)="$event.stopPropagation()">
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-            <mat-icon>lock_person</mat-icon>
+    <div *ngIf="showBlockModal"
+      class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200"
+      (click)="cancelBlock()">
+      <div class="bg-white w-full max-w-[400px] rounded-2xl shadow-2xl overflow-hidden"
+        (click)="$event.stopPropagation()">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+              <mat-icon>lock_person</mat-icon>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Suspend User</h2>
           </div>
-          <h2 class="text-xl font-bold text-slate-800">Suspend User</h2>
-        </div>
-        
-        <p class="text-sm text-slate-600 mb-5" *ngIf="blockTarget">
-          You are about to block <strong>{{ blockTarget.firstName }} {{ blockTarget.lastName }}</strong>.
-        </p>
 
-        <div class="mb-6">
-          <label class="block text-xs font-bold text-slate-700 mb-2">Reason <span class="text-red-500">*</span></label>
-          <textarea
-            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 resize-none"
-            rows="3"
-            [(ngModel)]="blockReason"
-            [disabled]="isBlocking">
+          <p class="text-sm text-slate-600 mb-5" *ngIf="blockTarget">
+            You are about to block <strong>{{ blockTarget.firstName }} {{ blockTarget.lastName }}</strong>.
+          </p>
+
+          <div class="mb-6">
+            <label class="block text-xs font-bold text-slate-700 mb-2">Reason <span
+                class="text-red-500">*</span></label>
+            <textarea
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 resize-none"
+              rows="3" [(ngModel)]="blockReason" [disabled]="isBlocking">
           </textarea>
-        </div>
+          </div>
 
-        <div class="flex items-center justify-end gap-3">
-          <button class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors" (click)="cancelBlock()" [disabled]="isBlocking">
-            Cancel
-          </button>
-          <button
-            class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            (click)="confirmBlock()"
-            [disabled]="!blockReason.trim() || isBlocking">
-            <mat-icon *ngIf="isBlocking" class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-            {{ isBlocking ? 'Suspending...' : 'Suspend User' }}
-          </button>
+          <div class="flex items-center justify-end gap-3">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              (click)="cancelBlock()" [disabled]="isBlocking">
+              Cancel
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="confirmBlock()" [disabled]="!blockReason.trim() || isBlocking">
+              <app-button-loading [loading]="isBlocking">
+                {{ isBlocking ? 'Suspending...' : 'Suspend User' }}
+              </app-button-loading>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════
        DELETE USER MODAL
   ═══════════════════════════════════════════ -->
-  <div *ngIf="showDeleteModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200" (click)="cancelDelete()">
-    <div class="bg-white w-full max-w-[400px] rounded-2xl shadow-2xl overflow-hidden" (click)="$event.stopPropagation()">
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-            <mat-icon>delete_forever</mat-icon>
+    <div *ngIf="showDeleteModal"
+      class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200"
+      (click)="cancelDelete()">
+      <div class="bg-white w-full max-w-[400px] rounded-2xl shadow-2xl overflow-hidden"
+        (click)="$event.stopPropagation()">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <mat-icon>delete_forever</mat-icon>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Delete User</h2>
           </div>
-          <h2 class="text-xl font-bold text-slate-800">Delete User</h2>
-        </div>
-        
-        <p class="text-sm text-slate-600 mb-5" *ngIf="deleteTarget">
-          Are you sure you want to permanently delete <strong>{{ deleteTarget.firstName }} {{ deleteTarget.lastName }}</strong>? This action cannot be undone.
-        </p>
 
-        <div class="mb-6">
-          <label class="block text-xs font-bold text-slate-700 mb-2">Reason <span class="text-red-500">*</span></label>
-          <textarea
-            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 resize-none"
-            rows="3"
-            [(ngModel)]="deleteReason"
-            [disabled]="isDeleting">
+          <p class="text-sm text-slate-600 mb-5" *ngIf="deleteTarget">
+            Are you sure you want to permanently delete <strong>{{ deleteTarget.firstName }} {{ deleteTarget.lastName
+              }}</strong>? This action cannot be undone.
+          </p>
+
+          <div class="mb-6">
+            <label class="block text-xs font-bold text-slate-700 mb-2">Reason <span
+                class="text-red-500">*</span></label>
+            <textarea
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 resize-none"
+              rows="3" [(ngModel)]="deleteReason" [disabled]="isDeleting">
           </textarea>
-        </div>
+          </div>
 
-        <div class="flex items-center justify-end gap-3">
-          <button class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors" (click)="cancelDelete()" [disabled]="isDeleting">
-            Cancel
-          </button>
-          <button
-            class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            (click)="confirmDelete()"
-            [disabled]="!deleteReason.trim() || isDeleting">
-            <mat-icon *ngIf="isDeleting" class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-            {{ isDeleting ? 'Deleting...' : 'Delete' }}
-          </button>
+          <div class="flex items-center justify-end gap-3">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              (click)="cancelDelete()" [disabled]="isDeleting">
+              Cancel
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="confirmDelete()" [disabled]="!deleteReason.trim() || isDeleting">
+              <app-button-loading [loading]="isDeleting">
+                {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              </app-button-loading>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>

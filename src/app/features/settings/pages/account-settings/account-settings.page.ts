@@ -7,31 +7,32 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserProfile } from '../../../../core/models/user-profile.model';
 import { ToastrService } from 'ngx-toastr';
+import { PageSkeletonComponent } from '../../../../shared/components/loading/page-skeleton.component';
 
 @Component({
   selector: 'app-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageSkeletonComponent],
   templateUrl: './account-settings.page.html',
   styleUrls: ['./account-settings.page.css']
 })
 export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
-  private fb          = inject(FormBuilder);
-  private toastr      = inject(ToastrService);
+  private fb = inject(FormBuilder);
+  private toastr = inject(ToastrService);
 
   // ─── Profile state ───────────────────────────────────────────────────────
   profileForm!: FormGroup;
   securityForm!: FormGroup;
   originalProfile: { firstName: string, lastName: string } | null = null;
   isLoadingProfile = true;
-  isSaving         = false;
+  isSaving = false;
   emailNotifications = true;
-  publicProfile      = false;
+  publicProfile = false;
 
   // ─── Avatar state ────────────────────────────────────────────────────────
   /** URL shown in the avatar circle — either from the server or a local crop preview */
-  avatarPreview:   string | null = null;
+  avatarPreview: string | null = null;
   /** Cropped blob waiting to be uploaded on Save Changes — null if unchanged */
   private _pendingAvatarBlob: Blob | null = null;
   /** Whether the user explicitly clicked "Remove Image" */
@@ -41,14 +42,14 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   showAvatarOptions = false;
 
   // ─── Cropper state ───────────────────────────────────────────────────────
-  isCropperOpen    = false;
+  isCropperOpen = false;
   selectedImageSrc: string | null = null;
-  livePreviewUrl:   string | null = null;
+  livePreviewUrl: string | null = null;
 
   cropTranslateX = 0;
   cropTranslateY = 0;
-  cropScale      = 1;
-  cropRotation   = 0;
+  cropScale = 1;
+  cropRotation = 0;
 
   _isDragging = false;
   private _dragStartX = 0;
@@ -60,13 +61,13 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private _previewObjectUrl: string | null = null;
 
   readonly CONTAINER_SIZE = 380;
-  readonly CROP_RADIUS    = 155;
+  readonly CROP_RADIUS = 155;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('cropImg')   cropImg!:  ElementRef<HTMLImageElement>;
+  @ViewChild('cropImg') cropImg!: ElementRef<HTMLImageElement>;
 
   constructor() { this.initForms(); }
-  ngOnInit()    { this.loadProfile(); }
+  ngOnInit() { this.loadProfile(); }
 
   ngOnDestroy() {
     this.revokeSelectedImage();
@@ -80,12 +81,12 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private initForms() {
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
-      lastName:  ['', Validators.required],
-      email:     [{ value: '', disabled: true }, [Validators.required, Validators.email]]
+      lastName: ['', Validators.required],
+      email: [{ value: '', disabled: true }, [Validators.required, Validators.email]]
     });
     this.securityForm = this.fb.group({
       currentPassword: [{ value: '', disabled: true }],
-      newPassword:     [{ value: '', disabled: true }],
+      newPassword: [{ value: '', disabled: true }],
       confirmPassword: [{ value: '', disabled: true }]
     });
   }
@@ -108,21 +109,21 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private populateForm(user: UserProfile) {
     this.profileForm.patchValue({
       firstName: user.firstName || '',
-      lastName:  user.lastName  || '',
-      email:     user.email     || ''
+      lastName: user.lastName || '',
+      email: user.email || ''
     });
     this.originalProfile = {
       firstName: user.firstName || '',
-      lastName:  user.lastName  || ''
+      lastName: user.lastName || ''
     };
-    this.avatarPreview     = user.avatar || null;
+    this.avatarPreview = user.avatar || null;
     this._pendingAvatarBlob = null;
-    this.avatarDeleted      = false;
+    this.avatarDeleted = false;
   }
 
   getInitials(): string {
     const f = this.profileForm.get('firstName')?.value || '';
-    const l = this.profileForm.get('lastName')?.value  || '';
+    const l = this.profileForm.get('lastName')?.value || '';
     if (!f && !l) return 'U';
     return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
   }
@@ -130,12 +131,12 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   get hasUnsavedChanges(): boolean {
     if (this.avatarDeleted || this._pendingAvatarBlob) return true;
     if (!this.originalProfile) return false;
-    
+
     const currentFirstName = this.profileForm.get('firstName')?.value;
     const currentLastName = this.profileForm.get('lastName')?.value;
 
-    return currentFirstName !== this.originalProfile.firstName || 
-           currentLastName !== this.originalProfile.lastName;
+    return currentFirstName !== this.originalProfile.firstName ||
+      currentLastName !== this.originalProfile.lastName;
   }
 
   // ─── Save Changes ─────────────────────────────────────────────────────────
@@ -150,7 +151,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.isSaving = true;
 
     const firstName = this.profileForm.get('firstName')?.value as string;
-    const lastName  = this.profileForm.get('lastName')?.value  as string;
+    const lastName = this.profileForm.get('lastName')?.value as string;
 
     if (this.avatarDeleted) {
       // ── Case 1: remove avatar ──────────────────────────────────────────────
@@ -183,7 +184,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
       const formData = new FormData();
       formData.append('profileImage', this._pendingAvatarBlob, 'avatar.png');
       formData.append('firstName', firstName);
-      formData.append('lastName',  lastName);
+      formData.append('lastName', lastName);
 
       this.authService.uploadAvatar(this._pendingAvatarBlob).subscribe({
         next: (r) => {
@@ -225,7 +226,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   toggleEmailNotifications() { this.emailNotifications = !this.emailNotifications; }
-  togglePublicProfile()      { this.publicProfile      = !this.publicProfile; }
+  togglePublicProfile() { this.publicProfile = !this.publicProfile; }
 
   // ─── Avatar dropdown ──────────────────────────────────────────────────────
   toggleAvatarOptions() { this.showAvatarOptions = !this.showAvatarOptions; }
@@ -236,10 +237,10 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   removePhoto() {
-    this.showAvatarOptions  = false;
-    this.avatarPreview       = null;
-    this._pendingAvatarBlob  = null;
-    this.avatarDeleted       = true;
+    this.showAvatarOptions = false;
+    this.avatarPreview = null;
+    this._pendingAvatarBlob = null;
+    this.avatarDeleted = true;
     this.fileInput.nativeElement.value = '';
   }
 
@@ -252,9 +253,9 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     input.value = '';
 
     this.revokeSelectedImage();
-    this.selectedImageSrc  = URL.createObjectURL(this._selectedFile);
+    this.selectedImageSrc = URL.createObjectURL(this._selectedFile);
     this.showAvatarOptions = false;
-    this.isCropperOpen     = true;
+    this.isCropperOpen = true;
   }
 
   // ─── Cropper: image load ──────────────────────────────────────────────────
@@ -264,10 +265,10 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this._naturalH = img.naturalHeight;
 
     const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW, this._naturalH);
-    this.cropScale      = cover;
+    this.cropScale = cover;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
-    this.cropRotation   = 0;
+    this.cropRotation = 0;
 
     setTimeout(() => this.refreshPreview(), 50);
   }
@@ -277,7 +278,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
       position: 'absolute',
       top: '50%',
       left: '50%',
-      width:  `${this._naturalW}px`,
+      width: `${this._naturalW}px`,
       height: `${this._naturalH}px`,
       'max-width': 'none',
       'transform-origin': 'center center',
@@ -322,7 +323,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   // ─── Cropper: controls ────────────────────────────────────────────────────
-  zoomIn()  { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
+  zoomIn() { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
   zoomOut() { this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); this.refreshPreview(); }
 
   updateZoom(e: Event) {
@@ -330,22 +331,22 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.refreshPreview();
   }
 
-  rotateLeft()  { this.cropRotation -= 90; this.refreshPreview(); }
+  rotateLeft() { this.cropRotation -= 90; this.refreshPreview(); }
   rotateRight() { this.cropRotation += 90; this.refreshPreview(); }
 
   resetCropTransform() {
     const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW || 1, this._naturalH || 1);
-    this.cropScale      = cover;
+    this.cropScale = cover;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
-    this.cropRotation   = 0;
+    this.cropRotation = 0;
     this.refreshPreview();
   }
 
   // ─── Cropper: live preview ────────────────────────────────────────────────
   refreshPreview() {
     if (!this.cropImg?.nativeElement?.complete) return;
-    const img  = this.cropImg.nativeElement;
+    const img = this.cropImg.nativeElement;
     const size = this.CROP_RADIUS * 2;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
@@ -395,11 +396,11 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
 
       // Store blob for upload on Save Changes — no Cloudinary call here
       this._pendingAvatarBlob = blob;
-      this.avatarDeleted      = false;
+      this.avatarDeleted = false;
 
       // Show the crop result as an instant local preview
-      this.avatarPreview  = this.livePreviewUrl ?? canvas.toDataURL('image/png');
-      this.isCropperOpen  = false;
+      this.avatarPreview = this.livePreviewUrl ?? canvas.toDataURL('image/png');
+      this.isCropperOpen = false;
       this.revokeSelectedImage();
     }, 'image/png', 1);
   }

@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription, filter, take, finalize } from 'rxjs';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../shared/components/loading';
 import { StatsCardsComponent } from './components/stats-cards/stats-cards.component';
 import { SalesTableComponent } from './components/sales-table/sales-table.component';
 import { BaseChartDirective } from 'ng2-charts';
@@ -22,7 +23,9 @@ import { AuthService } from '../../core/services/auth.service';
     MatProgressSpinnerModule,
     StatsCardsComponent,
     SalesTableComponent,
-    BaseChartDirective
+    BaseChartDirective,
+    PageSkeletonComponent,
+    ButtonLoadingComponent
   ],
   templateUrl: './instructor-analytics.page.html',
   styleUrl: './instructor-analytics.page.css'

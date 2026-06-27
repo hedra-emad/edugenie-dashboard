@@ -50,22 +50,9 @@
   }
 
   <!-- Loading Skeleton -->
-  @if (loading) {
-  <div class="skeleton-layout">
-    <div class="skeleton-card">
-      <div class="skeleton-line skeleton-title"></div>
-      @for (i of [1,2,3,4]; track i) {
-      <div class="skeleton-row">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-lines">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line skeleton-short"></div>
-        </div>
-      </div>
-      }
-    </div>
-  </div>
-  } @else {
+  <app-page-skeleton *ngIf="loading"></app-page-skeleton>
+
+  <ng-container *ngIf="!loading">
 
   <!-- Bulk Actions Toolbar -->
   @if (selectedCourseIds.size > 0) {
@@ -81,17 +68,20 @@
     </div>
     <div class="bulk-actions">
       <!-- Approve All — opens modal, only this button loads on approve -->
-      <button class="bulk-approve-btn" (click)="bulkApproveRequest()" [disabled]="bulkApproveLoading || bulkRejectLoading">
-        @if (bulkApproveLoading) { <span class="btn-spinner"></span> }
-        @else { <mat-icon>check_circle</mat-icon> }
-        Approve All
+      <button class="bulk-approve-btn" (click)="bulkApproveRequest()"
+        [disabled]="bulkApproveLoading || bulkRejectLoading">
+        <app-button-loading [loading]="bulkApproveLoading">
+          <mat-icon *ngIf="!bulkApproveLoading">check_circle</mat-icon>
+          Approve All
+        </app-button-loading>
       </button>
       <!-- Reject All — opens modal, only this button loads on reject -->
       <button class="bulk-reject-btn" (click)="bulkRejectRequest()"
         [disabled]="bulkApproveLoading || bulkRejectLoading">
-        @if (bulkRejectLoading) { <span class="btn-spinner"></span> }
-        @else { <mat-icon>cancel</mat-icon> }
-        Reject All
+        <app-button-loading [loading]="bulkRejectLoading">
+          <mat-icon *ngIf="!bulkRejectLoading">cancel</mat-icon>
+          Reject All
+        </app-button-loading>
       </button>
       <button class="bulk-clear-btn" (click)="clearSelection()" title="Clear selection">
         <mat-icon>close</mat-icon>
@@ -110,7 +100,7 @@
       (selectionChange)="onSelectionChange($event)">
     </app-approvals-table>
   </div>
-  }
+  </ng-container>
 
 </div>
 
@@ -118,12 +108,8 @@
      APPROVE COURSE MODAL (single + bulk)
      ============================================= -->
 @if (showApproveModal) {
-<app-approve-course-dialog
-  [courseTitle]="approveTargetTitle"
-  [isBulkMode]="isBulkApproveMode"
-  [selectedCount]="selectedCourseIds.size"
-  [isLoading]="isApproveLoading"
-  (confirm)="confirmApprove()"
+<app-approve-course-dialog [courseTitle]="approveTargetTitle" [isBulkMode]="isBulkApproveMode"
+  [selectedCount]="selectedCourseIds.size" [isLoading]="isApproveLoading" (confirm)="confirmApprove()"
   (cancel)="closeApproveModal()">
 </app-approve-course-dialog>
 }
@@ -132,12 +118,8 @@
      REJECT COURSE MODAL  (single + bulk)
      ============================================= -->
 @if (showRejectModal) {
-<app-reject-course-dialog
-  [courseTitle]="rejectTargetTitle"
-  [isBulkMode]="isBulkRejectMode"
-  [selectedCount]="selectedCourseIds.size"
-  [isLoading]="isRejectLoading"
-  (confirm)="confirmReject($event)"
+<app-reject-course-dialog [courseTitle]="rejectTargetTitle" [isBulkMode]="isBulkRejectMode"
+  [selectedCount]="selectedCourseIds.size" [isLoading]="isRejectLoading" (confirm)="confirmReject($event)"
   (cancel)="closeRejectModal()">
 </app-reject-course-dialog>
 }
