@@ -3,31 +3,31 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, finalize, catchError, of, tap } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import Pusher, { Channel } from 'pusher-js';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/enviroment';
 // import { AuthService } from './auth.service'; // adjust path if needed
 
 // notifications.ts (frontend)
 export type BackendNotificationType =
-  | 'COURSE_APPROVED'
-  | 'COURSE_REJECTED'
-  | 'COURSE_SUBMITTED_FOR_REVIEW'
-  | 'NEW_ENROLLMENT'
-  | 'NEW_REVIEW'
-  | 'LOW_RATING'
-  | 'PURCHASE_COMPLETED'
-  | 'PAYMENT_FAILED'
-  | 'COURSE_COMPLETED'
-  | 'CERTIFICATE_EARNED'
-  | 'REPORT_RESOLVED'
-  | 'EARNING_RECORDED'
-  | 'CONTENT_REMOVED'
-  | 'INACTIVITY_REMINDER'
-  | 'NEW_CONTENT_PUBLISHED'
-  | 'GOAL_MILESTONE'
-  | 'NEW_LOGIN_ATTEMPT'
-  | 'WEEKLY_SUMMARY'
-  | 'MONTHLY_SUMMARY'
-  | 'MILESTONE_REACHED';
+    | 'COURSE_APPROVED'
+    | 'COURSE_REJECTED'
+    | 'COURSE_SUBMITTED_FOR_REVIEW'
+    | 'NEW_ENROLLMENT'
+    | 'NEW_REVIEW'
+    | 'LOW_RATING'
+    | 'PURCHASE_COMPLETED'
+    | 'PAYMENT_FAILED'
+    | 'COURSE_COMPLETED'
+    | 'CERTIFICATE_EARNED'
+    | 'REPORT_RESOLVED'
+    | 'EARNING_RECORDED'
+    | 'CONTENT_REMOVED'
+    | 'INACTIVITY_REMINDER'
+    | 'NEW_CONTENT_PUBLISHED'
+    | 'GOAL_MILESTONE'
+    | 'NEW_LOGIN_ATTEMPT'
+    | 'WEEKLY_SUMMARY'
+    | 'MONTHLY_SUMMARY'
+    | 'MILESTONE_REACHED';
 
 
 export interface AppNotification {
@@ -74,44 +74,44 @@ export class NotificationsService implements OnDestroy {
 
     // ─── Call this once after the user logs in ───────────────────────────────
     connectPusher(userId: string): void {
-      console.log('🔌 connectPusher called for:', userId);
-      // Guard: already connected for this exact user — do nothing.
-      if (this.pusher && this.channel && this.connectedUserId === userId) {
-        console.log('⚡ Pusher already connected for user, skipping duplicate init.');
-        return;
-      }
+        console.log('🔌 connectPusher called for:', userId);
+        // Guard: already connected for this exact user — do nothing.
+        if (this.pusher && this.channel && this.connectedUserId === userId) {
+            console.log('⚡ Pusher already connected for user, skipping duplicate init.');
+            return;
+        }
 
-      // If switching users (or stale partial state), tear down first.
-      this.disconnectPusher();
+        // If switching users (or stale partial state), tear down first.
+        this.disconnectPusher();
 
-      this.pusher = new Pusher(environment.pusherKey, {
-        cluster: environment.pusherCluster,
-      });
-
-      // ── Task 5: connection diagnostics ──────────────────────────────────────
-      this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
-        console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
-      });
-      this.pusher.connection.bind('error', (err: any) => {
-        console.error('🔴 Pusher connection error:', err);
-      });
-      // ────────────────────────────────────────────────────────────────────────
-
-      this.channel = this.pusher.subscribe(`user-${userId}`);
-      this.connectedUserId = userId;
-      console.log('📡 Subscribed to channel:', `user-${userId}`);
-
-      this.channel.bind('new-notification', (notification: AppNotification) => {
-        console.log('📩 Received new-notification event:', notification);
-        this.ngZone.run(() => {
-          this.notificationsSubject.next([
-            notification,
-            ...this.notificationsSubject.value,
-          ]);
-          this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
-          this.showToast(notification);
+        this.pusher = new Pusher(environment.pusherKey, {
+            cluster: environment.pusherCluster,
         });
-      });
+
+        // ── Task 5: connection diagnostics ──────────────────────────────────────
+        this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
+            console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
+        });
+        this.pusher.connection.bind('error', (err: any) => {
+            console.error('🔴 Pusher connection error:', err);
+        });
+        // ────────────────────────────────────────────────────────────────────────
+
+        this.channel = this.pusher.subscribe(`user-${userId}`);
+        this.connectedUserId = userId;
+        console.log('📡 Subscribed to channel:', `user-${userId}`);
+
+        this.channel.bind('new-notification', (notification: AppNotification) => {
+            console.log('📩 Received new-notification event:', notification);
+            this.ngZone.run(() => {
+                this.notificationsSubject.next([
+                    notification,
+                    ...this.notificationsSubject.value,
+                ]);
+                this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+                this.showToast(notification);
+            });
+        });
     }
 
 
@@ -130,24 +130,24 @@ export class NotificationsService implements OnDestroy {
 
     // ─── Toast routing by notification type ─────────────────────────────────
     private showToast(notification: AppNotification): void {
-  const type = (notification.type || '').toUpperCase();
-  const title = notification.title;
-  const message = notification.message?.split('Reason:')[0].trim() ?? '';
+        const type = (notification.type || '').toUpperCase();
+        const title = notification.title;
+        const message = notification.message?.split('Reason:')[0].trim() ?? '';
 
-  switch (type) {
-    case 'COURSE_APPROVED':
-      this.toastr.success(message, title);
-      break;
-    case 'COURSE_REJECTED':
-      this.toastr.error(message, title);
-      break;
-    case 'COURSE_SUBMITTED_FOR_REVIEW':  // ← ADD THIS
-      this.toastr.info(message, title);
-      break;
-    default:
-      this.toastr.info(message, title);
-  }
-}
+        switch (type) {
+            case 'COURSE_APPROVED':
+                this.toastr.success(message, title);
+                break;
+            case 'COURSE_REJECTED':
+                this.toastr.error(message, title);
+                break;
+            case 'COURSE_SUBMITTED_FOR_REVIEW':  // ← ADD THIS
+                this.toastr.info(message, title);
+                break;
+            default:
+                this.toastr.info(message, title);
+        }
+    }
 
     // ─── Existing HTTP methods (unchanged) ───────────────────────────────────
     getNotifications(page = 1, limit = this.pageSize, append = false): void {

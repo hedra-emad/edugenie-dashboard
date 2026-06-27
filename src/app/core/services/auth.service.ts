@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/enviroment';
 import { Router } from '@angular/router';
 import {
   BehaviorSubject,
@@ -222,20 +222,20 @@ export class AuthService {
 
   // auth.service.ts
 
-setCurrentUser(user: UserProfile | null): void {
-  this.currentUserSubject.next(user);
-  this.currentUserSignal.set(user);
+  setCurrentUser(user: UserProfile | null): void {
+    this.currentUserSubject.next(user);
+    this.currentUserSignal.set(user);
 
-  if (user?.id) {
-    this.notificationsService.connectPusher(user.id);
+    if (user?.id) {
+      this.notificationsService.connectPusher(user.id);
+    }
   }
-}
 
-clearCurrentUser(): void {
-  this.notificationsService.disconnectPusher();
-  this.currentUserSubject.next(null);
-  this.currentUserSignal.set(null);
-}
+  clearCurrentUser(): void {
+    this.notificationsService.disconnectPusher();
+    this.currentUserSubject.next(null);
+    this.currentUserSignal.set(null);
+  }
 
   getCurrentUser(): UserProfile | null {
     return this.currentUserSubject.value;
