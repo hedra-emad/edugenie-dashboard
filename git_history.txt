@@ -1,0 +1,183 @@
+﻿commit 9db6be4edca4a6b672ce95876bbbd0594cde001e
+Author: Hedra Emad <emadhedra4@gmail.com>
+Date:   Fri Jun 26 16:02:54 2026 +0300
+
+    super admin dashboard
+
+diff --git a/src/app/features/superadmin/pages/command-center/command-center.page.html b/src/app/features/superadmin/pages/command-center/command-center.page.html
+new file mode 100644
+index 0000000..efb8272
+--- /dev/null
++++ b/src/app/features/superadmin/pages/command-center/command-center.page.html
+@@ -0,0 +1,171 @@
++<div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
++  <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8">
++    
++    <!-- Header -->
++    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
++      <div>
++        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
++          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">dashboard</mat-icon>
++          Command Center
++        </div>
++        <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight mb-2" style="color:#3B1892;">
++          Super Admin Dashboard
++        </h1>
++        <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
++          High-level overview of platform metrics and system health.
++        </p>
++      </div>
++      
++      @if (platformConfig) {
++        <button 
++          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
++          [ngClass]="platformConfig.maintenanceMode ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
++          (click)="toggleMaintenanceMode()"
++          [disabled]="isSavingConfig">
++          <mat-icon [class.animate-spin]="isSavingConfig">{{ isSavingConfig ? 'autorenew' : (platformConfig.maintenanceMode ? 'warning' : 'build') }}</mat-icon>
++          {{ platformConfig.maintenanceMode ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode' }}
++        </button>
++      }
++    </div>
++
++    @if (isLoading) {
++      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
++        @for (i of [1,2,3,4,5,6]; track i) {
++          <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 flex items-center gap-4 animate-pulse">
++            <div class="w-12 h-12 rounded-full bg-slate-200 shrink-0"></div>
++            <div class="flex flex-col gap-2 w-full">
++              <div class="h-3 bg-slate-200 rounded-full w-24"></div>
++              <div class="h-6 bg-slate-200 rounded-lg w-16"></div>
++            </div>
++          </div>
++        }
++      </div>
++    } @else {
++      <!-- Overview KPI Cards -->
++      @if (overview) {
++        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
++          <div class="stat-card">
++            <div class="stat-icon icon-blue"><mat-icon>attach_money</mat-icon></div>
++            <div class="stat-info">
++              <span class="stat-label">Platform Revenue</span>
++              <span class="stat-value">${{ overview.platformRevenue | number:'1.0-0' }}</span>
++            </div>
++          </div>
++
++          <div class="stat-card">
++            <div class="stat-icon icon-red"><mat-icon>account_balance_wallet</mat-icon></div>
++            <div class="stat-info">
++              <span class="stat-label">Payout Liability</span>
++              <span class="stat-value">${{ overview.payoutLiability | number:'1.0-0' }}</span>
++            </div>
++          </div>
++
++          <div class="stat-card">
++            <div class="stat-icon icon-orange"><mat-icon>payments</mat-icon></div>
++            <div class="stat-info">
++              <span class="stat-label">Pending Payouts</span>
++              <span class="stat-value">{{ overview.pendingPayouts | number }}</span>
++            </div>
++          </div>
++
++          <div class="stat-card">
++            <div class="stat-icon icon-purple"><mat-icon>admin_panel_settings</mat-icon></div>
++            <div class="stat-info">
++              <span class="stat-label">Active Admins</span>
++              <span class="stat-value">{{ overview.activeAdmins | number }}</span>
++            </div>
++          </div>
++
++          <div class="stat-card">
++            <div class="stat-icon icon-teal"><mat-icon>percent</mat-icon></div>
++            <div class="stat-info">
++              <span class="stat-label">Platform Fee</span>
++              <span class="stat-value">{{ platformConfig?.platformFeePercent || 0 }}%</span>
++            </div>
++          </div>
++          
++          <div class="stat-card" [ngClass]="overview.systemStatus === 'operational' ? 'bg-emerald-50' : 'bg-rose-50'">
++            <div class="stat-icon" [ngClass]="overview.systemStatus === 'operational' ? 'icon-green' : 'icon-red'">
++              <mat-icon>{{ overview.systemStatus === 'operational' ? 'check_circle' : 'error' }}</mat-icon>
++            </div>
++            <div class="stat-info">
++              <span class="stat-label">System Status</span>
++              <span class="stat-value capitalize" [ngClass]="overview.systemStatus === 'operational' ? 'text-emerald-700' : 'text-rose-700'">
++                {{ overview.systemStatus }}
++              </span>
++            </div>
++          </div>
++        </div>
++      }
++
++      <!-- System Health -->
++      @if (systemHealth) {
++        <div class="mt-8">
++          <h2 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
++            <mat-icon class="text-slate-400">monitor_heart</mat-icon> System Health
++          </h2>
++          
++          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
++            <div class="health-card">
++              <div class="flex items-center justify-between mb-4">
++                <span class="font-bold text-slate-700">API Status</span>
++                <span class="status-indicator" [ngClass]="systemHealth.apiStatus === 'healthy' ? 'status-healthy' : 'status-unhealthy'"></span>
++              </div>
++              <p class="text-sm text-slate-500 capitalize">{{ systemHealth.apiStatus }}</p>
++            </div>
++
++            <div class="health-card">
++              <div class="flex items-center justify-between mb-4">
++                <span class="font-bold text-slate-700">Webhook Failures (24h)</span>
++                <mat-icon [ngClass]="systemHealth.webhookFailuresLast24h > 0 ? 'text-rose-500' : 'text-emerald-500'">
++                  {{ systemHealth.webhookFailuresLast24h > 0 ? 'warning' : 'check_circle' }}
++                </mat-icon>
++              </div>
++              <p class="text-sm text-slate-500">{{ systemHealth.webhookFailuresLast24h }} errors</p>
++            </div>
++
++            <div class="health-card">
++              <div class="flex items-center justify-between mb-4">
++                <span class="font-bold text-slate-700">Avg Response Time</span>
++                <mat-icon class="text-slate-400">speed</mat-icon>
++              </div>
++              <p class="text-sm text-slate-500">{{ systemHealth.averageResponseTimeMs !== null ? systemHealth.averageResponseTimeMs + 'ms' : 'N/A' }}</p>
++            </div>
++          </div>
++
++          <!-- Critical Alerts -->
++          @if (overview && overview.criticalAlerts && overview.criticalAlerts.length > 0) {
++            <div class="mt-6 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
++              <div class="px-6 py-4 bg-rose-50 border-b border-rose-100 font-bold text-rose-700 flex items-center gap-2">
++                <mat-icon>notification_important</mat-icon> Critical Alerts
++              </div>
++              <div class="divide-y divide-slate-100">
++                @for (alert of overview.criticalAlerts; track alert.type) {
++                  <div class="px-6 py-4 hover:bg-slate-50 transition-colors">
++                    @if (alert.type === 'webhook_failure') {
++                      <div class="flex items-center justify-between">
++                        <div>
++                          <span class="font-bold text-slate-700 block">Webhook Failure: {{ alert.service }}</span>
++                          <span class="text-sm text-slate-500">Occurred {{ alert.occurredCount }} times. Last failure: {{ alert.lastOccurredAt | date:'medium' }}</span>
++                        </div>
++                        <mat-icon class="text-rose-500">error_outline</mat-icon>
++                      </div>
++                    } @else if (alert.type === 'payout_backlog') {
++                      <div class="flex items-center justify-between">
++                        <div>
++                          <span class="font-bold text-slate-700 block">Payout Backlog</span>
++                          <span class="text-sm text-slate-500">{{ alert.count }} pending payouts. Oldest from: {{ alert.oldestPendingDate | date:'medium' }}</span>
++                        </div>
++                        <mat-icon class="text-amber-500">warning</mat-icon>
++                      </div>
++                    }
++                  </div>
++                }
++              </div>
++            </div>
++          }
++        </div>
++      }
++    }
++  </div>
++</div>

@@ -58,14 +58,14 @@ export class SidebarComponent implements OnInit {
   readonly instructorBottomItems: NavItem[] = [];
 
   readonly superadminNavItems: NavItem[] = [
-    { icon: 'dashboard',        label: 'Command Center',   route: '/admin/command-center' },
-    { icon: 'admin_panel_settings', label: 'Admins',       route: '/admin/admins' },
-    { icon: 'payments',         label: 'Payouts',          route: '/admin/payouts' },
-    { icon: 'tune',             label: 'Platform Config',  route: '/admin/platform-config' },
-    { icon: 'history',          label: 'Audit Logs',       route: '/admin/audit-logs' },
-    { icon: 'group',            label: 'Users',            route: '/admin/users' },
-    { icon: 'fact_check',       label: 'Approvals',        route: '/admin/course-approvals' },
-    { icon: 'notifications',    label: 'Notifications',    route: '/admin/notifications' },
+    { icon: 'dashboard', label: 'Dashboard', route: '/admin/command-center' },
+    { icon: 'admin_panel_settings', label: 'Admins', route: '/admin/admins' },
+    { icon: 'payments', label: 'Payouts', route: '/admin/payouts' },
+    { icon: 'tune', label: 'Platform Config', route: '/admin/platform-config' },
+    { icon: 'history', label: 'Audit Logs', route: '/admin/audit-logs' },
+    { icon: 'group', label: 'Users', route: '/admin/users' },
+    { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
+    { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
   readonly superadminBottomItems: NavItem[] = [
