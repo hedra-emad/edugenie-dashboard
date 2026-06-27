@@ -167,10 +167,14 @@ export class AttachmentManagerComponent implements OnInit {
     // If there's a new file (create or edit)
     if (file) {
       const folder = this.buildFolder();
-      this.cloudinaryService.uploadAttachment(file, folder).subscribe({
+
+      this.cloudinaryService.uploadAttachment(
+        file,
+        folder,
+      ).subscribe({
         next: (cloudRes) => {
           const ext = file.name.split('.').pop()?.toLowerCase() || '';
-          
+
           if (editing) {
             // EDIT MODE WITH NEW FILE
             const payload: Partial<Attachment> = {
@@ -303,7 +307,7 @@ export class AttachmentManagerComponent implements OnInit {
   // ─── Update Flow ───────────────────────────────────────────
   toggleVisibility(attachment: Attachment): void {
     if (this.isLessonLevel) return; // Lesson attachments are always private
-    
+
     this.updatingId.set(attachment.id);
     const newIsPublic = !attachment.isPublic;
 

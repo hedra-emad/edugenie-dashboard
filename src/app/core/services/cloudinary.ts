@@ -56,7 +56,7 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   private deleteOldAsset(
     publicId: string,
-    resourceType: 'image' | 'video' = 'image',
+    resourceType: 'image' | 'video' | 'raw' = 'image',
   ): Observable<any> {
     return this.http
       .delete(`${this.apiBase}/cloudinary/delete`, {
@@ -67,9 +67,9 @@ export class CloudinaryService {
   }
 
   deleteAsset(
-    publicId: string,
-    resourceType: 'image' | 'video' = 'video'
-  ): Observable<any> {
+  publicId: string,
+  resourceType: 'image' | 'video' | 'raw' = 'video'
+): Observable<any> {
     return this.deleteOldAsset(publicId, resourceType);
   }
 
@@ -200,6 +200,8 @@ export class CloudinaryService {
   // Attachments are arbitrary documents (PDF, DOCX, ZIP, etc.)
   // so we use 'auto' which reliably accepts any file type.
   // ─────────────────────────────────────────────────────────────
+
+
   uploadAttachment(
     file: File,
     folder: string,
@@ -239,7 +241,7 @@ export class CloudinaryService {
   // files uploaded via resource_type 'auto'. Best-effort cleanup.
   // ─────────────────────────────────────────────────────────────
   deleteAttachmentAsset(publicId: string): Observable<any> {
-    return this.deleteOldAsset(publicId, 'image').pipe(
+    return this.deleteOldAsset(publicId, 'raw').pipe(
       catchError(() => of(null)),
     );
   }
