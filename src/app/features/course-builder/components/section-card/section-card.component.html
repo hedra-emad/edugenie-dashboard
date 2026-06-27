@@ -157,6 +157,17 @@
       </div>
     </div>
 
+
+    <!-- Section Preview Video (optional, collapsed by default) -->
+<app-preview-video-upload
+  *ngIf="isExistingSection"
+  resourceType="section"
+  [ownerId]="sectionId"
+  [existingUrl]="sectionPreviewVideoUrl"
+  [existingPublicId]="sectionPreviewVideoPublicId"
+  (uploaded)="onPreviewVideoUploaded($event)"
+  (removed)="onPreviewVideoRemoved()"
+></app-preview-video-upload>
     <!-- Action Buttons -->
     <div class="pt-1 flex justify-between items-center gap-2">
 

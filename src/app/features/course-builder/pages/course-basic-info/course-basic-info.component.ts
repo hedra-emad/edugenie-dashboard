@@ -24,6 +24,7 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
+import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
 
 @Component({
   selector: 'app-course-basic-info',
@@ -36,7 +37,8 @@ import { FileDraftService } from '../../../../core/services/file-draft.service';
     GoalsInputComponent,
     RequirementsInputComponent,
     ActionBarComponent,
-    AppLoader
+    AppLoader,
+    PreviewVideoUploadComponent
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -52,7 +54,11 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private fileDraftService = inject(FileDraftService);
-  
+
+  // Preview Video Fields
+  coursePreviewVideoUrl: string | null = null;
+  coursePreviewVideoPublicId: string | null = null;
+
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -88,6 +94,8 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   draftId: string = '';
   hasDraftData = signal(false);
 
+
+
   // Utility function to truncate names for toastr messages
   private truncateName(name: string, maxLength: number = 40): string {
     if (name.length <= maxLength) return name;
@@ -109,7 +117,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   }
 
   isFormPopulated = false;
-  
+
   private initializeDraftSystem() {
     // Generate or get draft ID
     this.draftId = this.formDraftIntegration.generateDraftId('course', undefined, this.courseId || undefined);
@@ -342,7 +350,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
   private setBaseline(baselineValue?: any) {
     this.initialValue = baselineValue || this.normalize(this.courseForm.getRawValue());
-    
+
     const current = this.normalize(this.courseForm.getRawValue());
     this.hasChanges.set(
       JSON.stringify(current) !== JSON.stringify(this.initialValue)
@@ -388,6 +396,11 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     if (course.thumbnail) {
       this.thumbnailPreview.set(course.thumbnail);
       this.hasThumbnail.set(true);
+    }
+
+    if (course.previewVideoUrl) {
+      this.coursePreviewVideoUrl = course.previewVideoUrl;
+      this.coursePreviewVideoPublicId = course.previewVideoPublicId ?? null;
     }
 
     this.setArray('goals', course.goals || []);
@@ -600,10 +613,10 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
         this.initialValue = this.normalize(this.courseForm.getRawValue());
 
         this.courseForm.markAsPristine();
-        
+
         // Clear draft state after successful update
         this.clearDraftAfterSave();
-        
+
         const courseTitle = this.courseForm.get('title')?.value || 'Course';
         const truncatedTitle = this.truncateName(courseTitle);
         this.toastr.success(`"${truncatedTitle}" updated successfully`);
@@ -732,10 +745,10 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     this.initialValue = this.normalize(this.courseForm.getRawValue());
     this.hasChanges.set(false);
     this.setBaseline();
-    
+
     // Clear draft state after successful course creation
     this.clearDraftAfterSave();
-    
+
     this.courseCreatedEvent.emit(courseId);
     const courseTitle = this.courseForm.get('title')?.value || 'Course';
     const truncatedTitle = this.truncateName(courseTitle);
@@ -788,5 +801,37 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
       this.status() === 'saving' ||
       this.status() === 'updating'
     );
+  }
+
+  onPreviewVideoUploaded(event: { url: string; publicId: string }) {
+    this.coursePreviewVideoUrl = event.url;
+    this.coursePreviewVideoPublicId = event.publicId;
+
+    this.coursesService.updateCourse(this.courseId!, {
+      previewVideoUrl: event.url,
+      previewVideoPublicId: event.publicId
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.toastr.success('Preview video saved'),
+      error: () => this.toastr.error('Failed to save preview video')
+    });
+  }
+
+  onPreviewVideoRemoved() {
+    const oldPublicId = this.coursePreviewVideoPublicId;
+    this.coursePreviewVideoUrl = null;
+    this.coursePreviewVideoPublicId = null;
+
+    this.coursesService.updateCourse(this.courseId!, {
+      previewVideoUrl: null,
+      previewVideoPublicId: null
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.toastr.success('Preview video removed');
+        if (oldPublicId) {
+          this.cloudinaryService.deleteAsset(oldPublicId, 'video').subscribe();
+        }
+      },
+      error: () => this.toastr.error('Failed to remove preview video')
+    });
   }
 }

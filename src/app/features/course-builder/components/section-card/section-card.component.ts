@@ -43,7 +43,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
-
+import { PreviewVideoUploadComponent } from "../preview-video-upload/preview-video-upload.component";
+import { CloudinaryService } from '../../../../core/services/cloudinary';
 @Component({
   selector: 'app-section-card',
   standalone: true,
@@ -56,7 +57,8 @@ import { extractId } from '../../pages/section-builder/section-builder.component
     MatMenuModule,
     DragDropModule,
     MatDialogModule,
-    ExpansionPanelComponent
+    ExpansionPanelComponent,
+    PreviewVideoUploadComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
@@ -69,7 +71,11 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private sectionsService = inject(SectionsService);
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
-  
+  private cloudinaryService = inject(CloudinaryService);
+
+  sectionPreviewVideoUrl: string | null = null;
+  sectionPreviewVideoPublicId: string | null = null;
+
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -115,6 +121,43 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   // ================= Lifecycle =================
   ngOnInit() {
     this.initializeDraftSystem();
+    const existing = this.sectionForm.getRawValue();
+    if (existing.previewVideoUrl) {
+      this.sectionPreviewVideoUrl = existing.previewVideoUrl;
+      this.sectionPreviewVideoPublicId = existing.previewVideoPublicId ?? null;
+    }
+  }
+
+  onPreviewVideoUploaded(event: { url: string; publicId: string }) {
+    this.sectionPreviewVideoUrl = event.url;
+    this.sectionPreviewVideoPublicId = event.publicId;
+
+    this.sectionsService.updateSection(this.courseId, this.sectionId, {
+      previewVideoUrl: event.url,
+      previewVideoPublicId: event.publicId
+    }).subscribe({
+      next: () => this.toastr.success('Preview video saved'),
+      error: () => this.toastr.error('Failed to save preview video')
+    });
+  }
+
+  onPreviewVideoRemoved() {
+    const oldPublicId = this.sectionPreviewVideoPublicId;
+    this.sectionPreviewVideoUrl = null;
+    this.sectionPreviewVideoPublicId = null;
+
+    this.sectionsService.updateSection(this.courseId, this.sectionId, {
+      previewVideoUrl: null,
+      previewVideoPublicId: null
+    }).subscribe({
+      next: () => {
+        this.toastr.success('Preview video removed');
+        if (oldPublicId) {
+          this.cloudinaryService.deleteAsset(oldPublicId, 'video').subscribe();
+        }
+      },
+      error: () => this.toastr.error('Failed to remove preview video')
+    });
   }
 
   ngOnDestroy() {
@@ -137,7 +180,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       sectionId = this.formDraftIntegration.generateDraftId('section', this.courseId);
       this.sectionForm.get('id')?.setValue(sectionId, { emitEvent: false });
     }
-    
+
     this.draftId = sectionId;
 
     // Check if there's existing draft data for this section
@@ -297,10 +340,10 @@ export class SectionCardComponent implements OnInit, OnDestroy {
         next: () => {
           this.isDeleting = false;
           this.cdr.markForCheck();
-          
+
           // Clear draft state after successful delete
           this.clearDraftAfterSave();
-          
+
           this.delete.emit(this.index);
         },
         error: (err) => {
@@ -454,5 +497,9 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     if (h > 0) return `${h}h ${m}m`;
     if (m > 0) return `${m}m ${s}s`;
     return `${s}s`;
+  }
+
+  get sectionId(): string {
+    return extractId(this.sectionForm.get('id')?.value) ?? '';
   }
 }
