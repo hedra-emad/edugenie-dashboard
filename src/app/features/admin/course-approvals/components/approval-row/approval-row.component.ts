@@ -2,12 +2,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CourseApproval } from '../../models/course-approval.model';
-import { ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: '[app-approval-row]',
   standalone: true,
-  imports: [CommonModule, MatIconModule, ButtonLoadingComponent],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './approval-row.component.html',
   styleUrl: './approval-row.component.css'
 })

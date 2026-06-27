@@ -10,7 +10,10 @@
 
   <!-- Loading State -->
   @if (loading) {
-  <app-page-skeleton></app-page-skeleton>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading course details...</p>
+  </div>
   }
 
   <!-- Error State -->
@@ -46,9 +49,9 @@
 
           <div class="course-header-info">
             <div class="badges-row">
-                <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
+              <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
                 <span class="status-dot"></span>
-                  {{ getStatusLabel(course.status) }}
+                {{ getStatusLabel(course.status) }}
               </span>
               <span class="date-badge">
                 <mat-icon>calendar_today</mat-icon>
@@ -308,10 +311,12 @@
         @if (course.status === 'pending') {
         <div class="actions-buttons">
           <button class="btn-approve" (click)="openApproveModal()" [disabled]="approveLoading || rejectLoading">
-            <app-button-loading [loading]="approveLoading">
-              <mat-icon>check_circle</mat-icon>
-              Approve
-            </app-button-loading>
+            @if (approveLoading) {
+            <div class="btn-spinner"></div>
+            } @else {
+            <mat-icon>check_circle</mat-icon>
+            }
+            Approve
           </button>
           <button class="btn-reject" (click)="openRejectModal()" [disabled]="approveLoading || rejectLoading">
             <mat-icon>cancel</mat-icon>
@@ -321,19 +326,23 @@
         }
         <!-- </div>
           </div> -->
-          @if (course.status === 'rejected') {
-          <div class="card content-card rejected-info-card" style="margin-top: 1.5rem; border: 1px solid #fca5a5; background: #fef2f2;">
-            <h2 class="card-title" style="color: #b91c1c; border-bottom: 1px solid #fecaca; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-              <mat-icon class="card-title-icon" style="color: #b91c1c;">error_outline</mat-icon>
-              Rejected Information
-            </h2>
-            <div class="rejected-details" style="color: #7f1d1d; display: flex; flex-direction: column; gap: 8px;">
-              <p style="margin: 0;"><strong>Reason:</strong> <br/>{{ course.rejectionReason || 'No reason provided.' }}</p>
-              <p style="margin: 0;"><strong>Rejected By:</strong> <br/>{{ course.rejectedBy || 'System' }}</p>
-              <p style="margin: 0;"><strong>Rejected At:</strong> <br/>{{ (course.rejectedAt | date:'d MMM y • hh:mm a') || 'N/A' }}</p>
-            </div>
+        @if (course.status === 'rejected') {
+        <div class="card content-card rejected-info-card"
+          style="margin-top: 1.5rem; border: 1px solid #fca5a5; background: #fef2f2;">
+          <h2 class="card-title"
+            style="color: #b91c1c; border-bottom: 1px solid #fecaca; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <mat-icon class="card-title-icon" style="color: #b91c1c;">error_outline</mat-icon>
+            Rejected Information
+          </h2>
+          <div class="rejected-details" style="color: #7f1d1d; display: flex; flex-direction: column; gap: 8px;">
+            <p style="margin: 0;"><strong>Reason:</strong> <br />{{ course.rejectionReason || 'No reason provided.' }}
+            </p>
+            <p style="margin: 0;"><strong>Rejected By:</strong> <br />{{ course.rejectedBy || 'System' }}</p>
+            <p style="margin: 0;"><strong>Rejected At:</strong> <br />{{ (course.rejectedAt | date:'d MMM y • hh:mm a')
+              || 'N/A' }}</p>
           </div>
-          }
+        </div>
+        }
       </div>
       <!-- END RIGHT COLUMN -->
 
@@ -347,19 +356,13 @@
 </div>
 
 @if (showApproveModal) {
-<app-approve-course-dialog
-  [courseTitle]="course?.title || null"
-  [isLoading]="approveLoading"
-  (confirm)="confirmApprove()"
-  (cancel)="closeApproveModal()">
+<app-approve-course-dialog [courseTitle]="course?.title || null" [isLoading]="approveLoading"
+  (confirm)="confirmApprove()" (cancel)="closeApproveModal()">
 </app-approve-course-dialog>
 }
 
 @if (showRejectModal) {
-<app-reject-course-dialog
-  [courseTitle]="course?.title || null"
-  [isLoading]="rejectLoading"
-  (confirm)="confirmReject($event)"
-  (cancel)="closeRejectModal()">
+<app-reject-course-dialog [courseTitle]="course?.title || null" [isLoading]="rejectLoading"
+  (confirm)="confirmReject($event)" (cancel)="closeRejectModal()">
 </app-reject-course-dialog>
 }

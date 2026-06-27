@@ -11,7 +11,6 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
 import { AuthService } from '../../core/services/auth.service';
-import { PageSkeletonComponent } from '../../shared/components/loading';
 
 @Component({
   selector: 'app-instructor-analytics',
@@ -23,8 +22,7 @@ import { PageSkeletonComponent } from '../../shared/components/loading';
     MatProgressSpinnerModule,
     StatsCardsComponent,
     SalesTableComponent,
-    BaseChartDirective,
-    PageSkeletonComponent
+    BaseChartDirective
   ],
   templateUrl: './instructor-analytics.page.html',
   styleUrl: './instructor-analytics.page.css'

@@ -4,12 +4,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
 import { PendingPayoutListItem, PayoutProcessResponse } from '../../models/superadmin.models';
-import { ButtonLoadingComponent, PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-payouts',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSnackBarModule, ButtonLoadingComponent, PageSkeletonComponent],
+  imports: [CommonModule, MatIconModule, MatSnackBarModule],
   templateUrl: './payouts.page.html',
   styleUrl: './payouts.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,7 +20,7 @@ export class PayoutsPageComponent implements OnInit {
 
   isLoading = true;
   payouts: PendingPayoutListItem[] = [];
-  
+
   // Pagination
   currentPage = 1;
   totalPages = 1;
@@ -59,7 +58,7 @@ export class PayoutsPageComponent implements OnInit {
   }
 
   get pageNumbers(): number[] {
-    return Array.from({length: this.totalPages}, (_, i) => i + 1);
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
   setPage(page: number) {

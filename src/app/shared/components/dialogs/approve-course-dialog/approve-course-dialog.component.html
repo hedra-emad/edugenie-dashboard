@@ -20,7 +20,7 @@
     <div class="modal-body">
       <p class="dialog-description">
         Are you sure you want to publish {{ isBulkMode ? 'these courses' : 'this course' }}?
-        <br/><br/>
+        <br /><br />
         Once published, {{ isBulkMode ? 'they' : 'it' }} will become available to students.
       </p>
     </div>
@@ -29,10 +29,13 @@
         Cancel
       </button>
       <button class="btn-approve" (click)="confirm.emit()" [disabled]="isLoading">
-        <app-button-loading [loading]="isLoading">
-          <mat-icon *ngIf="!isLoading">check_circle</mat-icon>
-          {{ isLoading ? 'Publishing...' : 'Publish Course' + (isBulkMode && selectedCount > 1 ? 's' : '') }}
-        </app-button-loading>
+        @if (isLoading) {
+        <span class="btn-spinner-sm"></span>
+        Publishing...
+        } @else {
+        <mat-icon>check_circle</mat-icon>
+        Publish Course{{ isBulkMode && selectedCount > 1 ? 's' : '' }}
+        }
       </button>
     </div>
   </div>

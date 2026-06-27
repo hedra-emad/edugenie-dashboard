@@ -6,12 +6,11 @@ import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
 import { AdminListItem, AdminActivityItem, InviteAdminResponse } from '../../models/superadmin.models';
-import { ButtonLoadingComponent, PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-admin-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, ButtonLoadingComponent, PageSkeletonComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule],
   templateUrl: './admin-management.page.html',
   styleUrl: './admin-management.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,7 +26,7 @@ export class AdminManagementPageComponent implements OnInit {
   // Modal State
   showActivityModal = false;
   selectedAdmin: AdminListItem | null = null;
-  
+
   // Activity Pagination
   isActivityLoading = false;
   activities: AdminActivityItem[] = [];
@@ -111,7 +110,7 @@ export class AdminManagementPageComponent implements OnInit {
   }
 
   get activityPageNumbers(): number[] {
-    return Array.from({length: this.activityTotalPages}, (_, i) => i + 1);
+    return Array.from({ length: this.activityTotalPages }, (_, i) => i + 1);
   }
 
   setActivityPage(page: number) {

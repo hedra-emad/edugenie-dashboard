@@ -5,12 +5,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
 import { PlatformConfigResponse } from '../../models/superadmin.models';
-import { ButtonLoadingComponent, PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-platform-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, ButtonLoadingComponent, PageSkeletonComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule],
   templateUrl: './platform-config.page.html',
   styleUrl: './platform-config.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,9 +58,9 @@ export class PlatformConfigPageComponent implements OnInit {
   get isDirty(): boolean {
     if (!this.originalConfig) return false;
     return this.originalConfig.platformFeePercent !== this.formConfig.platformFeePercent ||
-           this.originalConfig.instructorSharePercent !== this.formConfig.instructorSharePercent ||
-           this.originalConfig.maintenanceMode !== this.formConfig.maintenanceMode ||
-           this.originalConfig.minimumPayoutThreshold !== this.formConfig.minimumPayoutThreshold;
+      this.originalConfig.instructorSharePercent !== this.formConfig.instructorSharePercent ||
+      this.originalConfig.maintenanceMode !== this.formConfig.maintenanceMode ||
+      this.originalConfig.minimumPayoutThreshold !== this.formConfig.minimumPayoutThreshold;
   }
 
   toggleMaintenanceMode() {

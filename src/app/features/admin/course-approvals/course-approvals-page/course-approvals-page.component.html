@@ -51,7 +51,20 @@
 
   <!-- Loading Skeleton -->
   @if (loading) {
-  <app-page-skeleton></app-page-skeleton>
+  <div class="skeleton-layout">
+    <div class="skeleton-card">
+      <div class="skeleton-line skeleton-title"></div>
+      @for (i of [1,2,3,4]; track i) {
+      <div class="skeleton-row">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-lines">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-short"></div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
   } @else {
 
   <!-- Bulk Actions Toolbar -->
@@ -68,19 +81,18 @@
     </div>
     <div class="bulk-actions">
       <!-- Approve All — opens modal, only this button loads on approve -->
-      <button class="bulk-approve-btn" (click)="bulkApproveRequest()" [disabled]="bulkApproveLoading || bulkRejectLoading">
-        <app-button-loading [loading]="bulkApproveLoading">
-          <mat-icon>check_circle</mat-icon>
-          Approve All
-        </app-button-loading>
+      <button class="bulk-approve-btn" (click)="bulkApproveRequest()"
+        [disabled]="bulkApproveLoading || bulkRejectLoading">
+        @if (bulkApproveLoading) { <span class="btn-spinner"></span> }
+        @else { <mat-icon>check_circle</mat-icon> }
+        Approve All
       </button>
       <!-- Reject All — opens modal, only this button loads on reject -->
       <button class="bulk-reject-btn" (click)="bulkRejectRequest()"
         [disabled]="bulkApproveLoading || bulkRejectLoading">
-        <app-button-loading [loading]="bulkRejectLoading">
-          <mat-icon>cancel</mat-icon>
-          Reject All
-        </app-button-loading>
+        @if (bulkRejectLoading) { <span class="btn-spinner"></span> }
+        @else { <mat-icon>cancel</mat-icon> }
+        Reject All
       </button>
       <button class="bulk-clear-btn" (click)="clearSelection()" title="Clear selection">
         <mat-icon>close</mat-icon>
@@ -107,12 +119,8 @@
      APPROVE COURSE MODAL (single + bulk)
      ============================================= -->
 @if (showApproveModal) {
-<app-approve-course-dialog
-  [courseTitle]="approveTargetTitle"
-  [isBulkMode]="isBulkApproveMode"
-  [selectedCount]="selectedCourseIds.size"
-  [isLoading]="isApproveLoading"
-  (confirm)="confirmApprove()"
+<app-approve-course-dialog [courseTitle]="approveTargetTitle" [isBulkMode]="isBulkApproveMode"
+  [selectedCount]="selectedCourseIds.size" [isLoading]="isApproveLoading" (confirm)="confirmApprove()"
   (cancel)="closeApproveModal()">
 </app-approve-course-dialog>
 }
@@ -121,12 +129,8 @@
      REJECT COURSE MODAL  (single + bulk)
      ============================================= -->
 @if (showRejectModal) {
-<app-reject-course-dialog
-  [courseTitle]="rejectTargetTitle"
-  [isBulkMode]="isBulkRejectMode"
-  [selectedCount]="selectedCourseIds.size"
-  [isLoading]="isRejectLoading"
-  (confirm)="confirmReject($event)"
+<app-reject-course-dialog [courseTitle]="rejectTargetTitle" [isBulkMode]="isBulkRejectMode"
+  [selectedCount]="selectedCourseIds.size" [isLoading]="isRejectLoading" (confirm)="confirmReject($event)"
   (cancel)="closeRejectModal()">
 </app-reject-course-dialog>
 }

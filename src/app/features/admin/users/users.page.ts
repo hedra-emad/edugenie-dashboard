@@ -10,13 +10,12 @@ import { UserRole } from '../../../core/models/user-profile.model';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ButtonLoadingComponent } from '../../../shared/components/loading';
 
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule, ButtonLoadingComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule],
   templateUrl: './users.page.html',
   styleUrl: './users.page.css',
 })
@@ -39,7 +38,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   }
 
   get pageNumbers(): number[] {
-    return Array.from({length: this.totalPages}, (_, i) => i);
+    return Array.from({ length: this.totalPages }, (_, i) => i);
   }
 
   get pageFrom(): number {
@@ -66,13 +65,13 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   deleteTarget: any = null;
   deleteReason = '';
   isDeleting = false;
-  
+
   private searchSubject = new Subject<string>();
   private sub?: Subscription;
 
   ngOnInit() {
     this.loadUsers();
-    
+
     this.sub = this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged()
@@ -81,11 +80,11 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
       this.applyFilters();
     });
   }
-  
+
   ngOnDestroy() {
     if (this.sub) this.sub.unsubscribe();
   }
-  
+
   onSearchChange(event: any) {
     const value = event?.target?.value || '';
     this.searchQuery = value; // Update instantly so the input field doesn't lag
@@ -114,7 +113,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         // Backend returns { data: [...], meta: { total, page, ... } }
         let fetchedUsers = res.data || [];
-        
+
         // Exclude admin and superadmin users
         fetchedUsers = fetchedUsers.filter((u: any) => u.role !== 'admin' && u.role !== 'superadmin');
 
@@ -129,12 +128,12 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
           });
         }
         this.users = fetchedUsers;
-        
+
         // Accurate total count logic without modifying backend
         if (this.selectedRole) {
           this.totalUsers = res.meta?.total || this.users.length;
           this.totalPages = res.meta?.totalPages || Math.ceil(this.totalUsers / this.limit) || 1;
-          this.pages = Array.from({length: this.totalPages}, (_, i) => i + 1);
+          this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
         } else {
           // If 'All Roles' is selected, fetch true totals for student + instructor only
           forkJoin({
@@ -143,11 +142,11 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
           }).subscribe(({ students, instructors }) => {
             this.totalUsers = (students.meta?.total || 0) + (instructors.meta?.total || 0);
             this.totalPages = Math.ceil(this.totalUsers / this.limit) || 1;
-            this.pages = Array.from({length: this.totalPages}, (_, i) => i + 1);
+            this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
             this.cdr.detectChanges();
           });
         }
-        
+
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -268,7 +267,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   confirmDelete() {
     if (!this.deleteReason.trim()) return;
     this.isDeleting = true;
-    
+
     setTimeout(() => {
       this.users = this.users.filter(u => u.id !== this.deleteTarget.id);
       this.totalUsers--;
