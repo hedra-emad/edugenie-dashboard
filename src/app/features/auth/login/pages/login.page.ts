@@ -103,10 +103,7 @@ export class LoginPageComponent implements OnInit {
           const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
 
           if (this.authService.isExternalRedirect(homeRoute)) {
-            // Student — leave the Angular app entirely.
-            // Using the exchangeToken from backend response to authenticate in Next.js
-            const token = res.data.exchangeToken;
-            window.location.href = `${this.authService.getStudentAppRedirectUrl()}/auth-callback?token=${token}`;
+            this.authService.redirectToStudentApp(res.data.exchangeToken).subscribe();
             return;
           }
 

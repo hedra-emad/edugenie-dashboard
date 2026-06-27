@@ -1,0 +1,39 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-icon approve-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div>
+        <h3>Publish Course?</h3>
+        @if (!isBulkMode && courseTitle) {
+        <p class="modal-subtitle">"{{ courseTitle }}"</p>
+        }
+        @if (isBulkMode) {
+        <p class="modal-subtitle">{{ selectedCount }} course{{ selectedCount !== 1 ? 's' : '' }} will be published</p>
+        }
+      </div>
+      <button class="modal-close" (click)="cancel.emit()" [disabled]="isLoading" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="dialog-description">
+        Are you sure you want to publish {{ isBulkMode ? 'these courses' : 'this course' }}?
+        <br/><br/>
+        Once published, {{ isBulkMode ? 'they' : 'it' }} will become available to students.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cancel.emit()" [disabled]="isLoading">
+        Cancel
+      </button>
+      <button class="btn-approve" (click)="confirm.emit()" [disabled]="isLoading">
+        <app-button-loading [loading]="isLoading">
+          <mat-icon *ngIf="!isLoading">check_circle</mat-icon>
+          {{ isLoading ? 'Publishing...' : 'Publish Course' + (isBulkMode && selectedCount > 1 ? 's' : '') }}
+        </app-button-loading>
+      </button>
+    </div>
+  </div>
+</div>

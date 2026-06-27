@@ -10,257 +10,185 @@
 
   <!-- Stats Grid — 6 cards, 3×2 on desktop -->
   @if (stats) {
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon icon-blue"><mat-icon>library_books</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Total Courses</span>
-          <span class="stat-value">{{ stats.totalCourses }}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-orange"><mat-icon>pending_actions</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Pending Review</span>
-          <span class="stat-value">{{ stats.underReview }}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-green"><mat-icon>check_circle</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Published</span>
-          <span class="stat-value">{{ stats.published }}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-red"><mat-icon>cancel</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Rejected</span>
-          <span class="stat-value">{{ stats.rejected }}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-gray"><mat-icon>edit_note</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Draft</span>
-          <span class="stat-value">{{ stats.draft || 0 }}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-purple"><mat-icon>inventory_2</mat-icon></div>
-        <div class="stat-info">
-          <span class="stat-label">Archived</span>
-          <span class="stat-value">{{ stats.archived || 0 }}</span>
-        </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><mat-icon>library_books</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Total Courses</span>
+        <span class="stat-value">{{ stats.totalCourses }}</span>
       </div>
     </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><mat-icon>pending_actions</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Pending Review</span>
+        <span class="stat-value">{{ stats.underReview }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><mat-icon>check_circle</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Published</span>
+        <span class="stat-value">{{ stats.published }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-red"><mat-icon>cancel</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Rejected</span>
+        <span class="stat-value">{{ stats.rejected }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple"><mat-icon>edit_note</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-label">Draft</span>
+        <span class="stat-value">{{ stats.draft || 0 }}</span>
+      </div>
+    </div>
+  </div>
   }
 
   <!-- Loading Skeleton -->
   @if (loading) {
-    <div class="skeleton-layout">
-      <div class="skeleton-card">
-        <div class="skeleton-line skeleton-title"></div>
-        @for (i of [1,2,3,4]; track i) {
-          <div class="skeleton-row">
-            <div class="skeleton-avatar"></div>
-            <div class="skeleton-lines">
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line skeleton-short"></div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
+  <app-page-skeleton></app-page-skeleton>
   } @else {
 
-    <!-- Bulk Actions Toolbar -->
-    @if (selectedCourseIds.size > 0) {
-      <div class="bulk-toolbar">
-        <div class="bulk-left">
-          <span class="bulk-count">
-            <mat-icon>check_box</mat-icon>
-            {{ selectedCourseIds.size }} Course{{ selectedCourseIds.size !== 1 ? 's' : '' }} Selected
-          </span>
-          <button class="bulk-view-btn" (click)="openSelectedModal()">
-            <mat-icon>visibility</mat-icon> View Selected
-          </button>
-        </div>
-        <div class="bulk-actions">
-          <!-- Approve All — only this button loads on approve -->
-          <button class="bulk-approve-btn"
-            (click)="bulkApprove()"
-            [disabled]="bulkApproveLoading || bulkRejectLoading">
-            @if (bulkApproveLoading) { <span class="btn-spinner"></span> }
-            @else { <mat-icon>check_circle</mat-icon> }
-            Approve All
-          </button>
-          <!-- Reject All — opens modal, only this button loads on reject -->
-          <button class="bulk-reject-btn"
-            (click)="bulkRejectRequest()"
-            [disabled]="bulkApproveLoading || bulkRejectLoading">
-            @if (bulkRejectLoading) { <span class="btn-spinner"></span> }
-            @else { <mat-icon>cancel</mat-icon> }
-            Reject All
-          </button>
-          <button class="bulk-clear-btn" (click)="clearSelection()" title="Clear selection">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- Approvals Table -->
-    <div class="table-col">
-      <app-approvals-table
-        [courses]="courses"
-        [actionLoading]="actionLoading"
-        [selectedIds]="selectedCourseIds"
-        [rejectConfirmedId]="isRejectLoading && !isBulkRejectMode ? rejectTargetId : null"
-        (viewDetails)="onViewCourse($event)"
-        (approve)="onApprove($event)"
-        (reject)="onRejectRequest($event)"
-        (selectionChange)="onSelectionChange($event)">
-      </app-approvals-table>
+  <!-- Bulk Actions Toolbar -->
+  @if (selectedCourseIds.size > 0) {
+  <div class="bulk-toolbar">
+    <div class="bulk-left">
+      <span class="bulk-count">
+        <mat-icon>check_box</mat-icon>
+        {{ selectedCourseIds.size }} Course{{ selectedCourseIds.size !== 1 ? 's' : '' }} Selected
+      </span>
+      <button class="bulk-view-btn" (click)="openSelectedModal()">
+        <mat-icon>visibility</mat-icon> View Selected
+      </button>
     </div>
+    <div class="bulk-actions">
+      <!-- Approve All — opens modal, only this button loads on approve -->
+      <button class="bulk-approve-btn" (click)="bulkApproveRequest()" [disabled]="bulkApproveLoading || bulkRejectLoading">
+        <app-button-loading [loading]="bulkApproveLoading">
+          <mat-icon>check_circle</mat-icon>
+          Approve All
+        </app-button-loading>
+      </button>
+      <!-- Reject All — opens modal, only this button loads on reject -->
+      <button class="bulk-reject-btn" (click)="bulkRejectRequest()"
+        [disabled]="bulkApproveLoading || bulkRejectLoading">
+        <app-button-loading [loading]="bulkRejectLoading">
+          <mat-icon>cancel</mat-icon>
+          Reject All
+        </app-button-loading>
+      </button>
+      <button class="bulk-clear-btn" (click)="clearSelection()" title="Clear selection">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Approvals Table -->
+  <div class="table-col">
+    <app-approvals-table [courses]="courses" [actionLoading]="actionLoading" [selectedIds]="selectedCourseIds"
+      [currentFilter]="activeTableFilter" (filterChange)="activeTableFilter = $event"
+      [rejectConfirmedId]="isRejectLoading && !isBulkRejectMode ? rejectTargetId : null"
+      [approveConfirmedId]="isApproveLoading && !isBulkApproveMode ? approveTargetId : null"
+      (viewDetails)="onViewCourse($event)" (approve)="onApproveRequest($event)" (reject)="onRejectRequest($event)"
+      (selectionChange)="onSelectionChange($event)">
+    </app-approvals-table>
+  </div>
   }
 
 </div>
 
 <!-- =============================================
+     APPROVE COURSE MODAL (single + bulk)
+     ============================================= -->
+@if (showApproveModal) {
+<app-approve-course-dialog
+  [courseTitle]="approveTargetTitle"
+  [isBulkMode]="isBulkApproveMode"
+  [selectedCount]="selectedCourseIds.size"
+  [isLoading]="isApproveLoading"
+  (confirm)="confirmApprove()"
+  (cancel)="closeApproveModal()">
+</app-approve-course-dialog>
+}
+
+<!-- =============================================
      REJECT COURSE MODAL  (single + bulk)
      ============================================= -->
 @if (showRejectModal) {
-  <div class="modal-overlay" (click)="closeRejectModal()">
-    <div class="modal-container reject-modal" (click)="$event.stopPropagation()">
-
-      <div class="modal-header reject-modal-header">
-        <div class="modal-header-icon">
-          <mat-icon>cancel</mat-icon>
-        </div>
-        <div class="modal-header-text">
-          <h3>{{ isBulkRejectMode ? 'Reject Selected Courses' : 'Reject Course' }}</h3>
-          @if (!isBulkRejectMode && rejectTargetTitle) {
-            <p class="modal-subtitle">"{{ rejectTargetTitle }}"</p>
-          }
-          @if (isBulkRejectMode) {
-            <p class="modal-subtitle">{{ selectedCourseIds.size }} course{{ selectedCourseIds.size !== 1 ? 's' : '' }} will be rejected</p>
-          }
-        </div>
-        <button class="modal-close" (click)="closeRejectModal()" [disabled]="isRejectLoading" aria-label="Close">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <p class="reject-description">
-          Please provide a reason for rejection. This feedback will help the instructor improve the course.
-        </p>
-        <div class="field-group">
-          <label class="field-label" for="rejectReason">
-            Reason of Rejection <span class="field-required">*</span>
-          </label>
-          <textarea
-            id="rejectReason"
-            class="reject-textarea"
-            [class.field-error]="rejectReasonTouched && !rejectReason.trim()"
-            [(ngModel)]="rejectReason"
-            (blur)="rejectReasonTouched = true"
-            placeholder="e.g. Course description is incomplete. Please add detailed module outlines and learning objectives."
-            rows="4"
-            [disabled]="isRejectLoading">
-          </textarea>
-          @if (rejectReasonTouched && !rejectReason.trim()) {
-            <span class="field-error-msg">
-              <mat-icon>error_outline</mat-icon>
-              Rejection reason is required.
-            </span>
-          }
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeRejectModal()" [disabled]="isRejectLoading">
-          Cancel
-        </button>
-        <button
-          class="btn-confirm-reject"
-          (click)="confirmReject()"
-          [disabled]="isRejectLoading || !rejectReason.trim()">
-          @if (isRejectLoading) {
-            <span class="btn-spinner-sm"></span>
-            Rejecting...
-          } @else {
-            <mat-icon>cancel</mat-icon>
-            {{ isBulkRejectMode ? 'Reject Selected' : 'Reject Course' }}
-          }
-        </button>
-      </div>
-
-    </div>
-  </div>
+<app-reject-course-dialog
+  [courseTitle]="rejectTargetTitle"
+  [isBulkMode]="isBulkRejectMode"
+  [selectedCount]="selectedCourseIds.size"
+  [isLoading]="isRejectLoading"
+  (confirm)="confirmReject($event)"
+  (cancel)="closeRejectModal()">
+</app-reject-course-dialog>
 }
 
 <!-- =============================================
      SELECTED COURSES MODAL
      ============================================= -->
 @if (showSelectedModal) {
-  <div class="modal-overlay" (click)="closeSelectedModal()">
-    <div class="modal-container selected-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <h3>Selected Courses</h3>
-          <span class="modal-count-badge">{{ selectedCourses.length }}</span>
-        </div>
-        <button class="modal-close" (click)="closeSelectedModal()" aria-label="Close">
-          <mat-icon>close</mat-icon>
-        </button>
+<div class="modal-overlay" (click)="closeSelectedModal()">
+  <div class="modal-container selected-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h3>Selected Courses</h3>
+        <span class="modal-count-badge">{{ selectedCourses.length }}</span>
       </div>
+      <button class="modal-close" (click)="closeSelectedModal()" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        @if (selectedCourses.length === 0) {
-          <div class="modal-empty">
-            <mat-icon>inbox</mat-icon>
-            <p>No courses selected.</p>
-          </div>
-        } @else {
-          <div class="selected-list">
-            @for (course of selectedCourses; track course.id) {
-              <div class="selected-item">
-                <div class="selected-item-thumb">
-                  @if (course.thumbnail && course.thumbnail.startsWith('http')) {
-                    <img [src]="course.thumbnail" [alt]="course.title" />
-                  } @else {
-                    <mat-icon>video_library</mat-icon>
-                  }
-                </div>
-                <div class="selected-item-info">
-                  <span class="selected-item-title">{{ course.title }}</span>
-                  <span class="selected-item-meta">{{ course.instructorName }} · {{ course.category }}</span>
-                </div>
-                <span class="selected-status-dot" [ngClass]="course.status"></span>
-                <button class="selected-remove-btn" (click)="removeFromSelection(course.id)" title="Remove">
-                  <mat-icon>close</mat-icon>
-                </button>
-              </div>
+    <div class="modal-body">
+      @if (selectedCourses.length === 0) {
+      <div class="modal-empty">
+        <mat-icon>inbox</mat-icon>
+        <p>No courses selected.</p>
+      </div>
+      } @else {
+      <div class="selected-list">
+        @for (course of selectedCourses; track course.id) {
+        <div class="selected-item">
+          <div class="selected-item-thumb">
+            @if (course.thumbnail && course.thumbnail.startsWith('http')) {
+            <img [src]="course.thumbnail" [alt]="course.title" />
+            } @else {
+            <mat-icon>video_library</mat-icon>
             }
           </div>
+          <div class="selected-item-info">
+            <span class="selected-item-title">{{ course.title }}</span>
+            <span class="selected-item-meta">{{ course.instructorName }} · {{ course.category }}</span>
+          </div>
+          <span class="selected-status-dot" [ngClass]="course.status"></span>
+          <button class="selected-remove-btn" (click)="removeFromSelection(course.id)" title="Remove">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
         }
       </div>
+      }
+    </div>
 
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeSelectedModal()">Close</button>
-        <button class="modal-bulk-reject-btn"
-          (click)="closeSelectedModal(); bulkRejectRequest()"
-          [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
-          <mat-icon>cancel</mat-icon> Reject All
-        </button>
-        <button class="modal-bulk-approve-btn"
-          (click)="bulkApprove(); closeSelectedModal()"
-          [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
-          <mat-icon>check_circle</mat-icon> Approve All
-        </button>
-      </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeSelectedModal()">Close</button>
+      <button class="modal-bulk-reject-btn" (click)="closeSelectedModal(); bulkRejectRequest()"
+        [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
+        <mat-icon>cancel</mat-icon> Reject All
+      </button>
+      <button class="modal-bulk-approve-btn" (click)="bulkApproveRequest(); closeSelectedModal()"
+        [disabled]="bulkApproveLoading || bulkRejectLoading || selectedCourses.length === 0">
+        <mat-icon>check_circle</mat-icon> Approve All
+      </button>
     </div>
   </div>
+</div>
 }

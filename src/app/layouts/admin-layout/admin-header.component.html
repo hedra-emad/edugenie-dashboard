@@ -23,6 +23,9 @@
       <button (click)="toggleNotifications()" class="icon-btn notification-btn" title="Notifications">
         <mat-icon>notifications</mat-icon>
         <span class="badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+        @if ((unreadCount$ | async)! > 0) {
+          <span class="unread-badge">{{ unreadCount$ | async }}</span>
+        }
       </button>
 
       <!-- Notifications Dropdown -->

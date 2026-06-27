@@ -8,7 +8,7 @@
         @if (badgeCount > 0) {
           <span class="count-badge"
             [class.badge-orange]="currentFilter === 'pending'"
-            [class.badge-green]="currentFilter === 'approved'"
+            [class.badge-green]="currentFilter === 'published'"
             [class.badge-red]="currentFilter === 'rejected'"
             [class.badge-gray]="currentFilter === 'all'">
             {{ badgeCount }}
@@ -47,8 +47,8 @@
       <button role="tab" class="filter-tab" [class.active-pending]="currentFilter === 'pending'" (click)="setFilter('pending')">
         Pending Review <span class="tab-count pending-count">{{ pendingCount }}</span>
       </button>
-      <button role="tab" class="filter-tab" [class.active-approved]="currentFilter === 'approved'" (click)="setFilter('approved')">
-        Approved <span class="tab-count approved-count">{{ approvedCount }}</span>
+      <button role="tab" class="filter-tab" [class.active-published]="currentFilter === 'published'" (click)="setFilter('published')">
+        Published <span class="tab-count published-count">{{ publishedCount }}</span>
       </button>
       <button role="tab" class="filter-tab" [class.active-rejected]="currentFilter === 'rejected'" (click)="setFilter('rejected')">
         Rejected <span class="tab-count rejected-count">{{ rejectedCount }}</span>

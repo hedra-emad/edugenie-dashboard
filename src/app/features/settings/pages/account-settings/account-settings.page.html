@@ -25,17 +25,8 @@
               <div
                 class="w-32 h-32 rounded-full border-[6px] border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-4xl relative">
 
-                <!-- Uploading Spinner overlay -->
-                <div *ngIf="isUploadingAvatar"
-                  class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-                  <svg class="animate-spin h-8 w-8 text-[#00B0FF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
-                  </svg>
-                </div>
+                <!-- Uploading Spinner overlay — shown while Save Changes uploads the avatar -->
+                <app-loading-overlay [show]="isUploadingAvatar"></app-loading-overlay>
 
                 <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Profile Avatar" class="w-full h-full object-cover"
                   [class.opacity-50]="isUploadingAvatar">
@@ -43,7 +34,7 @@
               </div>
 
               <button type="button" (click)="toggleAvatarOptions()"
-                class="absolute bottom-1 right-1 bg-[#00B0FF] text-white p-2 rounded-full shadow-lg hover:bg-blue-400 transition-colors border-2 border-white z-10">
+                class="absolute bottom-1 right-1 btn-primary-icon">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
@@ -54,7 +45,10 @@
               <!-- Avatar Options Dropdown -->
               <div *ngIf="showAvatarOptions"
                 class="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white shadow-xl rounded-lg border border-gray-100 py-1 w-36 z-20 overflow-hidden">
-                <button type="button" (click)="triggerFileInput()"
+                <button *ngIf="!avatarPreview" type="button" (click)="triggerFileInput()"
+                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Upload
+                  Image</button>
+                <button *ngIf="avatarPreview" type="button" (click)="triggerFileInput()"
                   class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Change
                   Image</button>
                 <button *ngIf="avatarPreview" type="button" (click)="removePhoto()"
@@ -146,12 +140,12 @@
             </div>
             <button (click)="toggleEmailNotifications()"
               class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#00B0FF] focus:ring-offset-2"
-              [ngClass]="emailNotifications ? 'bg-[#00B0FF]' : 'bg-gray-200'" role="switch"
+              [ngClass]="emailNotifications ? 'bg-[#3b1892]' : 'bg-gray-200'" role="switch"
               [attr.aria-checked]="emailNotifications">
               <span
                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center"
                 [ngClass]="emailNotifications ? 'translate-x-5' : 'translate-x-0'">
-                <svg *ngIf="emailNotifications" class="w-3.5 h-3.5 text-[#00B0FF]" fill="currentColor"
+                <svg *ngIf="emailNotifications" class="w-3.5 h-3.5 text-[#3b1892]" fill="currentColor"
                   viewBox="0 0 20 20">
                   <path fill-rule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -169,8 +163,8 @@
                 and course progress.</p>
             </div>
             <button (click)="togglePublicProfile()"
-              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#00B0FF] focus:ring-offset-2"
-              [ngClass]="publicProfile ? 'bg-[#00B0FF]' : 'bg-gray-200'" role="switch"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3b1892] focus:ring-offset-2"
+              [ngClass]="publicProfile ? 'bg-[#3b1892]' : 'bg-gray-200'" role="switch"
               [attr.aria-checked]="publicProfile">
               <span
                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
@@ -185,21 +179,11 @@
 
     <!-- Footer Actions -->
     <div class="mt-16 flex justify-end gap-4 pb-8">
-      <button type="button"
-        class="px-6 py-3 text-[14px] font-semibold text-gray-700 hover:text-gray-900 bg-transparent transition-colors rounded-lg disabled:opacity-50"
-        [disabled]="isSaving || isUploadingAvatar">
-        Cancel
-      </button>
-      <button type="button" (click)="onSaveChanges()" [disabled]="isSaving || profileForm.invalid || isUploadingAvatar"
-        class="px-6 py-3 text-[14px] font-semibold text-white bg-[#00B0FF] hover:bg-blue-400 shadow-md shadow-blue-400/20 rounded-lg transition-colors flex items-center justify-center min-w-[140px] disabled:opacity-70 disabled:cursor-not-allowed">
-        <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
-          fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-          </path>
-        </svg>
-        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      <button type="button" (click)="onSaveChanges()" [disabled]="isSaving || profileForm.invalid || isUploadingAvatar || !hasUnsavedChanges"
+        class="px-6 py-3 text-[14px] font-semibold text-white btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        <app-button-loading [loading]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Save Changes' }}
+        </app-button-loading>
       </button>
     </div>
 
@@ -227,10 +211,10 @@
     </div>
 
     <!-- Body -->
-    <div class="flex flex-col md:flex-row gap-0 overflow-y-auto flex-1">
+    <div class="flex flex-col md:flex-row gap-0 overflow-y-auto md:overflow-hidden flex-1">
 
       <!-- ── LEFT: Crop Zone ── -->
-      <div class="flex flex-col items-center justify-center gap-5 p-6 flex-1 bg-gray-50">
+      <div class="flex flex-col items-center justify-center gap-3 p-4 flex-1 bg-gray-50">
 
         <!-- Crop arena -->
         <div class="cropper-arena"
@@ -335,13 +319,13 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex justify-end gap-3 px-6 py-5 border-t border-gray-100 bg-gray-50/50 shrink-0">
+    <div class="flex justify-end gap-3 px-6 py-3 border-t border-gray-100 bg-gray-50/50 shrink-0">
       <button type="button" (click)="cancelCrop()"
-        class="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+        class="px-6 py-2.5 text-sm font-semibold bg-white text-[#3b1892] border border-gray-300 rounded-lg hover:text-red-500 hover:bg-red-50 hover:border-red-500 hover:border rounded-lg cursor-pointer">
         Cancel
       </button>
       <button type="button" (click)="confirmCrop()"
-        class="px-8 py-2.5 text-sm font-semibold text-white bg-[#00B0FF] rounded-lg hover:bg-blue-500 transition-colors shadow-md shadow-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-300">
+        class="px-8 py-2.5 text-sm font-semibold text-white bg-[#3b1892] rounded-lg hover:bg-[#2d1073] transition-colors shadow-md shadow-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer">
         Apply Crop
       </button>
     </div>
@@ -350,13 +334,7 @@
 </div>
 
 <ng-template #loadingTemplate>
-  <div class="p-8 md:p-12 lg:p-16 flex items-center justify-center min-h-[500px]">
-    <svg class="animate-spin h-10 w-10 text-[#00B0FF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-      </path>
-    </svg>
+  <div class="p-8 md:p-12 lg:p-16">
+    <app-page-skeleton></app-page-skeleton>
   </div>
 </ng-template>

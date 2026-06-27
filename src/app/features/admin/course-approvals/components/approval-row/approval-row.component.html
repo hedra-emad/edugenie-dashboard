@@ -64,11 +64,9 @@
         [disabled]="anyLoading"
         class="action-btn reject-btn"
         title="Reject Course">
-        @if (rejectLoading) {
-          <div class="spinner reject-spinner"></div>
-        } @else {
+        <app-button-loading [loading]="rejectLoading">
           <mat-icon>close</mat-icon>
-        }
+        </app-button-loading>
       </button>
       <!-- Approve -->
       <button
@@ -76,11 +74,9 @@
         [disabled]="anyLoading"
         class="action-btn approve-btn"
         title="Approve Course">
-        @if (approveLoading) {
-          <div class="spinner"></div>
-        } @else {
+        <app-button-loading [loading]="approveLoading">
           <mat-icon>check</mat-icon>
-        }
+        </app-button-loading>
       </button>
     } @else {
       <!-- Read-only: just navigate to course detail -->

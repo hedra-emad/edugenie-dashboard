@@ -377,14 +377,7 @@
   }
 
   /* Hide text in Remove Filters button on mobile, show only icon */
-  :host ::ng-deep app-sub-button.remove-filters-mobile button {
-    min-width: 44px !important;
-    padding: 0 12px !important;
-  }
   
-  :host ::ng-deep app-sub-button.remove-filters-mobile button span {
-    display: none !important;
-  }
 }
 
 @media (max-width: 480px) {

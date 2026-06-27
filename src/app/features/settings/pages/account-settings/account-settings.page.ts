@@ -6,52 +6,51 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserProfile } from '../../../../core/models/user-profile.model';
-import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ToastrService } from 'ngx-toastr';
+import { PageSkeletonComponent, ButtonLoadingComponent, LoadingOverlayComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageSkeletonComponent, ButtonLoadingComponent, LoadingOverlayComponent],
   templateUrl: './account-settings.page.html',
   styleUrls: ['./account-settings.page.css']
 })
 export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
-  private fb = inject(FormBuilder);
-  private cloudinaryService = inject(CloudinaryService);
-  private toastr = inject(ToastrService);
+  private fb          = inject(FormBuilder);
+  private toastr      = inject(ToastrService);
 
-  // Profile state
+  // ─── Profile state ───────────────────────────────────────────────────────
   profileForm!: FormGroup;
   securityForm!: FormGroup;
+  originalProfile: { firstName: string, lastName: string } | null = null;
   isLoadingProfile = true;
-  isSaving = false;
-  errorMessage = '';
-  successMessage = '';
+  isSaving         = false;
   emailNotifications = true;
-  publicProfile = false;
+  publicProfile      = false;
 
-  // Avatar state
-  avatarPreview: string | null = null;
-  avatarUrl: string | null = null;
-  avatarPublicId: string | null = null;
+  // ─── Avatar state ────────────────────────────────────────────────────────
+  /** URL shown in the avatar circle — either from the server or a local crop preview */
+  avatarPreview:   string | null = null;
+  /** Cropped blob waiting to be uploaded on Save Changes — null if unchanged */
+  private _pendingAvatarBlob: Blob | null = null;
+  /** Whether the user explicitly clicked "Remove Image" */
   avatarDeleted = false;
+  /** True while the save request that includes an avatar upload is in-flight */
   isUploadingAvatar = false;
   showAvatarOptions = false;
 
-  // Cropper state
-  isCropperOpen = false;
+  // ─── Cropper state ───────────────────────────────────────────────────────
+  isCropperOpen    = false;
   selectedImageSrc: string | null = null;
-  livePreviewUrl: string | null = null;
+  livePreviewUrl:   string | null = null;
 
-  // Image transform state (custom cropper)
   cropTranslateX = 0;
   cropTranslateY = 0;
-  cropScale = 1;
-  cropRotation = 0;
+  cropScale      = 1;
+  cropRotation   = 0;
 
-  // Drag tracking
   _isDragging = false;
   private _dragStartX = 0;
   private _dragStartY = 0;
@@ -61,23 +60,24 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private _selectedFile: File | null = null;
   private _previewObjectUrl: string | null = null;
 
-  // Cropper layout constants (must match CSS)
   readonly CONTAINER_SIZE = 380;
-  readonly CROP_RADIUS = 155;
+  readonly CROP_RADIUS    = 155;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('cropImg') cropImg!: ElementRef<HTMLImageElement>;
+  @ViewChild('cropImg')   cropImg!:  ElementRef<HTMLImageElement>;
 
   constructor() { this.initForms(); }
-  ngOnInit() { this.loadProfile(); }
+  ngOnInit()    { this.loadProfile(); }
 
   ngOnDestroy() {
     this.revokeSelectedImage();
-    this.revokeLivePreview();
+    // local preview blobs are data: URLs — nothing to revoke
+    if (this.avatarPreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.avatarPreview);
+    }
   }
 
   // ─── Forms ────────────────────────────────────────────────────────────────
-
   private initForms() {
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
@@ -91,12 +91,14 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Profile ──────────────────────────────────────────────────────────────
-
+  // ─── Profile load ─────────────────────────────────────────────────────────
   loadProfile() {
     this.isLoadingProfile = true;
     this.authService.getProfile().subscribe({
-      next: (r) => { if (r.data) this.populateForm(r.data); this.isLoadingProfile = false; },
+      next: (r) => {
+        if (r.data) this.populateForm(r.data);
+        this.isLoadingProfile = false;
+      },
       error: (err) => {
         this.toastr.error(err.error?.message || 'Failed to load profile.');
         this.isLoadingProfile = false;
@@ -110,9 +112,13 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
       lastName:  user.lastName  || '',
       email:     user.email     || ''
     });
-    this.avatarPreview = user.avatar || null;
-    this.avatarUrl = user.avatar || null;
-    this.avatarDeleted = false;
+    this.originalProfile = {
+      firstName: user.firstName || '',
+      lastName:  user.lastName  || ''
+    };
+    this.avatarPreview     = user.avatar || null;
+    this._pendingAvatarBlob = null;
+    this.avatarDeleted      = false;
   }
 
   getInitials(): string {
@@ -122,37 +128,107 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
   }
 
+  get hasUnsavedChanges(): boolean {
+    if (this.avatarDeleted || this._pendingAvatarBlob) return true;
+    if (!this.originalProfile) return false;
+    
+    const currentFirstName = this.profileForm.get('firstName')?.value;
+    const currentLastName = this.profileForm.get('lastName')?.value;
+
+    return currentFirstName !== this.originalProfile.firstName || 
+           currentLastName !== this.originalProfile.lastName;
+  }
+
+  // ─── Save Changes ─────────────────────────────────────────────────────────
+  /**
+   * Single save action that handles three cases:
+   *  1. Avatar removed → PATCH { removeAvatar: true } then update profile fields
+   *  2. New avatar pending → upload via FormData (backend → Cloudinary) then update fields
+   *  3. No avatar change → plain JSON PATCH with name fields only
+   */
   onSaveChanges() {
     if (this.profileForm.invalid || this.isUploadingAvatar) return;
     this.isSaving = true;
-    const payload: { firstName?: string; lastName?: string; avatar?: string | null; avatarPublicId?: string | null } = {
-      firstName: this.profileForm.get('firstName')?.value,
-      lastName:  this.profileForm.get('lastName')?.value
-    };
+
+    const firstName = this.profileForm.get('firstName')?.value as string;
+    const lastName  = this.profileForm.get('lastName')?.value  as string;
+
     if (this.avatarDeleted) {
-      payload.avatar = null;
-    } else if (this.avatarUrl && this.avatarPublicId) {
-      payload.avatar = this.avatarUrl;
-      payload.avatarPublicId = this.avatarPublicId;
+      // ── Case 1: remove avatar ──────────────────────────────────────────────
+      this.authService.removeAvatar().subscribe({
+        next: () => {
+          // After avatar removal, update name fields
+          this.authService.updateProfile({ firstName, lastName }).subscribe({
+            next: (r) => {
+              this.isSaving = false;
+              this.toastr.success('Profile updated successfully.');
+              if (r.data) this.populateForm(r.data);
+            },
+            error: (err) => {
+              this.isSaving = false;
+              this.toastr.error(err.error?.message || 'Failed to update profile.');
+            }
+          });
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.toastr.error(err.error?.message || 'Failed to remove avatar.');
+        }
+      });
+
+    } else if (this._pendingAvatarBlob) {
+      // ── Case 2: new avatar — send file to backend ──────────────────────────
+      this.isUploadingAvatar = true;
+
+      // Build FormData with both avatar file and profile fields in one request
+      const formData = new FormData();
+      formData.append('profileImage', this._pendingAvatarBlob, 'avatar.png');
+      formData.append('firstName', firstName);
+      formData.append('lastName',  lastName);
+
+      this.authService.uploadAvatar(this._pendingAvatarBlob).subscribe({
+        next: (r) => {
+          this.isUploadingAvatar = false;
+          // Now update name fields (avatar was already saved by uploadAvatar)
+          this.authService.updateProfile({ firstName, lastName }).subscribe({
+            next: (r2) => {
+              this.isSaving = false;
+              this.toastr.success('Profile updated successfully.');
+              if (r2.data) this.populateForm(r2.data);
+            },
+            error: (err) => {
+              this.isSaving = false;
+              this.toastr.error(err.error?.message || 'Failed to update profile fields.');
+            }
+          });
+        },
+        error: (err) => {
+          this.isUploadingAvatar = false;
+          this.isSaving = false;
+          this.toastr.error(err.error?.message || 'Avatar upload failed. Please try again.');
+        }
+      });
+
+    } else {
+      // ── Case 3: name-only update ───────────────────────────────────────────
+      this.authService.updateProfile({ firstName, lastName }).subscribe({
+        next: (r) => {
+          this.isSaving = false;
+          this.toastr.success('Profile updated successfully.');
+          if (r.data) this.populateForm(r.data);
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.toastr.error(err.error?.message || 'Failed to update profile.');
+        }
+      });
     }
-    this.authService.updateProfile(payload).subscribe({
-      next: (r) => {
-        this.isSaving = false;
-        this.toastr.success('Profile updated successfully.');
-        if (r.data) this.populateForm(r.data);
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.toastr.error(err.error?.message || 'Failed to update profile.');
-      }
-    });
   }
 
   toggleEmailNotifications() { this.emailNotifications = !this.emailNotifications; }
   togglePublicProfile()      { this.publicProfile      = !this.publicProfile; }
 
-  // ─── Avatar Dropdown ──────────────────────────────────────────────────────
-
+  // ─── Avatar dropdown ──────────────────────────────────────────────────────
   toggleAvatarOptions() { this.showAvatarOptions = !this.showAvatarOptions; }
 
   triggerFileInput() {
@@ -161,45 +237,39 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   removePhoto() {
-    this.showAvatarOptions = false;
-    this.avatarPreview  = null;
-    this.avatarUrl      = null;
-    this.avatarPublicId = null;
-    this.avatarDeleted  = true;
+    this.showAvatarOptions  = false;
+    this.avatarPreview       = null;
+    this._pendingAvatarBlob  = null;
+    this.avatarDeleted       = true;
     this.fileInput.nativeElement.value = '';
   }
 
-  // ─── File Selection ───────────────────────────────────────────────────────
-
+  // ─── File selection ───────────────────────────────────────────────────────
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
     this._selectedFile = input.files[0];
-    // Reset input immediately so the same file can be re-selected
     input.value = '';
 
     this.revokeSelectedImage();
-    this.selectedImageSrc = URL.createObjectURL(this._selectedFile);
+    this.selectedImageSrc  = URL.createObjectURL(this._selectedFile);
     this.showAvatarOptions = false;
-    this.isCropperOpen = true;
+    this.isCropperOpen     = true;
   }
 
-  // ─── Custom Cropper — Image Load ─────────────────────────────────────────
-
+  // ─── Cropper: image load ──────────────────────────────────────────────────
   onCropImageLoaded(event: Event) {
     const img = event.target as HTMLImageElement;
     this._naturalW = img.naturalWidth;
     this._naturalH = img.naturalHeight;
 
-    // Auto-scale so the image covers the crop circle (like Google / LinkedIn)
     const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW, this._naturalH);
-    this.cropScale = cover;
+    this.cropScale      = cover;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
-    this.cropRotation = 0;
+    this.cropRotation   = 0;
 
-    // Give Angular a tick so the img element reflects its new state
     setTimeout(() => this.refreshPreview(), 50);
   }
 
@@ -219,8 +289,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     };
   }
 
-  // ─── Drag ─────────────────────────────────────────────────────────────────
-
+  // ─── Cropper: drag ────────────────────────────────────────────────────────
   onCropPointerDown(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     this._isDragging = true;
@@ -245,8 +314,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   @HostListener('document:touchend')
   onDocumentUp() { this._isDragging = false; }
 
-  // ─── Wheel Zoom ───────────────────────────────────────────────────────────
-
+  // ─── Cropper: wheel zoom ──────────────────────────────────────────────────
   onCropWheel(event: WheelEvent) {
     event.preventDefault();
     const delta = event.deltaY < 0 ? 0.08 : -0.08;
@@ -254,10 +322,10 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.refreshPreview();
   }
 
-  // ─── Controls ─────────────────────────────────────────────────────────────
-
+  // ─── Cropper: controls ────────────────────────────────────────────────────
   zoomIn()  { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
   zoomOut() { this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); this.refreshPreview(); }
+
   updateZoom(e: Event) {
     this.cropScale = parseFloat((e.target as HTMLInputElement).value);
     this.refreshPreview();
@@ -275,18 +343,15 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.refreshPreview();
   }
 
-  // ─── Live Preview ─────────────────────────────────────────────────────────
-
+  // ─── Cropper: live preview ────────────────────────────────────────────────
   refreshPreview() {
     if (!this.cropImg?.nativeElement?.complete) return;
-    const img = this.cropImg.nativeElement;
+    const img  = this.cropImg.nativeElement;
     const size = this.CROP_RADIUS * 2;
     const canvas = document.createElement('canvas');
-    canvas.width  = size;
-    canvas.height = size;
+    canvas.width = canvas.height = size;
     const ctx = canvas.getContext('2d')!;
     this.drawToCanvas(ctx, img, size);
-    this.revokeLivePreview();
     this.livePreviewUrl = canvas.toDataURL('image/png');
   }
 
@@ -300,19 +365,21 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     ctx.restore();
   }
 
-  // ─── Confirm / Cancel ─────────────────────────────────────────────────────
-
+  // ─── Cropper: confirm ────────────────────────────────────────────────────
+  /**
+   * Renders the crop to a 500×500 canvas, stores the blob locally,
+   * and sets an instant local preview.  NO upload happens here.
+   * The actual upload goes via the backend when the user clicks Save Changes.
+   */
   confirmCrop() {
     const img = this.cropImg?.nativeElement;
     if (!img) return;
 
     const OUT = 500;
     const canvas = document.createElement('canvas');
-    canvas.width  = OUT;
-    canvas.height = OUT;
+    canvas.width = canvas.height = OUT;
     const ctx = canvas.getContext('2d')!;
 
-    // Scale from visual crop size to output size
     const scale = OUT / (this.CROP_RADIUS * 2);
     ctx.save();
     ctx.translate(
@@ -327,26 +394,14 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     canvas.toBlob(blob => {
       if (!blob) { this.toastr.error('Failed to process image.'); return; }
 
-      this.isCropperOpen    = false;
-      this.isUploadingAvatar = true;
-      this.avatarPreview    = this.livePreviewUrl;  // instant local preview
+      // Store blob for upload on Save Changes — no Cloudinary call here
+      this._pendingAvatarBlob = blob;
+      this.avatarDeleted      = false;
 
-      this.cloudinaryService.uploadImage(blob).subscribe({
-        next: (res) => {
-          this.avatarUrl      = res.secure_url;
-          this.avatarPublicId = res.public_id;
-          this.avatarDeleted  = false;
-          this.isUploadingAvatar = false;
-          this.toastr.success('Avatar ready — click Save Changes to apply.');
-          this.revokeSelectedImage();
-        },
-        error: () => {
-          this.isUploadingAvatar = false;
-          this.avatarPreview = null;
-          this.toastr.error('Upload failed. Please try again.');
-          this.revokeSelectedImage();
-        }
-      });
+      // Show the crop result as an instant local preview
+      this.avatarPreview  = this.livePreviewUrl ?? canvas.toDataURL('image/png');
+      this.isCropperOpen  = false;
+      this.revokeSelectedImage();
     }, 'image/png', 1);
   }
 
@@ -357,7 +412,6 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-
   private getPoint(e: MouseEvent | TouchEvent): { x: number; y: number } {
     if (e instanceof TouchEvent && e.touches.length) {
       return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -366,15 +420,13 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   private revokeSelectedImage() {
-    if (this._previewObjectUrl) { URL.revokeObjectURL(this._previewObjectUrl); this._previewObjectUrl = null; }
-    if (this.selectedImageSrc && this.selectedImageSrc.startsWith('blob:')) {
+    if (this._previewObjectUrl) {
+      URL.revokeObjectURL(this._previewObjectUrl);
+      this._previewObjectUrl = null;
+    }
+    if (this.selectedImageSrc?.startsWith('blob:')) {
       URL.revokeObjectURL(this.selectedImageSrc);
     }
     this.selectedImageSrc = null;
-  }
-
-  private revokeLivePreview() {
-    // livePreviewUrl is a data: URL from canvas, no revoking needed
-    this.livePreviewUrl = null;
   }
 }

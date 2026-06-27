@@ -1,9 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CreateLessonDto } from '../models/dto/create-lesson.dto';
-import { Lesson } from '../models/lesson.model';
-import { Observable, map, mergeMap, of, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable, map, throwError } from 'rxjs';
+
 
 export interface TranscriptionStatus {
   videoReady: boolean;
@@ -16,21 +15,14 @@ export class LessonsService {
 
   private http = inject(HttpClient);
 
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = ''; // intercepted by api.interceptor.ts
 
   addLesson(courseId: string, sectionId: string, body: CreateLessonDto): Observable<any> {
-    const forceFail = false; // ⬅️ set to true only while testing, then back to false
-
-    return this.http
-      .post(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body)
-      .pipe(
-        mergeMap(res => {
-          if (forceFail) {
-            return throwError(() => new Error('Simulated DB failure'));
-          }
-          return of(res);
-        })
-      );
+    const forceFail = false;
+    if (forceFail) {
+      return throwError(() => new Error('Simulated DB failure'));   // ← returns immediately, http.post() below never runs
+    }
+    return this.http.post(`${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons`, body);
   }
 
   updateLesson(courseId: string, sectionId: string, lessonId: string, body: Partial<CreateLessonDto>): Observable<any> {

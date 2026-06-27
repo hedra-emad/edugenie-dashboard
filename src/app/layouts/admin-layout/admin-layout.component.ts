@@ -1,22 +1,26 @@
 import {
-  Component, HostListener, OnInit,
+  Component, HostListener, OnInit, OnDestroy,
   ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { AdminSidebarComponent } from './admin-sidebar.component';
+import { SidebarComponent } from '../../shared/components/layout/sidebar/sidebar.component';
+import { NotificationsService } from '../../core/services/notifications';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterOutlet, MatIconModule, AdminSidebarComponent],
+  imports: [CommonModule, RouterOutlet, MatIconModule, SidebarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly notificationsService = inject(NotificationsService);
+
+  readonly unreadCount$ = this.notificationsService.unreadCount$;
 
   sidebarExpanded = true;
   isMobile = false;
@@ -24,6 +28,15 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkScreenSize();
+    // Load initial unread count. Real-time updates come via
+    // NotificationsService.connectPusher() which was already called by
+    // AuthService.setCurrentUser() during the login/redeem flow.
+    this.notificationsService.getNotifications(1, 10);
+  }
+
+  ngOnDestroy(): void {
+    // NotificationsService is a root singleton — Pusher stays alive
+    // across navigation. Only disconnect on logout (handled by clearCurrentUser).
   }
 
   @HostListener('window:resize')
@@ -39,7 +52,6 @@ export class AdminLayoutComponent implements OnInit {
     this.isMobile = w < 768;
     this.isTablet = w >= 768 && w < 1024;
 
-    // Only reset state when crossing a breakpoint
     if (this.isMobile !== wasMobile || this.isTablet !== wasTablet) {
       if (this.isMobile || this.isTablet) {
         this.sidebarExpanded = false;
@@ -61,4 +73,4 @@ export class AdminLayoutComponent implements OnInit {
       this.cdr.markForCheck();
     }
   }
-}
+}

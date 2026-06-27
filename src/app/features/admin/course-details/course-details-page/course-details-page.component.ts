@@ -3,20 +3,36 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, withLatestFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { CourseApprovalService } from '../../course-approvals/services/course-approval.service';
 import { ToastrService } from 'ngx-toastr';
+import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
+import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-course-details-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, FormsModule, DatePipe, TitleCasePipe],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    MatIconModule,
+    MatTabsModule,
+    FormsModule, 
+    DatePipe, 
+    TitleCasePipe,
+    ApproveCourseDialogComponent,
+    RejectCourseDialogComponent,
+    PageSkeletonComponent,
+    ButtonLoadingComponent
+  ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'
 })
@@ -37,10 +53,11 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   approveLoading = false;
   rejectLoading  = false;
 
+  // ── Approve modal ──────────────────────────────────────────────────────────
+  showApproveModal = false;
+
   // ── Reject modal ──────────────────────────────────────────────────────────
   showRejectModal      = false;
-  rejectReason         = '';
-  rejectReasonTouched  = false;
 
   expandedSections: Record<number, boolean> = {};
   playingVideoLessonId: string | null = null;
@@ -66,9 +83,19 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
     this.error   = false;
     this.cdr.markForCheck();
 
-    this.service.getCourseById(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: data => {
-        this.course = data;
+    this.service.getCourseById(id).pipe(
+      withLatestFrom(this.service.courses$),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ([data, courses]) => {
+        const cached = courses.find(c => c.id === id);
+        this.course = { 
+          ...data, 
+          status: cached?.status || this.service.normalizeStatus(data),
+          rejectionReason: cached?.rejectionReason || data.rejectionReason,
+          rejectedBy: cached?.rejectedBy || data.rejectedBy,
+          rejectedAt: cached?.rejectedAt || data.rejectedAt
+        };
         if (this.course?.sections?.length > 0) {
           this.expandedSections[0] = true;
         }
@@ -106,8 +133,32 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
     );
   }
 
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'pending': return 'Pending Review';
+      case 'under_review': return 'Pending Review'; // fallback
+      case 'published': return 'Published';
+      case 'rejected': return 'Rejected';
+      case 'draft': return 'Draft';
+      case 'archived': return 'Archived';
+      default: return 'Pending Review';
+    }
+  }
+
   // ── Approve ───────────────────────────────────────────────────────────────
-  approveCourse(): void {
+  openApproveModal(): void {
+    if (this.approveLoading || this.rejectLoading) return;
+    this.showApproveModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeApproveModal(): void {
+    if (this.approveLoading) return;
+    this.showApproveModal = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmApprove(): void {
     if (!this.courseId || this.approveLoading || this.rejectLoading) return;
     this.approveLoading = true;
     this.cdr.markForCheck();
@@ -122,7 +173,8 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
       )
       .subscribe(success => {
         if (success) {
-          this.course = { ...this.course, status: 'approved' };
+          this.showApproveModal = false;
+          this.course = { ...this.course, status: 'published' };
           this.cdr.markForCheck();
         }
       });
@@ -133,8 +185,6 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   /** Open modal — no loading starts here */
   openRejectModal(): void {
     if (this.approveLoading || this.rejectLoading) return;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.showRejectModal     = true;
     this.cdr.markForCheck();
   }
@@ -143,16 +193,12 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
   closeRejectModal(): void {
     if (this.rejectLoading) return;
     this.showRejectModal     = false;
-    this.rejectReason        = '';
-    this.rejectReasonTouched = false;
     this.cdr.markForCheck();
   }
 
   /** Confirm rejection — loading starts only here, after admin submits */
-  confirmReject(): void {
-    this.rejectReasonTouched = true;
-    const reason = this.rejectReason.trim();
-    if (!reason || !this.courseId || this.rejectLoading) return;
+  confirmReject(reason: string): void {
+    if (!this.courseId || this.rejectLoading) return;
 
     this.rejectLoading = true;
     this.cdr.markForCheck();
@@ -167,10 +213,8 @@ export class CourseDetailsPageComponent implements OnInit, OnDestroy {
       )
       .subscribe(success => {
         if (success) {
-          this.showRejectModal     = false;
-          this.rejectReason        = '';
-          this.rejectReasonTouched = false;
-          this.course = { ...this.course, status: 'rejected' };
+          this.showRejectModal = false;
+          this.course = { ...this.course, status: 'rejected', rejectionReason: reason };
           this.cdr.markForCheck();
         }
       });

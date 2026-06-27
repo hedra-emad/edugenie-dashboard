@@ -4,7 +4,6 @@ export interface Category {
   _id?: string;
   id: string;
   name: string;
-  slug?: string;
   courseCount?: number;
   order?: number;
   createdAt?: string;
@@ -33,6 +32,10 @@ export interface CourseApproval {
   thumbnail: string;
   status: ApprovalStatus;
   exceedsLimit: boolean;
+  
+  rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
 }
 
 export interface AdminStats {
@@ -43,4 +46,3 @@ export interface AdminStats {
   draft: number;
   archived: number;
 }
-
