@@ -174,7 +174,10 @@ export const routes: Routes = [
       roles: ['admin', 'superadmin'],
     },
     children: [
-      { path: '', redirectTo: 'course-approvals', pathMatch: 'full' },
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/admin-home-redirect.component').then(m => m.AdminHomeRedirectComponent),
+      },
       {
         path: 'command-center',
         canActivate: [authGuard, roleGuard],
