@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, switchMap, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface SignatureResponse {
   signature: string;
@@ -79,7 +80,7 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
 
   private uploadPreset = 'edugenie_avatar';
-  private cloudName = 'dxeoqi3kb';
+  private cloudName = environment.cloudName;
   uploadImage(file: File | Blob) {
     const formData = new FormData();
 
