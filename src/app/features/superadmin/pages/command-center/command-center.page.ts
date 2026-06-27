@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +26,7 @@ export class CommandCenterPageComponent implements OnInit {
   private readonly superadminService = inject(SuperadminService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
 
   // ── state ────────────────────────────────────────────────────
   isLoading = true;
@@ -245,6 +247,10 @@ export class CommandCenterPageComponent implements OnInit {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  goTo(path: string) {
+    void this.router.navigateByUrl(path);
   }
 
 
