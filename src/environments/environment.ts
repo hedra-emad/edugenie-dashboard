@@ -1,8 +1,9 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://edugenie-api.vercel.app',
+  apiUrl: 'https://edugenie-api.vercel.app/api',
   lessonUploadPreset: 'lessons',
   thumbnailUploadPreset: 'course_thumbnails',
-  // studentAppUrl: 'http://localhost:3000' // NOTE: Verified via next.config.ts and package.json that Next.js uses 3000, not 4200
-  studentAppUrl: 'https://edugenie-student-web.vercel.app'
+  studentAppUrl: 'http://localhost:3000',
+  pusherKey: '3a59a972cbaf38e1fb97',
+  pusherCluster: 'us2',
 };
