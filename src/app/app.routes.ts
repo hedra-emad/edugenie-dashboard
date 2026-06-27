@@ -97,6 +97,14 @@ export const routes: Routes = [
       import('./features/auth/redeem/redeem.component').then((m) => m.RedeemComponent),
     // NO guards — this is the unauthenticated entry point
   },
+  {
+    path: 'accept-invite',
+    loadComponent: () =>
+      import('./features/auth/accept-invite/accept-invite.component').then(
+        (m) => m.AcceptInviteComponent,
+      ),
+    // NO guards — new admins accept their invite before they have a session.
+  },
 
   {
     path: '',

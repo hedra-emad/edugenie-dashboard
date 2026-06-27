@@ -12,9 +12,16 @@
           Admin Management
         </h1>
         <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
-          View all platform administrators and monitor their activity logs.
+          Invite administrators, monitor their activity, and revoke access when needed.
         </p>
       </div>
+      <button
+        (click)="openInviteModal()"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity shrink-0"
+        style="background:#3B1892;">
+        <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">person_add</mat-icon>
+        Invite Admin
+      </button>
     </div>
 
     <!-- Table Card -->
@@ -39,6 +46,7 @@
                 <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Admin Details</th>
                 <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Contact Info</th>
                 <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Role</th>
+                <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Status</th>
                 <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Last Active</th>
                 <th scope="col" class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Activity This Month</th>
                 <th scope="col" class="px-6 py-4 text-center text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider w-[120px]">Actions</th>
@@ -65,6 +73,13 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 align-middle">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold capitalize border shadow-sm"
+                         [ngClass]="isRevoked(admin) ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
+                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0">{{ isRevoked(admin) ? 'block' : 'check_circle' }}</mat-icon>
+                      <span>{{ isRevoked(admin) ? 'Revoked' : 'Active' }}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 align-middle">
                     <span class="text-[13px] font-medium text-slate-600 whitespace-nowrap">{{ admin.lastActiveAt ? (admin.lastActiveAt | date:'medium') : 'Never' }}</span>
                   </td>
                   <td class="px-6 py-4 align-middle">
@@ -82,17 +97,24 @@
                         <mat-icon class="!text-slate-400 !mr-0">history</mat-icon>
                         View Activity
                       </button>
-                      <button mat-menu-item (click)="openRoleModal(admin)" class="!flex !items-center !gap-2 !text-slate-700 hover:!bg-slate-50">
-                        <mat-icon class="!text-slate-400 !mr-0">swap_horiz</mat-icon>
-                        Change Role
-                      </button>
+                      @if (isRevoked(admin)) {
+                        <button mat-menu-item (click)="unrevokeAdmin(admin)" [disabled]="rowBusyId === admin.id" class="!flex !items-center !gap-2 !text-emerald-700 hover:!bg-emerald-50">
+                          <mat-icon class="!text-emerald-500 !mr-0">lock_open</mat-icon>
+                          Unrevoke Admin
+                        </button>
+                      } @else {
+                        <button mat-menu-item (click)="revokeAdmin(admin)" [disabled]="rowBusyId === admin.id" class="!flex !items-center !gap-2 !text-rose-700 hover:!bg-rose-50">
+                          <mat-icon class="!text-rose-500 !mr-0">block</mat-icon>
+                          Revoke Admin
+                        </button>
+                      }
                     </mat-menu>
                   </td>
                 </tr>
               }
               @if (admins.length === 0) {
                 <tr>
-                  <td colspan="6" class="px-6 py-12 text-center">
+                  <td colspan="7" class="px-6 py-12 text-center">
                     <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px] mb-2">group_off</mat-icon>
                     <p class="text-lg font-bold text-slate-700">No admins found</p>
                   </td>
@@ -172,60 +194,90 @@
       </div>
     }
 
-    <!-- Change Role Modal -->
-    @if (showRoleModal && roleTargetAdmin) {
-      <div class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200" (click)="closeRoleModal()">
-        <div class="bg-white w-full max-w-[400px] rounded-2xl shadow-2xl overflow-hidden" (click)="$event.stopPropagation()">
-          <div class="p-6 border-b border-slate-100">
+    <!-- Invite Admin Modal -->
+    @if (showInviteModal) {
+      <div class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-200" (click)="closeInviteModal()">
+        <div class="bg-white w-full max-w-[440px] rounded-2xl shadow-2xl overflow-hidden" (click)="$event.stopPropagation()">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                <mat-icon>swap_horiz</mat-icon>
+                <mat-icon>person_add</mat-icon>
               </div>
-              <h2 class="text-xl font-bold text-slate-800">Change Role</h2>
+              <h2 class="text-xl font-bold text-slate-800">Invite Admin</h2>
             </div>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors" (click)="closeInviteModal()" [disabled]="isInviting">
+              <mat-icon>close</mat-icon>
+            </button>
           </div>
-          
+
           <div class="p-6">
-            <p class="text-sm text-slate-600 mb-5">
-              Select a new role for <strong>{{ roleTargetAdmin.name }}</strong>.
-            </p>
+            @if (!inviteResult) {
+              <p class="text-sm text-slate-600 mb-5">
+                The new admin will receive a one-time link to set their password and activate their account.
+              </p>
 
-            <div class="form-group mb-5">
-              <label class="block text-xs font-bold text-slate-700 mb-2">New Role <span class="text-red-500">*</span></label>
-              <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:outline-none focus:border-violet-500 transition-all"
-                      [(ngModel)]="newRole" [disabled]="isChangingRole">
-                <option value="student">Student</option>
-                <option value="instructor">Instructor</option>
-                <option value="admin">Admin</option>
-                <option value="superadmin">Superadmin</option>
-              </select>
-            </div>
+              <div class="flex gap-3 mb-4">
+                <div class="form-group flex-1">
+                  <label class="block text-xs font-bold text-slate-700 mb-2">First name <span class="text-red-500">*</span></label>
+                  <input type="text" [(ngModel)]="inviteFirstName" [disabled]="isInviting" autocomplete="off"
+                         class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:outline-none focus:border-violet-500 transition-all" />
+                </div>
+                <div class="form-group flex-1">
+                  <label class="block text-xs font-bold text-slate-700 mb-2">Last name <span class="text-red-500">*</span></label>
+                  <input type="text" [(ngModel)]="inviteLastName" [disabled]="isInviting" autocomplete="off"
+                         class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:outline-none focus:border-violet-500 transition-all" />
+                </div>
+              </div>
 
-            @if (newRole === 'superadmin') {
-              <div class="form-group mb-6 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                <input type="checkbox" id="confirmSuperAdmin" [(ngModel)]="confirmSuperAdminChange" class="mt-1" [disabled]="isChangingRole">
-                <label for="confirmSuperAdmin" class="text-xs text-amber-800 leading-tight">
-                  I confirm that I want to grant Super Admin privileges to this user. This is a highly sensitive action.
-                </label>
+              <div class="form-group mb-6">
+                <label class="block text-xs font-bold text-slate-700 mb-2">Email <span class="text-red-500">*</span></label>
+                <input type="email" [(ngModel)]="inviteEmail" [disabled]="isInviting" autocomplete="off" placeholder="name@example.com"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:outline-none focus:border-violet-500 transition-all" />
+              </div>
+
+              <div class="flex items-center justify-end gap-3">
+                <button class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors" (click)="closeInviteModal()" [disabled]="isInviting">
+                  Cancel
+                </button>
+                <button
+                  class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  (click)="submitInvite()"
+                  [disabled]="isInviting || !isInviteValid">
+                  @if (isInviting) {
+                    <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+                    Sending...
+                  } @else {
+                    Send Invite
+                  }
+                </button>
+              </div>
+            } @else {
+              <!-- Result view -->
+              <div class="flex flex-col items-center text-center py-2">
+                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
+                  <mat-icon>{{ inviteResult.emailSent ? 'mark_email_read' : 'link' }}</mat-icon>
+                </div>
+                <p class="text-sm font-bold text-slate-800">{{ inviteResult.message }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ inviteResult.email }}</p>
+              </div>
+
+              @if (inviteResult.inviteUrl) {
+                <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Invite link (email not configured)</p>
+                  <p class="text-xs text-slate-700 break-all">{{ inviteResult.inviteUrl }}</p>
+                  <button class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-700" (click)="copyInviteUrl()">
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">content_copy</mat-icon>
+                    Copy link
+                  </button>
+                </div>
+              }
+
+              <div class="flex items-center justify-end mt-6">
+                <button class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors" (click)="closeInviteModal()">
+                  Done
+                </button>
               </div>
             }
-
-            <div class="flex items-center justify-end gap-3">
-              <button class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors" (click)="closeRoleModal()" [disabled]="isChangingRole">
-                Cancel
-              </button>
-              <button
-                class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                (click)="confirmRoleChange()"
-                [disabled]="isChangingRole || (newRole === 'superadmin' && !confirmSuperAdminChange)">
-                @if (isChangingRole) {
-                  <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-                  Saving...
-                } @else {
-                  Save Role
-                }
-              </button>
-            </div>
           </div>
         </div>
       </div>

@@ -5,8 +5,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
-import { AdminListItem, AdminActivityItem } from '../../models/superadmin.models';
-import { UserRole } from '../../../../core/models/user-profile.model';
+import { AdminListItem, AdminActivityItem, InviteAdminResponse } from '../../models/superadmin.models';
 
 @Component({
   selector: 'app-admin-management',
@@ -35,12 +34,16 @@ export class AdminManagementPageComponent implements OnInit {
   activityTotalPages = 1;
   activityLimit = 10;
 
-  // Change Role Modal State
-  showRoleModal = false;
-  roleTargetAdmin: AdminListItem | null = null;
-  newRole: UserRole | string = '';
-  confirmSuperAdminChange = false;
-  isChangingRole = false;
+  // Invite Admin Modal State
+  showInviteModal = false;
+  isInviting = false;
+  inviteFirstName = '';
+  inviteLastName = '';
+  inviteEmail = '';
+  inviteResult: InviteAdminResponse | null = null;
+
+  // Revoke/unrevoke in-flight guard (per admin id)
+  rowBusyId: string | null = null;
 
   ngOnInit() {
     this.loadAdmins();
@@ -117,44 +120,103 @@ export class AdminManagementPageComponent implements OnInit {
     }
   }
 
-  // --- Change Role Logic ---
-  openRoleModal(admin: AdminListItem) {
-    this.roleTargetAdmin = admin;
-    this.newRole = admin.role;
-    this.confirmSuperAdminChange = false;
-    this.showRoleModal = true;
+  // --- Invite Admin ---
+  openInviteModal() {
+    this.inviteFirstName = '';
+    this.inviteLastName = '';
+    this.inviteEmail = '';
+    this.inviteResult = null;
+    this.showInviteModal = true;
   }
 
-  closeRoleModal() {
-    if (this.isChangingRole) return;
-    this.showRoleModal = false;
-    this.roleTargetAdmin = null;
+  closeInviteModal() {
+    if (this.isInviting) return;
+    this.showInviteModal = false;
+    this.inviteResult = null;
   }
 
-  confirmRoleChange() {
-    if (!this.roleTargetAdmin || !this.newRole) return;
-    
-    this.isChangingRole = true;
+  get isInviteValid(): boolean {
+    return (
+      this.inviteFirstName.trim().length >= 2 &&
+      this.inviteLastName.trim().length >= 2 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.inviteEmail.trim())
+    );
+  }
+
+  submitInvite() {
+    if (!this.isInviteValid || this.isInviting) return;
+    this.isInviting = true;
     this.cdr.detectChanges();
 
-    this.superadminService.changeUserRole(
-      this.roleTargetAdmin.id, 
-      this.newRole, 
-      this.confirmSuperAdminChange
-    ).subscribe({
+    this.superadminService.inviteAdmin({
+      firstName: this.inviteFirstName.trim(),
+      lastName: this.inviteLastName.trim(),
+      email: this.inviteEmail.trim(),
+    }).subscribe({
       next: (res) => {
-        this.isChangingRole = false;
-        this.showRoleModal = false;
-        this.roleTargetAdmin = null;
+        this.isInviting = false;
+        this.inviteResult = res;
         this.cdr.detectChanges();
-        this.snackBar.open('User role updated successfully.', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
+        const msg = res.emailSent
+          ? `Invitation emailed to ${res.email}.`
+          : `Invitation created for ${res.email}. Share the link below.`;
+        this.snackBar.open(msg, 'Close', { duration: 4000, panelClass: ['bg-green-600', 'text-white'] });
+      },
+      error: (err) => {
+        this.isInviting = false;
+        this.cdr.detectChanges();
+        const errorMsg = err?.error?.message || 'Failed to send invitation';
+        this.snackBar.open(errorMsg, 'Close', { duration: 4000, panelClass: ['bg-red-600', 'text-white'] });
+      }
+    });
+  }
+
+  copyInviteUrl() {
+    if (!this.inviteResult?.inviteUrl) return;
+    navigator.clipboard?.writeText(this.inviteResult.inviteUrl).then(() => {
+      this.snackBar.open('Invite link copied', 'Close', { duration: 2000 });
+    });
+  }
+
+  // --- Revoke / Unrevoke admin access ---
+  isRevoked(admin: AdminListItem): boolean {
+    return admin.status === 'deactivated';
+  }
+
+  revokeAdmin(admin: AdminListItem) {
+    if (this.rowBusyId) return;
+    this.rowBusyId = admin.id;
+    this.cdr.detectChanges();
+
+    this.superadminService.revokeAdmin(admin.id).subscribe({
+      next: () => {
+        this.rowBusyId = null;
+        this.snackBar.open(`Revoked admin access for ${admin.name}.`, 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
         this.loadAdmins();
       },
       error: (err) => {
-        this.isChangingRole = false;
+        this.rowBusyId = null;
         this.cdr.detectChanges();
-        const errorMsg = err?.error?.message || 'Failed to update user role';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+        this.snackBar.open(err?.error?.message || 'Failed to revoke admin', 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+      }
+    });
+  }
+
+  unrevokeAdmin(admin: AdminListItem) {
+    if (this.rowBusyId) return;
+    this.rowBusyId = admin.id;
+    this.cdr.detectChanges();
+
+    this.superadminService.unrevokeAdmin(admin.id).subscribe({
+      next: () => {
+        this.rowBusyId = null;
+        this.snackBar.open(`Restored admin access for ${admin.name}.`, 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
+        this.loadAdmins();
+      },
+      error: (err) => {
+        this.rowBusyId = null;
+        this.cdr.detectChanges();
+        this.snackBar.open(err?.error?.message || 'Failed to restore admin', 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
       }
     });
   }

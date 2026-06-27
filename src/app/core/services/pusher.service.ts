@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import Pusher, { Channel } from 'pusher-js';
-import { environment } from '../../../environments/enviroment';
+import { environment } from '../../../environments/environment';
 import { Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })

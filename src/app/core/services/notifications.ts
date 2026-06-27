@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, finalize, catchError, of, tap } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import Pusher, { Channel } from 'pusher-js';
-import { environment } from '../../../environments/enviroment';
+import { environment } from '../../../environments/environment';
 // import { AuthService } from './auth.service'; // adjust path if needed
 
 // notifications.ts (frontend)

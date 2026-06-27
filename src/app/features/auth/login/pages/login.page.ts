@@ -103,7 +103,7 @@ export class LoginPageComponent implements OnInit {
           const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
 
           if (this.authService.isExternalRedirect(homeRoute)) {
-            this.authService.redirectToStudentApp().subscribe();
+            this.authService.redirectToStudentApp(res.data.exchangeToken).subscribe();
             return;
           }
 
