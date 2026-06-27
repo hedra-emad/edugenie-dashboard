@@ -122,9 +122,21 @@
               <!-- Name + Avatar -->
               <td class="px-6 py-4 align-middle">
                 <div class="flex items-center gap-3">
-                  <img [src]="getAvatarUrl(user) || '/avatar.jpg'" onerror="this.src='/avatar.jpg'; this.onerror=null;"
+
+                  <!-- Real avatar when URL exists -->
+                  <img *ngIf="getUserAvatar(user)"
+                    [src]="getUserAvatar(user)"
                     class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0"
                     alt="Avatar" />
+
+                  <!-- Initials fallback when no avatar URL -->
+                  <span *ngIf="!getUserAvatar(user)"
+                    class="w-10 h-10 rounded-full ring-2 ring-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0 inline-flex items-center justify-center text-sm font-bold select-none"
+                    style="background:#ede9fe; color:var(--color-primary,#3b1892);"
+                    [attr.aria-label]="getUserInitials(user)">
+                    {{ getUserInitials(user) }}
+                  </span>
+
                   <div class="flex flex-col min-w-0">
                     <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{user.name || user.firstName +
                       ' ' + user.lastName}}</span>
