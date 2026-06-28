@@ -15,6 +15,12 @@ import { CommonModule } from '@angular/common';
     </span>
   `,
   styles: [`
+    .btn-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
     .btn-loading-wrapper {
       display: inline-flex;
       align-items: center;

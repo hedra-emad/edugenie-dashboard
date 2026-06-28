@@ -108,6 +108,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   }
 
   loadUsers() {
+    console.log(this.users);
     this.isLoading = true;
     this.cdr.detectChanges();
     this.adminUsersService.getUsers(this.currentPage, this.limit, this.selectedRole, this.selectedStatus, this.searchQuery).subscribe({
@@ -180,11 +181,32 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.loadUsers();
   }
 
-  getAvatarUrl(user: any): string {
-    const avatar = user.avatar || user.profilePicture;
-    if (!avatar) return '';
-    if (avatar.startsWith('http')) return avatar;
-    return `${environment.apiUrl}/${avatar.replace(/^\//, '')}`;
+  getUserAvatar(user: any): string | null {
+    const avatar = user?.avatar?.trim();
+
+    if (
+      !avatar ||
+      avatar === 'null' ||
+      avatar === 'undefined' ||
+      avatar === '.....'
+    ) {
+      return null;
+    }
+
+    return avatar;
+  }
+
+  /** Returns up to 2 uppercase initials extracted from a user object */
+  getUserInitials(user: any): string {
+    const first = (user.firstName || '').trim();
+    const last = (user.lastName || '').trim();
+    if (first && last) return (first.charAt(0) + last.charAt(0)).toUpperCase();
+    if (first) return first.charAt(0).toUpperCase();
+    // Fallback: try the combined `name` field
+    const parts = (user.name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return 'U';
   }
 
   nextPage() {

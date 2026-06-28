@@ -9,6 +9,8 @@ export interface Section {
   isPublished: boolean;
   expectedOutcomes?: string[];
   price?: number | null;
+  previewVideoUrl?: string | null;       // add this
+  previewVideoPublicId?: string | null;  // add this
   lessons: Lesson[];
   createdAt: string;
   updatedAt: string;

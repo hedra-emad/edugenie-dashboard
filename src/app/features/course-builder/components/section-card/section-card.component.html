@@ -157,6 +157,22 @@
       </div>
     </div>
 
+
+    <!-- Section Preview Video (optional, collapsed by default) -->
+    <app-preview-video-upload
+      resourceType="section"
+      [ownerId]="draftId"
+      [parentForm]="sectionForm"
+    ></app-preview-video-upload>
+
+    <!-- Section Attachments -->
+    <app-attachment-manager
+      *ngIf="isExistingSection"
+      [parentType]="AttachmentParentType.SECTION"
+      [courseId]="courseId"
+      [sectionId]="sectionId">
+    </app-attachment-manager>
+
     <!-- Action Buttons -->
     <div class="pt-1 flex justify-between items-center gap-2">
 

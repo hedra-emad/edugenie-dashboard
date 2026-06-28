@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, switchMap, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface SignatureResponse {
   signature: string;
@@ -56,7 +57,7 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   private deleteOldAsset(
     publicId: string,
-    resourceType: 'image' | 'video' = 'image',
+    resourceType: 'image' | 'video' | 'raw' = 'image',
   ): Observable<any> {
     return this.http
       .delete(`${this.apiBase}/cloudinary/delete`, {
@@ -67,9 +68,9 @@ export class CloudinaryService {
   }
 
   deleteAsset(
-    publicId: string,
-    resourceType: 'image' | 'video' = 'video'
-  ): Observable<any> {
+  publicId: string,
+  resourceType: 'image' | 'video' | 'raw' = 'video'
+): Observable<any> {
     return this.deleteOldAsset(publicId, resourceType);
   }
 
@@ -79,7 +80,7 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
 
   private uploadPreset = 'edugenie_avatar';
-  private cloudName = 'dxeoqi3kb';
+  private cloudName = environment.cloudName;
   uploadImage(file: File | Blob) {
     const formData = new FormData();
 
@@ -155,7 +156,7 @@ export class CloudinaryService {
   ): Observable<VideoUploadEvent> {
     const folder = `edugenie/courses/videos/${courseId}/sections/${sectionId}`;
     // Include lessonId in context if provided (helps webhook find the lesson)
-    const context = lessonId 
+    const context = lessonId
       ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
       : `courseId=${courseId}|sectionId=${sectionId}`;
 
@@ -192,6 +193,105 @@ export class CloudinaryService {
           }),
         );
       }),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PUBLIC: upload attachment file (signed, resource_type: auto)
+  // Attachments are arbitrary documents (PDF, DOCX, ZIP, etc.)
+  // so we use 'auto' which reliably accepts any file type.
+  // ─────────────────────────────────────────────────────────────
+
+
+  uploadAttachment(
+    file: File,
+    folder: string,
+  ): Observable<{
+    secure_url: string;
+    public_id: string;
+    bytes: number;
+    format?: string;
+    original_filename: string;
+  }> {
+    return this.getSignature(folder).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folder);
+        formData.append('timestamp', String(timestamp));
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
+
+        return this.http.post<{
+          secure_url: string;
+          public_id: string;
+          bytes: number;
+          format?: string;
+          original_filename: string;
+        }>(
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+          formData,
+        );
+      }),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PUBLIC: delete an auto-uploaded attachment asset
+  // Cloudinary's destroy API uses 'raw' for non-image/non-video
+  // files uploaded via resource_type 'auto'. Best-effort cleanup.
+  // ─────────────────────────────────────────────────────────────
+  deleteAttachmentAsset(publicId: string): Observable<any> {
+    return this.deleteOldAsset(publicId, 'raw').pipe(
+      catchError(() => of(null)),
+    );
+  }
+
+  uploadPreviewVideo(
+    file: File,
+    resourceType: 'course' | 'section',
+    ownerId: string,
+    oldPublicId?: string | null,
+  ): Observable<VideoUploadEvent> {
+    const folder = `edugenie/courses/previews/${resourceType}/${ownerId}`;
+
+    return this.getSignature(folder).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folder);
+        formData.append('timestamp', String(timestamp));
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
+
+        const req = new HttpRequest(
+          'POST',
+          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          formData,
+          { reportProgress: true }
+        );
+
+        return this.http.request<CloudinaryUploadResponse>(req).pipe(
+          switchMap((event: HttpEvent<CloudinaryUploadResponse>) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              return of({ progress: Math.round((100 * event.loaded) / event.total) } as VideoUploadEvent);
+            }
+            if (event.type === HttpEventType.Response) {
+              return of({ progress: 100, response: event.body as CloudinaryUploadResponse } as VideoUploadEvent);
+            }
+            return of({} as VideoUploadEvent);
+          }),
+          switchMap((uploadEvent) => {
+            // After completion, delete old asset if provided
+            if (uploadEvent.response && oldPublicId) {
+              return this.deleteOldAsset(oldPublicId, 'video').pipe(
+                switchMap(() => of(uploadEvent))
+              );
+            }
+            return of(uploadEvent);
+          })
+        );
+      })
     );
   }
 }

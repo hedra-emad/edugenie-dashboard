@@ -4,9 +4,16 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-// Auth endpoints whose own 401/403 must NOT trigger a global logout/redirect
-// (otherwise a failed login would bounce the user around).
-const AUTH_PATHS = ['/auth/login', '/auth/redeem-code', '/auth/verify-exchange-token'];
+// Endpoints whose own 401 must NOT trigger a global logout/redirect.
+// - Auth paths: a failed login should not bounce the user around.
+// - change-password: a 401 here means the *current* password is wrong,
+//   not that the session has expired — the component handles it locally.
+const AUTH_PATHS = [
+  '/auth/login',
+  '/auth/redeem-code',
+  '/auth/verify-exchange-token',
+  '/users/change-password',   // 401 = wrong current password, not expired session
+];
 
 /**
  * Global handler for expired / invalid sessions. When any non-auth request
