@@ -53,6 +53,9 @@ export type LessonUploadState =
   | 'max_retries_exceeded' // 3 DB retries all failed → asset cleaned up
   | 'deleting'; // delete in progress
 
+
+  
+
 interface UploadSnapshot {
   state: LessonUploadState;
   /** Progress 0-100 (only meaningful during `uploading`) */
@@ -154,6 +157,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   selectedVideoFile: File | null = null;
   selectedVideoUrl: string | null = null; // blob URL for preview
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
 
   // ── Misc UI ───────────────────────────────────────────────
   isDeleting = false; // Kept for template compatibility
@@ -944,19 +948,28 @@ export class LessonCardComponent implements OnInit, OnDestroy {
           let newId: string | null = null;
 
           if (!lessonId) {
-            newId = res.createdLessonId ?? null;
+  newId = res.createdLessonId ?? null;
 
-            if (newId) {
-              this.lessonForm.patchValue({ id: newId });
+  if (newId) {
+    this.lessonForm.patchValue({ id: newId });
 
-              this.lessonForm.get('id')?.updateValueAndValidity();
+    this.lessonForm.get('id')?.updateValueAndValidity();
 
-              this.lessonCreated.emit({
-                index: this.index,
-                id: newId,
-              });
-            }
-          }
+    this.lessonCreated.emit({
+      index: this.index,
+      id: newId,
+    });
+
+    // Flush any attachments queued before the lesson existed
+    if (this.attachmentManagerComponent) {
+      this.attachmentManagerComponent.flushPending(this.courseId, this.sectionId, newId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (err) => console.error('Attachment flush failed:', err)
+        });
+    }
+  }
+}
 
           this.lessonForm.markAsPristine();
           this.lessonForm.markAsUntouched();
