@@ -552,11 +552,10 @@
     <!-- </div> -->
   </ng-container>
 
-  <div *ngIf="!isAdmin" class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-6">
+  <div *ngIf="!isAdmin" class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
     <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
       <div>
-        <h1 class="text-[22px] md:text-[28px] font-extrabold tracking-tight leading-tight"
-          style="color:var(--color-primary);">
+        <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">
           Earnings Overview
         </h1>
         <p class="text-slate-400 text-[12px] md:text-sm font-medium mt-0.5">Track your course performance and
@@ -569,7 +568,8 @@
       </div>
     </header>
     @if (isLoading) {
-    <div class="flex justify-center items-center py-20"><mat-spinner diameter="40"></mat-spinner></div>
+    <!-- <div class="flex justify-center items-center py-20"><mat-spinner diameter="40"></mat-spinner></div> -->
+     <app-page-skeleton></app-page-skeleton>
     } @else if (error) {
     <div class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
       <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>

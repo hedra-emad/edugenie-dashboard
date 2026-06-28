@@ -10,6 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-create-course-page',
@@ -20,7 +21,8 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    AppLoader
+    AppLoader,
+    PageSkeletonComponent
   ],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'
