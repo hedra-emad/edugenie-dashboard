@@ -24,6 +24,8 @@ import {
 } from '../../../../core/models/attachment.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { forkJoin, of, Observable } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-attachment-manager',
@@ -41,7 +43,7 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 export class AttachmentManagerComponent implements OnInit {
   // ─── Inputs ────────────────────────────────────────────────
   @Input({ required: true }) parentType!: AttachmentParentType;
-  @Input({ required: true }) courseId!: string;
+  @Input() courseId?: string | null;
   @Input() sectionId?: string;
   @Input() lessonId?: string;
 
@@ -59,6 +61,7 @@ export class AttachmentManagerComponent implements OnInit {
   deletingId = signal<string | null>(null);
   updatingId = signal<string | null>(null);
   editingAttachment = signal<Attachment | null>(null);
+  pendingAttachments = signal<{ id: string; file: File; title: string; isPublic: boolean; failed?: boolean; error?: string }[]>([]);
 
   // Inline upload form state
   pendingFile = signal<File | null>(null);
@@ -66,18 +69,46 @@ export class AttachmentManagerComponent implements OnInit {
   isPublicToggle = signal(false);
   fileError = signal<string | null>(null);
 
+  // Expand/collapse state (mirrors PreviewVideoUploadComponent)
+  expanded = signal(false);
+
   // Constants exposed to template
   readonly MAX_SIZE = MAX_ATTACHMENT_FILE_SIZE_BYTES;
   readonly MAX_COUNT = MAX_ATTACHMENTS_PER_PARENT;
   readonly ACCEPTED_TYPES = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.txt,.png,.jpg,.jpeg,.csv,.md';
 
+  toggle(): void {
+    this.expanded.set(!this.expanded());
+  }
+
+  get isPendingMode(): boolean {
+    return !this.courseId
+      || (this.parentType === AttachmentParentType.SECTION && !this.sectionId)
+      || (this.parentType === AttachmentParentType.LESSON && !this.lessonId);
+  }
+
   // ─── Lifecycle ─────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadAttachments();
+    if (this.courseId) {
+      this.loadAttachments();
+    } else {
+      // No parent yet — nothing to fetch, queue mode only
+      this.isLoading.set(false);
+    }
+
+    // Auto-expand if there's already something worth showing
+    if (this.pendingAttachments().length > 0) {
+      this.expanded.set(true);
+    }
   }
 
   // ─── Data Loading ──────────────────────────────────────────
   loadAttachments(): void {
+    if (!this.courseId) {
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
     this.attachmentsService
       .listForInstructor(this.courseId, this.sectionId, this.lessonId)
@@ -85,6 +116,7 @@ export class AttachmentManagerComponent implements OnInit {
         next: (list) => {
           this.attachments.set(list);
           this.isLoading.set(false);
+          if (list.length > 0) this.expanded.set(true);
           this.cdr.markForCheck();
         },
         error: () => {
@@ -97,7 +129,7 @@ export class AttachmentManagerComponent implements OnInit {
 
   // ─── Computed helpers ──────────────────────────────────────
   get isAtLimit(): boolean {
-    return this.attachments().length >= this.MAX_COUNT;
+    return (this.attachments().length + this.pendingAttachments().length) >= this.MAX_COUNT;
   }
 
   get isLessonLevel(): boolean {
@@ -159,24 +191,36 @@ export class AttachmentManagerComponent implements OnInit {
     const editing = this.editingAttachment();
 
     if (!title) return;
-    if (!editing && !file) return; // New upload requires file
+    if (!editing && !file) return;
 
+    // ── PENDING MODE: no parent entity yet ──────────────────────
+    if (this.isPendingMode) {
+      if (!file) return; // editing doesn't apply pre-creation
+      if (this.pendingAttachments().length + this.attachments().length >= this.MAX_COUNT) {
+        this.fileError.set(`Maximum ${this.MAX_COUNT} attachments reached`);
+        return;
+      }
+
+      this.pendingAttachments.update(list => [
+        ...list,
+        { id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, file, title, isPublic: this.isLessonLevel ? false : this.isPublicToggle() }
+      ]);
+      this.cancelPending();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // ── EXISTING MODE: parent already exists, behave as before ──
     this.isUploading.set(true);
     this.fileError.set(null);
 
-    // If there's a new file (create or edit)
     if (file) {
       const folder = this.buildFolder();
-
-      this.cloudinaryService.uploadAttachment(
-        file,
-        folder,
-      ).subscribe({
+      this.cloudinaryService.uploadAttachment(file, folder).subscribe({
         next: (cloudRes) => {
           const ext = file.name.split('.').pop()?.toLowerCase() || '';
 
           if (editing) {
-            // EDIT MODE WITH NEW FILE
             const payload: Partial<Attachment> = {
               title,
               isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
@@ -186,12 +230,9 @@ export class AttachmentManagerComponent implements OnInit {
               fileSize: cloudRes.bytes || file.size,
               originalFilename: file.name,
             };
-
             this.attachmentsService.update(editing.id, payload).subscribe({
               next: (updatedAttachment) => {
-                this.attachments.update((list) =>
-                  list.map((a) => (a.id === editing.id ? updatedAttachment : a))
-                );
+                this.attachments.update((list) => list.map((a) => (a.id === editing.id ? updatedAttachment : a)));
                 this.isUploading.set(false);
                 this.cancelPending();
                 this.toastr.success(`"${title}" updated successfully`);
@@ -200,13 +241,11 @@ export class AttachmentManagerComponent implements OnInit {
               error: (err) => {
                 this.cloudinaryService.deleteAttachmentAsset(cloudRes.public_id).subscribe();
                 this.isUploading.set(false);
-                const msg = err?.error?.message || 'Failed to update attachment';
-                this.toastr.error(msg);
+                this.toastr.error(err?.error?.message || 'Failed to update attachment');
                 this.cdr.markForCheck();
               },
             });
           } else {
-            // CREATE MODE
             const payload: CreateAttachmentPayload = {
               title,
               originalFilename: file.name,
@@ -216,25 +255,21 @@ export class AttachmentManagerComponent implements OnInit {
               fileSize: cloudRes.bytes || file.size,
               isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
             };
-
-            this.attachmentsService
-              .create(this.courseId, payload, this.sectionId, this.lessonId)
-              .subscribe({
-                next: (attachment) => {
-                  this.attachments.update((list) => [...list, attachment]);
-                  this.isUploading.set(false);
-                  this.cancelPending();
-                  this.toastr.success(`"${title}" uploaded successfully`);
-                  this.cdr.markForCheck();
-                },
-                error: (err) => {
-                  this.cloudinaryService.deleteAttachmentAsset(cloudRes.public_id).subscribe();
-                  this.isUploading.set(false);
-                  const msg = err?.error?.message || 'Failed to save attachment';
-                  this.toastr.error(msg);
-                  this.cdr.markForCheck();
-                },
-              });
+            this.attachmentsService.create(this.courseId!, payload, this.sectionId, this.lessonId).subscribe({
+              next: (attachment) => {
+                this.attachments.update((list) => [...list, attachment]);
+                this.isUploading.set(false);
+                this.cancelPending();
+                this.toastr.success(`"${title}" uploaded successfully`);
+                this.cdr.markForCheck();
+              },
+              error: (err) => {
+                this.cloudinaryService.deleteAttachmentAsset(cloudRes.public_id).subscribe();
+                this.isUploading.set(false);
+                this.toastr.error(err?.error?.message || 'Failed to save attachment');
+                this.cdr.markForCheck();
+              },
+            });
           }
         },
         error: () => {
@@ -244,17 +279,10 @@ export class AttachmentManagerComponent implements OnInit {
         },
       });
     } else if (editing) {
-      // EDIT MODE, NO NEW FILE
-      const payload: Partial<Attachment> = {
-        title,
-        isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
-      };
-
+      const payload: Partial<Attachment> = { title, isPublic: this.isLessonLevel ? false : this.isPublicToggle() };
       this.attachmentsService.update(editing.id, payload).subscribe({
         next: (updatedAttachment) => {
-          this.attachments.update((list) =>
-            list.map((a) => (a.id === editing.id ? updatedAttachment : a))
-          );
+          this.attachments.update((list) => list.map((a) => (a.id === editing.id ? updatedAttachment : a)));
           this.isUploading.set(false);
           this.cancelPending();
           this.toastr.success(`"${title}" updated successfully`);
@@ -267,6 +295,10 @@ export class AttachmentManagerComponent implements OnInit {
         },
       });
     }
+  }
+
+  removeQueued(id: string): void {
+    this.pendingAttachments.update(list => list.filter(p => p.id !== id));
   }
 
   // ─── Delete Flow ───────────────────────────────────────────
@@ -329,13 +361,13 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   // ─── Helpers ───────────────────────────────────────────────
-  private buildFolder(): string {
-    const base = `edugenie/courses/attachments/${this.courseId}`;
-    if (this.sectionId && this.lessonId) {
-      return `${base}/sections/${this.sectionId}/lessons/${this.lessonId}`;
+  private buildFolder(courseId: string = this.courseId!, sectionId = this.sectionId, lessonId = this.lessonId): string {
+    const base = `edugenie/courses/attachments/${courseId}`;
+    if (sectionId && lessonId) {
+      return `${base}/sections/${sectionId}/lessons/${lessonId}`;
     }
-    if (this.sectionId) {
-      return `${base}/sections/${this.sectionId}`;
+    if (sectionId) {
+      return `${base}/sections/${sectionId}`;
     }
     return `${base}/course`;
   }
@@ -362,8 +394,92 @@ export class AttachmentManagerComponent implements OnInit {
     return attachment.id;
   }
 
+  trackPendingById(_index: number, p: { id: string }): string {
+    return p.id;
+  }
+
   private truncateName(name: string, maxLength: number = 40): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
+  }
+
+  /**
+   * Uploads every queued (pending) attachment and creates its DB record,
+   * now that the parent entity exists. Called by the page component right
+   * after course/section/lesson creation succeeds.
+   *
+   * Failures don't kill the batch — failed items stay in pendingAttachments()
+   * (flagged) so the user can retry just those, without re-selecting files.
+   */
+  flushPending(courseId: string, sectionId?: string, lessonId?: string): Observable<Attachment[]> {
+    const queue = this.pendingAttachments();
+    if (queue.length === 0) return of([]);
+
+    this.isUploading.set(true);
+    const folder = this.buildFolder(courseId, sectionId, lessonId);
+
+    const tasks = queue.map(item =>
+      this.cloudinaryService.uploadAttachment(item.file, folder).pipe(
+        switchMap(cloudRes => {
+          const ext = item.file.name.split('.').pop()?.toLowerCase() || '';
+          const payload: CreateAttachmentPayload = {
+            title: item.title,
+            originalFilename: item.file.name,
+            fileUrl: cloudRes.secure_url,
+            filePublicId: cloudRes.public_id,
+            fileType: cloudRes.format || ext,
+            fileSize: cloudRes.bytes || item.file.size,
+            isPublic: item.isPublic,
+          };
+          return this.attachmentsService.create(courseId, payload, sectionId, lessonId).pipe(
+            map(attachment => ({ ok: true as const, id: item.id, attachment })),
+            catchError(err => {
+              // DB record failed after upload succeeded — best-effort cleanup of orphaned asset
+              this.cloudinaryService.deleteAttachmentAsset(cloudRes.public_id).subscribe();
+              return of({ ok: false as const, id: item.id, error: err?.error?.message || 'Failed to save attachment' });
+            })
+          );
+        }),
+        catchError(err => of({ ok: false as const, id: item.id, error: 'Upload failed' }))
+      )
+    );
+
+    return forkJoin(tasks).pipe(
+      map(results => {
+        const succeededIds = new Set(results.filter(r => r.ok).map(r => r.id));
+        const succeeded = results.filter((r): r is { ok: true; id: string; attachment: Attachment } => r.ok);
+
+        // Keep only failed items in the queue (flagged), drop succeeded ones
+        this.pendingAttachments.update(list =>
+          list
+            .filter(p => !succeededIds.has(p.id))
+            .map(p => {
+              const failure = results.find(r => r.id === p.id && !r.ok) as { error: string } | undefined;
+              return failure ? { ...p, failed: true, error: failure.error } : p;
+            })
+        );
+
+        this.attachments.update(list => [...list, ...succeeded.map(s => s.attachment)]);
+        this.isUploading.set(false);
+        if (succeeded.length > 0 || this.attachments().length > 0) this.expanded.set(true);
+        this.cdr.markForCheck();
+
+        if (this.pendingAttachments().some(p => p.failed)) {
+          this.toastr.warning(`${succeeded.length}/${queue.length} attachments uploaded. Some failed — you can retry them.`);
+        }
+
+        return succeeded.map(s => s.attachment);
+      })
+    );
+  }
+
+  /** Retry a single failed queued attachment after a flush partially failed. */
+  retryQueued(id: string, courseId?: string, sectionId?: string, lessonId?: string): void {
+    if (!courseId) return; // shouldn't happen — failed items only exist post-creation
+    const item = this.pendingAttachments().find(p => p.id === id);
+    if (!item) return;
+
+    this.pendingAttachments.update(list => list.map(p => p.id === id ? { ...p, failed: false, error: undefined } : p));
+    this.flushPending(courseId, sectionId, lessonId).subscribe();
   }
 }

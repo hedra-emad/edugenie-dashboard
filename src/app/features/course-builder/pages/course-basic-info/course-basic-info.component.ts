@@ -62,7 +62,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   coursePreviewVideoUrl: string | null = null;
   coursePreviewVideoPublicId: string | null = null;
   @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
-
+@ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
