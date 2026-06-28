@@ -13,6 +13,8 @@ import { AppLoader } from '../add-loader/app-loader';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { RejectionReasonModalComponent } from '../rejection-reason-modal/rejection-reason-modal.component';
+import { PageSkeletonComponent } from '../loading';
+
 
 
 export interface UiNotification {
@@ -36,7 +38,7 @@ export interface UiNotification {
   selector: 'app-notifications-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, RouterModule, AppLoader, MatDialogModule],
+  imports: [CommonModule, MatIconModule, RouterModule, AppLoader, MatDialogModule, PageSkeletonComponent],
   templateUrl: './notifications-page.component.html',
   styleUrl: './notifications-page.component.css',
 })
