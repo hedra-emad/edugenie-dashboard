@@ -20,6 +20,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { HasPendingOperations } from '../../../../core/guards/pending-operations.guard';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-lessons-builder',
@@ -34,7 +35,8 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     MainButtonComponent,
     DragDropModule,
     EmptyStateComponent,
-    AppLoader
+    AppLoader,
+    PageSkeletonComponent
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'

@@ -18,7 +18,9 @@
         </button>
     </div>
 
-    <app-loading *ngIf="isLoading" [fullScreen]="false"></app-loading>
+     <div *ngIf="isLoading">
+        <app-page-skeleton></app-page-skeleton>
+     </div>
 
     <!-- Empty state -->
     <app-empty-state *ngIf="!isLoading && lessonsArray.length === 0" icon="menu_book" title="No lessons in this section yet"

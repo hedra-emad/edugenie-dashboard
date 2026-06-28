@@ -46,14 +46,15 @@ export class SidebarComponent implements OnInit {
     { icon: 'menu_book', label: 'My Courses', route: '/my-courses' },
     { icon: 'analytics', label: 'Analytics', route: '/analytics' },
     { icon: 'notifications', label: 'Notifications', route: '/notifications' },
-    { icon: 'settings', label: 'Settings', route: '/settings' },
   ];
 
   readonly adminBottomItems: NavItem[] = [
     { icon: 'settings', label: 'Settings', route: '/admin/settings' },
   ];
 
-  readonly instructorBottomItems: NavItem[] = [];
+  readonly instructorBottomItems: NavItem[] = [
+    { icon: 'settings', label: 'Settings', route: '/settings' },
+  ];
 
   readonly superadminNavItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/admin/command-center' },
