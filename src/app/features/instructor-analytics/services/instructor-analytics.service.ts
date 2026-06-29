@@ -5,6 +5,7 @@ import { InstructorAnalyticsResponse } from '../models/instructor-analytics.mode
 
 export interface RecentSaleApiItem {
   student?: string;
+  studentAvatar?: string;
   course?: string;
   date?: string | Date;
   amount?: number;
@@ -59,9 +60,11 @@ export class InstructorAnalyticsService {
     return this.http.get<any>(`${this.apiUrl}/dashboard/recent-sales`).pipe(
       map(response => response.data !== undefined ? response.data : response),
       map((payload) => {
+        // Since the backend now returns { data: [ ...items ] } we parse it nicely
         const list = Array.isArray(payload) ? payload : (payload?.items ?? []);
         return list.map((item: any) => ({
           student: item.studentName || item.student || item.studentId || '-',
+          studentAvatar: item.studentAvatar || null,
           course: item.courseName || item.course || item.courseTitle || '-',
           date: item.date || item.createdAt || item.enrolledAt || item.purchasedAt,
           amount: item.amount ?? item.price ?? item.total ?? 0,
@@ -70,4 +73,7 @@ export class InstructorAnalyticsService {
       })
     );
   }
+
+
+
 }

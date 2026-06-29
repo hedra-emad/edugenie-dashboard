@@ -6,6 +6,7 @@ import { MatChipsModule } from '@angular/material/chips';
 
 export interface RecentSale {
   student?: string;
+  studentAvatar?: string;
   course?: string;
   date?: string | Date;
   amount?: number;
