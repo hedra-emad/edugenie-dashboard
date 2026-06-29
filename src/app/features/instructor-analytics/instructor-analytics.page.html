@@ -1,623 +1,698 @@
-<div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
+<!-- <div class="min-h-screen bg-[#f5f7fa] font-sans antialiased"> -->
 
 
-    <ng-container *ngIf="isAdmin">
-<div class="min-h-screen bg-[#f4f6fb] font-sans antialiased">
-  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col gap-6">
+  <ng-container *ngIf="isAdmin">
+    <!-- <div class="min-h-screen bg-[#f4f6fb] font-sans antialiased"> -->
+      <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
 
-    <!-- ── Page Header ──────────────────────────────────────────── -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-[28px] font-black tracking-tight leading-none text-slate-800">Overview</h1>
-        <p class="text-[13px] text-slate-400 font-medium mt-1">Platform analytics &amp; performance</p>
-      </div>
-      <span class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-full">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-        Live data
-      </span>
-    </div>
-
-    <!-- ── Skeleton ──────────────────────────────────────────────── -->
-    <app-page-skeleton *ngIf="adminStatsLoading"></app-page-skeleton>
-
-    <ng-container *ngIf="!adminStatsLoading">
-
-      <!-- ── ① Stat Cards ────────────────────────────────────────── -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-
-        <!-- Total Revenue -->
-        <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(124,58,237,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-          <div class="flex items-start justify-between gap-2">
-            <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0" style="background:#EDE9FE;">
-              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#7C3AED;">payments</mat-icon>
-            </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">Total<br>Revenue</p>
-          </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">${{ adminStatsData?.totalRevenue || 0 | number:'1.0-0' }}</p>
-          <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
-            <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
-              <defs>
-                <linearGradient id="cardGradRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L0,50 L20,40 L40,48 L60,35 L80,38 L100,25 L120,28 L140,15 L160,20 L180,5 L200,8 L200,60 Z" fill="url(#cardGradRev)"/>
-              <path d="M0,50 L20,40 L40,48 L60,35 L80,38 L100,25 L120,28 L140,15 L160,20 L180,5 L200,8" stroke="#7C3AED" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Total Students -->
-        <div *ngIf="platformData" class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(37,99,235,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-          <div class="flex items-start justify-between gap-2">
-            <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0" style="background:#DBEAFE;">
-              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#2563EB;">people</mat-icon>
-            </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">Total<br>Students</p>
-          </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ platformData?.totalStudents || 0 | number }}</p>
-          <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
-            <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
-              <defs>
-                <linearGradient id="cardGradStu" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#2563EB" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L0,45 L25,48 L50,30 L75,35 L100,20 L125,25 L150,15 L175,20 L200,10 L200,60 Z" fill="url(#cardGradStu)"/>
-              <path d="M0,45 L25,48 L50,30 L75,35 L100,20 L125,25 L150,15 L175,20 L200,10" stroke="#2563EB" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Total Instructors -->
-        <div *ngIf="platformData" class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(217,119,6,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-          <div class="flex items-start justify-between gap-2">
-            <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0" style="background:#FEF3C7;">
-              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#D97706;">school</mat-icon>
-            </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">Total<br>Instructors</p>
-          </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ platformData?.totalInstructors || 0 | number }}</p>
-          <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
-            <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
-              <defs>
-                <linearGradient id="cardGradInst" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#D97706" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#D97706" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L0,40 L30,45 L60,25 L90,30 L120,15 L150,18 L180,5 L200,10 L200,60 Z" fill="url(#cardGradInst)"/>
-              <path d="M0,40 L30,45 L60,25 L90,30 L120,15 L150,18 L180,5 L200,10" stroke="#D97706" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Pending Reviews -->
-        <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(225,29,72,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-          <div class="flex items-start justify-between gap-2">
-            <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0" style="background:#FFE4E6;">
-              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#E11D48;">pending_actions</mat-icon>
-            </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">Pending<br>Reviews</p>
-          </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.pendingApprovals || 0 | number }}</p>
-          <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
-            <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
-              <defs>
-                <linearGradient id="cardGradPend" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#E11D48" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#E11D48" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L0,20 L25,35 L50,15 L75,25 L100,45 L125,30 L150,40 L175,15 L200,20 L200,60 Z" fill="url(#cardGradPend)"/>
-              <path d="M0,20 L25,35 L50,15 L75,25 L100,45 L125,30 L150,40 L175,15 L200,20" stroke="#E11D48" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- New Signups -->
-        <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(5,150,105,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-          <div class="flex items-start justify-between gap-2">
-            <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0" style="background:#D1FAE5;">
-              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#059669;">group_add</mat-icon>
-            </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">New<br>Signups</p>
-          </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.newSignupsToday || 0 | number }}</p>
-          <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
-            <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
-              <defs>
-                <linearGradient id="cardGradNew" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#059669" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#059669" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,60 L0,40 L25,45 L50,25 L75,30 L100,15 L125,18 L150,10 L175,25 L200,5 L200,60 Z" fill="url(#cardGradNew)"/>
-              <path d="M0,40 L25,45 L50,25 L75,30 L100,15 L125,18 L150,10 L175,25 L200,5" stroke="#059669" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-
-      </div>
-      <!-- end stat cards -->
-
-      <!-- ── ①.5 Revenue Overview Chart ────────────────────────────── -->
-      <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col lg:flex-row">
-        <!-- Chart side -->
-        <div class="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <p class="text-[16px] font-black text-slate-800">Revenue Overview</p>
-              <mat-icon class="!text-[16px] !w-4 !h-4 text-slate-400">info</mat-icon>
-            </div>
-            <!-- Toggle tabs -->
-            <div class="flex items-center bg-slate-50 p-1 rounded-[10px] border border-slate-100">
-              <button (click)="setRevenuePeriod('week')" [ngClass]="revenuePeriod === 'week' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Week</button>
-              <button (click)="setRevenuePeriod('month')" [ngClass]="revenuePeriod === 'month' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Month</button>
-              <button (click)="setRevenuePeriod('year')" [ngClass]="revenuePeriod === 'year' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Year</button>
-            </div>
-          </div>
-          <!-- The Chart -->
-          <div class="h-[260px] w-full mt-2">
-            <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
-            <canvas *ngIf="!revenueChartLoading" baseChart
-              [data]="adminRevenueChartData"
-              [options]="adminRevenueChartOptions"
-              [type]="'line'">
-            </canvas>
-          </div>
-        </div>
-        <!-- Right summary side -->
-        <div class="w-full lg:w-[280px] p-6 flex flex-col justify-center gap-6 shrink-0 bg-slate-50/50">
+        <!-- ── Page Header ──────────────────────────────────────────── -->
+        <div class="flex items-center justify-between">
           <div>
-            <p class="text-[12px] font-bold text-slate-500 mb-1">Today's Revenue</p>
-            <p class="text-[28px] font-black text-violet-700 leading-none">${{ (adminStatsData?.todayRevenue || adminStatsData?.totalRevenue / 30) | number:'1.0-0' }}</p>
+            <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">Overview</h1>
+            <p class="page-subtitle">Platform analytics &amp; performance</p>
           </div>
-          <div>
-            <p class="text-[12px] font-bold text-slate-500 mb-1">Best Day</p>
-            <p class="text-[16px] font-black text-slate-800">Monday</p>
-          </div>
-          <div>
-            <p class="text-[12px] font-bold text-slate-500 mb-1">Growth</p>
-            <p class="text-[18px] font-black text-emerald-500 flex items-center gap-1">
-              <mat-icon class="!text-[20px] !w-5 !h-5">arrow_upward</mat-icon> 18%
-            </p>
-            <p class="text-[11px] text-slate-400 mt-1">vs last 30 days</p>
-          </div>
+          <span
+            class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+            Live data
+          </span>
         </div>
-      </div>
-      <!-- end revenue overview chart -->
 
-      <!-- ── ② Top Courses + User Breakdown ────────────────────── -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- ── Skeleton ──────────────────────────────────────────────── -->
+        <app-page-skeleton *ngIf="adminStatsLoading"></app-page-skeleton>
 
-        <!-- Top Courses (col-span-2) -->
-        <div class="lg:col-span-2 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0" style="background:#EDE9FE;">
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">emoji_events</mat-icon>
+        <ng-container *ngIf="!adminStatsLoading">
+
+          <!-- ── ① Stat Cards ────────────────────────────────────────── -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+
+            <!-- Total Revenue -->
+            <div
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(124,58,237,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+                  style="background:#EDE9FE;">
+                  <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#7C3AED;">payments</mat-icon>
+                </div>
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
+                  Total<br>Revenue</p>
+              </div>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">${{ adminStatsData?.totalRevenue
+                || 0 | number:'1.0-0' }}</p>
+              <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                    <linearGradient id="cardGradRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.15" />
+                      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0,60 L0,50 L20,40 L40,48 L60,35 L80,38 L100,25 L120,28 L140,15 L160,20 L180,5 L200,8 L200,60 Z"
+                    fill="url(#cardGradRev)" />
+                  <path d="M0,50 L20,40 L40,48 L60,35 L80,38 L100,25 L120,28 L140,15 L160,20 L180,5 L200,8"
+                    stroke="#7C3AED" stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Total Students -->
+            <div *ngIf="platformData"
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(37,99,235,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+                  style="background:#DBEAFE;">
+                  <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#2563EB;">people</mat-icon>
+                </div>
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
+                  Total<br>Students</p>
+              </div>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ platformData?.totalStudents
+                || 0 | number }}</p>
+              <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                    <linearGradient id="cardGradStu" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#2563EB" stop-opacity="0.15" />
+                      <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,60 L0,45 L25,48 L50,30 L75,35 L100,20 L125,25 L150,15 L175,20 L200,10 L200,60 Z"
+                    fill="url(#cardGradStu)" />
+                  <path d="M0,45 L25,48 L50,30 L75,35 L100,20 L125,25 L150,15 L175,20 L200,10" stroke="#2563EB"
+                    stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Total Instructors -->
+            <div *ngIf="platformData"
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(217,119,6,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+                  style="background:#FEF3C7;">
+                  <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#D97706;">school</mat-icon>
+                </div>
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
+                  Total<br>Instructors</p>
+              </div>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{
+                platformData?.totalInstructors || 0 | number }}</p>
+              <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                    <linearGradient id="cardGradInst" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#D97706" stop-opacity="0.15" />
+                      <stop offset="100%" stop-color="#D97706" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,60 L0,40 L30,45 L60,25 L90,30 L120,15 L150,18 L180,5 L200,10 L200,60 Z"
+                    fill="url(#cardGradInst)" />
+                  <path d="M0,40 L30,45 L60,25 L90,30 L120,15 L150,18 L180,5 L200,10" stroke="#D97706"
+                    stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Pending Reviews -->
+            <div
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(225,29,72,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+                  style="background:#FFE4E6;">
+                  <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#E11D48;">pending_actions</mat-icon>
+                </div>
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
+                  Pending<br>Reviews</p>
+              </div>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{
+                adminStatsData?.pendingApprovals || 0 | number }}</p>
+              <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                    <linearGradient id="cardGradPend" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#E11D48" stop-opacity="0.15" />
+                      <stop offset="100%" stop-color="#E11D48" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,60 L0,20 L25,35 L50,15 L75,25 L100,45 L125,30 L150,40 L175,15 L200,20 L200,60 Z"
+                    fill="url(#cardGradPend)" />
+                  <path d="M0,20 L25,35 L50,15 L75,25 L100,45 L125,30 L150,40 L175,15 L200,20" stroke="#E11D48"
+                    stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- New Signups -->
+            <div
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-5 pb-14 flex flex-col gap-2 relative overflow-hidden hover:shadow-[0_6px_24px_rgba(5,150,105,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+                  style="background:#D1FAE5;">
+                  <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#059669;">group_add</mat-icon>
+                </div>
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
+                  New<br>Signups</p>
+              </div>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{
+                adminStatsData?.newSignupsToday || 0 | number }}</p>
+              <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                    <linearGradient id="cardGradNew" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#059669" stop-opacity="0.15" />
+                      <stop offset="100%" stop-color="#059669" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,60 L0,40 L25,45 L50,25 L75,30 L100,15 L125,18 L150,10 L175,25 L200,5 L200,60 Z"
+                    fill="url(#cardGradNew)" />
+                  <path d="M0,40 L25,45 L50,25 L75,30 L100,15 L125,18 L150,10 L175,25 L200,5" stroke="#059669"
+                    stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+          </div>
+          <!-- end stat cards -->
+
+          <!-- ── ①.5 Revenue Overview Chart ────────────────────────────── -->
+          <div
+            class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col lg:flex-row">
+            <!-- Chart side -->
+            <div class="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <p class="text-[16px] font-black text-slate-800">Revenue Overview</p>
+                  <mat-icon class="!text-[16px] !w-4 !h-4 text-slate-400">info</mat-icon>
+                </div>
+                <!-- Toggle tabs -->
+                <div class="flex items-center bg-slate-50 p-1 rounded-[10px] border border-slate-100">
+                  <button (click)="setRevenuePeriod('week')"
+                    [ngClass]="revenuePeriod === 'week' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Week</button>
+                  <button (click)="setRevenuePeriod('month')"
+                    [ngClass]="revenuePeriod === 'month' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Month</button>
+                  <button (click)="setRevenuePeriod('year')"
+                    [ngClass]="revenuePeriod === 'year' ? 'bg-white text-violet-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-4 py-1.5 text-[12px] font-bold rounded-[8px] transition-colors">Year</button>
+                </div>
+              </div>
+              <!-- The Chart -->
+              <div class="h-[260px] w-full mt-2">
+                <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
+                <canvas *ngIf="!revenueChartLoading" baseChart [data]="adminRevenueChartData"
+                  [options]="adminRevenueChartOptions" [type]="'line'">
+                </canvas>
+              </div>
+            </div>
+            <!-- Right summary side -->
+            <div class="w-full lg:w-[280px] p-6 flex flex-col justify-center gap-6 shrink-0 bg-slate-50/50">
+              <div>
+                <p class="text-[12px] font-bold text-slate-500 mb-1">Today's Revenue</p>
+                <p class="text-[28px] font-black text-violet-700 leading-none">${{ (adminStatsData?.todayRevenue ||
+                  adminStatsData?.totalRevenue / 30) | number:'1.0-0' }}</p>
               </div>
               <div>
-                <p class="text-[15px] font-black text-slate-800 leading-none">Top Courses</p>
-                <p class="text-[11px] text-slate-400 mt-0.5 font-medium">By total enrollments</p>
+                <p class="text-[12px] font-bold text-slate-500 mb-1">Best Day</p>
+                <p class="text-[16px] font-black text-slate-800">Monday</p>
+              </div>
+              <div>
+                <p class="text-[12px] font-bold text-slate-500 mb-1">Growth</p>
+                <p class="text-[18px] font-black text-emerald-500 flex items-center gap-1">
+                  <mat-icon class="!text-[20px] !w-5 !h-5">arrow_upward</mat-icon> 18%
+                </p>
+                <p class="text-[11px] text-slate-400 mt-1">vs last 30 days</p>
               </div>
             </div>
-            <a routerLink="/admin/course-approvals"
-              class="text-[12px] font-bold px-3 py-1.5 rounded-lg transition-colors"
-              style="color:#7C3AED; background:#F5F3FF;">View all</a>
           </div>
+          <!-- end revenue overview chart -->
 
-          <!-- Loading -->
-          <div *ngIf="!platformData" class="flex justify-center items-center py-14">
-            <mat-spinner diameter="28"></mat-spinner>
-          </div>
+          <!-- ── ② Top Courses + User Breakdown ────────────────────── -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-          <!-- Course list -->
-          <div *ngIf="platformData" class="flex-1 p-5">
-            <ng-container *ngIf="platformData?.topCourses?.length; else noCoursesData">
-              <div *ngFor="let course of platformData.topCourses; let i = index"
-                class="flex items-center gap-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 rounded-lg px-2 transition-colors">
-                
-                <!-- Rank badge -->
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-black shrink-0 leading-none shadow-sm"
-                  [style.background]="i === 0 ? 'linear-gradient(135deg,#7C3AED,#A78BFA)' : i === 1 ? '#e2e8f0' : i === 2 ? '#f1f5f9' : '#f8fafc'"
-                  [style.color]="i === 0 ? '#fff' : '#64748b'">
-                  {{ i + 1 }}
+            <!-- Top Courses (col-span-2) -->
+            <div
+              class="lg:col-span-2 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
+              <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0"
+                    style="background:#EDE9FE;">
+                    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">emoji_events</mat-icon>
+                  </div>
+                  <div>
+                    <p class="text-[15px] font-black text-slate-800 leading-none">Top Courses</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 font-medium">By total enrollments</p>
+                  </div>
                 </div>
-                
-                <!-- Course Image or Icon -->
-                <div class="w-12 h-10 rounded-[8px] bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200">
-                  <ng-container *ngIf="course.thumbnail || course.image || course.cover; else noCourseImg">
-                    <img [src]="course.thumbnail || course.image || course.cover" class="w-full h-full object-cover">
-                  </ng-container>
-                  <ng-template #noCourseImg>
-                    <mat-icon class="!text-[20px] !w-5 !h-5 text-slate-400">play_circle_outline</mat-icon>
-                  </ng-template>
+                <a routerLink="/admin/course-approvals"
+                  class="text-[12px] font-bold px-3 py-1.5 rounded-lg transition-colors"
+                  style="color:#7C3AED; background:#F5F3FF;">View all</a>
+              </div>
+
+              <!-- Loading -->
+              <div *ngIf="!platformData" class="flex justify-center items-center py-14">
+                <mat-spinner diameter="28"></mat-spinner>
+              </div>
+
+              <!-- Course list -->
+              <div *ngIf="platformData" class="flex-1 p-5">
+                <ng-container *ngIf="platformData?.topCourses?.length; else noCoursesData">
+                  <div *ngFor="let course of platformData.topCourses; let i = index"
+                    class="flex items-center gap-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 rounded-lg px-2 transition-colors">
+
+                    <!-- Rank badge -->
+                    <div
+                      class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-black shrink-0 leading-none shadow-sm"
+                      [style.background]="i === 0 ? 'linear-gradient(135deg,#7C3AED,#A78BFA)' : i === 1 ? '#e2e8f0' : i === 2 ? '#f1f5f9' : '#f8fafc'"
+                      [style.color]="i === 0 ? '#fff' : '#64748b'">
+                      {{ i + 1 }}
+                    </div>
+
+                    <!-- Course Image or Icon -->
+                    <div
+                      class="w-12 h-10 rounded-[8px] bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200">
+                      <ng-container *ngIf="course.thumbnail || course.image || course.cover; else noCourseImg">
+                        <img [src]="course.thumbnail || course.image || course.cover"
+                          class="w-full h-full object-cover">
+                      </ng-container>
+                      <ng-template #noCourseImg>
+                        <mat-icon class="!text-[20px] !w-5 !h-5 text-slate-400">play_circle_outline</mat-icon>
+                      </ng-template>
+                    </div>
+
+                    <!-- Title + progress bar -->
+                    <div class="flex-1 min-w-0 pr-4">
+                      <p class="text-[13.5px] font-bold text-slate-700 truncate mb-1.5">{{ course.title }}</p>
+                      <div class="flex items-center gap-3">
+                        <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-700"
+                            style="background:linear-gradient(90deg,#6D28D9,#A78BFA)"
+                            [style.width]="((course.enrollments || 0) / maxCourseEnrollments * 100) + '%'">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="text-right shrink-0">
+                      <p class="text-[14px] font-black text-slate-800 leading-none">${{ (course.revenue ||
+                        course.totalRevenue || 0) | number:'1.0-0' }}</p>
+                      <p class="text-[11px] font-semibold text-slate-400 mt-1">{{ course.enrollments | number }}
+                        students</p>
+                    </div>
+
+                  </div>
+                </ng-container>
+                <ng-template #noCoursesData>
+                  <div class="py-14 flex flex-col items-center text-slate-400">
+                    <mat-icon class="!text-[36px] !w-9 !h-9 mb-2" style="opacity:0.3">menu_book</mat-icon>
+                    <p class="text-[13px] font-medium">No course data yet</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- User Breakdown (col-span-1) -->
+            <div
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
+              <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0"
+                  style="background:#EDE9FE;">
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">donut_large</mat-icon>
+                </div>
+                <div>
+                  <p class="text-[15px] font-black text-slate-800 leading-none">User Breakdown</p>
+                  <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Platform users by role</p>
+                </div>
+              </div>
+
+              <div class="px-6 py-6 flex-1 flex flex-col items-center justify-center gap-8">
+                <!-- Loading -->
+                <div *ngIf="!platformData" class="py-10">
+                  <mat-spinner diameter="24"></mat-spinner>
                 </div>
 
-                <!-- Title + progress bar -->
-                <div class="flex-1 min-w-0 pr-4">
-                  <p class="text-[13.5px] font-bold text-slate-700 truncate mb-1.5">{{ course.title }}</p>
-                  <div class="flex items-center gap-3">
-                    <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-700"
-                        style="background:linear-gradient(90deg,#6D28D9,#A78BFA)"
-                        [style.width]="((course.enrollments || 0) / maxCourseEnrollments * 100) + '%'">
+                <ng-container *ngIf="platformData">
+                  <!-- Thick Donut SVG -->
+                  <div class="relative w-[180px] h-[180px]">
+                    <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                      <!-- track -->
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="#f1f5f9" stroke-width="7" />
+                      <!-- students arc -->
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="url(#adminGrad1)" stroke-width="7"
+                        stroke-linecap="round"
+                        [attr.stroke-dasharray]="((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalStudents/(platformData.totalStudents+platformData.totalInstructors))*100)+' 100' : '0 100'"
+                        stroke-dashoffset="0" />
+                      <!-- instructors arc -->
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="#F59E0B" stroke-width="7"
+                        stroke-linecap="round"
+                        [attr.stroke-dasharray]="((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalInstructors/(platformData.totalStudents+platformData.totalInstructors))*100)+' 100' : '0 100'"
+                        [attr.stroke-dashoffset]="-((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)>0 ? (platformData.totalStudents/(platformData.totalStudents+platformData.totalInstructors))*100 : 0)" />
+                      <defs>
+                        <linearGradient id="adminGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" style="stop-color:#6D28D9;stop-opacity:1" />
+                          <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <!-- center text -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                      <p class="text-[26px] font-black text-slate-800 leading-none mt-1">
+                        {{ ((platformData?.totalStudents||0) + (platformData?.totalInstructors||0)) | number }}
+                      </p>
+                      <p class="text-[11px] text-slate-400 font-bold mt-1 uppercase tracking-wide">Total Users</p>
+                    </div>
+                  </div>
+
+                  <!-- Legend -->
+                  <div class="w-full flex flex-col gap-3.5">
+                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
+                          style="background:linear-gradient(135deg,#6D28D9,#A78BFA);"></div>
+                        <span class="text-[14px] text-slate-700 font-bold">Students</span>
+                      </div>
+                      <div class="text-right flex items-center gap-2">
+                        <span class="text-[14px] font-black text-slate-800">{{ platformData?.totalStudents || 0 | number
+                          }}</span>
+                        <span class="text-[12px] font-semibold text-slate-400">({{
+                          ((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ?
+                          ((platformData.totalStudents/((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)))*100
+                          | number:'1.0-1') : 0 }}%)</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-3.5 h-3.5 rounded-full bg-amber-400 shrink-0 shadow-sm"></div>
+                        <span class="text-[14px] text-slate-700 font-bold">Instructors</span>
+                      </div>
+                      <div class="text-right flex items-center gap-2">
+                        <span class="text-[14px] font-black text-slate-800">{{ platformData?.totalInstructors || 0 |
+                          number }}</span>
+                        <span class="text-[12px] font-semibold text-slate-400">({{
+                          ((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ?
+                          ((platformData.totalInstructors/((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)))*100
+                          | number:'1.0-1') : 0 }}%)</span>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div class="text-right shrink-0">
-                  <p class="text-[14px] font-black text-slate-800 leading-none">${{ (course.revenue || course.totalRevenue || 0) | number:'1.0-0' }}</p>
-                  <p class="text-[11px] font-semibold text-slate-400 mt-1">{{ course.enrollments | number }} students</p>
-                </div>
-
-              </div>
-            </ng-container>
-            <ng-template #noCoursesData>
-              <div class="py-14 flex flex-col items-center text-slate-400">
-                <mat-icon class="!text-[36px] !w-9 !h-9 mb-2" style="opacity:0.3">menu_book</mat-icon>
-                <p class="text-[13px] font-medium">No course data yet</p>
-              </div>
-            </ng-template>
-          </div>
-        </div>
-
-        <!-- User Breakdown (col-span-1) -->
-        <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0" style="background:#EDE9FE;">
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">donut_large</mat-icon>
-            </div>
-            <div>
-              <p class="text-[15px] font-black text-slate-800 leading-none">User Breakdown</p>
-              <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Platform users by role</p>
-            </div>
-          </div>
-
-          <div class="px-6 py-6 flex-1 flex flex-col items-center justify-center gap-8">
-            <!-- Loading -->
-            <div *ngIf="!platformData" class="py-10">
-              <mat-spinner diameter="24"></mat-spinner>
-            </div>
-
-            <ng-container *ngIf="platformData">
-              <!-- Thick Donut SVG -->
-              <div class="relative w-[180px] h-[180px]">
-                <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
-                  <!-- track -->
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="#f1f5f9" stroke-width="7"/>
-                  <!-- students arc -->
-                  <circle cx="18" cy="18" r="14" fill="none"
-                    stroke="url(#adminGrad1)" stroke-width="7" stroke-linecap="round"
-                    [attr.stroke-dasharray]="((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalStudents/(platformData.totalStudents+platformData.totalInstructors))*100)+' 100' : '0 100'"
-                    stroke-dashoffset="0"/>
-                  <!-- instructors arc -->
-                  <circle cx="18" cy="18" r="14" fill="none"
-                    stroke="#F59E0B" stroke-width="7" stroke-linecap="round"
-                    [attr.stroke-dasharray]="((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalInstructors/(platformData.totalStudents+platformData.totalInstructors))*100)+' 100' : '0 100'"
-                    [attr.stroke-dashoffset]="-((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)>0 ? (platformData.totalStudents/(platformData.totalStudents+platformData.totalInstructors))*100 : 0)"/>
-                  <defs>
-                    <linearGradient id="adminGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" style="stop-color:#6D28D9;stop-opacity:1"/>
-                      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1"/>
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <!-- center text -->
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <p class="text-[26px] font-black text-slate-800 leading-none mt-1">
-                    {{ ((platformData?.totalStudents||0) + (platformData?.totalInstructors||0)) | number }}
-                  </p>
-                  <p class="text-[11px] text-slate-400 font-bold mt-1 uppercase tracking-wide">Total Users</p>
-                </div>
-              </div>
-
-              <!-- Legend -->
-              <div class="w-full flex flex-col gap-3.5">
-                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm" style="background:linear-gradient(135deg,#6D28D9,#A78BFA);"></div>
-                    <span class="text-[14px] text-slate-700 font-bold">Students</span>
-                  </div>
-                  <div class="text-right flex items-center gap-2">
-                    <span class="text-[14px] font-black text-slate-800">{{ platformData?.totalStudents || 0 | number }}</span>
-                    <span class="text-[12px] font-semibold text-slate-400">({{ ((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalStudents/((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)))*100 | number:'1.0-1') : 0 }}%)</span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-3.5 h-3.5 rounded-full bg-amber-400 shrink-0 shadow-sm"></div>
-                    <span class="text-[14px] text-slate-700 font-bold">Instructors</span>
-                  </div>
-                  <div class="text-right flex items-center gap-2">
-                    <span class="text-[14px] font-black text-slate-800">{{ platformData?.totalInstructors || 0 | number }}</span>
-                    <span class="text-[12px] font-semibold text-slate-400">({{ ((platformData?.totalStudents||0)+(platformData?.totalInstructors||0))>0 ? ((platformData.totalInstructors/((platformData?.totalStudents||0)+(platformData?.totalInstructors||0)))*100 | number:'1.0-1') : 0 }}%)</span>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </div>
-
-      </div>
-      <!-- end top courses + user breakdown row -->
-
-      <!-- ── ③ Top Instructors + Quick Actions ─────────────────── -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        <!-- Top Instructors (col-span-2) -->
-        <div class="lg:col-span-2 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0" style="background:#FEF3C7;">
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#D97706;">workspace_premium</mat-icon>
-              </div>
-              <div>
-                <p class="text-[15px] font-black text-slate-800 leading-none">Top Instructors</p>
-                <p class="text-[11px] text-slate-400 mt-0.5 font-medium">By revenue earned</p>
+                </ng-container>
               </div>
             </div>
-          </div>
 
-          <!-- Loading -->
-          <div *ngIf="!platformData" class="flex justify-center items-center py-14">
-            <mat-spinner diameter="28"></mat-spinner>
           </div>
+          <!-- end top courses + user breakdown row -->
 
-          <!-- Instructor list -->
-          <ng-container *ngIf="platformData">
-            <ng-container *ngIf="platformData?.topInstructors?.length; else noInstructorData">
-              <div *ngFor="let inst of platformData.topInstructors; let i = index"
-                class="flex items-center gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-[#faf9ff] transition-colors">
-                
-                <!-- Avatar with photo or initial -->
-                <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-[18px] font-black text-white shrink-0 shadow-sm"
-                  [style.background]="i === 0 ? 'linear-gradient(135deg,#7C3AED,#A78BFA)' : i === 1 ? 'linear-gradient(135deg,#6D28D9,#8B5CF6)' : i === 2 ? 'linear-gradient(135deg,#5B21B6,#7C3AED)' : i === 3 ? 'linear-gradient(135deg,#8B5CF6,#C4B5FD)' : 'linear-gradient(135deg,#4C1D95,#6D28D9)'">
-                  <ng-container *ngIf="inst.avatar || inst.profileImage || inst.photo; else noInstImg">
-                    <img [src]="inst.avatar || inst.profileImage || inst.photo" class="w-full h-full object-cover">
-                  </ng-container>
-                  <ng-template #noInstImg>
-                    {{ (inst.name || '?').charAt(0).toUpperCase() }}
-                  </ng-template>
-                </div>
-                
-                <!-- Name + students -->
-                <div class="flex-1 min-w-0 px-2">
-                  <p class="text-[14.5px] font-black text-slate-700 truncate">{{ inst.name }}</p>
-                  <p class="text-[12.5px] font-semibold text-slate-400 mt-0.5">{{ inst.totalStudents | number }} students</p>
-                </div>
-                
-                <!-- Revenue + Rating (if available) -->
-                <div class="text-right shrink-0 flex items-center gap-6">
+          <!-- ── ③ Top Instructors + Quick Actions ─────────────────── -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+            <!-- Top Instructors (col-span-2) -->
+            <div
+              class="lg:col-span-2 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0"
+                    style="background:#FEF3C7;">
+                    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]"
+                      style="color:#D97706;">workspace_premium</mat-icon>
+                  </div>
                   <div>
-                    <p class="text-[16px] font-black leading-none" style="color:#7C3AED;">${{ inst.totalRevenue | number:'1.0-0' }}</p>
-                  </div>
-                  <!-- Rating badge (matching design) -->
-                  <div *ngIf="inst.rating || inst.averageRating" class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px] !w-4 !h-4 text-amber-400">star</mat-icon>
-                    <span class="text-[13px] font-black text-slate-700">{{ inst.rating || inst.averageRating | number:'1.1-1' }}</span>
+                    <p class="text-[15px] font-black text-slate-800 leading-none">Top Instructors</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 font-medium">By revenue earned</p>
                   </div>
                 </div>
               </div>
-            </ng-container>
-            <ng-template #noInstructorData>
-              <div class="py-14 flex flex-col items-center text-slate-400">
-                <mat-icon class="!text-[36px] !w-9 !h-9 mb-2" style="opacity:0.3">people_outline</mat-icon>
-                <p class="text-[13px] font-medium">No instructor data yet</p>
-              </div>
-            </ng-template>
-          </ng-container>
-        </div>
 
-        <!-- Quick Actions (col-span-1) -->
-        <div class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0" style="background:#EDE9FE;">
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">bolt</mat-icon>
+              <!-- Loading -->
+              <div *ngIf="!platformData" class="flex justify-center items-center py-14">
+                <mat-spinner diameter="28"></mat-spinner>
+              </div>
+
+              <!-- Instructor list -->
+              <ng-container *ngIf="platformData">
+                <ng-container *ngIf="platformData?.topInstructors?.length; else noInstructorData">
+                  <div *ngFor="let inst of platformData.topInstructors; let i = index"
+                    class="flex items-center gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-[#faf9ff] transition-colors">
+
+                    <!-- Avatar with photo or initial -->
+                    <div
+                      class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-[18px] font-black text-white shrink-0 shadow-sm"
+                      [style.background]="i === 0 ? 'linear-gradient(135deg,#7C3AED,#A78BFA)' : i === 1 ? 'linear-gradient(135deg,#6D28D9,#8B5CF6)' : i === 2 ? 'linear-gradient(135deg,#5B21B6,#7C3AED)' : i === 3 ? 'linear-gradient(135deg,#8B5CF6,#C4B5FD)' : 'linear-gradient(135deg,#4C1D95,#6D28D9)'">
+                      <ng-container *ngIf="inst.avatar || inst.profileImage || inst.photo; else noInstImg">
+                        <img [src]="inst.avatar || inst.profileImage || inst.photo" class="w-full h-full object-cover">
+                      </ng-container>
+                      <ng-template #noInstImg>
+                        {{ (inst.name || '?').charAt(0).toUpperCase() }}
+                      </ng-template>
+                    </div>
+
+                    <!-- Name + students -->
+                    <div class="flex-1 min-w-0 px-2">
+                      <p class="text-[14.5px] font-black text-slate-700 truncate">{{ inst.name }}</p>
+                      <p class="text-[12.5px] font-semibold text-slate-400 mt-0.5">{{ inst.totalStudents | number }}
+                        students</p>
+                    </div>
+
+                    <!-- Revenue + Rating (if available) -->
+                    <div class="text-right shrink-0 flex items-center gap-6">
+                      <div>
+                        <p class="text-[16px] font-black leading-none" style="color:#7C3AED;">${{ inst.totalRevenue |
+                          number:'1.0-0' }}</p>
+                      </div>
+                      <!-- Rating badge (matching design) -->
+                      <div *ngIf="inst.rating || inst.averageRating" class="flex items-center gap-1">
+                        <mat-icon class="!text-[16px] !w-4 !h-4 text-amber-400">star</mat-icon>
+                        <span class="text-[13px] font-black text-slate-700">{{ inst.rating || inst.averageRating |
+                          number:'1.1-1' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #noInstructorData>
+                  <div class="py-14 flex flex-col items-center text-slate-400">
+                    <mat-icon class="!text-[36px] !w-9 !h-9 mb-2" style="opacity:0.3">people_outline</mat-icon>
+                    <p class="text-[13px] font-medium">No instructor data yet</p>
+                  </div>
+                </ng-template>
+              </ng-container>
             </div>
-            <p class="text-[15px] font-black text-slate-800">Quick Actions</p>
+
+            <!-- Quick Actions (col-span-1) -->
+            <div
+              class="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0"
+                  style="background:#EDE9FE;">
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" style="color:#7C3AED;">bolt</mat-icon>
+                </div>
+                <p class="text-[15px] font-black text-slate-800">Quick Actions</p>
+              </div>
+              <div class="p-5 grid grid-cols-2 gap-4">
+
+                <a routerLink="/admin/course-approvals"
+                  class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-violet-200 hover:bg-violet-50 transition-all duration-150 no-underline group">
+                  <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#EDE9FE;">
+                    <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#7C3AED;">fact_check</mat-icon>
+                  </div>
+                  <span
+                    class="text-[12px] font-bold text-slate-500 group-hover:text-violet-700 text-center leading-snug">Approve<br>Courses</span>
+                </a>
+
+                <a routerLink="/admin/users"
+                  class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all duration-150 no-underline group">
+                  <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#DBEAFE;">
+                    <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#2563EB;">group</mat-icon>
+                  </div>
+                  <span
+                    class="text-[12px] font-bold text-slate-500 group-hover:text-blue-700 text-center leading-snug">Manage<br>Users</span>
+                </a>
+
+                <a routerLink="/admin/categories"
+                  class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-150 no-underline group">
+                  <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#D1FAE5;">
+                    <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#059669;">category</mat-icon>
+                  </div>
+                  <span
+                    class="text-[12px] font-bold text-slate-500 group-hover:text-emerald-700 text-center leading-snug">Categories</span>
+                </a>
+
+                <a routerLink="/admin/notifications"
+                  class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all duration-150 no-underline group">
+                  <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#FEF3C7;">
+                    <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#D97706;">notifications</mat-icon>
+                  </div>
+                  <span
+                    class="text-[12px] font-bold text-slate-500 group-hover:text-amber-700 text-center leading-snug">Notifications</span>
+                </a>
+
+                <a routerLink="/admin/settings"
+                  class="col-span-2 flex flex-col items-center gap-2 p-3.5 rounded-[16px] border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all duration-150 no-underline group">
+                  <div class="w-10 h-10 rounded-[11px] flex items-center justify-center bg-slate-100">
+                    <mat-icon class="!text-[20px] !w-5 !h-5 text-slate-500">settings</mat-icon>
+                  </div>
+                  <span
+                    class="text-[12px] font-bold text-slate-500 group-hover:text-slate-700 text-center">Settings</span>
+                </a>
+
+              </div>
+            </div>
+
           </div>
-          <div class="p-5 grid grid-cols-2 gap-4">
+          <!-- end top instructors + quick actions row -->
 
-            <a routerLink="/admin/course-approvals"
-              class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-violet-200 hover:bg-violet-50 transition-all duration-150 no-underline group">
-              <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#EDE9FE;">
-                <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#7C3AED;">fact_check</mat-icon>
-              </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-violet-700 text-center leading-snug">Approve<br>Courses</span>
-            </a>
-
-            <a routerLink="/admin/users"
-              class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all duration-150 no-underline group">
-              <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#DBEAFE;">
-                <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#2563EB;">group</mat-icon>
-              </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-blue-700 text-center leading-snug">Manage<br>Users</span>
-            </a>
-
-            <a routerLink="/admin/categories"
-              class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-150 no-underline group">
-              <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#D1FAE5;">
-                <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#059669;">category</mat-icon>
-              </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-emerald-700 text-center leading-snug">Categories</span>
-            </a>
-
-            <a routerLink="/admin/notifications"
-              class="flex flex-col items-center gap-2.5 p-4 rounded-[16px] border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all duration-150 no-underline group">
-              <div class="w-10 h-10 rounded-[11px] flex items-center justify-center" style="background:#FEF3C7;">
-                <mat-icon class="!text-[20px] !w-5 !h-5" style="color:#D97706;">notifications</mat-icon>
-              </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-amber-700 text-center leading-snug">Notifications</span>
-            </a>
-
-            <a routerLink="/admin/settings"
-              class="col-span-2 flex flex-col items-center gap-2 p-3.5 rounded-[16px] border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all duration-150 no-underline group">
-              <div class="w-10 h-10 rounded-[11px] flex items-center justify-center bg-slate-100">
-                <mat-icon class="!text-[20px] !w-5 !h-5 text-slate-500">settings</mat-icon>
-              </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-slate-700 text-center">Settings</span>
-            </a>
-
-          </div>
-        </div>
+        </ng-container>
+        <!-- end !adminStatsLoading -->
 
       </div>
-      <!-- end top instructors + quick actions row -->
+    <!-- </div> -->
+  </ng-container>
 
-    </ng-container>
-    <!-- end !adminStatsLoading -->
+  <div *ngIf="!isAdmin" class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div>
+        <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">
+          Earnings Overview
+        </h1>
+        <p class="text-slate-400 text-[12px] md:text-sm font-medium mt-0.5">Track your course performance and
+          payouts.</p>
+      </div>
+      <!-- Withdraw button removed per request -->
+      <div class="flex items-center gap-2">
+        <button mat-flat-button (click)="exportCsv()" class="!rounded-xl !px-4 !py-2"
+          style="background:var(--color-primary); color:#fff;">Export CSV</button>
+      </div>
+    </header>
+    @if (isLoading) {
+    <!-- <div class="flex justify-center items-center py-20"><mat-spinner diameter="40"></mat-spinner></div> -->
+     <app-page-skeleton></app-page-skeleton>
+    } @else if (error) {
+    <div class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+      <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>
+      <p class="font-bold">Failed to load analytics data.</p>
+      <p class="text-sm opacity-80 mt-1">Please try again later.</p>
+    </div>
+    } @else if (analyticsData) {
+    <app-stats-cards [stats]="analyticsData"></app-stats-cards>
 
-  </div>
-</div>
-</ng-container>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#f8fafc] flex items-center justify-center shrink-0">
+            <mat-icon class="text-[#3B1892]">menu_book</mat-icon>
+          </div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Courses</span>
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+            analyticsData.totalCourses | number }}</h3>
+          <p class="text-[11px] text-slate-400 mt-2">Active courses for your account</p>
+        </div>
+      </div>
 
-<div *ngIf="!isAdmin" class="max-w-[1000px] mx-auto w-full p-4 lg:p-8 flex flex-col gap-6">
-        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#f7fee7] flex items-center justify-center shrink-0">
+            <mat-icon class="text-emerald-600">star_rate</mat-icon>
+          </div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Average Rating</span>
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+            analyticsData.averageRating | number:'1.1-1' }}</h3>
+          <p class="text-[11px] text-slate-400 mt-2">From all course reviews</p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#eff6ff] flex items-center justify-center shrink-0">
+            <mat-icon class="text-sky-600">history</mat-icon>
+          </div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">New Students</span>
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
+            analyticsData.newStudentsThisWeek | number }}</h3>
+          <p class="text-[11px] text-slate-400 mt-2">This week</p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center shrink-0">
+              <mat-icon class="text-amber-600">trending_up</mat-icon>
+            </div>
             <div>
-                <h1 class="text-[22px] md:text-[28px] font-extrabold tracking-tight leading-tight"
-                    style="color:var(--color-primary);">
-                    Earnings Overview
-                </h1>
-                <p class="text-slate-400 text-[12px] md:text-sm font-medium mt-0.5">Track your course performance and
-                    payouts.</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Earnings Change</p>
+              <p class="text-[11px] text-slate-400">Previous vs current</p>
             </div>
-            <!-- Withdraw button removed per request -->
-            <div class="flex items-center gap-2">
-                <button mat-flat-button (click)="exportCsv()" class="!rounded-xl !px-4 !py-2"
-                    style="background:var(--color-primary); color:#fff;">Export CSV</button>
-            </div>
-        </header>
-        @if (isLoading) {
-        <div class="flex justify-center items-center py-20"><mat-spinner diameter="40"></mat-spinner></div>
-        } @else if (error) {
-        <div class="bg-red-50 text-red-600 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-            <mat-icon class="mb-2 !w-10 !h-10 !text-[40px]">error_outline</mat-icon>
-            <p class="font-bold">Failed to load analytics data.</p>
-            <p class="text-sm opacity-80 mt-1">Please try again later.</p>
+          </div>
+          <div class="px-2.5 py-1 rounded-full text-sm font-semibold"
+            [ngClass]="analyticsData.earningsChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'">
+            {{ analyticsData.earningsChangePercent >= 0 ? '+' : '' }}{{ analyticsData.earningsChangePercent
+            | number:'1.0-0' }}%
+          </div>
         </div>
-        } @else if (analyticsData) {
-        <app-stats-cards [stats]="analyticsData"></app-stats-cards>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-[#f8fafc] flex items-center justify-center shrink-0">
-                        <mat-icon class="text-[#3B1892]">menu_book</mat-icon>
-                    </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Courses</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
-                        analyticsData.totalCourses | number }}</h3>
-                    <p class="text-[11px] text-slate-400 mt-2">Active courses for your account</p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-[#f7fee7] flex items-center justify-center shrink-0">
-                        <mat-icon class="text-emerald-600">star_rate</mat-icon>
-                    </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Average Rating</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
-                        analyticsData.averageRating | number:'1.1-1' }}</h3>
-                    <p class="text-[11px] text-slate-400 mt-2">From all course reviews</p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-[#eff6ff] flex items-center justify-center shrink-0">
-                        <mat-icon class="text-sky-600">history</mat-icon>
-                    </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">New Students</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{
-                        analyticsData.newStudentsThisWeek | number }}</h3>
-                    <p class="text-[11px] text-slate-400 mt-2">This week</p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center shrink-0">
-                            <mat-icon class="text-amber-600">trending_up</mat-icon>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Earnings Change</p>
-                            <p class="text-[11px] text-slate-400">Previous vs current</p>
-                        </div>
-                    </div>
-                    <div class="px-2.5 py-1 rounded-full text-sm font-semibold"
-                        [ngClass]="analyticsData.earningsChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'">
-                        {{ analyticsData.earningsChangePercent >= 0 ? '+' : '' }}{{ analyticsData.earningsChangePercent
-                        | number:'1.0-0' }}%
-                    </div>
-                </div>
-                <div class="w-full h-28">
-                    <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
-            <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorEarningsChangeData" [options]="instructorEarningsChangeOptions"
-                        [type]="'bar'"></canvas>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-3">Compared to previous 30 days</p>
-            </div>
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-                <p class="text-sm font-bold text-slate-700 mb-3">Payouts</p>
-                <div class="relative w-full h-48">
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 flex-col">
-                        <p class="text-xs text-slate-500">Total Earnings</p>
-                        <p class="text-lg font-black text-slate-800">${{ analyticsData.totalEarnings | number:'1.0-0' }}
-                        </p>
-                        <p *ngIf="instructorPayoutHasData" class="text-xs text-slate-500 mt-1">Pending: ${{
-                            analyticsData.pendingPayouts | number:'1.0-0' }}</p>
-                        <p *ngIf="!instructorPayoutHasData" class="text-xs text-slate-400 mt-1">No payout data</p>
-                    </div>
-                    <div class="w-full h-full">
-                        <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
-            <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorPayoutDonutData" [options]="instructorChartOptions"
-                            [type]="'doughnut'"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#eef2ff] flex items-center justify-center shrink-0">
-                            <mat-icon class="text-[#3B1892]">people</mat-icon>
-                        </div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Students</span>
-                    </div>
-                    <div class="text-sm font-semibold text-slate-700">{{ analyticsData.totalStudents | number }}</div>
-                </div>
-                <div class="w-full h-40">
-                    <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
-            <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorStudentsBarData" [options]="instructorStudentsOptions"
-                        [type]="'bar'"></canvas>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-3">New this week: {{ analyticsData.newStudentsThisWeek | number
-                    }}</p>
-            </div>
-
+        <div class="w-full h-28">
+          <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
+          <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorEarningsChangeData"
+            [options]="instructorEarningsChangeOptions" [type]="'bar'"></canvas>
         </div>
+        <p class="text-[11px] text-slate-400 mt-3">Compared to previous 30 days</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+        <p class="text-sm font-bold text-slate-700 mb-3">Payouts</p>
+        <div class="relative w-full h-48">
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 flex-col">
+            <p class="text-xs text-slate-500">Total Earnings</p>
+            <p class="text-lg font-black text-slate-800">${{ analyticsData.totalEarnings | number:'1.0-0' }}
+            </p>
+            <p *ngIf="instructorPayoutHasData" class="text-xs text-slate-500 mt-1">Pending: ${{
+              analyticsData.pendingPayouts | number:'1.0-0' }}</p>
+            <p *ngIf="!instructorPayoutHasData" class="text-xs text-slate-400 mt-1">No payout data</p>
+          </div>
+          <div class="w-full h-full">
+            <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
+            <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorPayoutDonutData"
+              [options]="instructorChartOptions" [type]="'doughnut'"></canvas>
+          </div>
+        </div>
+      </div>
 
-        <app-sales-table [recentSales]="recentSalesData"></app-sales-table>
-        }
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#eef2ff] flex items-center justify-center shrink-0">
+              <mat-icon class="text-[#3B1892]">people</mat-icon>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Students</span>
+          </div>
+          <div class="text-sm font-semibold text-slate-700">{{ analyticsData.totalStudents | number }}</div>
+        </div>
+        <div class="w-full h-40">
+          <mat-spinner *ngIf="revenueChartLoading" diameter="30" class="m-auto mt-20"></mat-spinner>
+          <canvas *ngIf="!revenueChartLoading" baseChart [data]="instructorStudentsBarData"
+            [options]="instructorStudentsOptions" [type]="'bar'"></canvas>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-3">New this week: {{ analyticsData.newStudentsThisWeek | number
+          }}</p>
+      </div>
+
     </div>
 
-</div>
+    <app-sales-table [recentSales]="recentSalesData"></app-sales-table>
+    }
+  </div>
+
+<!-- </div> -->

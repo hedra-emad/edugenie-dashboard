@@ -21,6 +21,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
+import { PageSkeletonComponent } from '../../../../shared/components/loading';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -70,7 +71,8 @@ export function extractId(val: any): string | null {
     SectionCardComponent,
     AppLoader,
     DragDropModule,
-    EmptyStateComponent
+    EmptyStateComponent,
+    PageSkeletonComponent
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'

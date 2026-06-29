@@ -51,7 +51,7 @@
   <div class="space-y-4">
 
     <div *ngIf="isLoading" class="flex justify-center py-16">
-      <app-loading [size]="40" color="var(--color-primary)"></app-loading>
+      <app-page-skeleton></app-page-skeleton>
     </div>
 
     <ng-container *ngIf="!isLoading">
