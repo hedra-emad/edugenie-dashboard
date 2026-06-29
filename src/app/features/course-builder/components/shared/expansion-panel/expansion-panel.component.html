@@ -14,60 +14,65 @@
   </div>
 
   <mat-expansion-panel-header>
-    <mat-panel-title class="flex items-center justify-between w-full pr-0 sm:pr-2 gap-2">
+    <mat-panel-title class="flex items-stretch justify-between w-full pr-0 sm:pr-2 gap-2">
 
       <!-- Content wrapper that intercepts touches and handles drag -->
-      <div class="flex items-center flex-1 min-w-0 cursor-grab active:cursor-grabbing"
-        cdkDragHandle
-        (click)="preventHeaderToggle($event)"
-        (touchstart)="preventHeaderToggle($event)">
+      <div class="flex items-stretch flex-1 min-w-0 cursor-grab active:cursor-grabbing"
+  cdkDragHandle
+  (click)="preventHeaderToggle($event)"
+  (touchstart)="preventHeaderToggle($event)">
 
-        <!-- Drag handle icon (visual only now) -->
+        <!-- Drag handle icon -->
         <span *ngIf="showDragHandle"
-          class="flex items-center justify-center w-6 h-6 mr-1 flex-shrink-0 text-[var(--color-text-secondary)] opacity-60 hover:opacity-100"
+          class="flex items-center justify-center w-6 self-center mr-1 flex-shrink-0 text-[var(--color-text-secondary)] opacity-60 hover:opacity-100"
           aria-label="Drag to reorder">
           <mat-icon class="!text-[15px] !w-[15px] !h-[15px] block pointer-events-none">drag_indicator</mat-icon>
         </span>
 
         <!-- Title + subtitle -->
-        <div class="flex items-center gap-2 font-bold text-sm sm:text-base leading-snug min-w-0 flex-1"
-          [style.color]="'var(--color-primary)'">
-          <mat-icon class="text-[var(--color-text-secondary)] opacity-80 flex-shrink-0 !text-[18px] !w-[18px] !h-[18px]">{{ icon }}</mat-icon>
-          <span class="truncate block">
-            {{ index + 1 }}. {{ title }}
-          </span>
-          
-          <!-- Unified Draft Indicator (New System) -->
+        <div class="flex items-center gap-2 font-bold text-sm sm:text-base leading-none min-w-0 flex-1"
+    [style.color]="'var(--color-primary)'">
+
+    <mat-icon class="text-[var(--color-text-secondary)] opacity-80 flex-shrink-0 !text-[18px] !w-[18px] !h-[18px]">{{ icon }}</mat-icon>
+
+    <!-- THIS is the key fix: max-w + truncate + overflow-hidden -->
+    <span
+  class="block truncate w-[240px] lg:w-[320px]">
+  {{ index + 1 }}. {{ title }}
+</span>
+
+
+          <!-- Unified Draft Indicator -->
           <app-draft-indicator *ngIf="shouldShowDraftIndicator"
-                              [draftId]="draftId || ''"
-                              [type]="draftIndicatorType || legacyIndicatorType"
-                              [customTooltip]="customTooltip"
-                              [autoDetect]="autoDetectDraftState && !!draftId"
-                              class="flex-shrink-0 ml-1">
+            [draftId]="draftId || ''"
+            [type]="draftIndicatorType || legacyIndicatorType"
+            [customTooltip]="customTooltip"
+            [autoDetect]="autoDetectDraftState && !!draftId"
+            class="flex-shrink-0 ml-1">
           </app-draft-indicator>
-          
+
           <!-- Failed State Indicators -->
-          <div *ngIf="hasSaveFailed" 
-               class="save-failed-indicator flex-shrink-0 ml-1"
-               matTooltip="Save failed - Click to retry"
-               matTooltipPosition="above"
-               matTooltipShowDelay="500">
+          <div *ngIf="hasSaveFailed"
+            class="save-failed-indicator flex-shrink-0 ml-1"
+            matTooltip="Save failed - Click to retry"
+            matTooltipPosition="above"
+            matTooltipShowDelay="500">
           </div>
-          
-          <div *ngIf="hasUploadError" 
-               class="upload-error-indicator flex-shrink-0 ml-1"
-               matTooltip="Upload failed - Please try again"
-               matTooltipPosition="above"
-               matTooltipShowDelay="500">
+
+          <div *ngIf="hasUploadError"
+            class="upload-error-indicator flex-shrink-0 ml-1"
+            matTooltip="Upload failed - Please try again"
+            matTooltipPosition="above"
+            matTooltipShowDelay="500">
           </div>
-          
-          <div *ngIf="hasFailedLessons" 
-               class="section-failed-lessons-indicator flex-shrink-0 ml-1"
-               matTooltip="This section has lessons with save failures"
-               matTooltipPosition="above"
-               matTooltipShowDelay="500">
+
+          <div *ngIf="hasFailedLessons"
+            class="section-failed-lessons-indicator flex-shrink-0 ml-1"
+            matTooltip="This section has lessons with save failures"
+            matTooltipPosition="above"
+            matTooltipShowDelay="500">
           </div>
-          
+
           <span *ngIf="subtitle"
             class="text-xs text-[var(--color-text-secondary)] ml-2 shrink-0 duration-text hidden sm:inline font-normal">
             {{ subtitle }}
@@ -123,7 +128,7 @@
 
         </div>
 
-        <!-- Mobile actions: delete button only (lesson mode) -->
+        <!-- Mobile actions: delete only (lesson mode, no menu) -->
         <div *ngIf="showMoveButtons && !showMobileMenu" class="flex sm:hidden items-center gap-1 flex-shrink-0">
           <button *ngIf="showDeleteButton"
             type="button"
@@ -137,8 +142,9 @@
           </button>
         </div>
 
-        <!-- Mobile actions: three-dot mat-menu (section mode) -->
-        <div *ngIf="showMobileMenu && (showLessonsButton || showQuizButton)" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
+        <!-- Mobile actions: three-dot menu (section mode) -->
+        <div *ngIf="showMobileMenu && (showLessonsButton || showQuizButton)"
+  class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-auto">
           <button type="button"
             [matMenuTriggerFor]="mobileMenu"
             [disabled]="isDeleting"
@@ -149,8 +155,9 @@
           </button>
         </div>
 
-        <!-- Mobile direct delete action (lesson mode) -->
-        <div *ngIf="showMobileMenu && showDeleteButton && !showLessonsButton && !showQuizButton" class="flex sm:hidden items-center gap-1.5 flex-shrink-0">
+        <!-- Mobile direct delete (lesson mode with menu) -->
+        <div *ngIf="showMobileMenu && showDeleteButton && !showLessonsButton && !showQuizButton"
+          class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center">
           <button type="button"
             (click)="onDeleteClicked($event)"
             [disabled]="isDeleting"
@@ -162,11 +169,11 @@
 
       </div>
 
-      <!-- Dedicated Expand/Collapse Button (always visible) -->
+      <!-- Expand/Collapse Button -->
       <button
         type="button"
         [disabled]="isDeleting"
-        class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 self-center flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         (click)="togglePanel($event, panel)"
         (touchstart)="$event.stopPropagation()">
         <mat-icon class="!text-[24px] !w-[24px] !h-[24px] block pointer-events-none">
@@ -177,7 +184,7 @@
     </mat-panel-title>
   </mat-expansion-panel-header>
 
-  <!-- Mobile mat-menu (CDK overlay, outside panel DOM) -->
+  <!-- Mobile mat-menu -->
   <mat-menu #mobileMenu="matMenu" class="mobile-section-menu">
     <button *ngIf="showDeleteButton" mat-menu-item (click)="onDeleteClicked($event)" [disabled]="isDeleting">
       <mat-icon class="!text-[16px]">delete</mat-icon>
@@ -193,7 +200,7 @@
     </button>
   </mat-menu>
 
-  <!-- Body: default ng-content slot -->
+  <!-- Body -->
   <ng-content></ng-content>
 
 </mat-expansion-panel>
