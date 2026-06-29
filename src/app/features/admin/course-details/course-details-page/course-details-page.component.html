@@ -191,6 +191,19 @@
                     @if (expandedSections[i]) {
                       <div class="accordion-content">
 
+                        <!-- Section Preview Video (only if exists, no placeholder) -->
+                        @if (section.previewVideoUrl) {
+                          <div class="content-preview-player">
+                            <video
+                              controls
+                              preload="metadata"
+                              class="preview-video-player">
+                              <source [src]="section.previewVideoUrl" type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        }
+
                         @if (section.description) {
                           <div class="section-description">
                             <mat-icon>info_outline</mat-icon>
