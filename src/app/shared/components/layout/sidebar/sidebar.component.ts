@@ -49,11 +49,11 @@ export class SidebarComponent implements OnInit {
   ];
 
   readonly adminBottomItems: NavItem[] = [
-    { icon: 'settings', label: 'Settings', route: '/admin/settings' },
+    { icon: 'settings', label: 'Account Settings', route: '/admin/settings' },
   ];
 
   readonly instructorBottomItems: NavItem[] = [
-    { icon: 'settings', label: 'Settings', route: '/settings' },
+    { icon: 'settings', label: 'Account Settings', route: '/settings' },
   ];
 
   readonly superadminNavItems: NavItem[] = [
@@ -68,7 +68,7 @@ export class SidebarComponent implements OnInit {
   ];
 
   readonly superadminBottomItems: NavItem[] = [
-    { icon: 'settings', label: 'Settings', route: '/admin/settings' },
+    { icon: 'settings', label: 'Account Settings', route: '/admin/settings' },
   ];
 
   get navItems(): NavItem[] {
@@ -108,6 +108,12 @@ export class SidebarComponent implements OnInit {
       this.router.navigate([route]).then(() => {
         this.toggle.emit();
       });
+    }
+  }
+
+  goToSettings(): void {
+    if (this.router.url !== '/admin/settings') {
+      this.router.navigate(['/admin/settings']);
     }
   }
 

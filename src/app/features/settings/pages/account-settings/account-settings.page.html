@@ -1,431 +1,335 @@
+<!-- ── Loading skeleton ── -->
 <app-page-skeleton *ngIf="isLoadingProfile"></app-page-skeleton>
 
-<div class="p-8 md:p-12 lg:p-16 relative" *ngIf="!isLoadingProfile">
-  <div class="max-w-4xl">
-    <!-- Header -->
-    <div class="mb-12">
-      <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">Account Settings</h1>
-      <p class="page-subtitle">Manage your profile, security, and notification preferences.</p>
-    </div>
+<!-- ── Main page ── -->
+@if (!isLoadingProfile) {
+<div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-16">
-
-      <!-- Profile Information Section -->
-      <section class="col-span-1 lg:col-span-2">
-        <div class="flex items-center gap-3 mb-8">
-          <svg class="w-6 h-6 text-[#1a0b59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-          </svg>
-          <h2 class="text-xl font-semibold text-[#1a0b59]">Profile Information</h2>
-        </div>
-
-        <div class="flex flex-col md:flex-col lg:flex-row gap-10 items-center relative">
-          <!-- Avatar -->
-          <div class="flex flex-col items-center shrink-0">
-            <div class="relative">
-              <div
-                class="w-32 h-32 rounded-full border-[6px] border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-4xl relative">
-
-                <!-- Uploading Spinner overlay — shown while Save Changes uploads the avatar -->
-                <div *ngIf="isUploadingAvatar"
-                  class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-                  <svg class="animate-spin h-8 w-8 text-[#00B0FF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
-                  </svg>
-                </div>
-
-                <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Profile Avatar" class="w-full h-full object-cover"
-                  [class.opacity-50]="isUploadingAvatar">
-                <span *ngIf="!avatarPreview" [class.opacity-50]="isUploadingAvatar">{{ getInitials() }}</span>
-              </div>
-
-              <button type="button" (click)="toggleAvatarOptions()" class="absolute bottom-1 right-1 btn-primary-icon">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                  </path>
-                </svg>
-              </button>
-
-              <!-- Avatar Options Dropdown -->
-              <div *ngIf="showAvatarOptions"
-                class="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white shadow-xl rounded-lg border border-gray-100 py-1 w-36 z-20 overflow-hidden">
-                <button *ngIf="!avatarPreview" type="button" (click)="triggerFileInput()"
-                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Upload
-                  Image</button>
-                <button *ngIf="avatarPreview" type="button" (click)="triggerFileInput()"
-                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Change
-                  Image</button>
-                <button *ngIf="avatarPreview" type="button" (click)="removePhoto()"
-                  class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors">Remove
-                  Image</button>
-              </div>
-              <!-- Hidden file input -->
-              <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
-            </div>
-            <p class="text-[11px] text-gray-500 text-center mt-4 max-w-[120px] leading-tight">JPG, GIF or PNG. Max size
-              of 800K</p>
-          </div>
-
-          <!-- Profile Form -->
-          <form [formGroup]="profileForm" class="flex-1 w-full space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-[13px] font-medium text-gray-700 block">First Name</label>
-                <input type="text" formControlName="firstName"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1a0b59] focus:border-[#1a0b59] outline-none transition-all text-gray-800">
-              </div>
-              <div class="space-y-2">
-                <label class="text-[13px] font-medium text-gray-700 block">Last Name</label>
-                <input type="text" formControlName="lastName"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1a0b59] focus:border-[#1a0b59] outline-none transition-all text-gray-800">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="text-[13px] font-medium text-gray-700 block">Email Address</label>
-              <input type="email" formControlName="email" readonly
-                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1a0b59] focus:border-[#1a0b59] outline-none transition-all text-gray-500 bg-gray-50 cursor-not-allowed">
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <!-- Security Section -->
-      <section class="col-span-1">
-        <div class="flex items-center gap-3 mb-8">
-          <svg class="w-6 h-6 text-[#1a0b59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-            </path>
-          </svg>
-          <h2 class="text-xl font-semibold text-[#1a0b59]">Security</h2>
-        </div>
-
-        <form [formGroup]="securityForm" class="space-y-6">
-          <!-- Current Password -->
-          <div class="space-y-2">
-            <label class="text-[13px] font-medium text-gray-700 block">Current Password</label>
-            <div class="relative">
-              <input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword" placeholder="Enter current password"
-                (keydown.enter)="$event.preventDefault(); onSaveChanges()"
-                class="w-full px-4 py-3 pr-12 rounded-lg border outline-none transition-all text-gray-800 h-[50px] placeholder:text-gray-400 placeholder:font-normal placeholder:tracking-normal"
-                [ngClass]="{
-                  'border-red-500 focus:ring-2 focus:ring-red-500/20': securityForm.get('currentPassword')?.invalid && (securityForm.get('currentPassword')?.touched || securityForm.get('currentPassword')?.dirty),
-                  'border-gray-300 focus:ring-2 focus:ring-[#1a0b59]': !(securityForm.get('currentPassword')?.invalid && (securityForm.get('currentPassword')?.touched || securityForm.get('currentPassword')?.dirty))
-                }">
-              
-              <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                (click)="showCurrentPassword = !showCurrentPassword">
-                <svg *ngIf="showCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                </svg>
-                <svg *ngIf="!showCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </div>
-            
-            <div *ngIf="securityForm.get('currentPassword')?.invalid && (securityForm.get('currentPassword')?.touched || securityForm.get('currentPassword')?.dirty)" class="text-xs text-red-500 mt-1">
-              <span *ngIf="securityForm.get('currentPassword')?.errors?.['required']">Current password is required.</span>
-              <span *ngIf="securityForm.get('currentPassword')?.errors?.['serverIncorrect']">Current password is incorrect.</span>
-            </div>
-          </div>
-
-          <!-- New Password -->
-          <div class="space-y-2">
-            <label class="text-[13px] font-medium text-gray-700 block">New Password</label>
-            <div class="relative">
-              <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" placeholder="Enter new password"
-                (keydown.enter)="$event.preventDefault(); onSaveChanges()"
-                class="w-full px-4 py-3 pr-12 rounded-lg border outline-none transition-all text-gray-800 h-[50px] placeholder:text-gray-400 placeholder:font-normal placeholder:tracking-normal"
-                [ngClass]="{
-                  'border-red-500 focus:ring-2 focus:ring-red-500/20': securityForm.get('newPassword')?.invalid && (securityForm.get('newPassword')?.touched || securityForm.get('newPassword')?.dirty),
-                  'border-gray-300 focus:ring-2 focus:ring-[#1a0b59]': !(securityForm.get('newPassword')?.invalid && (securityForm.get('newPassword')?.touched || securityForm.get('newPassword')?.dirty))
-                }">
-              
-              <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                (click)="showNewPassword = !showNewPassword">
-                <svg *ngIf="showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                </svg>
-                <svg *ngIf="!showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </div>
-
-            <div *ngIf="securityForm.get('newPassword')?.invalid && (securityForm.get('newPassword')?.touched || securityForm.get('newPassword')?.dirty)" class="text-xs text-red-500 mt-1">
-              <span *ngIf="securityForm.get('newPassword')?.errors?.['required']">New password is required.</span>
-              <span *ngIf="securityForm.get('newPassword')?.errors?.['minlength']">Password must be at least 6 characters.</span>
-              <span *ngIf="securityForm.get('newPassword')?.errors?.['serverValidationError']">{{ securityForm.get('newPassword')?.errors?.['serverValidationError'] }}</span>
-            </div>
-          </div>
-
-          <!-- Confirm Password -->
-          <div class="space-y-2">
-            <label class="text-[13px] font-medium text-gray-700 block">Confirm New Password</label>
-            <div class="relative">
-              <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm new password"
-                (keydown.enter)="$event.preventDefault(); onSaveChanges()"
-                class="w-full px-4 py-3 pr-12 rounded-lg border outline-none transition-all text-gray-800 h-[50px] placeholder:text-gray-400 placeholder:font-normal placeholder:tracking-normal"
-                [ngClass]="{
-                  'border-red-500   focus:ring-2 focus:ring-red-500/20':   (securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && (securityForm.get('confirmPassword')?.errors?.['required'] || securityForm.hasError('mismatch')),
-                  'border-green-500 focus:ring-2 focus:ring-green-500/20': (securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && securityForm.get('confirmPassword')?.value && !securityForm.get('confirmPassword')?.errors?.['required'] && !securityForm.hasError('mismatch'),
-                  'border-gray-300  focus:ring-2 focus:ring-[#1a0b59]':    !securityForm.get('confirmPassword')?.value || (!securityForm.get('confirmPassword')?.touched && !securityForm.get('confirmPassword')?.dirty)
-                }">
-              
-              <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                (click)="showConfirmPassword = !showConfirmPassword">
-                <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                </svg>
-                <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </div>
-
-            <!-- "required" error lives on the control; "mismatch" lives on the FormGroup -->
-            <div *ngIf="(securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty)" class="text-xs text-red-500 mt-1">
-              <span *ngIf="securityForm.get('confirmPassword')?.errors?.['required']">Confirm password is required.</span>
-              <span *ngIf="!securityForm.get('confirmPassword')?.errors?.['required'] && securityForm.hasError('mismatch')">Passwords do not match.</span>
-            </div>
-
-            <div *ngIf="securityForm.get('confirmPassword')?.value && (securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && !securityForm.get('confirmPassword')?.errors?.['required'] && !securityForm.hasError('mismatch')" class="text-xs text-green-600 mt-1 flex items-center gap-1">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              Passwords match!
-            </div>
-          </div>
-
-          <div class="pt-2">
-            <a href="#" class="text-[13px] text-[#00B0FF] hover:underline font-medium">Forgot your password?</a>
-          </div>
-        </form>
-      </section>
-
-      <!-- Preferences Section -->
-      <section class="col-span-1">
-        <div class="flex items-center gap-3 mb-8">
-          <svg class="w-6 h-6 text-[#1a0b59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-            </path>
-          </svg>
-          <h2 class="text-xl font-semibold text-[#1a0b59]">Preferences</h2>
-        </div>
-
-        <div class="space-y-10 mt-[3rem]">
-          <!-- Email Notifications Toggle -->
-          <div class="flex justify-between items-start gap-4">
-            <div class="pr-4">
-              <h3 class="text-[15px] font-semibold text-gray-900">Email Notifications</h3>
-              <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed pr-6">Receive weekly digests, course updates,
-                and promotional offers.</p>
-            </div>
-            <button (click)="toggleEmailNotifications()"
-              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3b1892] focus:ring-offset-2"
-              [ngClass]="emailNotifications ? 'bg-[#3b1892]' : 'bg-gray-200'" role="switch"
-              [attr.aria-checked]="emailNotifications">
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center"
-                [ngClass]="emailNotifications ? 'translate-x-5' : 'translate-x-0'">
-                <svg *ngIf="emailNotifications" class="w-3.5 h-3.5 text-[#3b1892]" fill="currentColor"
-                  viewBox="0 0 20 20">
-                  <path fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"></path>
-                </svg>
-              </span>
-            </button>
-          </div>
-
-          <!-- Public Profile Toggle -->
-          <div class="flex justify-between items-start gap-4">
-            <div class="pr-4">
-              <h3 class="text-[15px] font-semibold text-gray-900">Public Profile</h3>
-              <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed pr-6">Allow other learners to see your profile
-                and course progress.</p>
-            </div>
-            <button (click)="togglePublicProfile()"
-              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3b1892] focus:ring-offset-2"
-              [ngClass]="publicProfile ? 'bg-[#3b1892]' : 'bg-gray-200'" role="switch"
-              [attr.aria-checked]="publicProfile">
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                [ngClass]="publicProfile ? 'translate-x-5' : 'translate-x-0'">
-              </span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- Footer Actions -->
-    <div class="mt-16 flex justify-end gap-4 pb-8">
-      <button type="button" (click)="onSaveChanges()"
-        [disabled]="isSubmitDisabled"
-        class="px-6 py-3 text-[14px] font-semibold text-white btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]">
-        <app-button-loading [loading]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Save Changes' }}
-        </app-button-loading>
-      </button>
-    </div>
-
+  <!-- Page header -->
+  <div class="settings-header">
+    <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">Account Settings</h1>
+    <p class="settings-subtitle">Manage your profile, security, and notification preferences.</p>
   </div>
-</div>
+
+  <!-- ══════════════════════════
+       PROFILE CARD
+       ══════════════════════════ -->
+  <div class="settings-card">
+    <div class="card-section-header">
+      <div class="card-section-icon">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="card-section-title">Profile Information</h2>
+        <p class="card-section-desc">Your name and public-facing identity.</p>
+      </div>
+    </div>
+
+    <div class="profile-body">
+      <!-- Avatar column -->
+      <div class="avatar-col">
+
+        <!-- Clickable avatar — triggers file input on click -->
+        <button
+          type="button"
+          class="avatar-trigger"
+          (click)="triggerFileInput()"
+          [disabled]="isUploadingAvatar"
+          aria-label="Change profile photo">
+
+          <!-- Upload-in-progress spinner (highest z-index) -->
+          @if (isUploadingAvatar) {
+            <div class="avatar-uploading-overlay">
+              <svg class="animate-spin w-7 h-7 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+            </div>
+          }
+
+          <!-- Avatar image or initials -->
+          <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Avatar" class="avatar-img">
+          <span *ngIf="!avatarPreview" class="avatar-initials">{{ getInitials() }}</span>
+
+          <!-- Hover overlay with camera icon -->
+          <div class="avatar-hover-overlay" aria-hidden="true">
+            <svg class="avatar-camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+        </button>
+
+        <!-- Hidden file input — unchanged -->
+        <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
+
+        <p class="avatar-hint">JPG, GIF or PNG · Max 800 KB</p>
+
+        <!-- Remove photo button — shown only when avatar exists -->
+        <button *ngIf="avatarPreview" type="button" class="avatar-remove-btn" (click)="removePhoto()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Remove photo
+        </button>
+
+      </div>
+
+      <!-- Name / Email form -->
+      <form [formGroup]="profileForm" class="profile-form">
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-label">First Name</label>
+            <input type="text" formControlName="firstName" class="field-input"
+              [class.field-input--error]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched"
+              placeholder="First name">
+            <span *ngIf="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched"
+              class="field-error">First name is required.</span>
+          </div>
+          <div class="form-field">
+            <label class="field-label">Last Name</label>
+            <input type="text" formControlName="lastName" class="field-input"
+              [class.field-input--error]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched"
+              placeholder="Last name">
+            <span *ngIf="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched"
+              class="field-error">Last name is required.</span>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Email Address</label>
+          <input type="email" formControlName="email" class="field-input field-input--readonly" readonly>
+          <p class="field-hint">Email address cannot be changed.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════
+       SECURITY CARD
+       ══════════════════════════ -->
+  <div class="settings-card">
+    <div class="card-section-header">
+      <div class="card-section-icon">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="card-section-title">Change Password</h2>
+        <p class="card-section-desc">Update your password to keep your account secure.</p>
+      </div>
+    </div>
+
+    <form [formGroup]="securityForm" class="security-form">
+      <!-- Current Password -->
+      <div class="form-field">
+        <label class="field-label">Current Password</label>
+        <div class="field-password-wrap">
+          <input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword"
+            class="field-input field-input--password"
+            [class.field-input--error]="securityForm.get('currentPassword')?.invalid && (securityForm.get('currentPassword')?.touched || securityForm.get('currentPassword')?.dirty)"
+            placeholder="Enter current password"
+            (keydown.enter)="$event.preventDefault(); onSaveChanges()">
+          <button type="button" class="password-toggle" (click)="showCurrentPassword = !showCurrentPassword"
+            [attr.aria-label]="showCurrentPassword ? 'Hide password' : 'Show password'">
+            <svg *ngIf="showCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+            <svg *ngIf="!showCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+        <div *ngIf="securityForm.get('currentPassword')?.invalid && (securityForm.get('currentPassword')?.touched || securityForm.get('currentPassword')?.dirty)" class="field-error">
+          <span *ngIf="securityForm.get('currentPassword')?.errors?.['required']">Current password is required.</span>
+          <span *ngIf="securityForm.get('currentPassword')?.errors?.['serverIncorrect']">Current password is incorrect.</span>
+        </div>
+      </div>
+
+      <!-- New Password -->
+      <div class="form-row-2">
+        <div class="form-field">
+          <label class="field-label">New Password</label>
+          <div class="field-password-wrap">
+            <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword"
+              class="field-input field-input--password"
+              [class.field-input--error]="securityForm.get('newPassword')?.invalid && (securityForm.get('newPassword')?.touched || securityForm.get('newPassword')?.dirty)"
+              placeholder="New password"
+              (keydown.enter)="$event.preventDefault(); onSaveChanges()">
+            <button type="button" class="password-toggle" (click)="showNewPassword = !showNewPassword">
+              <svg *ngIf="showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+              </svg>
+              <svg *ngIf="!showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          <div *ngIf="securityForm.get('newPassword')?.invalid && (securityForm.get('newPassword')?.touched || securityForm.get('newPassword')?.dirty)" class="field-error">
+            <span *ngIf="securityForm.get('newPassword')?.errors?.['required']">New password is required.</span>
+            <span *ngIf="securityForm.get('newPassword')?.errors?.['minlength']">Minimum 6 characters.</span>
+            <span *ngIf="securityForm.get('newPassword')?.errors?.['serverValidationError']">{{ securityForm.get('newPassword')?.errors?.['serverValidationError'] }}</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Confirm New Password</label>
+          <div class="field-password-wrap">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
+              class="field-input field-input--password"
+              [class.field-input--error]="(securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && (securityForm.get('confirmPassword')?.errors?.['required'] || securityForm.hasError('mismatch'))"
+              [class.field-input--success]="(securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && securityForm.get('confirmPassword')?.value && !securityForm.get('confirmPassword')?.errors?.['required'] && !securityForm.hasError('mismatch')"
+              placeholder="Confirm password"
+              (keydown.enter)="$event.preventDefault(); onSaveChanges()">
+            <button type="button" class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword">
+              <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+              </svg>
+              <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          <div *ngIf="(securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty)" class="field-error">
+            <span *ngIf="securityForm.get('confirmPassword')?.errors?.['required']">Confirm password is required.</span>
+            <span *ngIf="!securityForm.get('confirmPassword')?.errors?.['required'] && securityForm.hasError('mismatch')">Passwords do not match.</span>
+          </div>
+          <div *ngIf="securityForm.get('confirmPassword')?.value && (securityForm.get('confirmPassword')?.touched || securityForm.get('confirmPassword')?.dirty) && !securityForm.get('confirmPassword')?.errors?.['required'] && !securityForm.hasError('mismatch')" class="field-success">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Passwords match!
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-1">
+        <a href="#" class="text-[13px] text-[var(--color-secondary,#00B0FF)] hover:underline font-medium">Forgot your password?</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ══════════════════════════
+       FOOTER ACTIONS
+       ══════════════════════════ -->
+  <div class="settings-footer">
+    <button type="button" class="btn-save" [disabled]="isSubmitDisabled" (click)="onSaveChanges()">
+      <app-button-loading [loading]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </app-button-loading>
+    </button>
+  </div>
+
+</div><!-- end settings-page -->
+}
 
 <!-- ══════════════════════════════════════════════════════════════
      AVATAR CROPPER MODAL  — custom canvas, fixed circular frame
+     (unchanged logic, only slight class cleanup)
      ══════════════════════════════════════════════════════════════ -->
-<div *ngIf="isCropperOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+@if (isCropperOpen) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
   role="dialog" aria-modal="true" aria-labelledby="cropper-title">
-
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[95vh] overflow-hidden">
 
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
-      <h3 id="cropper-title" class="text-xl font-bold text-[#1a0b59]">Adjust Your Photo</h3>
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+      <h3 id="cropper-title" class="text-lg font-bold text-[var(--color-primary,#3b1892)]">Adjust Your Photo</h3>
       <button (click)="cancelCrop()" aria-label="Close"
-        class="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#00B0FF]">
+        class="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
     </div>
 
     <!-- Body -->
     <div class="flex flex-col md:flex-row gap-0 overflow-y-auto md:overflow-hidden flex-1">
-
-      <!-- ── LEFT: Crop Zone ── -->
+      <!-- Crop zone -->
       <div class="flex flex-col items-center justify-center gap-3 p-4 flex-1 bg-gray-50">
-
-        <!-- Crop arena -->
         <div class="cropper-arena" (mousedown)="onCropPointerDown($event)" (touchstart)="onCropPointerDown($event)"
-          (wheel)="onCropWheel($event)" [class.cursor-grabbing]="_isDragging" style="cursor: grab;">
-
-          <!-- The actual image (moved by CSS transform) -->
-          <img *ngIf="selectedImageSrc" #cropImg [src]="selectedImageSrc" [ngStyle]="cropImageStyle" alt="Image to crop"
-            draggable="false" (load)="onCropImageLoaded($event)">
-
-          <!-- Semi-transparent overlay with circular hole (box-shadow trick) -->
+          (wheel)="onCropWheel($event)" [class.cursor-grabbing]="_isDragging" style="cursor:grab">
+          <img *ngIf="selectedImageSrc" #cropImg [src]="selectedImageSrc" [ngStyle]="cropImageStyle"
+            alt="Image to crop" draggable="false" (load)="onCropImageLoaded($event)">
           <div class="cropper-overlay" aria-hidden="true"></div>
-
-          <!-- White circular border ring -->
           <div class="cropper-ring" aria-hidden="true"></div>
         </div>
-
-        <p class="text-xs text-gray-500">Drag to reposition · Scroll or use slider to zoom</p>
-
-        <!-- ── Controls ── -->
+        <p class="text-xs text-gray-400">Drag to reposition · Scroll or slider to zoom</p>
         <div class="w-full max-w-[380px] bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
-
-          <!-- Zoom -->
           <div class="flex items-center gap-3">
-            <button (click)="zoomOut()" aria-label="Zoom out"
-              class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <button (click)="zoomOut()" class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
               </svg>
             </button>
             <input type="range" min="0.1" max="5" step="0.05" [value]="cropScale" (input)="updateZoom($event)"
-              class="flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#00B0FF]"
-              aria-label="Zoom level">
-            <button (click)="zoomIn()" aria-label="Zoom in"
-              class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
+              class="flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#00B0FF]">
+            <button (click)="zoomIn()" class="p-2 rounded-lg text-gray-500 hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7m3-3v6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7m3-3v6"/>
               </svg>
             </button>
           </div>
-
-          <!-- Rotate + Reset -->
           <div class="flex items-center justify-between border-t border-gray-100 pt-3">
             <div class="flex gap-2">
-              <button (click)="rotateLeft()" aria-label="Rotate left"
-                class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
+              <button (click)="rotateLeft()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                 Left
               </button>
-              <button (click)="rotateRight()" aria-label="Rotate right"
-                class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-                </svg>
+              <button (click)="rotateRight()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:text-[#00B0FF] hover:bg-blue-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/></svg>
                 Right
               </button>
             </div>
-            <button (click)="resetCropTransform()" aria-label="Reset"
-              class="px-3 py-1.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-              Reset
-            </button>
+            <button (click)="resetCropTransform()" class="px-3 py-1.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50">Reset</button>
           </div>
         </div>
       </div>
 
-      <!-- ── RIGHT: Live Preview ── -->
-      <div
-        class="flex flex-col items-center justify-center gap-5 p-6 md:w-56 shrink-0 bg-white border-t md:border-t-0 md:border-l border-gray-100">
+      <!-- Preview -->
+      <div class="flex flex-col items-center justify-center gap-4 p-6 md:w-52 shrink-0 bg-white border-t md:border-t-0 md:border-l border-gray-100">
         <span class="text-xs font-semibold uppercase tracking-widest text-gray-400">Preview</span>
-
-        <!-- Circle preview -->
-        <div
-          class="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center text-[#1a0b59] font-bold text-3xl">
-          <img *ngIf="livePreviewUrl" [src]="livePreviewUrl" class="w-full h-full object-cover" alt="Live preview">
+        <div class="w-36 h-36 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center text-[var(--color-primary,#3b1892)] font-bold text-3xl">
+          <img *ngIf="livePreviewUrl" [src]="livePreviewUrl" class="w-full h-full object-cover" alt="Preview">
           <span *ngIf="!livePreviewUrl">{{ getInitials() }}</span>
         </div>
-
-        <!-- Small badge preview -->
         <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow bg-gray-100">
           <img *ngIf="livePreviewUrl" [src]="livePreviewUrl" class="w-full h-full object-cover" alt="">
         </div>
-
-        <p class="text-[12px] text-gray-400 text-center max-w-[140px] leading-relaxed">
+        <p class="text-[11px] text-gray-400 text-center max-w-[130px] leading-relaxed">
           Your avatar appears circular across the platform.
         </p>
       </div>
-
     </div>
 
     <!-- Footer -->
     <div class="flex justify-end gap-3 px-6 py-3 border-t border-gray-100 bg-gray-50/50 shrink-0">
       <button type="button" (click)="cancelCrop()"
-        class="px-6 py-2.5 text-sm font-semibold bg-white text-[#3b1892] border border-gray-300 rounded-lg hover:text-red-500 hover:bg-red-50 hover:border-red-500 hover:border rounded-lg cursor-pointer">
+        class="px-5 py-2.5 text-sm font-semibold text-gray-600 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors">
         Cancel
       </button>
       <button type="button" (click)="confirmCrop()"
-        class="px-8 py-2.5 text-sm font-semibold text-white bg-[#3b1892] rounded-lg hover:bg-[#2d1073] transition-colors shadow-md shadow-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer">
+        class="px-7 py-2.5 text-sm font-semibold text-white bg-[var(--color-primary,#3b1892)] rounded-lg hover:bg-[#2d1073] transition-colors shadow-sm">
         Apply Crop
       </button>
     </div>
 
   </div>
 </div>
-
-<ng-template #loadingTemplate>
-  <div class="p-8 md:p-12 lg:p-16 flex items-center justify-center min-h-[500px]">
-    <svg class="animate-spin h-10 w-10 text-[#00B0FF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-      </path>
-    </svg>
-  </div>
-</ng-template>
+}
