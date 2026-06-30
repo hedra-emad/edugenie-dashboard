@@ -95,15 +95,14 @@
     </div>
 
     <!-- Course Preview Video (optional, collapsed by default) -->
-    <app-preview-video-upload *ngIf="courseId" resourceType="course" [ownerId]="courseId"
-      [parentForm]="courseForm" ></app-preview-video-upload>
+    <app-preview-video-upload [ownerId]="courseId ?? draftId" resourceType="course" [parentForm]="courseForm">
+</app-preview-video-upload>
 
     <!-- Course Attachments -->
     <app-attachment-manager
-      *ngIf="courseId"
-      [parentType]="AttachmentParentType.COURSE"
-      [courseId]="courseId">
-    </app-attachment-manager>
+  [courseId]="courseId"
+  [parentType]="AttachmentParentType.COURSE">
+</app-attachment-manager>
 
     <!-- Course Details -->
 

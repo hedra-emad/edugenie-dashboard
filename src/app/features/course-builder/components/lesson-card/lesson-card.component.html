@@ -318,12 +318,11 @@
 
     <!-- Lesson Attachments -->
     <app-attachment-manager
-      *ngIf="isUpdateMode"
-      [parentType]="AttachmentParentType.LESSON"
-      [courseId]="courseId"
-      [sectionId]="sectionId"
-      [lessonId]="lessonForm.get('id')?.value">
-    </app-attachment-manager>
+  [parentType]="AttachmentParentType.LESSON"
+  [courseId]="courseId"
+  [sectionId]="sectionId"
+  [lessonId]="isUpdateMode ? lessonForm.get('id')?.value : undefined">
+</app-attachment-manager>
 
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">
