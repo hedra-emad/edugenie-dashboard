@@ -1,6 +1,7 @@
 import {
   Component, ElementRef, HostListener, OnDestroy,
-  OnInit, ViewChild, inject, ChangeDetectorRef
+  OnInit, ViewChild, inject, ChangeDetectorRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -14,6 +15,7 @@ import { catchError, switchMap, tap, takeUntil, finalize, map } from 'rxjs/opera
 @Component({
   selector: 'app-account-settings',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, PageSkeletonComponent, ButtonLoadingComponent],
   templateUrl: './account-settings.page.html',
   styleUrls: ['./account-settings.page.css']
@@ -144,13 +146,23 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.avatarPreview = user.avatar || null;
     this._pendingAvatarBlob = null;
     this.avatarDeleted = false;
+    // Cache initials so the template never recomputes it on every CD cycle
+    this._cachedInitials = this.computeInitials();
+    this.cdr.markForCheck();
   }
 
-  getInitials(): string {
+  // Cached initials — recomputed only when the form is populated/reset
+  _cachedInitials = 'U';
+
+  private computeInitials(): string {
     const f = this.profileForm.get('firstName')?.value || '';
     const l = this.profileForm.get('lastName')?.value || '';
     if (!f && !l) return 'U';
     return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
+  }
+
+  getInitials(): string {
+    return this._cachedInitials;
   }
 
   get hasUnsavedChanges(): boolean {
@@ -546,4 +558,5 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     }
     this.selectedImageSrc = null;
   }
+
 }

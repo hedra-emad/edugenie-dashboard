@@ -65,10 +65,11 @@ export const routes: Routes = [
     // by mistake should be sent to Next.js, not blocked
   },
   {
-    path: 'register',
+    // Dedicated Admin login — only admins and superadmins may complete login here
+    path: 'admin-login',
     canActivate: [guestGuard],
     loadComponent: () =>
-      import('./features/auth/register/pages/register.page').then((m) => m.RegisterPageComponent),
+      import('./features/auth/login/pages/login.page').then((m) => m.LoginPageComponent),
   },
   {
     path: 'forgot-password',

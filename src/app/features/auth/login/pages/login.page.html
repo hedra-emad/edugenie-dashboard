@@ -2,28 +2,16 @@
   <app-auth-logo></app-auth-logo>
 
   <app-auth-card>
-    <div class="auth-card-header">
-      <app-auth-tabs
-        *ngIf="!isWatchMode()"
-        [activeTab]="activeTab()"
-        (onTabChange)="setTab($event)"
-      >
-      </app-auth-tabs>
-    </div>
 
     @if (errorMessage()) {
-  <div class="auth-error flex items-start gap-2 rounded-[var(--radius-md)] border var(--color-error) bg-[var(--color-error-light)] px-3 py-2 text-sm text-[var(--color-error)] shadow-sm">
-  
-  <svg class="w-4 h-4 mt-[2px] shrink-0 var(--color-error)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-
-  <span class="leading-relaxed">
-    {{ errorMessage() }}
-  </span>
-</div>
-}
+      <div class="auth-error flex items-start gap-2 rounded-[var(--radius-md)] border var(--color-error) bg-[var(--color-error-light)] px-3 py-2 text-sm text-[var(--color-error)] shadow-sm">
+        <svg class="w-4 h-4 mt-[2px] shrink-0 var(--color-error)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="leading-relaxed">{{ errorMessage() }}</span>
+      </div>
+    }
 
     <form
       [formGroup]="loginForm"
@@ -39,31 +27,20 @@
           autocomplete="email"
           placeholder="name@example.com"
           [showSuccessWhenValid]="true">
-        
-          <svg
-            icon
-            class="h-5 w-5 var(--color-text-secondary)"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
+          <svg icon class="h-5 w-5 var(--color-text-secondary)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </app-auth-input>
 
-            <app-password-input
-            [control]="loginForm.controls['password']"
-            label="Password"
-            id="password"
-            autocomplete="current-password"
-            placeholder="••••••••"
-            [showSuccessWhenValid]="true">
-          </app-password-input>
+        <app-password-input
+          [control]="loginForm.controls['password']"
+          label="Password"
+          id="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [showSuccessWhenValid]="true">
+        </app-password-input>
 
         <div *ngIf="!isWatchMode()">
           <app-remember-me formControlName="rememberMe"></app-remember-me>
@@ -77,11 +54,5 @@
       </div>
     </form>
 
-    <div *ngIf="!isWatchMode()" class="auth-card-social">
-      <app-auth-divider>or continue with</app-auth-divider>
-
-      <app-social-login (onGoogle)="loginWithGoogle()" >
-      </app-social-login>
-    </div>
   </app-auth-card>
 </app-auth-layout>

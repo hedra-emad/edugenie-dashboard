@@ -6,7 +6,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
-import { AuthTabsComponent } from '../../../../shared/components/auth-tabs/auth-tabs.component';
 import { AuthInputComponent } from '../../../../shared/components/auth-input/auth-input.component';
 import { PasswordInputComponent } from '../../../../shared/components/password-input/password-input.component';
 import { RememberMeComponent } from '../../../../shared/components/remember-me/remember-me.component';
@@ -15,6 +14,9 @@ import { AuthDividerComponent } from '../../../../shared/components/auth-divider
 import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LoginResponse } from '../../../../core/models/user-profile.model';
+import { environment } from '../../../../../environments/environment';
+/** Roles that are allowed to access the Admin Panel */
+const ADMIN_ROLES = new Set(['admin', 'superadmin']);
 
 @Component({
   selector: 'app-login-page',
@@ -25,7 +27,6 @@ import { LoginResponse } from '../../../../core/models/user-profile.model';
     AuthLayoutComponent,
     AuthLogoComponent,
     AuthCardComponent,
-    AuthTabsComponent,
     AuthInputComponent,
     PasswordInputComponent,
     RememberMeComponent,
@@ -43,7 +44,6 @@ export class LoginPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  activeTab = signal<'signin' | 'signup'>('signin');
   isLoading = signal(false);
   isWatchMode = signal(false);
 
@@ -67,76 +67,56 @@ export class LoginPageComponent implements OnInit {
     });
   }
 
- loginForm: FormGroup = this.fb.group({
-  email: [
-    '',
-    [
-      Validators.required,
-      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+  loginForm: FormGroup = this.fb.group({
+    email: [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+      ],
     ],
-  ],
-  password: ['', [Validators.required, Validators.minLength(6)]],
-  rememberMe: [false],
-});
-
-  setTab(tab: 'signin' | 'signup') {
-    this.activeTab.set(tab);
-
-    if (tab === 'signup') {
-      this.router.navigate(['/register']);
-    }
-  }
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    rememberMe: [false],
+  });
 
   onSubmit() {
     this.errorMessage.set(null);
-    const { email, password, rememberMe } = this.loginForm.value;
-    if (this.loginForm.valid) {
-      this.isLoading.set(true);
+    const { email, password } = this.loginForm.value;
 
-      this.authService.login({
-  email,
-  password,
-})
-        .subscribe({
-        next: (res: LoginResponse) => {
-          this.isLoading.set(false);
-          const homeRoute = this.authService.getHomeRouteForRole(res.data.user.role);
-
-          if (this.authService.isExternalRedirect(homeRoute)) {
-            this.authService.redirectToStudentApp(res.data.exchangeToken).subscribe();
-            return;
-          }
-
-          this.router.navigate([homeRoute]);
-        },
-
-          error: (err) => {
-          console.error('Login error:', err);
-
-          this.isLoading.set(false);
-
-          const status = err?.status;
-
-          if (status === 401) {
-            this.errorMessage.set('Invalid email or password');
-          } else if (status === 429) {
-            this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
-          } else if (status === 0) {
-            this.errorMessage.set('Network error. Please check your connection');
-          } else {
-            this.errorMessage.set('Something went wrong. Please try again later');
-          }
-        }
-        });
-    } else {
+    if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
+      return;
     }
 
-    
+    this.isLoading.set(true);
+
+    this.authService.login({ email, password }).subscribe({
+      next: (res: LoginResponse) => {
+        this.isLoading.set(false);
+        const role = res.data.user.role;
+
+        // Admin / SuperAdmin — continue exactly as before
+        const homeRoute = this.authService.getHomeRouteForRole(role);
+        this.router.navigate([homeRoute]);
+      },
+
+      error: (err) => {
+        this.isLoading.set(false);
+        const status = err?.status;
+
+        if (status === 401) {
+          this.errorMessage.set('Invalid email or password');
+        } else if (status === 429) {
+          this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
+        } else if (status === 0) {
+          this.errorMessage.set('Network error. Please check your connection');
+        } else {
+          this.errorMessage.set('Something went wrong. Please try again later');
+        }
+      },
+    });
   }
 
-  loginWithGoogle() {
-    // console.log('Google login clicked');
-  }
-
+  loginWithGoogle() { }
+  loginWithGithub() { }
 }
