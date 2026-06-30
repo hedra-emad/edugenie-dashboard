@@ -25,8 +25,7 @@ import { DraftStateService } from '../../../../core/services/draft-state.service
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
 import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
-import { AttachmentManagerComponent } from "../../components/attachment-manager/attachment-manager.component";
-import { AttachmentParentType } from '../../../../core/models/attachment.model';
+
 
 @Component({
   selector: 'app-course-basic-info',
@@ -41,7 +40,6 @@ import { AttachmentParentType } from '../../../../core/models/attachment.model';
     ActionBarComponent,
     AppLoader,
     PreviewVideoUploadComponent,
-    AttachmentManagerComponent
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -62,7 +60,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   coursePreviewVideoUrl: string | null = null;
   coursePreviewVideoPublicId: string | null = null;
   @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
-@ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
+
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -91,7 +89,6 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   initialValue: any = null;
   CourseLevel = CourseLevel;
-  AttachmentParentType = AttachmentParentType;
   private toastr = inject(ToastrService);
   parent = inject(CourseBuilderPageComponent, { optional: true });
 

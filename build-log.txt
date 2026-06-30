@@ -1,0 +1,159 @@
+---------------------------------
+- Root directory:  D:\Study\Projects\EduGenie\edugenie-dashboard
+- Working directory:  D:\Study\Projects\EduGenie\edugenie-dashboard
+- Files: .env
+- Environment: production
+- Environment files: 
+ Γ£ö D:\Study\Projects\EduGenie\edugenie-dashboard\.env
+- Environment variables: NG_APP 
+ Γ£ö NG_APP_API_URL
+ Γ£ö NG_APP_PRODUCTION
+ Γ£ö NG_APP_STUDENT_APP_URL
+---------------------------------
+
+[33m>[39m Building...
+[32mΓêÜ[39m Building...
+[1mInitial chunk files[22m  [2m | [22m[1mNames[22m                          [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-BTZESWFV.js[39m    [2m | [22m[2m-[22m                              [2m | [22m[36m220.63 kB[39m[2m | [22m               [36m66.21 kB[39m
+[32mchunk-BU43BZC5.js[39m    [2m | [22m[2m-[22m                              [2m | [22m[36m177.03 kB[39m[2m | [22m               [36m51.47 kB[39m
+[32mstyles-EG6B4RG4.css[39m  [2m | [22m[2mstyles[22m                         [2m | [22m[36m103.21 kB[39m[2m | [22m               [36m14.71 kB[39m
+[32mchunk-562UCCOK.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m79.51 kB[39m[2m | [22m               [36m19.77 kB[39m
+[32mchunk-N3I7GNHS.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m72.18 kB[39m[2m | [22m               [36m20.08 kB[39m
+[32mmain-3YY276F2.js[39m     [2m | [22m[2mmain[22m                           [2m | [22m [36m71.48 kB[39m[2m | [22m               [36m19.61 kB[39m
+[32mchunk-ALYUTTOX.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m66.82 kB[39m[2m | [22m               [36m17.95 kB[39m
+[32mchunk-L2UU2NW7.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m46.58 kB[39m[2m | [22m                [36m9.31 kB[39m
+[32mchunk-5T2WAWO3.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m45.15 kB[39m[2m | [22m               [36m11.89 kB[39m
+[32mpolyfills-ED6LRYKL.js[39m[2m | [22m[2mpolyfills[22m                      [2m | [22m [36m34.59 kB[39m[2m | [22m               [36m11.32 kB[39m
+[32mchunk-USTW7RA3.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m34.30 kB[39m[2m | [22m                [36m8.29 kB[39m
+[32mchunk-3357B2P7.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m29.09 kB[39m[2m | [22m                [36m6.87 kB[39m
+[32mchunk-PL4OJ7VG.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m23.52 kB[39m[2m | [22m                [36m5.12 kB[39m
+[32mchunk-UOQXH5WS.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m13.39 kB[39m[2m | [22m                [36m3.27 kB[39m
+[32mchunk-M46KUN5V.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m10.82 kB[39m[2m | [22m                [36m2.91 kB[39m
+[32mchunk-RCL3AIJS.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m9.26 kB[39m[2m | [22m                [36m2.88 kB[39m
+[32mchunk-WJGIM7HZ.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m4.89 kB[39m[2m | [22m                [36m1.48 kB[39m
+[32mchunk-2W6Y7EC5.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m3.87 kB[39m[2m | [22m                [36m1.16 kB[39m
+[32mchunk-VAGK7FSM.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m2.66 kB[39m[2m | [22m              [36m898 bytes[39m
+[32mchunk-CDE7OOP5.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m1.40 kB[39m[2m | [22m              [36m602 bytes[39m
+[32mchunk-VUJ5X2ZZ.js[39m    [2m | [22m[2m-[22m                              [2m | [22m  [36m1.03 kB[39m[2m | [22m              [36m402 bytes[39m
+[32mchunk-XY5FBTRE.js[39m    [2m | [22m[2m-[22m                              [2m | [22m[36m258 bytes[39m[2m | [22m              [36m258 bytes[39m
+[32mchunk-C4WAFSSA.js[39m    [2m | [22m[2m-[22m                              [2m | [22m[36m224 bytes[39m[2m | [22m              [36m224 bytes[39m
+
+[1m [22m                    [2m | [22m[1mInitial total[22m                  [2m | [22m  [1m1.05 MB[22m[2m | [22m              [1m276.69 kB[22m
+
+[1mLazy chunk files[22m     [2m | [22m[1mNames[22m                          [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-7EVHS5A5.js[39m    [2m | [22m[2m-[22m                              [2m | [22m[36m123.72 kB[39m[2m | [22m               [36m27.09 kB[39m
+[32mchunk-7Y5BC3OX.js[39m    [2m | [22m[2m-[22m                              [2m | [22m [36m64.75 kB[39m[2m | [22m               [36m10.89 kB[39m
+[32mchunk-Z57P5KFU.js[39m    [2m | [22m[2msection-builder-component[22m      [2m | [22m [36m60.16 kB[39m[2m | [22m               [36m13.06 kB[39m
+[32mchunk-WAJQ5M5A.js[39m    [2m | [22m[2mcourse-approvals-page-component[22m[2m | [22m [36m56.21 kB[39m[2m | [22m               [36m10.80 kB[39m
+[32mchunk-ZGMXCCMJ.js[39m    [2m | [22m[2mcourses-list-component[22m         [2m | [22m [36m55.18 kB[39m[2m | [22m               [36m11.78 kB[39m
+[32mchunk-OMQNXMO2.js[39m    [2m | [22m[2minstructor-analytics-page[22m      [2m | [22m [36m54.42 kB[39m[2m | [22m               [36m11.57 kB[39m
+[32mchunk-CGUZDMXQ.js[39m    [2m | [22m[2mlesson-builder[22m                 [2m | [22m [36m54.40 kB[39m[2m | [22m               [36m12.15 kB[39m
+[32mchunk-CHZ2OSEH.js[39m    [2m | [22m[2mcourse-basic-info-component[22m    [2m | [22m [36m50.61 kB[39m[2m | [22m               [36m10.81 kB[39m
+[32mchunk-J7T7JFYI.js[39m    [2m | [22m[2mcategories-page-component[22m      [2m | [22m [36m41.17 kB[39m[2m | [22m                [36m8.62 kB[39m
+[32mchunk-KZENMF44.js[39m    [2m | [22m[2maccount-settings-page[22m          [2m | [22m [36m41.08 kB[39m[2m | [22m                [36m9.16 kB[39m
+[32mchunk-TVNMJDNS.js[39m    [2m | [22m[2mregister-page[22m                  [2m | [22m [36m39.64 kB[39m[2m | [22m                [36m9.76 kB[39m
+[32mchunk-IXDAZNPX.js[39m    [2m | [22m[2mnotifications-page-component[22m   [2m | [22m [36m38.59 kB[39m[2m | [22m                [36m8.46 kB[39m
+[32mchunk-S6DGA4GS.js[39m    [2m | [22m[2musers-page[22m                     [2m | [22m [36m38.55 kB[39m[2m | [22m                [36m8.82 kB[39m
+[32mchunk-HVQPLOPF.js[39m    [2m | [22m[2mcourse-details-page-component[22m  [2m | [22m [36m32.98 kB[39m[2m | [22m                [36m7.37 kB[39m
+[32mchunk-T2XCCLE7.js[39m    [2m | [22m[2mcommand-center-page[22m            [2m | [22m [36m31.74 kB[39m[2m | [22m                [36m7.99 kB[39m
+[2m...and 31 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [109.018 seconds] - 2026-06-30T16:08:59.341Z
+
+Γû▓ [WARNING] NG8113: AppLoader is not used within the template of CourseBuilderPageComponent [plugin angular-compiler]
+
+    src/app/features/course-builder/pages/course-builder-page/course-builder-page.component.ts:24:4:
+      24 Γöé     AppLoader,
+         Γò╡     ~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8113: AppLoader is not used within the template of LessonBuilder [plugin angular-compiler]
+
+    src/app/features/course-builder/pages/lesson-builder/lesson-builder.ts:38:4:
+      38 Γöé     AppLoader,
+         Γò╡     ~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8113: AppLoader is not used within the template of SectionBuilderComponent [plugin angular-compiler]
+
+    src/app/features/course-builder/pages/section-builder/section-builder.component.ts:72:4:
+      72 Γöé     AppLoader,
+         Γò╡     ~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. [plugin angular-compiler]
+
+    src/app/features/superadmin/pages/command-center/command-center.page.html:201:25:
+      201 Γöé             {{ overview?.systemStatus | titlecase }}
+          Γò╡                          ~~~~~~~~~~~~
+
+  Warning occurs in the template of component CommandCenterPageComponent.
+
+    src/app/features/superadmin/pages/command-center/command-center.page.ts:21:15:
+      21 Γöé   templateUrl: './command-center.page.html',
+         Γò╡                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8113: AppLoader is not used within the template of NotificationsPageComponent [plugin angular-compiler]
+
+    src/app/shared/components/notifications-page/notifications-page.component.ts:41:55:
+      41 Γöé ...tIconModule, RouterModule, AppLoader, MatDialogModule, PageSkel...
+         Γò╡                               ~~~~~~~~~
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;1f7b3d1f4fbe4dc4608fe1633d5e69a5d6a634db435c3df6292a3759dbe9dac9;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/table-skeleton.component.ts:32:8:
+      32 Γöé     .w-2/3 { width: 66.667%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;2546037b8d23b303fde77f93e3d885f23081209d9961fa1fc4409f469acc220c;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/card-skeleton.component.ts:52:8:
+      52 Γöé     .w-5/6 { width: 83.333%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;2546037b8d23b303fde77f93e3d885f23081209d9961fa1fc4409f469acc220c;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/card-skeleton.component.ts:53:8:
+      53 Γöé     .w-2/3 { width: 66.667%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;2546037b8d23b303fde77f93e3d885f23081209d9961fa1fc4409f469acc220c;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/card-skeleton.component.ts:54:8:
+      54 Γöé     .w-1/2 { width: 50%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;2546037b8d23b303fde77f93e3d885f23081209d9961fa1fc4409f469acc220c;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/card-skeleton.component.ts:55:8:
+      55 Γöé     .w-1/3 { width: 33.333%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] Unexpected "/" [plugin angular-compiler] [css-syntax-error]
+
+    angular:styles/component:css;2546037b8d23b303fde77f93e3d885f23081209d9961fa1fc4409f469acc220c;D:/Study/Projects/EduGenie/edugenie-dashboard/src/app/shared/components/loading/card-skeleton.component.ts:56:8:
+      56 Γöé     .w-1/4 { width: 25%; }
+         Γò╡         ^
+
+
+Γû▓ [WARNING] src/app/features/admin/course-details/course-details-page/course-details-page.component.css exceeded maximum budget. Budget 10.00 kB was not met by 1.97 kB with a total of 11.97 kB.
+
+
+Γû▓ [WARNING] src/app/shared/components/notifications-page/notifications-page.component.css exceeded maximum budget. Budget 10.00 kB was not met by 2.22 kB with a total of 12.22 kB.
+
+
+Γû▓ [WARNING] src/app/features/admin/users/users.page.css exceeded maximum budget. Budget 10.00 kB was not met by 1.81 kB with a total of 11.81 kB.
+
+
+Γû▓ [WARNING] src/app/features/admin/categories/categories-page/categories-page.component.css exceeded maximum budget. Budget 10.00 kB was not met by 6.91 kB with a total of 16.91 kB.
+
+
+Output location: D:\Study\Projects\EduGenie\edugenie-dashboard\dist\edugenie-dashboard
+
