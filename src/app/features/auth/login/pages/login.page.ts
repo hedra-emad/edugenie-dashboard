@@ -139,7 +139,4 @@ export class LoginPageComponent implements OnInit {
     // console.log('Google login clicked');
   }
 
-  loginWithGithub() {
-    // console.log('Github login clicked');
-  }
 }

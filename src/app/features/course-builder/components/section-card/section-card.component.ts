@@ -40,10 +40,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
-import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
-import { PreviewVideoUploadComponent } from "../preview-video-upload/preview-video-upload.component";
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
 import { AttachmentParentType } from '../../../../core/models/attachment.model';
@@ -60,7 +57,6 @@ import { AttachmentParentType } from '../../../../core/models/attachment.model';
     DragDropModule,
     MatDialogModule,
     ExpansionPanelComponent,
-    PreviewVideoUploadComponent,
     AttachmentManagerComponent
   ],
   templateUrl: './section-card.component.html',
@@ -76,7 +72,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private cloudinaryService = inject(CloudinaryService);
 
-  @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
+  
 @ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
@@ -218,117 +214,6 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.cdr.markForCheck();
 
-    const previewComp = this.previewVideoUploadComponent;
-    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
-
-    previewUpload$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (videoRes) => {
-        if (videoRes) {
-          payload.previewVideoUrl = videoRes.url;
-          payload.previewVideoPublicId = videoRes.publicId;
-
-          form.patchValue({
-            previewVideoUrl: videoRes.url,
-            previewVideoPublicId: videoRes.publicId
-          }, { emitEvent: false });
-        } else if (previewComp?.markedForDeletion()) {
-          // User removed the video — send nulls now
-          payload.previewVideoUrl = null;
-          payload.previewVideoPublicId = null;
-        } else {
-          payload.previewVideoUrl = form.get('previewVideoUrl')?.value || null;
-          payload.previewVideoPublicId = form.get('previewVideoPublicId')?.value || null;
-        }
-
-        const request = sectionId
-          ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
-          : this.sectionsService.addSection(this.courseId, payload);
-
-        request.subscribe({
-          next: (res: any) => {
-            this.isSaving = false;
-
-            const isNewSection = !sectionId;
-
-            // Reset preview video component and handle deferred Cloudinary deletion
-            if (this.previewVideoUploadComponent) {
-              const comp = this.previewVideoUploadComponent;
-
-              // Commit null values into the form if the user removed the video
-              if (comp.markedForDeletion()) {
-                form.patchValue(
-                  { previewVideoUrl: null, previewVideoPublicId: null },
-                  { emitEvent: false }
-                );
-              }
-
-              // Delete the old asset now that the DB save succeeded
-              if (comp.pendingDeletePublicId) {
-                this.cloudinaryService.deleteAsset(comp.pendingDeletePublicId, 'video').subscribe();
-              }
-
-              comp.resetAfterSave();
-            }
-
-            if (isNewSection) {
-  const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
-
-  const incomingId = extractId(createdSection);
-
-  if (incomingId) {
-    if (!form.contains('id')) {
-      form.addControl('id', new FormControl(incomingId));
-    } else {
-      form.get('id')?.setValue(incomingId);
-    }
-
-    form.get('id')?.updateValueAndValidity();
-
-    // Flush any attachments queued before the section existed
-    if (this.attachmentManagerComponent) {
-      this.attachmentManagerComponent.flushPending(this.courseId, incomingId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (err) => console.error('Attachment flush failed:', err)
-        });
-    }
-  }
-}
-
-            const sectionTitle = form.get('title')?.value || 'Section';
-            const truncatedTitle = this.truncateName(sectionTitle);
-            if (!sectionId) {
-              this.toastr.success(`"${truncatedTitle}" created successfully`);
-            } else {
-              this.toastr.success(`"${truncatedTitle}" updated successfully`);
-            }
-
-            // Clear draft state after successful save
-            this.clearDraftAfterSave();
-
-            // Disconnect old draft ID explicitly
-            this.formDraftIntegration.disconnectForm(this.draftId);
-
-            // Re-initialize draft system with the new real ID
-            this.initializeDraftSystem();
-
-            form.markAsPristine();
-            form.updateValueAndValidity();
-            this.cdr.markForCheck();
-          },
-
-          error: () => {
-            this.isSaving = false;
-            this.cdr.markForCheck();
-          }
-        });
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.cdr.markForCheck();
-        console.error('Section preview video upload failed:', err);
-      }
-    });
   }
 
   // ================= DELETE =================

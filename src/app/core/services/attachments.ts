@@ -9,17 +9,11 @@ export class AttachmentsService {
   private readonly baseUrl = ''; // intercepted by api.interceptor.ts
 
   /**
-   * Build the correct attachment base URL based on which IDs are provided.
+   * Build the attachment base URL for a section.
    * Mirrors the backend controller nesting logic.
    */
-  private buildUrl(courseId: string, sectionId?: string, lessonId?: string): string {
-    if (sectionId && lessonId) {
-      return `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/attachments`;
-    }
-    if (sectionId) {
-      return `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/attachments`;
-    }
-    return `${this.baseUrl}/courses/${courseId}/attachments`;
+  private buildUrl(courseId: string, sectionId: string): string {
+    return `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/attachments`;
   }
 
   /**
@@ -29,11 +23,10 @@ export class AttachmentsService {
   create(
     courseId: string,
     payload: CreateAttachmentPayload,
-    sectionId?: string,
-    lessonId?: string,
+    sectionId: string,
   ): Observable<Attachment> {
     return this.http.post<Attachment>(
-      this.buildUrl(courseId, sectionId, lessonId),
+      this.buildUrl(courseId, sectionId),
       payload,
       { withCredentials: true },
     );
@@ -45,11 +38,10 @@ export class AttachmentsService {
    */
   listForInstructor(
     courseId: string,
-    sectionId?: string,
-    lessonId?: string,
+    sectionId: string,
   ): Observable<Attachment[]> {
     return this.http.get<Attachment[]>(
-      `${this.buildUrl(courseId, sectionId, lessonId)}/manage`,
+      `${this.buildUrl(courseId, sectionId)}/manage`,
       { withCredentials: true },
     );
   }
