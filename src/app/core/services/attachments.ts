@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Attachment, CreateAttachmentPayload } from '../models/attachment.model';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +20,27 @@ export class AttachmentsService {
       return `${this.baseUrl}/courses/${courseId}/sections/${sectionId}/attachments`;
     }
     return `${this.baseUrl}/courses/${courseId}/attachments`;
+  }
+
+  /**
+   * List attachments for a course, section, or lesson.
+   */
+  list(
+    courseId: string,
+    sectionId?: string,
+    lessonId?: string
+  ): Observable<Attachment[]> {
+    return this.http.get<any>(
+      this.buildUrl(courseId, sectionId, lessonId),
+      { withCredentials: true }
+    ).pipe(
+      map(res => {
+        if (Array.isArray(res)) return res;
+        if (res && Array.isArray(res.data)) return res.data;
+        if (res && res.success && Array.isArray(res.data)) return res.data;
+        return [];
+      })
+    );
   }
 
   /**

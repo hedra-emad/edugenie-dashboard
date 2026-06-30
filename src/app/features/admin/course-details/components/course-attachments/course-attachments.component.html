@@ -1,0 +1,183 @@
+<div class="attachments-panel card">
+
+  <!-- ── Top-level toggle ── -->
+  <button class="panel-header" (click)="togglePanel()" [attr.aria-expanded]="panelOpen">
+    <div class="panel-header-left">
+      <div class="panel-icon">
+        <mat-icon>attach_file</mat-icon>
+      </div>
+      <div>
+        <h2 class="panel-title">Attachments</h2>
+        <p class="panel-subtitle">Course, section and lesson files</p>
+      </div>
+    </div>
+    <mat-icon class="chevron" [class.rotated]="panelOpen">expand_more</mat-icon>
+  </button>
+
+  <!-- ── Panel body ── -->
+  @if (panelOpen) {
+    <div class="panel-body">
+
+      <!-- ════ Course-level attachments ════ -->
+      <div class="level-section">
+        <div class="level-header">
+          <mat-icon class="level-icon icon-course">collections_bookmark</mat-icon>
+          <span class="level-label">Course Attachments</span>
+        </div>
+
+        @if (courseState === 'loading') {
+          <div class="skeleton-list">
+            @for (s of [1,2]; track s) { <div class="skeleton-row"></div> }
+          </div>
+        } @else if (courseState === 'error') {
+          <div class="state-row state-error">
+            <mat-icon>error_outline</mat-icon>
+            <span>Failed to load</span>
+            <button class="retry-btn" (click)="retryCourse()">Retry</button>
+          </div>
+        } @else if (courseState === 'loaded' && courseAttachments.length === 0) {
+          <div class="state-row state-empty">
+            <mat-icon>inbox</mat-icon>
+            <span>No course-level attachments</span>
+          </div>
+        } @else if (courseState === 'loaded') {
+          <div class="attachment-list">
+            @for (att of courseAttachments; track trackById($index, att)) {
+              <ng-container *ngTemplateOutlet="attCard; context: { att: att }"></ng-container>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- ════ Sections ════ -->
+      @for (sec of sections; track sec.sectionId) {
+        <div class="level-section">
+
+          <!-- Section toggle -->
+          <button class="section-toggle" (click)="toggleSection(sec)" [attr.aria-expanded]="sec.expanded">
+            <div class="section-toggle-left">
+              <mat-icon class="level-icon icon-section">folder_open</mat-icon>
+              <div>
+                <span class="section-toggle-title">{{ sec.sectionTitle }}</span>
+                <span class="section-toggle-meta">{{ sec.lessons.length }} lesson{{ sec.lessons.length !== 1 ? 's' : '' }}</span>
+              </div>
+            </div>
+            <mat-icon class="chevron" [class.rotated]="sec.expanded">chevron_right</mat-icon>
+          </button>
+
+          @if (sec.expanded) {
+            <div class="section-body">
+
+              <!-- Section attachments -->
+              <div class="sublevel">
+                <div class="sublevel-header">
+                  <mat-icon class="sublevel-icon">attachment</mat-icon>
+                  <span>Section Attachments</span>
+                </div>
+
+                @if (sec.state === 'loading') {
+                  <div class="skeleton-list">
+                    @for (s of [1]; track s) { <div class="skeleton-row"></div> }
+                  </div>
+                } @else if (sec.state === 'error') {
+                  <div class="state-row state-error">
+                    <mat-icon>error_outline</mat-icon>
+                    <span>Failed to load</span>
+                    <button class="retry-btn" (click)="retrySection(sec)">Retry</button>
+                  </div>
+                } @else if (sec.state === 'loaded' && sec.attachments.length === 0) {
+                  <div class="state-row state-empty">
+                    <mat-icon>inbox</mat-icon><span>No section attachments</span>
+                  </div>
+                } @else if (sec.state === 'loaded') {
+                  <div class="attachment-list">
+                    @for (att of sec.attachments; track trackById($index, att)) {
+                      <ng-container *ngTemplateOutlet="attCard; context: { att: att }"></ng-container>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Lessons -->
+              @for (les of sec.lessons; track les.lessonId) {
+                <div class="sublevel">
+                  <button class="lesson-toggle" (click)="toggleLesson(les)" [attr.aria-expanded]="les.expanded">
+                    <div class="lesson-toggle-left">
+                      <mat-icon class="sublevel-icon icon-lesson">play_lesson</mat-icon>
+                      <span>{{ les.lessonTitle }}</span>
+                    </div>
+                    <mat-icon class="chevron sm" [class.rotated]="les.expanded">expand_more</mat-icon>
+                  </button>
+
+                  @if (les.expanded) {
+                    @if (les.state === 'loading') {
+                      <div class="skeleton-list pad-left">
+                        @for (s of [1]; track s) { <div class="skeleton-row"></div> }
+                      </div>
+                    } @else if (les.state === 'error') {
+                      <div class="state-row state-error pad-left">
+                        <mat-icon>error_outline</mat-icon>
+                        <span>Failed to load</span>
+                        <button class="retry-btn" (click)="retryLesson(les)">Retry</button>
+                      </div>
+                    } @else if (les.state === 'loaded' && les.attachments.length === 0) {
+                      <div class="state-row state-empty pad-left">
+                        <mat-icon>inbox</mat-icon><span>No lesson attachments</span>
+                      </div>
+                    } @else if (les.state === 'loaded') {
+                      <div class="attachment-list pad-left">
+                        @for (att of les.attachments; track trackById($index, att)) {
+                          <ng-container *ngTemplateOutlet="attCard; context: { att: att }"></ng-container>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
+
+<!-- ── Attachment card template ── -->
+<ng-template #attCard let-att="att">
+  <div class="att-card">
+    <!-- File icon -->
+    <div class="att-icon" [style.background]="getIconColor(att.fileType) + '18'">
+      <mat-icon [style.color]="getIconColor(att.fileType)">{{ getFileIcon(att.fileType) }}</mat-icon>
+    </div>
+
+    <!-- Info -->
+    <div class="att-info">
+      <span class="att-title">{{ att.title || att.originalFilename }}</span>
+      @if (att.title && att.originalFilename !== att.title) {
+        <span class="att-filename">{{ att.originalFilename }}</span>
+      }
+      <div class="att-meta-row">
+        <span class="att-size">{{ formatBytes(att.fileSize) }}</span>
+        <span class="att-dot">·</span>
+        <span class="att-date">{{ att.createdAt | date:'d MMM y' }}</span>
+        <span class="att-badge" [class.att-badge--public]="att.isPublic" [class.att-badge--private]="!att.isPublic">
+          <mat-icon>{{ att.isPublic ? 'public' : 'lock' }}</mat-icon>
+          {{ att.isPublic ? 'Public' : 'Private' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="att-actions">
+      <button class="att-btn att-btn--open" (click)="openFile(att.fileUrl)" title="Open file">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+      <button class="att-btn att-btn--download" (click)="downloadFile(att.fileUrl, att.originalFilename)" title="Download">
+        <mat-icon>download</mat-icon>
+      </button>
+    </div>
+  </div>
+</ng-template>
