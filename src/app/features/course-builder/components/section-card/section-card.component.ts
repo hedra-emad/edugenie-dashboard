@@ -77,7 +77,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private cloudinaryService = inject(CloudinaryService);
 
   @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
-
+@ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -271,20 +271,29 @@ export class SectionCardComponent implements OnInit, OnDestroy {
             }
 
             if (isNewSection) {
-              const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
+  const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
 
-              const incomingId = extractId(createdSection);
+  const incomingId = extractId(createdSection);
 
-              if (incomingId) {
-                if (!form.contains('id')) {
-                  form.addControl('id', new FormControl(incomingId));
-                } else {
-                  form.get('id')?.setValue(incomingId);
-                }
+  if (incomingId) {
+    if (!form.contains('id')) {
+      form.addControl('id', new FormControl(incomingId));
+    } else {
+      form.get('id')?.setValue(incomingId);
+    }
 
-                form.get('id')?.updateValueAndValidity();
-              }
-            }
+    form.get('id')?.updateValueAndValidity();
+
+    // Flush any attachments queued before the section existed
+    if (this.attachmentManagerComponent) {
+      this.attachmentManagerComponent.flushPending(this.courseId, incomingId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (err) => console.error('Attachment flush failed:', err)
+        });
+    }
+  }
+}
 
             const sectionTitle = form.get('title')?.value || 'Section';
             const truncatedTitle = this.truncateName(sectionTitle);
