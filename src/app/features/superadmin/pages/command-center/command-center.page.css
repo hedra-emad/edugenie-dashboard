@@ -1,1 +1,7 @@
 /* Purposely empty. All styling is handled via Tailwind CSS utility classes in the HTML template. */
+
+.page-subtitle {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary, #6b7280);
+    margin: 0;
+}

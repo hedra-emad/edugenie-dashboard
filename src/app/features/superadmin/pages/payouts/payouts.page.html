@@ -1,162 +1,153 @@
-<div class="min-h-screen bg-[#f5f7fa] font-sans antialiased">
-  <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
 
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-      <div>
-        <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3B1892]/5 border border-[#3B1892]/20 text-[#3B1892] text-xs font-bold tracking-wide uppercase mb-3">
-          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">payments</mat-icon>
-          Super Admin
-        </div>
-        <h1 class="text-[30px] sm:text-[36px] font-black leading-none tracking-tight mb-2" style="color:#3B1892;">
-          Instructor Payouts
-        </h1>
-        <p class="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
-          Process pending payouts for instructors who have reached the minimum threshold.
-        </p>
-      </div>
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+    <div>
+      <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">
+        Instructor Payouts
+      </h1>
+      <p class="page-subtitle">
+        Process pending payouts for instructors who have reached the minimum threshold.
+      </p>
     </div>
+  </div>
 
-    <!-- Table Card -->
-    <div class="table-card">
-      @if (isLoading) {
-      <div class="w-full flex flex-col gap-4 p-6 animate-pulse">
-        @for (i of [1,2,3,4,5]; track i) {
-        <div class="flex items-center gap-6 pb-4 border-b border-slate-100 last:border-0">
-          <div class="flex flex-col gap-2 w-full max-w-[150px]">
-            <div class="h-3 bg-slate-200 rounded-full w-full"></div>
-            <div class="h-2 bg-slate-100 rounded-full w-2/3"></div>
-          </div>
+  <!-- Table Card -->
+  <div class="table-card">
+    @if (isLoading) {
+    <div class="w-full flex flex-col gap-4 p-6 animate-pulse">
+      @for (i of [1,2,3,4,5]; track i) {
+      <div class="flex items-center gap-6 pb-4 border-b border-slate-100 last:border-0">
+        <div class="flex flex-col gap-2 w-full max-w-[150px]">
+          <div class="h-3 bg-slate-200 rounded-full w-full"></div>
+          <div class="h-2 bg-slate-100 rounded-full w-2/3"></div>
         </div>
-        }
-      </div>
-      } @else {
-      <div class="overflow-x-auto w-full animate-fade-in">
-        <table class="w-full text-left border-collapse min-w-[800px]">
-          <thead class="bg-[#f9fafb] border-b border-slate-200 sticky top-0 z-10">
-            <tr>
-              <th scope="col"
-                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">
-                Instructor</th>
-              <th scope="col"
-                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Amount
-                Owed</th>
-              <th scope="col"
-                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">
-                Earnings Count</th>
-              <th scope="col"
-                class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Period
-                End</th>
-              <th scope="col"
-                class="px-6 py-4 text-center text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider w-[140px]">
-                Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (payout of payouts; track payout.instructorId) {
-            <tr
-              class="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150 group bg-white last:border-0">
-              <td class="px-6 py-4 align-middle">
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{ payout.instructorName
-                    }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 align-middle">
-                <span class="text-[14px] font-black text-slate-800">${{ payout.amount | number:'1.2-2' }}</span>
-              </td>
-              <td class="px-6 py-4 align-middle">
-                <span class="text-[13px] font-bold text-slate-600">{{ payout.earningsCount }} items</span>
-              </td>
-              <td class="px-6 py-4 align-middle">
-                <span class="text-[13px] font-medium text-slate-500">{{ payout.periodEnd | date:'mediumDate' }}</span>
-              </td>
-              <td class="px-6 py-4 align-middle text-center">
-                <button
-                  class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-sm"
-                  (click)="openProcessModal(payout)">
-                  Process
-                </button>
-              </td>
-            </tr>
-            }
-            @if (payouts.length === 0) {
-            <tr>
-              <td colspan="5" class="px-6 py-12 text-center">
-                <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px] mb-2">account_balance_wallet</mat-icon>
-                <p class="text-lg font-bold text-slate-700">No pending payouts</p>
-                <p class="text-sm text-slate-500 mt-1">All instructors are fully paid out.</p>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      @if (totalPages > 1) {
-      <div class="pagination-controls">
-        <button class="page-btn" (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        @for (p of pageNumbers; track p) {
-        <button class="page-btn" [class.page-btn--active]="p === currentPage" (click)="setPage(p)">
-          {{ p }}
-        </button>
-        }
-        <button class="page-btn" (click)="setPage(currentPage + 1)" [disabled]="currentPage >= totalPages">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
       </div>
       }
-      }
+    </div>
+    } @else {
+    <div class="overflow-x-auto w-full animate-fade-in">
+      <table class="w-full text-left border-collapse min-w-[800px]">
+        <thead class="bg-[#f9fafb] border-b border-slate-200 sticky top-0 z-10">
+          <tr>
+            <th scope="col"
+              class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">
+              Instructor</th>
+            <th scope="col"
+              class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Amount
+              Owed</th>
+            <th scope="col"
+              class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">
+              Earnings Count</th>
+            <th scope="col"
+              class="px-6 py-4 text-left text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider">Period
+              End</th>
+            <th scope="col"
+              class="px-6 py-4 text-center text-[0.75rem] font-semibold text-[#6b7280] uppercase tracking-wider w-[140px]">
+              Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payout of payouts; track payout.instructorId) {
+          <tr
+            class="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150 group bg-white last:border-0">
+            <td class="px-6 py-4 align-middle">
+              <div class="flex flex-col min-w-0">
+                <span class="text-[14px] font-bold text-slate-800 whitespace-nowrap">{{ payout.instructorName
+                  }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 align-middle">
+              <span class="text-[14px] font-black text-slate-800">${{ payout.amount | number:'1.2-2' }}</span>
+            </td>
+            <td class="px-6 py-4 align-middle">
+              <span class="text-[13px] font-bold text-slate-600">{{ payout.earningsCount }} items</span>
+            </td>
+            <td class="px-6 py-4 align-middle">
+              <span class="text-[13px] font-medium text-slate-500">{{ payout.periodEnd | date:'mediumDate' }}</span>
+            </td>
+            <td class="px-6 py-4 align-middle text-center">
+              <button
+                class="btn-primary btn-sm"
+                (click)="openProcessModal(payout)">
+                Process
+              </button>
+            </td>
+          </tr>
+          }
+          @if (payouts.length === 0) {
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <mat-icon class="text-slate-300 !text-[32px] !w-[32px] !h-[32px] mb-2">account_balance_wallet</mat-icon>
+              <p class="text-lg font-bold text-slate-700">No pending payouts</p>
+              <p class="text-sm text-slate-500 mt-1">All instructors are fully paid out.</p>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
 
-    <!-- Process Payout Modal -->
-    @if (showProcessModal && selectedPayout) {
-    <div class="modal-overlay" (click)="closeProcessModal()">
-      <div class="modal-container" (click)="$event.stopPropagation()">
-        <div class="p-6">
-          <div class="flex items-center gap-3 mb-4">
-            <div
-              class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <mat-icon>payments</mat-icon>
-            </div>
-            <h2 class="text-xl font-bold text-slate-800">Process Payout</h2>
-          </div>
-
-          <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-            You are about to process a payout of <span class="font-black text-slate-800">${{ selectedPayout.amount |
-              number:'1.2-2' }}</span> for <span class="font-bold text-slate-800">{{ selectedPayout.instructorName
-              }}</span>. The following amount will be marked as paid and their balance will be reset.
-          </p>
-
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
-            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payout Amount</span>
-            <span class="text-3xl font-black text-emerald-600">${{ selectedPayout.amount | number:'1.2-2' }}</span>
-          </div>
-
-          <div class="flex items-center justify-end gap-3">
-            <button
-              class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-              (click)="closeProcessModal()" [disabled]="isProcessing">
-              Cancel
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              (click)="confirmProcess()" [disabled]="isProcessing">
-              @if (isProcessing) {
-              <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-              Processing...
-              } @else {
-              <mat-icon class="!w-4 !h-4 !text-[16px]">check_circle</mat-icon>
-              Confirm Payout
-              }
-            </button>
-          </div>
-        </div>
-      </div>
+    @if (totalPages > 1) {
+    <div class="pagination-controls">
+      <button class="page-btn" (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      @for (p of pageNumbers; track p) {
+      <button class="page-btn" [class.page-btn--active]="p === currentPage" (click)="setPage(p)">
+        {{ p }}
+      </button>
+      }
+      <button class="page-btn" (click)="setPage(currentPage + 1)" [disabled]="currentPage >= totalPages">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
     }
+    }
   </div>
+
+  <!-- Process Payout Modal -->
+  @if (showProcessModal && selectedPayout) {
+  <div class="modal-overlay" (click)="closeProcessModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">Process Payout</h2>
+        </div>
+
+        <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+          You are about to process a payout of <span class="font-black text-slate-800">${{ selectedPayout.amount |
+            number:'1.2-2' }}</span> for <span class="font-bold text-slate-800">{{ selectedPayout.instructorName
+            }}</span>. The following amount will be marked as paid and their balance will be reset.
+        </p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
+          <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payout Amount</span>
+          <span class="text-3xl font-black text-emerald-600">${{ selectedPayout.amount | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+          <button class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+            (click)="closeProcessModal()" [disabled]="isProcessing">
+            Cancel
+          </button>
+          <button
+            class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            (click)="confirmProcess()" [disabled]="isProcessing">
+            @if (isProcessing) {
+            <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+            Processing...
+            } @else {
+            <mat-icon class="!w-4 !h-4 !text-[16px]">check_circle</mat-icon>
+            Confirm Payout
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
 </div>
