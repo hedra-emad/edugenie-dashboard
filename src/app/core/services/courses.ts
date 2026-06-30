@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, map } from 'rxjs';
-import { CourseLevel } from '../enums/course-level.enum';
 import { Course, CreateCoursePayload } from '../models/course.model';
 import { CourseStatus } from '../enums/course-status';
 

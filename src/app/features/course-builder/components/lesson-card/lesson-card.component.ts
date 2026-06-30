@@ -31,8 +31,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { ToastrService } from 'ngx-toastr';
-import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
-import { AttachmentParentType } from '../../../../core/models/attachment.model';
 
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all upload/save lifecycle states
@@ -95,7 +93,6 @@ function initialSnapshot(): UploadSnapshot {
     ExpansionPanelComponent,
     AppLoader,
     SubButtonComponent,
-    AttachmentManagerComponent,
   ],
   templateUrl: './lesson-card.component.html',
   styleUrl: './lesson-card.component.css',
@@ -124,7 +121,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private formDraftInteg = inject(FormDraftIntegrationService);
   private fileDraftService = inject(FileDraftService);
   private toastr = inject(ToastrService);
-  AttachmentParentType = AttachmentParentType;
 
   private destroy$ = new Subject<void>();
   private ignoreRestore = false;
@@ -157,8 +153,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   selectedVideoFile: File | null = null;
   selectedVideoUrl: string | null = null; // blob URL for preview
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
-  @ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
-
   // ── Misc UI ───────────────────────────────────────────────
   isDeleting = false; // Kept for template compatibility
   private saveLock = false;
@@ -960,14 +954,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       id: newId,
     });
 
-    // Flush any attachments queued before the lesson existed
-    if (this.attachmentManagerComponent) {
-      this.attachmentManagerComponent.flushPending(this.courseId, this.sectionId, newId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (err) => console.error('Attachment flush failed:', err)
-        });
-    }
+    
   }
 }
 

@@ -110,9 +110,9 @@ export class AttachmentManagerComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.attachmentsService
-      .listForInstructor(this.courseId, this.sectionId, this.lessonId)
-      .subscribe({
+          this.attachmentsService
+        .listForInstructor(this.courseId, this.sectionId!)
+        .subscribe({
         next: (list) => {
           this.attachments.set(list);
           this.isLoading.set(false);
@@ -255,7 +255,7 @@ export class AttachmentManagerComponent implements OnInit {
               fileSize: cloudRes.bytes || file.size,
               isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
             };
-            this.attachmentsService.create(this.courseId!, payload, this.sectionId, this.lessonId).subscribe({
+          this.attachmentsService.create(this.courseId!, payload, this.sectionId!).subscribe({
               next: (attachment) => {
                 this.attachments.update((list) => [...list, attachment]);
                 this.isUploading.set(false);
@@ -431,7 +431,8 @@ export class AttachmentManagerComponent implements OnInit {
             fileSize: cloudRes.bytes || item.file.size,
             isPublic: item.isPublic,
           };
-          return this.attachmentsService.create(courseId, payload, sectionId, lessonId).pipe(
+          
+          return this.attachmentsService.create(courseId, payload, sectionId!).pipe(
             map(attachment => ({ ok: true as const, id: item.id, attachment })),
             catchError(err => {
               // DB record failed after upload succeeded — best-effort cleanup of orphaned asset
