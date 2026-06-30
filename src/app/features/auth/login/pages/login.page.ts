@@ -95,21 +95,6 @@ export class LoginPageComponent implements OnInit {
         this.isLoading.set(false);
         const role = res.data.user.role;
 
-        // Block non-admin roles immediately — clear any stored session and stay on this page
-        if (!ADMIN_ROLES.has(role)) {
-          this.authService.clearCurrentUser();
-
-          this.errorMessage.set(
-            'Students and instructors should sign in through the EduGenie website.'
-          );
-
-          setTimeout(() => {
-            window.location.href = `${environment.studentAppUrl}/login`;
-          }, 1500);
-
-          return;
-        }
-
         // Admin / SuperAdmin — continue exactly as before
         const homeRoute = this.authService.getHomeRouteForRole(role);
         this.router.navigate([homeRoute]);
