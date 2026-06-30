@@ -54,11 +54,5 @@
       </div>
     </form>
 
-    <div *ngIf="!isWatchMode()" class="auth-card-social">
-      <app-auth-divider>or continue with</app-auth-divider>
-      <app-social-login (onGoogle)="loginWithGoogle()" (onGithub)="loginWithGithub()">
-      </app-social-login>
-    </div>
-
   </app-auth-card>
 </app-auth-layout>
