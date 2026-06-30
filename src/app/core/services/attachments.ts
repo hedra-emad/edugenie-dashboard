@@ -17,15 +17,11 @@ export class AttachmentsService {
   }
 
   /**
-   * List attachments for a course, section, or lesson.
+   * List attachments for a section.
    */
-  list(
-    courseId: string,
-    sectionId?: string,
-    lessonId?: string
-  ): Observable<Attachment[]> {
+  list(courseId: string, sectionId: string): Observable<Attachment[]> {
     return this.http.get<any>(
-      this.buildUrl(courseId, sectionId, lessonId),
+      this.buildUrl(courseId, sectionId),
       { withCredentials: true }
     ).pipe(
       map(res => {
