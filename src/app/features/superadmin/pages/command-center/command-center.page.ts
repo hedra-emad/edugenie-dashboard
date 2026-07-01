@@ -154,7 +154,7 @@ export class CommandCenterPageComponent implements OnInit {
   getRevenuePoints(): { x: number; y: number; val: number }[] {
     const rev = this.overview?.platformRevenue ?? 0;
     const ratios = [0.08, 0.12, 0.10, 0.15, 0.18, 0.14, 0.20, 0.23];
-    const xCoords = [50, 100, 160, 220, 280, 340, 400, 470];
+    const xCoords = [65, 120, 180, 240, 300, 360, 420, 470];
     const yTop = 15;
     const yBot = 140;
 
@@ -184,7 +184,10 @@ export class CommandCenterPageComponent implements OnInit {
   getRevenueYLabel(step: number): string {
     const rev = this.overview?.platformRevenue ?? 0;
     const val = Math.round((rev / 2) * (step / 3));
-    return '$' + val.toLocaleString();
+    if (val >= 1000) {
+      return (val / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + 'k EGP';
+    }
+    return val.toLocaleString() + ' EGP';
   }
 
 

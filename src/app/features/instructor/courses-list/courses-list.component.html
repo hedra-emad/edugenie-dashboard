@@ -134,7 +134,7 @@
         <div class="price-row">
           <div>
             <span class="price" *ngIf="course.price > 0">
-              EGP {{ course.price | number:'1.2-2' }}
+              {{ course.price | number:'1.0-0' }} EGP
             </span>
             <span class="price free" *ngIf="course.price === 0">Free</span>
           </div>
