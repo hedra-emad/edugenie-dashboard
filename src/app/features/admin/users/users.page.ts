@@ -11,12 +11,13 @@ import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../shared/components/loading';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule, PageSkeletonComponent, ButtonLoadingComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule, PageSkeletonComponent, ButtonLoadingComponent, PaginationComponent],
   templateUrl: './users.page.html',
   styleUrl: './users.page.css',
 })

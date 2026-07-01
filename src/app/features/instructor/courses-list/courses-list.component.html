@@ -20,7 +20,7 @@
     <mat-icon class="error-icon">error_outline</mat-icon>
     <p class="error-title">Failed to load courses</p>
     <p class="error-sub">We encountered an issue while loading your courses.</p>
-    <button mat-flat-button color="primary" (click)="ngOnInit()">
+    <button class="action-btn-primary" (click)="ngOnInit()">
       <mat-icon>refresh</mat-icon> Retry
     </button>
   </div>
@@ -92,7 +92,7 @@
       <mat-icon class="empty-icon">filter_list_off</mat-icon>
       <p class="empty-title">No courses match your filters</p>
       <p class="empty-sub">Try adjusting your filters or search terms to find courses.</p>
-      <button mat-flat-button color="primary" (click)="onClearFilters()">
+      <button class="action-btn-primary" (click)="onClearFilters()">
         <mat-icon>clear_all</mat-icon> Clear All Filters
       </button>
     </div>
@@ -139,7 +139,7 @@
             <span class="price free" *ngIf="course.price === 0">Free</span>
           </div>
 
-          <button mat-flat-button color="primary" (click)="editCourse(course.id); $event.stopPropagation()">
+          <button class="edit-btn-custom" (click)="editCourse(course.id); $event.stopPropagation()">
             Edit
           </button>
         </div>

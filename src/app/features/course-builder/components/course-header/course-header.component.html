@@ -27,9 +27,4 @@
       {{ formatDuration(courseDuration) }}
     </p>
   </div>
-
-  <!-- Publish Button - Moved to extreme right -->
-  <div class="ml-auto">
-    <app-publish-course-button *ngIf="courseTitle && canPublish" [courseId]="courseId"></app-publish-course-button>
-  </div>
 </header>

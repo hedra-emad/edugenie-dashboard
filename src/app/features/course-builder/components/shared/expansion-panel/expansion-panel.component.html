@@ -196,7 +196,7 @@
     </button>
     <button *ngIf="showQuizButton" mat-menu-item (click)="onQuizClicked($event)" [disabled]="quizButtonDisabled">
       <mat-icon class="!text-[16px]">quiz</mat-icon>
-      <span>Generate Quiz</span>
+      <span>{{ quizButtonLabel }}</span>
     </button>
   </mat-menu>
 

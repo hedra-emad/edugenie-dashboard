@@ -39,6 +39,10 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     selectedFile: File | null = null;
     localPreviewUrl: string | null = null;
 
+    // Backup for undo functionality
+    private backupSelectedFile: File | null = null;
+    private backupLocalPreviewUrl: string | null = null;
+
     /**
      * Tracks the public ID of the OLD video that should be deleted from Cloudinary
      * AFTER a successful save. Populated when the user replaces or removes a video.
@@ -71,6 +75,15 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
 
     get hasVideo(): boolean {
         return !!this.previewVideoUrlControl?.value || !!this.selectedFile;
+    }
+
+    /** Check if there's a saved video in the database (not just a locally selected file) */
+    get hasSavedVideo(): boolean {
+        const url = this.previewVideoUrlControl?.value;
+        const publicId = this.previewVideoPublicIdControl?.value;
+        // A saved video has both URL and publicId from the database
+        // If we only have a local file (selectedFile), it's not saved yet
+        return !!(url && publicId && !this.selectedFile);
     }
 
     /** The URL to display in the video player (local blob or remote URL). */
@@ -181,21 +194,45 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
      * The Cloudinary DELETE call is also deferred to after a successful save.
      */
     removeVideo() {
+        // If there's no saved video in DB, just clear the local state and return to idle
+        if (!this.hasSavedVideo) {
+            // Clear local file and preview
+            if (this.selectedFile) {
+                this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
+                this.selectedFile = null;
+            }
+            if (this.localPreviewUrl) {
+                URL.revokeObjectURL(this.localPreviewUrl);
+                this.localPreviewUrl = null;
+            }
+
+            // Clear form values and return to idle state
+            this.previewVideoUrlControl?.setValue(null);
+            this.previewVideoUrlControl?.markAsPristine();
+            this.previewVideoUrlControl?.updateValueAndValidity();
+            
+            this.previewVideoPublicIdControl?.setValue(null);
+            this.previewVideoPublicIdControl?.markAsPristine();
+            this.previewVideoPublicIdControl?.updateValueAndValidity();
+
+            this.updateSnapshot({ state: 'idle', message: '' });
+            return;
+        }
+
+        // If there's a saved video, mark it for deletion (with undo option)
         // Record the public ID to be deleted later (after save)
         const currentPublicId = this.previewVideoPublicIdControl?.value;
         if (currentPublicId) {
             this.pendingDeletePublicId = currentPublicId;
         }
 
-        // Clear any local draft file
-        if (this.selectedFile) {
-            this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
-            this.selectedFile = null;
-        }
-        if (this.localPreviewUrl) {
-            URL.revokeObjectURL(this.localPreviewUrl);
-            this.localPreviewUrl = null;
-        }
+        // Backup current state before clearing for undo functionality
+        this.backupSelectedFile = this.selectedFile;
+        this.backupLocalPreviewUrl = this.localPreviewUrl;
+
+        // Clear any local draft file (but don't remove from draft service yet, for undo)
+        this.selectedFile = null;
+        this.localPreviewUrl = null;
 
         // Mark the FORM dirty so the "Update" button activates,
         // but keep the actual values intact — they'll only be cleared
@@ -212,6 +249,21 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
         this.pendingDeletePublicId = null;
         this.markedForDeletion.set(false);
 
+        // Restore backed up file and preview URL
+        if (this.backupSelectedFile && this.backupLocalPreviewUrl) {
+            this.selectedFile = this.backupSelectedFile;
+            this.localPreviewUrl = this.backupLocalPreviewUrl;
+            this.updateSnapshot({ state: 'video_selected', message: 'Video restored' });
+        } else {
+            // If there was a saved video in the form (no local file), just restore the state
+            const url = this.previewVideoUrlControl?.value;
+            this.updateSnapshot({ state: url ? 'saved' : 'idle' });
+        }
+
+        // Clear backups
+        this.backupSelectedFile = null;
+        this.backupLocalPreviewUrl = null;
+
         // No need to restore controls — they were never cleared
         this.previewVideoUrlControl?.markAsPristine();
         this.previewVideoUrlControl?.updateValueAndValidity();
@@ -224,6 +276,15 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     resetAfterSave() {
         this.markedForDeletion.set(false);
         this.pendingDeletePublicId = null;
+        
+        // Clear backups since save is complete
+        this.backupSelectedFile = null;
+        this.backupLocalPreviewUrl = null;
+
+        // If video was marked for deletion and saved, actually remove from draft now
+        if (!this.previewVideoUrlControl?.value) {
+            this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
+        }
 
         const url = this.previewVideoUrlControl?.value;
         this.updateSnapshot({ state: url ? 'saved' : 'idle' });

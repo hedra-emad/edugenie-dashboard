@@ -119,6 +119,34 @@
   border-radius: var(--radius-md) !important;
 }
 
+.action-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.action-btn-primary:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.3);
+  transform: translateY(-1px);
+}
+
+.action-btn-primary mat-icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 .empty-illustration {
   width: 80px;
   height: 80px;
@@ -452,6 +480,25 @@
   font-size: 0.8rem !important;
   height: 32px !important;
   box-shadow: none !important;
+}
+
+.edit-btn-custom {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.edit-btn-custom:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.3);
 }
 
 /* Divider */

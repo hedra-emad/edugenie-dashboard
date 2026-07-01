@@ -285,7 +285,7 @@
     <div *ngIf="!isWatchMode() && currentStep === 2" class="auth-card-social">
       <app-auth-divider>or continue with</app-auth-divider>
       <div class="mt-1.5 max-[360px]:mt-1">
-        <app-social-login></app-social-login>
+        <app-social-login (onGoogle)="registerWithGoogle()"></app-social-login>
       </div>
     </div>
 

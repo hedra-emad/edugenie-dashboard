@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 
 @Component({
   selector: 'app-goals-input',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatButtonModule, SubButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatButtonModule],
   templateUrl: './goals-input.component.html',
   styleUrl: './goals-input.component.css'
 })

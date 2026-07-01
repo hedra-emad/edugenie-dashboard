@@ -70,11 +70,14 @@
   gap: 0.75rem;
   align-items: flex-start;
   margin-left: auto;
+  justify-content: flex-end;
+  min-width: fit-content;
 }
 
 .filters-button-wrapper {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .filter-badge {
@@ -334,9 +337,9 @@
 
 /* Style selected sub-buttons */
 :host ::ng-deep .chips-container app-sub-button.selected button {
-  background: var(--color-secondary) !important;
+  background: var(--color-primary) !important;
   color: white !important;
-  border-color: var(--color-secondary) !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* ═══════════════════════════════════════

@@ -9,7 +9,6 @@ import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
@@ -21,7 +20,6 @@ import { PageSkeletonComponent } from '../../../../shared/components/loading';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    AppLoader,
     PageSkeletonComponent
   ],
   templateUrl: './course-builder-page.component.html',

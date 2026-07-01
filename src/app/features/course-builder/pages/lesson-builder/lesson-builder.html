@@ -50,10 +50,31 @@
             </div>
     </ng-container>
 
+    <!-- Navigation Actions -->
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
-        <app-main-button label="Quiz" icon="arrow_forward" [disabled]="shouldDisableQuizButton"
+        <app-main-button [label]="hasQuiz ? 'Show Quiz' : 'Generate Quiz'" icon="arrow_forward" [disabled]="shouldDisableQuizButton"
             (action)="goToQuiz()"></app-main-button>
+    </div>
+
+    <!-- Course Submission Section -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <!-- Helper Text -->
+            <div class="flex items-start justify-center gap-2 px-4">
+                <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block">
+                    info
+                </mat-icon>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                    {{ publishButton.helperText() }}
+                </p>
+            </div>
+            
+            <!-- Send for Review Button -->
+            <div class="flex justify-center">
+                <app-publish-course-button #publishButton [courseId]="courseId" [course]="course"></app-publish-course-button>
+            </div>
+        </div>
     </div>
 
 </div>

@@ -272,6 +272,13 @@
   gap: 0.5rem;
 }
 
+/* Mobile: stack options vertically */
+@media (max-width: 640px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .option-chip {
   display: flex;
   align-items: center;
