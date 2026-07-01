@@ -164,6 +164,24 @@ export class AuthService {
     return this.http.post(`${this.authApiUrl}/register`, data);
   }
 
+  /** Request a password-reset link (Phase 4). */
+  forgotPassword(email: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/forgot-password`, { email });
+  }
+
+  /** Complete a password reset using the token from the email link. */
+  resetPassword(token: string, password: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/reset-password`, {
+      token,
+      password,
+    });
+  }
+
+  /** Confirm an email-verification token. */
+  verifyEmail(token: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/verify-email`, { token });
+  }
+
   /** Looks up the invitee details for an admin invite token. */
   validateInvite(token: string): Observable<{
     email: string;
