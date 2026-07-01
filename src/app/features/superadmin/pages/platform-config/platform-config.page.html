@@ -69,9 +69,10 @@
         <label class="form-label">Minimum Payout Threshold</label>
         <p class="text-xs text-slate-500 mb-3">Instructors must reach this amount before they can be paid out.</p>
         <div class="relative max-w-xs">
-          <mat-icon
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 !text-[20px] !w-[20px] !h-[20px] pointer-events-none">attach_money</mat-icon>
-          <input type="number" min="0" class="form-input pl-10" [(ngModel)]="formConfig.minimumPayoutThreshold" />
+          <input type="number" min="0" class="form-input pr-14" placeholder="e.g. 500"
+            [(ngModel)]="formConfig.minimumPayoutThreshold" />
+          <span
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px] font-bold pointer-events-none">EGP</span>
         </div>
       </div>
 
@@ -132,8 +133,8 @@
             @if (originalConfig?.minimumPayoutThreshold !== formConfig.minimumPayoutThreshold) {
             <li class="flex justify-between border-b border-slate-200 pb-2">
               <span class="text-slate-500">Payout Threshold:</span>
-              <span class="line-through text-slate-400 mr-2">${{ originalConfig?.minimumPayoutThreshold }}</span>
-              <span class="text-violet-600 font-bold ml-auto">${{ formConfig.minimumPayoutThreshold }}</span>
+              <span class="line-through text-slate-400 mr-2">{{ originalConfig?.minimumPayoutThreshold }} EGP</span>
+              <span class="text-violet-600 font-bold ml-auto">{{ formConfig.minimumPayoutThreshold }} EGP</span>
             </li>
             }
             @if (originalConfig?.maintenanceMode !== formConfig.maintenanceMode) {

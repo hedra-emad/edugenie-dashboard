@@ -53,8 +53,8 @@
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Platform Revenue</span>
       </div>
       <div class="flex flex-col gap-1">
-        <span class="text-[24px] font-black text-slate-800 leading-none">${{ overview.platformRevenue | number
-          }}</span>
+        <span class="text-[18px] font-black text-slate-800 leading-none">{{ overview.platformRevenue | number
+          }} EGP</span>
       </div>
       <div class="mt-auto w-full h-[75px]">
         <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
@@ -80,8 +80,8 @@
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Payout Liability</span>
       </div>
       <div class="flex flex-col gap-1">
-        <span class="text-[24px] font-black text-slate-800 leading-none">${{ overview.payoutLiability | number
-          }}</span>
+        <span class="text-[18px] font-black text-slate-800 leading-none">{{ overview.payoutLiability | number
+          }} EGP</span>
       </div>
       <div class="mt-auto w-full h-[75px]">
         <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
@@ -210,8 +210,8 @@
       </div>
       <div class="px-6 pt-5 pb-3 flex-1 flex flex-col justify-between">
         <div class="flex flex-col mb-4">
-          <span class="text-[26px] font-black text-slate-800 leading-none">${{ overview?.platformRevenue | number
-            }}</span>
+          <span class="text-[26px] font-black text-slate-800 leading-none">{{ overview?.platformRevenue | number
+            }} EGP</span>
           <span class="block text-[11.5px] font-semibold text-slate-500 mt-1">Total Revenue</span>
           <span class="block text-[11px] font-bold text-emerald-500 mt-1">+12% vs previous 7 days</span>
         </div>
@@ -219,18 +219,18 @@
         <div class="flex-1 relative min-h-[120px]">
           <!-- Chart implementation -->
           <svg class="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
-            <line x1="40" y1="20" x2="480" y2="20" stroke="#F1F5F9" stroke-width="1.2" />
-            <line x1="40" y1="60" x2="480" y2="60" stroke="#F1F5F9" stroke-width="1.2" />
-            <line x1="40" y1="100" x2="480" y2="100" stroke="#F1F5F9" stroke-width="1.2" />
-            <line x1="40" y1="140" x2="480" y2="140" stroke="#F1F5F9" stroke-width="1.2" />
+            <line x1="55" y1="20" x2="480" y2="20" stroke="#F1F5F9" stroke-width="1.2" />
+            <line x1="55" y1="60" x2="480" y2="60" stroke="#F1F5F9" stroke-width="1.2" />
+            <line x1="55" y1="100" x2="480" y2="100" stroke="#F1F5F9" stroke-width="1.2" />
+            <line x1="55" y1="140" x2="480" y2="140" stroke="#F1F5F9" stroke-width="1.2" />
 
-            <text x="35" y="24" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
+            <text x="50" y="24" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
               getRevenueYLabel(3) }}</text>
-            <text x="35" y="64" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
+            <text x="50" y="64" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
               getRevenueYLabel(2) }}</text>
-            <text x="35" y="104" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
+            <text x="50" y="104" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
               getRevenueYLabel(1) }}</text>
-            <text x="35" y="144" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">$0</text>
+            <text x="50" y="144" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">0 EGP</text>
 
             <defs>
               <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -247,7 +247,7 @@
             }
 
             @for (day of revenueDays; track $index) {
-            <text [attr.x]="50 + ($index * 420 / 7)" y="165" text-anchor="middle" font-size="10" fill="#94A3B8"
+            <text [attr.x]="65 + ($index * 405 / 7)" y="165" text-anchor="middle" font-size="10" fill="#94A3B8"
               font-weight="500">{{ day }}</text>
             }
           </svg>
@@ -278,10 +278,12 @@
               stroke-dashoffset="-277" />
           </svg>
           <div
-            class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-[28px] shadow-inner">
-            <span class="text-[16px] font-black text-slate-800 leading-none">${{ overview?.payoutLiability | number
-              }}</span>
-            <span class="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Liability</span>
+            class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-[26px] shadow-inner">
+            <span class="text-[13px] font-black text-slate-800 leading-none flex flex-col items-center gap-0.5">
+              <span>{{ overview?.payoutLiability | number }}</span>
+              <span class="text-[9px] font-bold text-slate-400">EGP</span>
+            </span>
+            <span class="text-[8px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Liability</span>
           </div>
         </div>
 
@@ -296,7 +298,7 @@
               </div>
               <span class="text-[10px] font-bold text-slate-400">({{ item.percent }}%)</span>
             </div>
-            <span class="text-[13px] font-black text-slate-800 pl-4.5">${{ item.value | number }}</span>
+            <span class="text-[13px] font-black text-slate-800 pl-4.5">{{ item.value | number }} EGP</span>
           </div>
           }
         </div>

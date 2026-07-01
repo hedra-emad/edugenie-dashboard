@@ -38,8 +38,8 @@
                   class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
                   Total<br>Revenue</p>
               </div>
-              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">${{ adminStatsData?.totalRevenue
-                || 0 | number:'1.0-0' }}</p>
+              <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.totalRevenue
+                || 0 | number:'1.0-0' }} EGP</p>
               <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
                 <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
                   <defs>
@@ -215,8 +215,8 @@
             <div class="w-full lg:w-[280px] p-6 flex flex-col justify-center gap-6 shrink-0 bg-slate-50/50">
               <div>
                 <p class="text-[12px] font-bold text-slate-500 mb-1">Today's Revenue</p>
-                <p class="text-[28px] font-black text-violet-700 leading-none">${{ (adminStatsData?.todayRevenue ||
-                  adminStatsData?.totalRevenue / 30) | number:'1.0-0' }}</p>
+                <p class="text-[28px] font-black text-violet-700 leading-none">{{ (adminStatsData?.todayRevenue ||
+                  adminStatsData?.totalRevenue / 30) | number:'1.0-0' }} EGP</p>
               </div>
               <div>
                 <p class="text-[12px] font-bold text-slate-500 mb-1">Best Day</p>
@@ -300,8 +300,8 @@
                     </div>
 
                     <div class="text-right shrink-0">
-                      <p class="text-[14px] font-black text-slate-800 leading-none">${{ (course.revenue ||
-                        course.totalRevenue || 0) | number:'1.0-0' }}</p>
+                      <p class="text-[14px] font-black text-slate-800 leading-none">{{ (course.revenue ||
+                        course.totalRevenue || 0) | number:'1.0-0' }} EGP</p>
                       <p class="text-[11px] font-semibold text-slate-400 mt-1">{{ course.enrollments | number }}
                         students</p>
                     </div>
@@ -461,8 +461,8 @@
                     <!-- Revenue + Rating (if available) -->
                     <div class="text-right shrink-0 flex items-center gap-6">
                       <div>
-                        <p class="text-[16px] font-black leading-none" style="color:#7C3AED;">${{ inst.totalRevenue |
-                          number:'1.0-0' }}</p>
+                        <p class="text-[16px] font-black leading-none" style="color:#7C3AED;">{{ inst.totalRevenue |
+                          number:'1.0-0' }} EGP</p>
                       </div>
                       <!-- Rating badge (matching design) -->
                       <div *ngIf="inst.rating || inst.averageRating" class="flex items-center gap-1">
@@ -656,10 +656,10 @@
         <div class="relative w-full h-48">
           <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 flex-col">
             <p class="text-xs text-slate-500">Total Earnings</p>
-            <p class="text-lg font-black text-slate-800">${{ analyticsData.totalEarnings | number:'1.0-0' }}
+            <p class="text-lg font-black text-slate-800">{{ analyticsData.totalEarnings | number:'1.0-0' }} EGP
             </p>
-            <p *ngIf="instructorPayoutHasData" class="text-xs text-slate-500 mt-1">Pending: ${{
-              analyticsData.pendingPayouts | number:'1.0-0' }}</p>
+            <p *ngIf="instructorPayoutHasData" class="text-xs text-slate-500 mt-1">Pending: {{
+              analyticsData.pendingPayouts | number:'1.0-0' }} EGP</p>
             <p *ngIf="!instructorPayoutHasData" class="text-xs text-slate-400 mt-1">No payout data</p>
           </div>
           <div class="w-full h-full">

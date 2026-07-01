@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -68,7 +68,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
         padding: 12,
         cornerRadius: 10,
         displayColors: false,
-        callbacks: { label: (ctx: any) => ' $' + (ctx.parsed.y || 0).toLocaleString() },
+        callbacks: { label: (ctx: any) => ' ' + (ctx.parsed.y || 0).toLocaleString() + ' EGP' },
       },
     },
     scales: {
@@ -85,7 +85,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           color: '#94a3b8',
           font: { size: 11, family: "'Inter', sans-serif" },
           padding: 8,
-          callback: (v) => '$' + Number(v).toLocaleString(),
+          callback: (v) => Number(v).toLocaleString() + ' EGP',
         },
       },
     },
