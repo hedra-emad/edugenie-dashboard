@@ -64,6 +64,7 @@ export class SidebarComponent implements OnInit {
     { icon: 'history', label: 'Audit Logs', route: '/admin/audit-logs' },
     { icon: 'group', label: 'Users', route: '/admin/users' },
     { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
+    { icon: 'category', label: 'Categories', route: '/admin/categories' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 

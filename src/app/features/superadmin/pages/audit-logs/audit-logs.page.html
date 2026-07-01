@@ -137,39 +137,17 @@
     </div>
 
     @if (totalPages > 1 || limit !== 10) {
-    <div class="pagination-bar">
-      <!-- Page Size -->
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-slate-500">Rows per page:</span>
-        <select
-          class="bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 py-1.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
-          [ngModel]="limit" (ngModelChange)="setPageSize($event)">
-          @for (size of pageSizeOptions; track size) {
-          <option [value]="size">{{ size }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="text-xs font-medium text-slate-500">
-        Showing {{ (currentPage - 1) * limit + 1 }} - {{ Math.min(currentPage * limit, totalItems) }} of {{ totalItems
-        }}
-      </div>
-
-      <!-- Controls -->
-      <div class="pagination-controls">
-        <button class="page-btn" (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        @for (p of pageNumbers; track p) {
-        <button class="page-btn" [class.page-btn--active]="p === currentPage" (click)="setPage(p)">
-          {{ p }}
-        </button>
-        }
-        <button class="page-btn" (click)="setPage(currentPage + 1)" [disabled]="currentPage >= totalPages">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-      </div>
-    </div>
+    <app-pagination
+      [pageIndex]="currentPage - 1"
+      [totalPages]="totalPages"
+      [pageFrom]="(currentPage - 1) * limit + 1"
+      [pageTo]="Math.min(currentPage * limit, totalItems)"
+      [totalItems]="totalItems"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageSize]="limit"
+      (pageChange)="setPage($event + 1)"
+      (pageSizeChange)="setPageSize($event)">
+    </app-pagination>
     }
     }
   </div>

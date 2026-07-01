@@ -4,11 +4,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
 import { PendingPayoutListItem, PayoutProcessResponse } from '../../models/superadmin.models';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-payouts',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, MatIconModule, MatSnackBarModule, PaginationComponent],
   templateUrl: './payouts.page.html',
   styleUrl: './payouts.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,6 +18,8 @@ export class PayoutsPageComponent implements OnInit {
   private readonly superadminService = inject(SuperadminService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  Math = Math;
 
   isLoading = true;
   payouts: PendingPayoutListItem[] = [];

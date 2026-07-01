@@ -88,21 +88,16 @@
       </table>
     </div>
 
-    @if (totalPages > 1) {
-    <div class="pagination-controls">
-      <button class="page-btn" (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      @for (p of pageNumbers; track p) {
-      <button class="page-btn" [class.page-btn--active]="p === currentPage" (click)="setPage(p)">
-        {{ p }}
-      </button>
-      }
-      <button class="page-btn" (click)="setPage(currentPage + 1)" [disabled]="currentPage >= totalPages">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
-    </div>
-    }
+    <app-pagination
+      [pageIndex]="currentPage - 1"
+      [totalPages]="totalPages"
+      [pageFrom]="(currentPage - 1) * limit + 1"
+      [pageTo]="Math.min(currentPage * limit, totalItems)"
+      [totalItems]="totalItems"
+      [pageSizeOptions]="[]"
+      [pageSize]="limit"
+      (pageChange)="setPage($event + 1)">
+    </app-pagination>
     }
   </div>
 
