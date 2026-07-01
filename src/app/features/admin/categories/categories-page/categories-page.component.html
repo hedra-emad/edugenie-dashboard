@@ -49,197 +49,197 @@
 
   <ng-container *ngIf="!loading">
 
-  <!-- Main Card -->
-  <div class="main-card">
+    <!-- Main Card -->
+    <div class="main-card">
 
-    <!-- Date Filters -->
-    <div class="date-filters-container">
-      <div class="filter-chips">
-        <button class="filter-chip" [class.active]="dateFilter === 'all'" (click)="setDateFilter('all')">All
-          Time</button>
-        <button class="filter-chip" [class.active]="dateFilter === 'today'"
-          (click)="setDateFilter('today')">Today</button>
-        <button class="filter-chip" [class.active]="dateFilter === 'week'" (click)="setDateFilter('week')">This
-          Week</button>
-        <button class="filter-chip" [class.active]="dateFilter === 'month'" (click)="setDateFilter('month')">This
-          Month</button>
-        <button class="filter-chip" [class.active]="dateFilter === 'year'" (click)="setDateFilter('year')">This
-          Year</button>
-        <button class="filter-chip" [class.active]="dateFilter === 'custom'" (click)="setDateFilter('custom')">Custom
-          Range</button>
+      <!-- Date Filters -->
+      <div class="date-filters-container">
+        <div class="filter-chips">
+          <button class="filter-chip" [class.active]="dateFilter === 'all'" (click)="setDateFilter('all')">All
+            Time</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'today'"
+            (click)="setDateFilter('today')">Today</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'week'" (click)="setDateFilter('week')">This
+            Week</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'month'" (click)="setDateFilter('month')">This
+            Month</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'year'" (click)="setDateFilter('year')">This
+            Year</button>
+          <button class="filter-chip" [class.active]="dateFilter === 'custom'" (click)="setDateFilter('custom')">Custom
+            Range</button>
+        </div>
+
+        @if (dateFilter === 'custom') {
+        <div class="custom-date-inputs">
+          <div class="date-input-group">
+            <label for="dateFrom">From</label>
+            <input type="date" id="dateFrom" [(ngModel)]="customDateFrom" (change)="onCustomDateChange()" />
+          </div>
+          <div class="date-input-group">
+            <label for="dateTo">To</label>
+            <input type="date" id="dateTo" [(ngModel)]="customDateTo" (change)="onCustomDateChange()" />
+          </div>
+        </div>
+        }
       </div>
 
-      @if (dateFilter === 'custom') {
-      <div class="custom-date-inputs">
-        <div class="date-input-group">
-          <label for="dateFrom">From</label>
-          <input type="date" id="dateFrom" [(ngModel)]="customDateFrom" (change)="onCustomDateChange()" />
-        </div>
-        <div class="date-input-group">
-          <label for="dateTo">To</label>
-          <input type="date" id="dateTo" [(ngModel)]="customDateTo" (change)="onCustomDateChange()" />
-        </div>
-      </div>
-      }
-    </div>
-
-    <!-- Toolbar: Search + Sort + Count -->
-    <div class="card-toolbar">
-      <div class="toolbar-left">
-        <!-- Search -->
-        <div class="search-wrapper">
-          <mat-icon class="search-icon">search</mat-icon>
-          <input type="text" class="search-input" placeholder="Search by name..." [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange()" aria-label="Search categories" />
-          @if (searchQuery) {
-          <button class="search-clear" (click)="searchQuery=''; onSearchChange()" aria-label="Clear">
-            <mat-icon>close</mat-icon>
-          </button>
-          }
-        </div>
-      </div>
-
-      <div class="toolbar-right">
-        <!-- Sort Dropdown -->
-        <div class="sort-wrapper">
-          <button class="sort-btn" (click)="showSortDropdown = !showSortDropdown"
-            [class.sort-btn--active]="showSortDropdown">
-            <mat-icon>sort</mat-icon>
-            <span>{{ sortLabel }}</span>
-            <mat-icon class="chevron">keyboard_arrow_down</mat-icon>
-          </button>
-          @if (showSortDropdown) {
-          <div class="sort-dropdown" (click)="$event.stopPropagation()">
-            @for (opt of [
-            { value: 'newest', label: 'Newest First' },
-            { value: 'oldest', label: 'Oldest First' },
-            { value: 'az', label: 'Name A → Z' },
-            { value: 'za', label: 'Name Z → A' }
-            ]; track opt.value) {
-            <button class="sort-option" [class.sort-option--active]="sortOption === opt.value"
-              (click)="setSort($any(opt.value))">
-              {{ opt.label }}
-              @if (sortOption === opt.value) {
-              <mat-icon>check</mat-icon>
-              }
+      <!-- Toolbar: Search + Sort + Count -->
+      <div class="card-toolbar">
+        <div class="toolbar-left">
+          <!-- Search -->
+          <div class="search-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input type="text" class="search-input" placeholder="Search by name..." [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange()" aria-label="Search categories" />
+            @if (searchQuery) {
+            <button class="search-clear" (click)="searchQuery=''; onSearchChange()" aria-label="Clear">
+              <mat-icon>close</mat-icon>
             </button>
             }
           </div>
-          }
         </div>
 
-        <span class="meta-count">{{ totalFiltered }} categor{{ totalFiltered === 1 ? 'y' : 'ies' }}</span>
-      </div>
-    </div>
+        <div class="toolbar-right">
+          <!-- Sort Dropdown -->
+          <div class="sort-wrapper">
+            <button class="sort-btn" (click)="showSortDropdown = !showSortDropdown"
+              [class.sort-btn--active]="showSortDropdown">
+              <mat-icon>sort</mat-icon>
+              <span>{{ sortLabel }}</span>
+              <mat-icon class="chevron">keyboard_arrow_down</mat-icon>
+            </button>
+            @if (showSortDropdown) {
+            <div class="sort-dropdown" (click)="$event.stopPropagation()">
+              @for (opt of [
+              { value: 'newest', label: 'Newest First' },
+              { value: 'oldest', label: 'Oldest First' },
+              { value: 'az', label: 'Name A → Z' },
+              { value: 'za', label: 'Name Z → A' }
+              ]; track opt.value) {
+              <button class="sort-option" [class.sort-option--active]="sortOption === opt.value"
+                (click)="setSort($any(opt.value))">
+                {{ opt.label }}
+                @if (sortOption === opt.value) {
+                <mat-icon>check</mat-icon>
+                }
+              </button>
+              }
+            </div>
+            }
+          </div>
 
-    <!-- Table -->
-    @if (pagedCategories.length > 0) {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <!-- <th>Slug</th> -->
-            <th>Courses</th>
-            <th>Created</th>
-            <th class="actions-th">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (cat of pagedCategories; track trackById($index, cat)) {
-          <tr class="table-row">
-            <td data-label="Name">
-              <div class="cat-name-cell">
-                <div class="cat-icon-wrap" [style.background-color]="getCategoryTheme(cat.name).bg"
-                  [style.color]="getCategoryTheme(cat.name).color">
-                  <span class="cat-letter">{{ getCategoryTheme(cat.name).letter }}</span>
+          <span class="meta-count">{{ totalFiltered }} categor{{ totalFiltered === 1 ? 'y' : 'ies' }}</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (pagedCategories.length > 0) {
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <!-- <th>Slug</th> -->
+              <th>Courses</th>
+              <th>Created</th>
+              <th class="actions-th">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cat of pagedCategories; track trackById($index, cat)) {
+            <tr class="table-row">
+              <td data-label="Name">
+                <div class="cat-name-cell">
+                  <div class="cat-icon-wrap" [style.background-color]="getCategoryTheme(cat.name).bg"
+                    [style.color]="getCategoryTheme(cat.name).color">
+                    <span class="cat-letter">{{ getCategoryTheme(cat.name).letter }}</span>
+                  </div>
+                  <div class="cat-name-details">
+                    <span class="cat-name">{{ cat.name }}</span>
+                    @if (isNew(cat.createdAt)) {
+                    <span class="new-badge">NEW</span>
+                    }
+                  </div>
                 </div>
-                <div class="cat-name-details">
-                  <span class="cat-name">{{ cat.name }}</span>
-                  @if (isNew(cat.createdAt)) {
-                  <span class="new-badge">NEW</span>
-                  }
-                </div>
-              </div>
-            </td>
-            <!-- <td data-label="Slug">
+              </td>
+              <!-- <td data-label="Slug">
                     <code class="slug-chip">{{ cat.slug || '—' }}</code>
                   </td> -->
-            <td data-label="Courses">
-              <span class="count-badge">{{ cat.courseCount || 0 }}</span>
-            </td>
-            <td data-label="Created">
-              <span class="date-text">{{ (cat.createdAt | date:'dd MMM yyyy • hh:mm a') || '—' }}</span>
-            </td>
-            <td class="actions-col" data-label="Actions">
-              <div class="actions-cell">
-                <button class="action-btn edit-btn" (click)="openEditModal(cat); $event.stopPropagation()"
-                  title="Edit category">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button class="action-btn delete-btn" (click)="openDeleteModal(cat); $event.stopPropagation()"
-                  title="Delete category">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </div>
-            </td>
-          </tr>
+              <td data-label="Courses">
+                <span class="count-badge">{{ cat.courseCount || 0 }}</span>
+              </td>
+              <td data-label="Created">
+                <span class="date-text">{{ (cat.createdAt | date:'dd MMM yyyy • hh:mm a') || '—' }}</span>
+              </td>
+              <td class="actions-col" data-label="Actions">
+                <div class="actions-cell">
+                  <button class="action-btn edit-btn" (click)="openEditModal(cat); $event.stopPropagation()"
+                    title="Edit category">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button class="action-btn delete-btn" (click)="openDeleteModal(cat); $event.stopPropagation()"
+                    title="Delete category">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1 || totalFiltered > 10) {
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Showing {{ pageFrom }}–{{ pageTo }} of {{ totalFiltered }}
+        </div>
+
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0"
+            aria-label="Previous page">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          @for (p of pageNumbers; track p) {
+          <button class="page-btn" [class.page-btn--active]="p === pageIndex" (click)="setPage(p)">
+            {{ p + 1 }}
+          </button>
           }
-        </tbody>
-      </table>
-    </div>
 
-    <!-- Pagination -->
-    @if (totalPages > 1 || totalFiltered > 10) {
-    <div class="pagination-bar">
-      <div class="pagination-info">
-        Showing {{ pageFrom }}–{{ pageTo }} of {{ totalFiltered }}
+          <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1"
+            aria-label="Next page">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+
+        <div class="page-size-wrapper">
+          <span class="page-size-label">Per page</span>
+          @for (size of pageSizeOptions; track size) {
+          <button class="page-size-btn" [class.page-size-btn--active]="pageSize === size" (click)="setPageSize(size)">
+            {{ size }}
+          </button>
+          }
+        </div>
       </div>
-
-      <div class="pagination-controls">
-        <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0"
-          aria-label="Previous page">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-
-        @for (p of pageNumbers; track p) {
-        <button class="page-btn" [class.page-btn--active]="p === pageIndex" (click)="setPage(p)">
-          {{ p + 1 }}
-        </button>
-        }
-
-        <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1"
-          aria-label="Next page">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-      </div>
-
-      <div class="page-size-wrapper">
-        <span class="page-size-label">Per page</span>
-        @for (size of pageSizeOptions; track size) {
-        <button class="page-size-btn" [class.page-size-btn--active]="pageSize === size" (click)="setPageSize(size)">
-          {{ size }}
-        </button>
-        }
-      </div>
-    </div>
-    }
-
-    } @else {
-    <!-- Empty State -->
-    <div class="empty-state">
-      <mat-icon class="empty-icon">category</mat-icon>
-      <h3>{{ searchQuery ? 'No results found' : 'No Categories Yet' }}</h3>
-      <p>{{ searchQuery ? 'Try a different search term.' : 'Create your first category to get started.' }}</p>
-      @if (!searchQuery) {
-      <button class="btn-primary btn-sm" (click)="openCreateModal()">
-        <mat-icon>add</mat-icon> Add Category
-      </button>
       }
-    </div>
-    }
 
-  </div>
+      } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <mat-icon class="empty-icon">category</mat-icon>
+        <h3>{{ searchQuery ? 'No results found' : 'No Categories Yet' }}</h3>
+        <p>{{ searchQuery ? 'Try a different search term.' : 'Create your first category to get started.' }}</p>
+        @if (!searchQuery) {
+        <button class="btn-primary btn-sm" (click)="openCreateModal()">
+          <mat-icon>add</mat-icon> Add Category
+        </button>
+        }
+      </div>
+      }
+
+    </div>
   </ng-container>
 
 </div>
