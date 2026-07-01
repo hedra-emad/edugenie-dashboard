@@ -10,8 +10,6 @@ import { AuthInputComponent } from '../../../../shared/components/auth-input/aut
 import { PasswordInputComponent } from '../../../../shared/components/password-input/password-input.component';
 import { RememberMeComponent } from '../../../../shared/components/remember-me/remember-me.component';
 import { AuthButtonComponent } from '../../../../shared/components/auth-button/auth-button.component';
-import { AuthDividerComponent } from '../../../../shared/components/auth-divider/auth-divider.component';
-import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LoginResponse } from '../../../../core/models/user-profile.model';
 import { environment } from '../../../../../environments/environment';
@@ -31,8 +29,6 @@ const ADMIN_ROLES = new Set(['admin', 'superadmin']);
     PasswordInputComponent,
     RememberMeComponent,
     AuthButtonComponent,
-    AuthDividerComponent,
-    SocialLoginComponent,
   ],
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',

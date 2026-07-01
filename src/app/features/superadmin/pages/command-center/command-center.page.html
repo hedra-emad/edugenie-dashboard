@@ -197,7 +197,7 @@
       <div class="flex flex-col gap-1">
         <span class="text-[18px] font-black leading-none mt-1"
           [ngClass]="isSystemOperational ? 'text-emerald-600' : 'text-rose-600'">
-          {{ overview?.systemStatus | titlecase }}
+          {{ overview.systemStatus | titlecase }}
         </span>
         <div class="text-[12px] font-medium mt-1" [ngClass]="isSystemOperational ? 'text-slate-400' : 'text-rose-500'">
           {{ isSystemOperational ? 'All systems perfectly healthy' : 'Action required, issues detected' }}

@@ -77,28 +77,6 @@
 
       <div class="h-px bg-slate-100 my-2"></div>
 
-      <!-- Maintenance Mode -->
-      <div class="form-group">
-        <div class="toggle-container" [ngClass]="{'border-amber-200 bg-amber-50/50': formConfig.maintenanceMode}">
-          <div>
-            <label class="form-label !mb-1 flex items-center gap-2">
-              Maintenance Mode
-              @if (formConfig.maintenanceMode) {
-              <span
-                class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-700 uppercase">Active</span>
-              }
-            </label>
-            <p class="text-xs text-slate-500 max-w-md">
-              When active, non-admins will see a maintenance screen and will not be able to access the platform.
-            </p>
-          </div>
-          <button type="button" class="toggle-switch shrink-0" role="switch"
-            [attr.aria-checked]="formConfig.maintenanceMode" (click)="toggleMaintenanceMode()">
-            <span class="toggle-knob"></span>
-          </button>
-        </div>
-      </div>
-
     </div>
     }
   </div>
@@ -134,14 +112,6 @@
               <span class="text-slate-500">Payout Threshold:</span>
               <span class="line-through text-slate-400 mr-2">${{ originalConfig?.minimumPayoutThreshold }}</span>
               <span class="text-violet-600 font-bold ml-auto">${{ formConfig.minimumPayoutThreshold }}</span>
-            </li>
-            }
-            @if (originalConfig?.maintenanceMode !== formConfig.maintenanceMode) {
-            <li class="flex justify-between pt-1">
-              <span class="text-slate-500">Maintenance Mode:</span>
-              <span class="text-amber-600 font-bold uppercase ml-auto">
-                {{ formConfig.maintenanceMode ? 'Enabled' : 'Disabled' }}
-              </span>
             </li>
             }
           </ul>
