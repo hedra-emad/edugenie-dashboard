@@ -15,17 +15,7 @@
 
   <!-- Filter Actions -->
   <div class="filter-actions">
-    <!-- Clear Filters Button -->
-    @if (activeFilterCount() > 0) {
-      <app-sub-button
-        label="Remove Filters"
-        icon="clear_all"
-        class="remove-filters-mobile"
-        (action)="clearAllFilters()">
-      </app-sub-button>
-    }
-
-    <!-- Filters Button -->
+    <!-- Filters Button (always visible, always on the right) -->
     <div class="filters-button-wrapper">
       <app-main-button
         label="Filters"
@@ -39,6 +29,16 @@
         </span>
       }
     </div>
+
+    <!-- Clear Filters Button (appears to the right when active) -->
+    @if (activeFilterCount() > 0) {
+      <app-sub-button
+        label="Remove Filters"
+        icon="clear_all"
+        class="remove-filters-mobile"
+        (action)="clearAllFilters()">
+      </app-sub-button>
+    }
   </div>
 </div>
 
@@ -109,7 +109,6 @@
           @for (status of config.statusOptions; track status.value) {
             <app-sub-button
               [label]="status.label"
-              [icon]="isStatusSelected(status.value) ? 'check_circle' : 'radio_button_unchecked'"
               [class.selected]="isStatusSelected(status.value)"
               (action)="toggleStatusFilter(status.value)">
             </app-sub-button>
@@ -126,7 +125,6 @@
           @for (level of config.levelOptions; track level.value) {
             <app-sub-button
               [label]="level.label"
-              [icon]="isLevelSelected(level.value) ? 'check_circle' : 'radio_button_unchecked'"
               [class.selected]="isLevelSelected(level.value)"
               (action)="toggleLevelFilter(level.value)">
             </app-sub-button>
@@ -143,7 +141,6 @@
           @for (price of config.priceOptions; track price.value) {
             <app-sub-button
               [label]="price.label"
-              [icon]="selectedPriceFilter() === price.value ? 'radio_button_checked' : 'radio_button_unchecked'"
               [class.selected]="selectedPriceFilter() === price.value"
               (action)="selectPriceFilter(price.value)">
             </app-sub-button>

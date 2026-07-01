@@ -40,13 +40,12 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
-import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
-import { PreviewVideoUploadComponent } from "../preview-video-upload/preview-video-upload.component";
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
 import { AttachmentParentType } from '../../../../core/models/attachment.model';
+import { QuizzesService } from '../../../../core/services/quizzes';
+
 @Component({
   selector: 'app-section-card',
   standalone: true,
@@ -60,7 +59,6 @@ import { AttachmentParentType } from '../../../../core/models/attachment.model';
     DragDropModule,
     MatDialogModule,
     ExpansionPanelComponent,
-    PreviewVideoUploadComponent,
     AttachmentManagerComponent
   ],
   templateUrl: './section-card.component.html',
@@ -75,11 +73,15 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private cloudinaryService = inject(CloudinaryService);
+  private quizzesService = inject(QuizzesService);
 
-  @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
+  
 @ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
+
+  // Quiz state
+  hasQuiz = false;
 
   // ================= Inputs =================
   @Input({ required: true }) sectionForm!: FormGroup;
@@ -124,6 +126,26 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   // ================= Lifecycle =================
   ngOnInit() {
     this.initializeDraftSystem();
+    this.checkQuizExists();
+  }
+
+  private checkQuizExists() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId || this.draftStateService.isDraftId(sectionId)) {
+      this.hasQuiz = false;
+      return;
+    }
+
+    this.quizzesService.getQuizForSection(sectionId).subscribe({
+      next: (quiz) => {
+        this.hasQuiz = !!quiz;
+        this.cdr.markForCheck(); // Trigger change detection
+      },
+      error: () => {
+        this.hasQuiz = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -137,6 +159,9 @@ export class SectionCardComponent implements OnInit, OnDestroy {
         panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     }
+    
+    // Check quiz exists when section form changes
+    this.checkQuizExists();
   }
 
   private initializeDraftSystem() {
@@ -206,6 +231,72 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const sectionId = isDraft ? null : extractId(rawId);
 
+    // Check if there's a pending file in the attachment form that hasn't been added to queue
+    const attachmentMgr = this.attachmentManagerComponent;
+    const hasPendingFileInForm = attachmentMgr 
+      && attachmentMgr.pendingFile() 
+      && attachmentMgr.pendingTitle().trim();
+
+    // Helper to add pending file to queue
+    const addPendingFileToQueue = () => {
+      if (hasPendingFileInForm && attachmentMgr) {
+        const file = attachmentMgr.pendingFile()!;
+        const title = attachmentMgr.pendingTitle().trim();
+        const isPublic = attachmentMgr.isPublicToggle();
+        
+        attachmentMgr.pendingAttachments.update(list => [
+          ...list,
+          { 
+            id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, 
+            file, 
+            title, 
+            isPublic: attachmentMgr.isLessonLevel ? false : isPublic
+          }
+        ]);
+        attachmentMgr.cancelPending();
+      }
+    };
+
+    // If form is pristine and section exists
+    if (this.sectionForm.pristine && sectionId) {
+      // Add pending file to queue if exists
+      addPendingFileToQueue();
+      
+      // Upload any pending attachments before navigating
+      if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0) {
+        this.isSaving = true;
+        this.cdr.markForCheck();
+        attachmentMgr.flushPending(this.courseId, sectionId).subscribe({
+          next: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
+            this.router.navigate([
+              '/course-builder',
+              this.courseId,
+              'sections',
+              sectionId,
+              'lessons'
+            ]);
+          },
+          error: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
+            this.toastr.error('Failed to upload some attachments');
+          }
+        });
+      } else {
+        // No pending attachments, navigate directly
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'sections',
+          sectionId,
+          'lessons'
+        ]);
+      }
+      return;
+    }
+
     const payload: any = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
@@ -218,115 +309,84 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.cdr.markForCheck();
 
-    const previewComp = this.previewVideoUploadComponent;
-    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
+    const saveObs = sectionId
+      ? this.sectionsService.updateSection(this.courseId, String(sectionId), payload)
+      : this.sectionsService.addSection(this.courseId, payload);
 
-    previewUpload$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (videoRes) => {
-        if (videoRes) {
-          payload.previewVideoUrl = videoRes.url;
-          payload.previewVideoPublicId = videoRes.publicId;
-
-          form.patchValue({
-            previewVideoUrl: videoRes.url,
-            previewVideoPublicId: videoRes.publicId
-          }, { emitEvent: false });
-        } else if (previewComp?.markedForDeletion()) {
-          // User removed the video — send nulls now
-          payload.previewVideoUrl = null;
-          payload.previewVideoPublicId = null;
-        } else {
-          payload.previewVideoUrl = form.get('previewVideoUrl')?.value || null;
-          payload.previewVideoPublicId = form.get('previewVideoPublicId')?.value || null;
+    saveObs.subscribe({
+      next: (sections) => {
+        // For create: find the newly created section
+        let newSectionId = sectionId;
+        if (!sectionId && Array.isArray(sections)) {
+          // Find the section with matching title (most recently created)
+          const newSection = sections.find(s => s.title === payload.title);
+          newSectionId = extractId(newSection?.id);
+          if (newSectionId) {
+            this.sectionForm.get('id')?.setValue(newSectionId, { emitEvent: false });
+            this.sectionCreated.emit(newSectionId);
+          }
         }
 
-        const request = sectionId
-          ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
-          : this.sectionsService.addSection(this.courseId, payload);
+        this.sectionForm.markAsPristine();
+        this.clearDraftAfterSave();
 
-        request.subscribe({
-          next: (res: any) => {
-            this.isSaving = false;
-
-            const isNewSection = !sectionId;
-
-            // Reset preview video component and handle deferred Cloudinary deletion
-            if (this.previewVideoUploadComponent) {
-              const comp = this.previewVideoUploadComponent;
-
-              // Commit null values into the form if the user removed the video
-              if (comp.markedForDeletion()) {
-                form.patchValue(
-                  { previewVideoUrl: null, previewVideoPublicId: null },
-                  { emitEvent: false }
-                );
-              }
-
-              // Delete the old asset now that the DB save succeeded
-              if (comp.pendingDeletePublicId) {
-                this.cloudinaryService.deleteAsset(comp.pendingDeletePublicId, 'video').subscribe();
-              }
-
-              comp.resetAfterSave();
+        const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
+        const truncatedTitle = this.truncateName(sectionTitle);
+        
+        // Add pending file to queue if exists
+        addPendingFileToQueue();
+        
+        // Upload pending attachments if any, then navigate
+        if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0 && newSectionId) {
+          attachmentMgr.flushPending(this.courseId, newSectionId).subscribe({
+            next: () => {
+              this.isSaving = false;
+              this.cdr.markForCheck();
+              this.toastr.success(`"${truncatedTitle}" saved successfully`);
+              this.router.navigate([
+                '/course-builder',
+                this.courseId,
+                'sections',
+                newSectionId,
+                'lessons'
+              ]);
+            },
+            error: () => {
+              this.isSaving = false;
+              this.cdr.markForCheck();
+              this.toastr.warning(`"${truncatedTitle}" saved, but some attachments failed to upload`);
+              this.router.navigate([
+                '/course-builder',
+                this.courseId,
+                'sections',
+                newSectionId,
+                'lessons'
+              ]);
             }
-
-            if (isNewSection) {
-  const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
-
-  const incomingId = extractId(createdSection);
-
-  if (incomingId) {
-    if (!form.contains('id')) {
-      form.addControl('id', new FormControl(incomingId));
-    } else {
-      form.get('id')?.setValue(incomingId);
-    }
-
-    form.get('id')?.updateValueAndValidity();
-
-    // Flush any attachments queued before the section existed
-    if (this.attachmentManagerComponent) {
-      this.attachmentManagerComponent.flushPending(this.courseId, incomingId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (err) => console.error('Attachment flush failed:', err)
-        });
-    }
-  }
-}
-
-            const sectionTitle = form.get('title')?.value || 'Section';
-            const truncatedTitle = this.truncateName(sectionTitle);
-            if (!sectionId) {
-              this.toastr.success(`"${truncatedTitle}" created successfully`);
-            } else {
-              this.toastr.success(`"${truncatedTitle}" updated successfully`);
-            }
-
-            // Clear draft state after successful save
-            this.clearDraftAfterSave();
-
-            // Disconnect old draft ID explicitly
-            this.formDraftIntegration.disconnectForm(this.draftId);
-
-            // Re-initialize draft system with the new real ID
-            this.initializeDraftSystem();
-
-            form.markAsPristine();
-            form.updateValueAndValidity();
-            this.cdr.markForCheck();
-          },
-
-          error: () => {
-            this.isSaving = false;
-            this.cdr.markForCheck();
+          });
+        } else {
+          // No pending attachments, navigate directly
+          this.isSaving = false;
+          this.cdr.markForCheck();
+          this.toastr.success(`"${truncatedTitle}" saved successfully`);
+          if (newSectionId) {
+            this.router.navigate([
+              '/course-builder',
+              this.courseId,
+              'sections',
+              newSectionId,
+              'lessons'
+            ]);
           }
-        });
+        }
       },
       error: (err) => {
+        console.error('Save error:', err);
         this.isSaving = false;
         this.cdr.markForCheck();
-        console.error('Section preview video upload failed:', err);
+        const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
+        const truncatedTitle = this.truncateName(sectionTitle);
+        this.toastr.error(`Failed to save "${truncatedTitle}"`);
       }
     });
   }

@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { BadgeComponent } from '../../../../shared/components/badge-component/badge-component';
 import { CourseStatus } from '../../../../core/enums/course-status';
-import { PublishCourseButtonComponent } from '../publish-course-button/publish-course-button';
 
 @Component({
   selector: 'app-course-header',
   standalone: true,
-  imports: [CommonModule, MatIconModule, BadgeComponent, PublishCourseButtonComponent],
+  imports: [CommonModule, MatIconModule, BadgeComponent],
   templateUrl: './course-header.component.html',
   styleUrl: './course-header.component.css'
 })

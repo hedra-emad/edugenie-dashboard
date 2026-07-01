@@ -98,11 +98,6 @@
     <app-preview-video-upload [ownerId]="courseId ?? draftId" resourceType="course" [parentForm]="courseForm">
 </app-preview-video-upload>
 
-    <!-- Course Attachments -->
-    <app-attachment-manager
-  [courseId]="courseId"
-  [parentType]="AttachmentParentType.COURSE">
-</app-attachment-manager>
 
     <!-- Course Details -->
 
@@ -141,9 +136,6 @@
         <p *ngIf="isInvalid('title')" class="text-xs text-red-500 mt-1">
           Title must be at least 5 characters
         </p>
-        <p *ngIf="!isInvalid('title')" class="text-xs text-[var(--color-text-secondary)] mt-1">
-          Title must be at least 5 characters.
-        </p>
       </div>
 
       <div class="relative">
@@ -170,9 +162,6 @@
 
         <p *ngIf="isInvalid('description')" class="text-xs text-red-500 mt-1">
           Description must be at least 20 characters
-        </p>
-        <p *ngIf="!isInvalid('description')" class="text-xs text-[var(--color-text-secondary)] mt-1">
-          Description must be at least 20 characters.
         </p>
       </div>
 
@@ -273,6 +262,26 @@
         [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isButtonDisabled()"
         (action)="onMainAction()"></app-action-bar>
 
+    </div>
+
+    <!-- Course Submission Section -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <!-- Helper Text -->
+            <div class="flex items-start justify-center gap-2 px-4">
+                <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block">
+                    info
+                </mat-icon>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                    {{ publishButton.helperText() }}
+                </p>
+            </div>
+            
+            <!-- Send for Review Button -->
+            <div class="flex justify-center">
+                <app-publish-course-button #publishButton [courseId]="courseId ?? null" [course]="course()"></app-publish-course-button>
+            </div>
+        </div>
     </div>
   </div>
 </ng-container>

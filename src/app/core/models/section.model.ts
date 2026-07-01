@@ -9,9 +9,10 @@ export interface Section {
   isPublished: boolean;
   expectedOutcomes?: string[];
   price?: number | null;
-  previewVideoUrl?: string | null;       // add this
-  previewVideoPublicId?: string | null;  // add this
+  previewVideoUrl?: string | null;
+  previewVideoPublicId?: string | null;
   lessons: Lesson[];
+  hasApprovedQuiz?: boolean; // Added to track if section has an approved quiz
   createdAt: string;
   updatedAt: string;
 }
