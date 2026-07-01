@@ -20,7 +20,7 @@
     <mat-icon class="error-icon">error_outline</mat-icon>
     <p class="error-title">Failed to load courses</p>
     <p class="error-sub">We encountered an issue while loading your courses.</p>
-    <button mat-flat-button color="primary" (click)="ngOnInit()">
+    <button class="action-btn-primary" (click)="ngOnInit()">
       <mat-icon>refresh</mat-icon> Retry
     </button>
   </div>
@@ -48,7 +48,7 @@
 
   <div class="page-header">
     <div>
-      <h1 class="page-title">My Courses</h1>
+      <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">My Courses</h1>
       <p class="page-subtitle">Manage and track all your courses.</p>
     </div>
 
@@ -92,7 +92,7 @@
       <mat-icon class="empty-icon">filter_list_off</mat-icon>
       <p class="empty-title">No courses match your filters</p>
       <p class="empty-sub">Try adjusting your filters or search terms to find courses.</p>
-      <button mat-flat-button color="primary" (click)="onClearFilters()">
+      <button class="action-btn-primary" (click)="onClearFilters()">
         <mat-icon>clear_all</mat-icon> Clear All Filters
       </button>
     </div>
@@ -100,7 +100,7 @@
   } @else {
   <div class="courses-grid">
     @for (course of pagedCourses; track course.id) {
-    <mat-card class="course-card"
+    <mat-card class="course-card" (click)="editCourse(course.id)"
       [style.borderTop]="(course.courseStatus | lowercase) === 'published' ? '4px solid #10B981' : '4px solid #F59E0B'">
 
       <!-- Thumbnail with Gradient Overlay -->
@@ -110,7 +110,7 @@
         <div class="thumbnail-overlay"></div>
 
         <!-- Hover Overlay -->
-        <div class="thumbnail-hover-overlay">
+        <div class="thumbnail-hover-overlay" (click)="editCourse(course.id); $event.stopPropagation()" style="cursor:pointer">
           <mat-icon>visibility</mat-icon>
           <span>View Course</span>
         </div>
@@ -134,12 +134,12 @@
         <div class="price-row">
           <div>
             <span class="price" *ngIf="course.price > 0">
-              ${{ course.price | number:'1.2-2' }}
+              EGP {{ course.price | number:'1.2-2' }}
             </span>
             <span class="price free" *ngIf="course.price === 0">Free</span>
           </div>
 
-          <button mat-flat-button color="primary" (click)="editCourse(course.id)">
+          <button class="edit-btn-custom" (click)="editCourse(course.id); $event.stopPropagation()">
             Edit
           </button>
         </div>
@@ -160,7 +160,7 @@
 
         <div class="stat-item">
           <mat-icon>schedule</mat-icon>
-          <span>{{ course.totalHours }}h</span>
+          <span>{{ formatTotalHours(course.totalHours) }}</span>
         </div>
       </mat-card-footer>
 

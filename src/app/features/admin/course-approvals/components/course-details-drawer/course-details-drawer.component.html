@@ -26,6 +26,24 @@
         </div>
       </div>
 
+      <div class="details-section rejection-info" *ngIf="course.status === 'rejected'">
+        <h4 class="rejection-title">Rejection Information</h4>
+        <div class="rejection-card">
+          <div class="rejection-field">
+            <span class="label">Reason:</span>
+            <span class="value">{{ course.rejectionReason || 'No reason provided.' }}</span>
+          </div>
+          <div class="rejection-field">
+            <span class="label">Rejected By:</span>
+            <span class="value">{{ course.rejectedBy || 'System' }}</span>
+          </div>
+          <div class="rejection-field">
+            <span class="label">Rejected At:</span>
+            <span class="value">{{ (course.rejectedAt | date:'medium') || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="details-section">
         <h4>Description</h4>
         <p class="description-text">{{ course.description || 'No description provided.' }}</p>

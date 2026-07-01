@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,7 @@ import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
 import { CreateCoursePayload } from '../../../../core/models/course.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { takeUntil } from 'rxjs/operators';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
@@ -24,6 +24,9 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
+import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
+import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
+
 
 @Component({
   selector: 'app-course-basic-info',
@@ -36,7 +39,9 @@ import { FileDraftService } from '../../../../core/services/file-draft.service';
     GoalsInputComponent,
     RequirementsInputComponent,
     ActionBarComponent,
-    AppLoader
+    AppLoader,
+    PreviewVideoUploadComponent,
+    PublishCourseButtonComponent,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -52,7 +57,12 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private fileDraftService = inject(FileDraftService);
-  
+
+  // Preview Video Fields
+  coursePreviewVideoUrl: string | null = null;
+  coursePreviewVideoPublicId: string | null = null;
+  @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
+
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -73,6 +83,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
+  course = computed(() => this.parent?.courseData() || null); // Get course for publish button
   isLoading = signal(true);
   existingThumbnailPublicId: string | null = null;
 
@@ -87,6 +98,8 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   // ================= Draft State =================
   draftId: string = '';
   hasDraftData = signal(false);
+
+
 
   // Utility function to truncate names for toastr messages
   private truncateName(name: string, maxLength: number = 40): string {
@@ -109,7 +122,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   }
 
   isFormPopulated = false;
-  
+
   private initializeDraftSystem() {
     // Generate or get draft ID
     this.draftId = this.formDraftIntegration.generateDraftId('course', undefined, this.courseId || undefined);
@@ -213,7 +226,9 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     category: new FormControl<string | null>(null, Validators.required),
     goals: this.fb.array([]),
-    requirements: this.fb.array([])
+    requirements: this.fb.array([]),
+    previewVideoUrl: [null as string | null],
+    previewVideoPublicId: [null as string | null]
   });
 
   ngOnInit() {
@@ -342,7 +357,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
   private setBaseline(baselineValue?: any) {
     this.initialValue = baselineValue || this.normalize(this.courseForm.getRawValue());
-    
+
     const current = this.normalize(this.courseForm.getRawValue());
     this.hasChanges.set(
       JSON.stringify(current) !== JSON.stringify(this.initialValue)
@@ -361,9 +376,15 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
   private normalize(value: any) {
     return {
-      ...value,
+      title: value.title,
+      description: value.description,
+      thumbnail: value.thumbnail,
+      level: value.level,
+      category: value.category,
       goals: [...(value.goals || [])],
       requirements: [...(value.requirements || [])],
+      previewVideoUrl: value.previewVideoUrl || null,
+      previewVideoPublicId: value.previewVideoPublicId || null
     };
   }
 
@@ -382,12 +403,19 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
         course.categoryId ||
         course.category?._id ||
         course.category?.id ||
-        course.category
+        course.category,
+      previewVideoUrl: course.previewVideoUrl || null,
+      previewVideoPublicId: course.previewVideoPublicId || null
     }, { emitEvent: false });
 
     if (course.thumbnail) {
       this.thumbnailPreview.set(course.thumbnail);
       this.hasThumbnail.set(true);
+    }
+
+    if (course.previewVideoUrl) {
+      this.coursePreviewVideoUrl = course.previewVideoUrl;
+      this.coursePreviewVideoPublicId = course.previewVideoPublicId ?? null;
     }
 
     this.setArray('goals', course.goals || []);
@@ -472,14 +500,13 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'hourglass_top';
-      return 'add';
+      return 'arrow_forward';
     }
 
     if (this.mode() === 'update') {
-      if (this.status() === 'updating') return 'sync';
+      if (this.status() === 'updating') return 'hourglass_top';
 
-      if (this.hasChanges()) return 'save';
-
+      // Always show arrow forward in update mode
       return 'arrow_forward';
     }
 
@@ -492,20 +519,15 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     if (this.mode() === 'update') {
 
-      if (this.status() === 'updating') return 'Updating...';
+      if (this.status() === 'updating') return 'Saving...';
 
-      // ⭐ ALWAYS show Continue if no baseline change detected yet
-      if (!this.hasChanges()) return 'Continue';
-
-      return 'Update';
+      // ⭐ Always show Next in update mode
+      return 'Next';
     }
 
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'Saving...';
-      const invalidKeys = Object.keys(this.courseForm.controls).filter(k => this.courseForm.get(k)?.invalid);
-      if (invalidKeys.length > 0) return `Missing: ${invalidKeys.join(', ')}`;
-      if (!this.selectedThumbnailFile) return `Missing: thumbnail`;
-      return 'Add Course';
+      return 'Next';
     }
 
     return '';
@@ -518,17 +540,19 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     }
 
     if (this.mode() === 'update') {
-
-      if (!this.hasChanges()) {
+      // Always update first if there are changes OR if preview video is marked for deletion
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      
+      if (this.hasChanges() || previewMarkedForDeletion) {
+        this.updateCourse();
+      } else {
+        // If no changes, navigate directly
         this.router.navigate([
           '/course-builder',
           this.courseId,
           'sections'
         ]);
-        return;
       }
-
-      this.updateCourse();
     }
   }
 
@@ -548,6 +572,8 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
       category: string | { _id: string };
       goals: string[];
       requirements: string[];
+      previewVideoUrl: string | null;
+      previewVideoPublicId: string | null;
     };
     const categoryId =
       typeof formValue.category === 'string'
@@ -563,32 +589,62 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
       requirements: formValue.requirements || [],
     };
 
-    const upload$ = this.selectedThumbnailFile
-      ? this.cloudinaryService.uploadThumbnail(
-        this.selectedThumbnailFile,
-        this.courseId!,
-        this.existingThumbnailPublicId,
-      )
-      : null;
+    const previewComp = this.previewVideoUploadComponent;
+    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
 
+    previewUpload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (videoRes) => {
+        if (videoRes) {
+          // A new video was uploaded
+          payload.previewVideoUrl = videoRes.url;
+          payload.previewVideoPublicId = videoRes.publicId;
+          this.coursePreviewVideoUrl = videoRes.url;
+          this.coursePreviewVideoPublicId = videoRes.publicId;
 
-    if (upload$) {
-      upload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res) => {
-          payload.thumbnail = res.secure_url;
-          payload.thumbnailPublicId = res.public_id;
-          this.existingThumbnailPublicId = res.public_id;
-          this.sendUpdate(payload);
-        },
-        error: (err) => {
-          this.status.set('ready');
-          console.error(err);
+          this.courseForm.patchValue({
+            previewVideoUrl: videoRes.url,
+            previewVideoPublicId: videoRes.publicId
+          }, { emitEvent: false });
+        } else if (previewComp?.markedForDeletion()) {
+          // User removed the video — send nulls now (form controls were kept intact)
+          payload.previewVideoUrl = null;
+          payload.previewVideoPublicId = null;
+        } else {
+          payload.previewVideoUrl = formValue.previewVideoUrl;
+          payload.previewVideoPublicId = formValue.previewVideoPublicId;
         }
-      });
-    } else {
-      payload.thumbnail = formValue.thumbnail;
-      this.sendUpdate(payload);
-    }
+
+        const upload$ = this.selectedThumbnailFile
+          ? this.cloudinaryService.uploadThumbnail(
+            this.selectedThumbnailFile,
+            this.courseId!,
+            this.existingThumbnailPublicId,
+          )
+          : null;
+
+        if (upload$) {
+          upload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next: (res) => {
+              payload.thumbnail = res.secure_url;
+              payload.thumbnailPublicId = res.public_id;
+              this.existingThumbnailPublicId = res.public_id;
+              this.sendUpdate(payload);
+            },
+            error: (err) => {
+              this.status.set('ready');
+              console.error(err);
+            }
+          });
+        } else {
+          payload.thumbnail = formValue.thumbnail;
+          this.sendUpdate(payload);
+        }
+      },
+      error: (err) => {
+        this.status.set('ready');
+        console.error('Preview video upload failed:', err);
+      }
+    });
   }
 
   sendUpdate(payload: any) {
@@ -597,17 +653,43 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
         this.status.set('ready');
         this.hasChanges.set(false);
 
+        // Reset preview video component state and handle deferred Cloudinary deletion
+        if (this.previewVideoUploadComponent) {
+          const comp = this.previewVideoUploadComponent;
+
+          // If user removed the video, commit the null values into the form now
+          if (comp.markedForDeletion()) {
+            this.courseForm.patchValue(
+              { previewVideoUrl: null, previewVideoPublicId: null },
+              { emitEvent: false }
+            );
+          }
+
+          // Delete the old Cloudinary asset now that the DB save succeeded
+          if (comp.pendingDeletePublicId) {
+            this.cloudinaryService.deleteAsset(comp.pendingDeletePublicId, 'video').subscribe();
+          }
+
+          comp.resetAfterSave();
+        }
+
         this.initialValue = this.normalize(this.courseForm.getRawValue());
 
         this.courseForm.markAsPristine();
-        
+
         // Clear draft state after successful update
         this.clearDraftAfterSave();
-        
+
         const courseTitle = this.courseForm.get('title')?.value || 'Course';
         const truncatedTitle = this.truncateName(courseTitle);
         this.toastr.success(`"${truncatedTitle}" updated successfully`);
 
+        // Navigate to sections builder after update
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'sections'
+        ]);
       },
       error: () => {
         this.isSaving.set(false);
@@ -732,14 +814,21 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     this.initialValue = this.normalize(this.courseForm.getRawValue());
     this.hasChanges.set(false);
     this.setBaseline();
-    
+
     // Clear draft state after successful course creation
     this.clearDraftAfterSave();
-    
+
     this.courseCreatedEvent.emit(courseId);
     const courseTitle = this.courseForm.get('title')?.value || 'Course';
     const truncatedTitle = this.truncateName(courseTitle);
     this.toastr.success(`"${truncatedTitle}" created successfully`);
+
+    // Navigate to sections builder after course creation
+    this.router.navigate([
+      '/course-builder',
+      courseId,
+      'sections'
+    ]);
   }
 
   formatLevel(level: string): string {
@@ -788,5 +877,37 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
       this.status() === 'saving' ||
       this.status() === 'updating'
     );
+  }
+
+  onPreviewVideoUploaded(event: { url: string; publicId: string }) {
+    this.coursePreviewVideoUrl = event.url;
+    this.coursePreviewVideoPublicId = event.publicId;
+
+    this.coursesService.updateCourse(this.courseId!, {
+      previewVideoUrl: event.url,
+      previewVideoPublicId: event.publicId
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.toastr.success('Preview video saved'),
+      error: () => this.toastr.error('Failed to save preview video')
+    });
+  }
+
+  onPreviewVideoRemoved() {
+    const oldPublicId = this.coursePreviewVideoPublicId;
+    this.coursePreviewVideoUrl = null;
+    this.coursePreviewVideoPublicId = null;
+
+    this.coursesService.updateCourse(this.courseId!, {
+      previewVideoUrl: null,
+      previewVideoPublicId: null
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.toastr.success('Preview video removed');
+        if (oldPublicId) {
+          this.cloudinaryService.deleteAsset(oldPublicId, 'video').subscribe();
+        }
+      },
+      error: () => this.toastr.error('Failed to remove preview video')
+    });
   }
 }

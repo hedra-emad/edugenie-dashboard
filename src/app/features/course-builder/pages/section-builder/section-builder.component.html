@@ -50,8 +50,8 @@
 
   <div class="space-y-4">
 
-    <div *ngIf="isLoading" class="flex justify-center py-16">
-      <app-loading [size]="40" color="var(--color-primary)"></app-loading>
+    <div *ngIf="isLoading" class="w-full py-8">
+      <app-page-skeleton [showBadge]="false" [showStats]="false"></app-page-skeleton>
     </div>
 
     <ng-container *ngIf="!isLoading">
@@ -88,6 +88,26 @@
 
     <div class="mt-6 flex justify-start">
       <app-back-button label="Back" (back)="goToCourse()"></app-back-button>
+    </div>
+
+    <!-- Course Submission Section -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <!-- Helper Text -->
+            <div class="flex items-start justify-center gap-2 px-4">
+                <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block">
+                    info
+                </mat-icon>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                    {{ publishButton.helperText() }}
+                </p>
+            </div>
+            
+            <!-- Send for Review Button -->
+            <div class="flex justify-center">
+                <app-publish-course-button #publishButton [courseId]="courseId" [course]="course"></app-publish-course-button>
+            </div>
+        </div>
     </div>
   </div>
 </div>

@@ -32,6 +32,10 @@ export interface CourseApproval {
   thumbnail: string;
   status: ApprovalStatus;
   exceedsLimit: boolean;
+  
+  rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
 }
 
 export interface AdminStats {
@@ -42,4 +46,3 @@ export interface AdminStats {
   draft: number;
   archived: number;
 }
-

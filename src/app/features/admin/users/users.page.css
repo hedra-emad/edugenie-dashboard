@@ -8,6 +8,13 @@
    - Complex layered box-shadows on avatars / buttons
    ============================================================ */
 
+.page-subtitle {
+    margin: 0;
+    color: var(--color-text-secondary, #6b7280);
+    font-size: 0.9375rem;
+}
+
+
 /* ─── Page wrapper ───────────────────────────────────────────── */
 .um-root {
     max-width: 1200px;
@@ -568,8 +575,13 @@
 }
 
 @keyframes um-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .um-modal-card {
@@ -578,7 +590,7 @@
     max-width: 440px;
     border-radius: 1.25rem;
     padding: 2rem;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
     transform: scale(0.95) translateY(10px);
     opacity: 0;
     animation: um-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -714,26 +726,103 @@
 }
 
 @keyframes um-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ── Pagination ── */
 .pagination-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-top: 1px solid var(--color-border,#e5e7eb);
-  background: transparent; gap: 12px; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--color-border, #e5e7eb);
+    background: transparent;
+    gap: 12px;
+    flex-wrap: wrap;
 }
-.pagination-controls { display: flex; align-items: center; gap: 6px; }
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .page-btn {
-  width: 40px; height: 40px; border-radius: 10px;
-  border: 1px solid var(--color-border,#e5e7eb); background: white;
-  font-size: 1rem; font-weight: 600; color: #3b1892; cursor: pointer; transition: all 0.2s ease;
-  display: flex; align-items: center; justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: white;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #3b1892;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.page-btn:hover:not(:disabled) { border-color: #5b3db8; color: #3b1892; background: #f5f3ff; }
-.page-btn--active { background: #3b1892; color: white; border-color: #3b1892; }
-.page-btn--active:hover { background: #2d1073; }
-.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.page-btn mat-icon { font-size: 20px; width: 20px; height: 20px; color: #9ca3af; }
-.page-btn:hover:not(:disabled) mat-icon { color: #3b1892; }
+
+.page-btn:hover:not(:disabled) {
+    border-color: #5b3db8;
+    color: #3b1892;
+    background: #f5f3ff;
+}
+
+.page-btn--active {
+    background: #3b1892;
+    color: white;
+    border-color: #3b1892;
+}
+
+.page-btn--active:hover {
+    background: #2d1073;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-btn mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+}
+
+.page-btn:hover:not(:disabled) mat-icon {
+    color: #3b1892;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-primary, #3b1892);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59, 24, 146, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark, #2d1073);
+    transform: translateY(-1px);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+}

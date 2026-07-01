@@ -13,16 +13,25 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
+import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
+import { NotificationsService } from './core/services/notifications';
 
-function initializeAuth(authService: AuthService) {
+function initializeAuth(authService: AuthService, notificationsService: NotificationsService) {
   return async () => {
     try {
       await firstValueFrom(authService.initializeAuth());
-    } catch {
-      // Auth init failure must never abort Angular bootstrap.
-      // AuthService.initializeAuth() already handles errors internally,
-      // but guard here as a safety net against EmptyError / network errors.
-    }
+      // On a normal page refresh: initializeAuth() fetches /users/profile with
+      // the existing cookie → setCurrentUser() → currentUserSignal is populated.
+      //
+      // On the redeem handoff path: initializeAuth()'s GET was sent before the
+      // cookie existed (401). RedeemComponent.getProfile() already called
+      // setCurrentUser() and connectPusher(). The guard in connectPusher()
+      // (connectedUserId check) prevents a duplicate connection here.
+      const user = authService.currentUserSignal();
+      if (user?.id) {
+        notificationsService.connectPusher(user.id);
+      }
+    } catch {}
   };
 }
 
@@ -31,7 +40,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([apiInterceptor])),
+    provideHttpClient(withInterceptors([apiInterceptor, authErrorInterceptor])),
     provideAnimations(),
     provideToastr({
       positionClass: 'toast-bottom-left',
@@ -51,10 +60,10 @@ export const appConfig: ApplicationConfig = {
     }),
     provideCharts(withDefaultRegisterables()),
     {
-      provide: APP_INITIALIZER,
-      useFactory: initializeAuth,
-      deps: [AuthService],
-      multi: true,
-    },
+  provide: APP_INITIALIZER,
+  useFactory: initializeAuth,
+  deps: [AuthService, NotificationsService],
+  multi: true,
+},
   ],
 };

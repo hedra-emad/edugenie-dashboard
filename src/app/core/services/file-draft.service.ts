@@ -116,7 +116,7 @@ export class FileDraftService {
         if (!courseId || !sectionId) {
           return throwError(() => new Error('Course ID and Section ID required for video upload'));
         }
-        uploadObservable = this.cloudinaryService.uploadVideo(file, courseId, sectionId).pipe(
+        uploadObservable = this.cloudinaryService.uploadVideo(file, courseId, sectionId, undefined).pipe(
           tap(event => {
             if (event.progress !== undefined) {
               this.updateUploadProgress(fileId, {

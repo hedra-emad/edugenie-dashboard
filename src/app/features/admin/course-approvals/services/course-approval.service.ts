@@ -7,7 +7,7 @@ import {
 import { CourseApproval, Category, AdminStats } from '../models/course-approval.model';
 import { ToastrService } from 'ngx-toastr';
 
-type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'draft' | 'published' | 'archived';
+type ApprovalStatus = 'pending' | 'published' | 'rejected' | 'draft' | 'archived';
 
 export interface PendingPage {
   courses: CourseApproval[];
@@ -66,30 +66,41 @@ export class CourseApprovalService {
       );
 
     // Pending uses the paginated endpoint (page 1, limit 10 initially)
-    const pendingUrl = `${this.coursesApiUrl}/pending-review?page=1&limit=10`;
+    const pendingUrl = `${this.adminCoursesApiUrl}/pending-review?page=1&limit=10`;
+    const rejectedUrl = `${this.adminCoursesApiUrl}/rejected?page=1&limit=10`;
 
     forkJoin({
       pending: this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
         map(res => {
-          // Backend may return { data: [...], total, page, limit } or { data: { data:[...], total } }
-          const raw = res?.data;
-          const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-          const total = raw?.total ?? res?.total ?? list.length;
-          const page = raw?.page ?? res?.page ?? 1;
-          const limit = raw?.limit ?? res?.limit ?? 10;
+          // Backend returns { data: [...], meta: { total, page, limit, totalPages } }
+          const list = Array.isArray(res?.data) ? res.data
+            : Array.isArray(res?.data?.data) ? res.data.data : [];
+          const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
+          const page  = res?.meta?.page  ?? res?.data?.page  ?? res?.page  ?? 1;
+          const limit = res?.meta?.limit ?? res?.data?.limit ?? res?.limit ?? 10;
           this.pendingPageSubject.next({ total, page, limit });
           return list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         }),
         catchError(() => of([] as CourseApproval[]))
       ),
-      published: safeFetch(`${this.coursesApiUrl}`, 'approved'),
+      published: safeFetch(`${this.coursesApiUrl}`, 'published'),
+      rejected: safeFetch(rejectedUrl, 'rejected'),
     }).pipe(
       finalize(() => this.loadingSubject.next(false))
-    ).subscribe(({ pending, published }) => {
+    ).subscribe(({ pending, published, rejected }) => {
       const map = new Map<string, CourseApproval>();
       (published as CourseApproval[]).forEach(c => map.set(c.id, c));
+      (rejected as CourseApproval[]).forEach(c => map.set(c.id, c));
       (pending as CourseApproval[]).forEach(c => map.set(c.id, c));
-      this.coursesSubject.next(Array.from(map.values()));
+      
+      const allCourses = Array.from(map.values());
+      
+      console.log('Pending Courses', pending);
+      console.log('Published Courses', published);
+      console.log('Rejected Courses', rejected);
+      console.log('All Tab Data', allCourses);
+      
+      this.coursesSubject.next(allCourses);
     });
 
     this.refreshStats();
@@ -102,16 +113,17 @@ export class CourseApprovalService {
   loadPendingPage(page: number, limit: number, search = ''): void {
     this.loadingSubject.next(true);
 
-    let url = `${this.coursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
+    let url = `${this.adminCoursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
     this.http.get<any>(url, { withCredentials: true }).pipe(
       finalize(() => this.loadingSubject.next(false))
     ).subscribe({
       next: res => {
-        const raw = res?.data;
-        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-        const total = raw?.total ?? res?.total ?? list.length;
+        // Backend returns { data: [...], meta: { total, page, limit, totalPages } }
+        const list = Array.isArray(res?.data) ? res.data
+          : Array.isArray(res?.data?.data) ? res.data.data : [];
+        const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
 
         this.pendingPageSubject.next({ total, page, limit });
 
@@ -238,20 +250,18 @@ export class CourseApprovalService {
   approveCourse(courseId: string): Observable<boolean> {
     this.setActionLoading(courseId, true);
     return this.http
-      .patch<{ success: boolean }>(
+      .patch<any>(
         `${this.adminCoursesApiUrl}/${courseId}/approve`, {}, { withCredentials: true }
       )
       .pipe(
-        tap(res => {
-          if (res.success) {
-            this.updateCourseStatus(courseId, 'approved');
-            this.toastr.success('Course approved successfully');
-            this.refreshStats();
-          }
+        tap(() => {
+          // Any non-error HTTP response means success
+          this.updateCourseStatus(courseId, 'published');
+          this.refreshStats();
         }),
-        map(res => res.success),
+        map(() => true),
         catchError(err => {
-          this.toastr.error(err.error?.message || 'Failed to approve course');
+          this.toastr.error(err.error?.message || 'Failed to publish course');
           return of(false);
         }),
         finalize(() => this.setActionLoading(courseId, false))
@@ -261,18 +271,16 @@ export class CourseApprovalService {
   rejectCourse(courseId: string, reason: string): Observable<boolean> {
     this.setActionLoading(courseId, true);
     return this.http
-      .patch<{ success: boolean }>(
+      .patch<any>(
         `${this.adminCoursesApiUrl}/${courseId}/reject`, { rejectionReason: reason }, { withCredentials: true }
       )
       .pipe(
-        tap(res => {
-          if (res.success) {
-            this.updateCourseStatus(courseId, 'rejected');
-            this.toastr.success('Course rejected successfully');
-            this.refreshStats();
-          }
+        tap(() => {
+          // Any non-error HTTP response means success
+          this.updateCourseStatus(courseId, 'rejected');
+          this.refreshStats();
         }),
-        map(res => res.success),
+        map(() => true),
         catchError(err => {
           this.toastr.error(err.error?.message || 'Failed to reject course');
           return of(false);
@@ -286,6 +294,14 @@ export class CourseApprovalService {
       c.id === courseId ? { ...c, status } : c
     );
     this.coursesSubject.next(updated);
+
+    // If it's no longer pending, update pending page total so UI badges update immediately
+    if (status !== 'pending') {
+      const current = this.pendingPageSubject.value;
+      if (current.total > 0) {
+        this.pendingPageSubject.next({ ...current, total: current.total - 1 });
+      }
+    }
   }
 
   refreshStats(): void {
@@ -328,12 +344,26 @@ export class CourseApprovalService {
     this.actionLoadingSubject.next(current);
   }
 
+  public normalizeStatus(course: any, forceStatus?: string): ApprovalStatus {
+    if (forceStatus) return forceStatus as ApprovalStatus;
+
+    const cs = course.courseStatus || course.status;
+    if (cs === 'rejected' || course.rejectionReason) return 'rejected';
+    if (cs === 'published' || cs === 'approved') return 'published';
+    if (cs === 'under_review' || cs === 'pending') return 'pending';
+    if (cs === 'draft') return 'draft';
+    if (cs === 'archived') return 'archived';
+
+    return (cs || 'pending') as ApprovalStatus;
+  }
+
   private mapCourseApproval(c: any, forceStatus?: ApprovalStatus): CourseApproval {
     const instructor = c.instructor || {};
-    const rawStatus = c.status || c.courseStatus || 'pending';
+    const status = this.normalizeStatus(c, forceStatus);
+    
     return {
-      _id: c._id,
-      id: c._id || c.id,
+      _id: c._id || c.courseId,
+      id: c._id || c.id || c.courseId,
       title: c.title,
       description: c.description,
       category: c.category?.name || c.category || 'Uncategorized',
@@ -341,19 +371,24 @@ export class CourseApprovalService {
       price: c.price,
       totalHours: c.totalHours,
       totalLessons: c.totalLessons,
-      sectionsCount: c.sections?.length || 0,
+      sectionsCount: c.totalSections ?? c.sectionsCount ?? c.sections?.length ?? 0,
       goals: c.goals || [],
       requirements: c.requirements || [],
       createdAt: c.createdAt,
-      instructorName: instructor.firstName
+      instructorName: c.instructorName || (instructor.firstName
         ? `${instructor.firstName} ${instructor.lastName}`.trim()
-        : (instructor.name || 'Unknown Instructor'),
+        : (instructor.name || 'Unknown Instructor')),
       instructorEmail: instructor.email,
       instructorAvatar: instructor.avatar,
       videoDuration: c.totalHours ? `${c.totalHours}h` : '0h',
-      thumbnail: c.thumbnail?.url || c.thumbnail || 'video_library',
-      status: forceStatus ?? rawStatus,
-      exceedsLimit: false
+      thumbnail: c.thumbnail?.url || c.thumbnail || c.thumbnailUrl || c.coverImage?.url || c.coverImage || c.image?.url || c.image || 'video_library',
+      status: status,
+      exceedsLimit: false,
+      rejectionReason: c.rejectionReason,
+      rejectedBy: c.rejectedBy?.firstName 
+        ? `${c.rejectedBy.firstName} ${c.rejectedBy.lastName}`.trim()
+        : c.rejectedBy?.name || c.rejectedBy || 'Unknown',
+      rejectedAt: c.rejectedAt
     };
   }
 

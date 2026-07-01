@@ -156,7 +156,7 @@
   font-weight: 600;
 }
 
-.filter-tab.active-approved {
+.filter-tab.active-published {
   color: #15803d;
   border-bottom-color: #22c55e;
   font-weight: 600;
@@ -180,7 +180,7 @@
 }
 
 .pending-count  { background: #fef3c7; color: #d97706; }
-.approved-count { background: #dcfce3; color: #15803d; }
+.published-count { background: #dcfce3; color: #15803d; }
 .rejected-count { background: #fee2e2; color: #b91c1c; }
 
 /* --- Table --- */

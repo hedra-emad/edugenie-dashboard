@@ -22,6 +22,7 @@ import {
   UserProfile,
   UserRole,
 } from '../models/user-profile.model';
+import { NotificationsService } from './notifications';
 
 
 @Injectable({
@@ -30,6 +31,7 @@ import {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly notificationsService = inject(NotificationsService);
 
   private readonly authApiUrl = '/auth';
   private readonly usersApiUrl = '/users';
@@ -43,6 +45,17 @@ export class AuthService {
   readonly currentUserSignal = signal<UserProfile | null>(null);
 
   private initialization$: Observable<void> | null = null;
+  private readonly inactiveAccountStatuses = new Set([
+    'deactivated',
+    'deleted',
+    'inactive',
+    'disabled',
+    'suspended',
+    'blocked',
+    'banned',
+    'pending_delete',
+    'deletion_pending',
+  ]);
 
   initializeAuth(): Observable<void> {
     if (!this.initialization$) {
@@ -53,11 +66,19 @@ export class AuthService {
             if (response.success && response.data) {
               this.setCurrentUser(response.data);
             } else {
-              this.clearCurrentUser();
+              // Only clear if nobody else has already set a user
+              // (e.g. RedeemComponent ran getProfile() before this resolved)
+              if (!this.currentUserSubject.value) {
+                this.clearCurrentUser();
+              }
             }
           }),
           catchError(() => {
-            this.clearCurrentUser();
+            // The GET was fired before the JWT cookie was set (redeem handoff).
+            // Only wipe state if no user has been authenticated by another path.
+            if (!this.currentUserSubject.value) {
+              this.clearCurrentUser();
+            }
             return of(null);
           }),
           map(() => void 0),
@@ -85,12 +106,19 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -103,12 +131,19 @@ export class AuthService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -127,6 +162,39 @@ export class AuthService {
 
   register(data: Record<string, unknown>): Observable<unknown> {
     return this.http.post(`${this.authApiUrl}/register`, data);
+  }
+
+  /** Looks up the invitee details for an admin invite token. */
+  validateInvite(token: string): Observable<{
+    email: string;
+    firstName: string;
+    lastName: string;
+  }> {
+    return this.http
+      .post<{
+        success: boolean;
+        data: { email: string; firstName: string; lastName: string };
+      }>(`${this.authApiUrl}/validate-invite`, { token })
+      .pipe(map((response) => response.data));
+  }
+
+  /** Accepts an admin invite, sets the session cookie, and populates state. */
+  acceptInvite(token: string, password: string): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.authApiUrl}/accept-invite`, { token, password })
+      .pipe(
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
+          }
+
+          this.setCurrentUser(user);
+          return response;
+        }),
+      );
   }
 
   getProfile(): Observable<ProfileApiResponse> {
@@ -198,6 +266,10 @@ export class AuthService {
       );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.patch<any>(`${this.usersApiUrl}/change-password`, { currentPassword, newPassword });
+  }
+
   logout(): Observable<void> {
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
@@ -210,13 +282,66 @@ export class AuthService {
     );
   }
 
+  private isAccountActive(user: UserProfile | null | undefined): boolean {
+    if (!user) {
+      return false;
+    }
+
+    const maybeUser = user as UserProfile & Record<string, unknown>;
+
+    if (typeof maybeUser['isDeleted'] === 'boolean' && maybeUser['isDeleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['deleted'] === 'boolean' && maybeUser['deleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['isActive'] === 'boolean' && !maybeUser['isActive']) {
+      return false;
+    }
+
+    const normalizedStatus = String(maybeUser['status'] ?? '').trim().toLowerCase();
+    if (this.inactiveAccountStatuses.has(normalizedStatus)) {
+      return false;
+    }
+
+    if (normalizedStatus.includes('deleted') || normalizedStatus.includes('deactivated') || normalizedStatus.includes('inactive')) {
+      return false;
+    }
+
+    const deletedAt = maybeUser['deletedAt'] ?? maybeUser['deleted_at'] ?? maybeUser['removedAt'];
+    if (deletedAt !== undefined && deletedAt !== null && deletedAt !== '') {
+      return false;
+    }
+
+    return true;
+  }
+
+  private createInactiveAccountError(): Error {
+    const error = new Error('This account has been deactivated or deleted.');
+    (error as Error & { status?: number }).status = 403;
+    return error;
+  }
+
   setCurrentUser(user: UserProfile | null): void {
+    if (!this.isAccountActive(user)) {
+      this.clearCurrentUser();
+      return;
+    }
+
     this.currentUserSubject.next(user);
     this.currentUserSignal.set(user);
+
+    if (user?.id) {
+      this.notificationsService.connectPusher(user.id);
+    }
   }
 
   clearCurrentUser(): void {
-    this.setCurrentUser(null);
+    this.notificationsService.disconnectPusher();
+    this.currentUserSubject.next(null);
+    this.currentUserSignal.set(null);
   }
 
   getCurrentUser(): UserProfile | null {
@@ -250,13 +375,17 @@ export class AuthService {
   }
 
   getStudentAppRedirectUrl(): string {
-    return import.meta.env.NG_APP_STUDENT_APP_URL;
+    return environment.studentAppUrl;
   }
 
-  redirectToStudentApp(): Observable<void> {
-    // Students should never be in the Angular app.
-    // Just redirect them directly — no handoff code needed.
-    window.location.href = import.meta.env['NG_APP_STUDENT_APP_URL'] || 'http://localhost:3000';
+  redirectToStudentApp(exchangeToken?: string): Observable<void> {
+    // Students belong on the Next.js app, which lives on a different domain and
+    // can't read this app's API cookie. Hand the session off via a short-lived
+    // exchange token so the student app can mint its own first-party cookie.
+    const base = environment.studentAppUrl || 'http://localhost:3000';
+    window.location.href = exchangeToken
+      ? `${base}/auth-callback?token=${encodeURIComponent(exchangeToken)}`
+      : base;
     return of(void 0);
   }
 }

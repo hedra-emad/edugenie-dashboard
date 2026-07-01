@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CourseHeaderComponent } from '../../components/course-header/course-header.component';
@@ -6,9 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoursesService } from '../../../../core/services/courses';
 import { CourseStatus } from '../../../../core/enums/course-status';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { PageSkeletonComponent } from '../../../../shared/components/loading';
 
 @Component({
   selector: 'app-create-course-page',
@@ -19,13 +20,14 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    AppLoader
+    PageSkeletonComponent
   ],
   templateUrl: './course-builder-page.component.html',
   styleUrl: './course-builder-page.component.css'
 })
 export class CourseBuilderPageComponent implements OnInit {
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   currentStep = signal(1);
   courseId = signal<string | null>(null);
   courseTitle = signal<string | null>(null);
@@ -39,6 +41,14 @@ export class CourseBuilderPageComponent implements OnInit {
   coursesService = inject(CoursesService);
 
   ngOnInit() {
+    this.coursesService.courseStatusChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ courseId, status }) => {
+        if (courseId === this.courseId()) {
+          this.courseStatus.set(status);
+        }
+      });
+
     this.updateStep(this.router.url);
 
     const urlParts = this.router.url.split('/');

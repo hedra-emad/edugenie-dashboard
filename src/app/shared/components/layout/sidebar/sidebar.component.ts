@@ -39,7 +39,6 @@ export class SidebarComponent implements OnInit {
     { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
     { icon: 'group', label: 'Users', route: '/admin/users' },
     { icon: 'category', label: 'Categories', route: '/admin/categories' },
-    { icon: 'bar_chart', label: 'Reports', route: '/admin/reports' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
@@ -47,28 +46,44 @@ export class SidebarComponent implements OnInit {
     { icon: 'menu_book', label: 'My Courses', route: '/my-courses' },
     { icon: 'analytics', label: 'Analytics', route: '/analytics' },
     { icon: 'notifications', label: 'Notifications', route: '/notifications' },
-    { icon: 'settings', label: 'Settings', route: '/settings' },
   ];
 
   readonly adminBottomItems: NavItem[] = [
-    { icon: 'help_outline', label: 'Support Center', route: '/admin/support' },
-    { icon: 'settings', label: 'Settings', route: '/admin/settings' },
+    { icon: 'settings', label: 'Account Settings', route: '/admin/settings' },
   ];
 
-  readonly instructorBottomItems: NavItem[] = [];
+  readonly instructorBottomItems: NavItem[] = [
+    { icon: 'settings', label: 'Account Settings', route: '/settings' },
+  ];
+
+  readonly superadminNavItems: NavItem[] = [
+    { icon: 'dashboard', label: 'Dashboard', route: '/admin/command-center' },
+    { icon: 'admin_panel_settings', label: 'Admins', route: '/admin/admins' },
+    { icon: 'payments', label: 'Payouts', route: '/admin/payouts' },
+    { icon: 'tune', label: 'Platform Config', route: '/admin/platform-config' },
+    { icon: 'history', label: 'Audit Logs', route: '/admin/audit-logs' },
+    { icon: 'group', label: 'Users', route: '/admin/users' },
+    { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
+    { icon: 'category', label: 'Categories', route: '/admin/categories' },
+    { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
+  ];
+
+  readonly superadminBottomItems: NavItem[] = [
+    { icon: 'settings', label: 'Account Settings', route: '/admin/settings' },
+  ];
 
   get navItems(): NavItem[] {
     const role = this.user?.role;
-    return (role === 'admin' || role === 'superadmin')
-      ? this.adminNavItems
-      : this.instructorNavItems;
+    if (role === 'superadmin') return this.superadminNavItems;
+    if (role === 'admin') return this.adminNavItems;
+    return this.instructorNavItems;
   }
 
   get bottomItems(): NavItem[] {
     const role = this.user?.role;
-    return (role === 'admin' || role === 'superadmin')
-      ? this.adminBottomItems
-      : this.instructorBottomItems;
+    if (role === 'superadmin') return this.superadminBottomItems;
+    if (role === 'admin') return this.adminBottomItems;
+    return this.instructorBottomItems;
   }
 
   get isOverlay(): boolean {
@@ -94,6 +109,12 @@ export class SidebarComponent implements OnInit {
       this.router.navigate([route]).then(() => {
         this.toggle.emit();
       });
+    }
+  }
+
+  goToSettings(): void {
+    if (this.router.url !== '/admin/settings') {
+      this.router.navigate(['/admin/settings']);
     }
   }
 

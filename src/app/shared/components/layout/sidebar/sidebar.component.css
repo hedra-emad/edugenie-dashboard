@@ -50,6 +50,15 @@
   transform: translateX(0);
 }
 
+.profile {
+  transition: all .2s ease;
+}
+
+.profile:hover {
+  /* background: #f8f9ff; */
+  cursor: pointer;
+}
+
 /* ── Overlay header ── */
 .overlay-header {
   display: flex;

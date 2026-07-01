@@ -1,9 +1,34 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, OnDestroy, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, finalize, catchError, of, tap } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
+import Pusher, { Channel } from 'pusher-js';
+import { environment } from '../../../environments/environment';
+// import { AuthService } from './auth.service'; // adjust path if needed
 
-export type BackendNotificationType = 'COURSE_APPROVED' | 'COURSE_REJECTED';
+// notifications.ts (frontend)
+export type BackendNotificationType =
+    | 'COURSE_APPROVED'
+    | 'COURSE_REJECTED'
+    | 'COURSE_SUBMITTED_FOR_REVIEW'
+    | 'NEW_ENROLLMENT'
+    | 'NEW_REVIEW'
+    | 'LOW_RATING'
+    | 'PURCHASE_COMPLETED'
+    | 'PAYMENT_FAILED'
+    | 'COURSE_COMPLETED'
+    | 'CERTIFICATE_EARNED'
+    | 'REPORT_RESOLVED'
+    | 'EARNING_RECORDED'
+    | 'CONTENT_REMOVED'
+    | 'INACTIVITY_REMINDER'
+    | 'NEW_CONTENT_PUBLISHED'
+    | 'GOAL_MILESTONE'
+    | 'NEW_LOGIN_ATTEMPT'
+    | 'WEEKLY_SUMMARY'
+    | 'MONTHLY_SUMMARY'
+    | 'MILESTONE_REACHED';
+
 
 export interface AppNotification {
     id: string;
@@ -18,10 +43,12 @@ export interface AppNotification {
 }
 
 @Injectable({ providedIn: 'root' })
-export class NotificationsService {
+export class NotificationsService implements OnDestroy {
     private readonly http = inject(HttpClient);
     private readonly toastr = inject(ToastrService);
-    private readonly base = '/notifications'; // interceptor prepends environment.apiUrl + withCredentials
+    // private readonly authService = inject(AuthService);
+    private readonly base = '/notifications';
+    private readonly ngZone = inject(NgZone);
 
     private readonly notificationsSubject = new BehaviorSubject<AppNotification[]>([]);
     private readonly unreadCountSubject = new BehaviorSubject<number>(0);
@@ -40,6 +67,89 @@ export class NotificationsService {
     private currentPage = 1;
     private readonly pageSize = 10;
 
+    // Pusher
+    private pusher: Pusher | null = null;
+    private channel: Channel | null = null;
+    private connectedUserId: string | null = null;
+
+    // ─── Call this once after the user logs in ───────────────────────────────
+    connectPusher(userId: string): void {
+        console.log('🔌 connectPusher called for:', userId);
+        // Guard: already connected for this exact user — do nothing.
+        if (this.pusher && this.channel && this.connectedUserId === userId) {
+            console.log('⚡ Pusher already connected for user, skipping duplicate init.');
+            return;
+        }
+
+        // If switching users (or stale partial state), tear down first.
+        this.disconnectPusher();
+
+        this.pusher = new Pusher(environment.pusherKey, {
+            cluster: environment.pusherCluster,
+        });
+
+        // ── Task 5: connection diagnostics ──────────────────────────────────────
+        this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
+            console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
+        });
+        this.pusher.connection.bind('error', (err: any) => {
+            console.error('🔴 Pusher connection error:', err);
+        });
+        // ────────────────────────────────────────────────────────────────────────
+
+        this.channel = this.pusher.subscribe(`user-${userId}`);
+        this.connectedUserId = userId;
+        console.log('📡 Subscribed to channel:', `user-${userId}`);
+
+        this.channel.bind('new-notification', (notification: AppNotification) => {
+            console.log('📩 Received new-notification event:', notification);
+            this.ngZone.run(() => {
+                this.notificationsSubject.next([
+                    notification,
+                    ...this.notificationsSubject.value,
+                ]);
+                this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+                this.showToast(notification);
+            });
+        });
+    }
+
+
+    // ─── Call this on logout ─────────────────────────────────────────────────
+    disconnectPusher(): void {
+        this.channel?.unbind_all();
+        this.pusher?.disconnect();
+        this.pusher = null;
+        this.channel = null;
+        this.connectedUserId = null;
+    }
+
+    ngOnDestroy(): void {
+        this.disconnectPusher();
+    }
+
+    // ─── Toast routing by notification type ─────────────────────────────────
+    private showToast(notification: AppNotification): void {
+        const type = (notification.type || '').toUpperCase();
+        const title = notification.title;
+        const message = notification.message?.split('Reason:')[0].trim() ?? '';
+
+        switch (type) {
+            case 'COURSE_APPROVED':
+                this.toastr.success(message, title);
+                break;
+            case 'COURSE_REJECTED':
+                this.toastr.error(message, title);
+                break;
+            case 'COURSE_SUBMITTED_FOR_REVIEW':  // ← ADD THIS
+                this.toastr.info(message, title);
+                break;
+            default:
+                this.toastr.info(message, title);
+        }
+    }
+
+    // ─── Existing HTTP methods (unchanged) ───────────────────────────────────
     getNotifications(page = 1, limit = this.pageSize, append = false): void {
         const loadingFlag = append ? this.loadingMoreSubject : this.loadingSubject;
         loadingFlag.next(true);

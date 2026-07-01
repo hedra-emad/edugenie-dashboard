@@ -1,37 +1,50 @@
 import {
   Component, ElementRef, HostListener, OnDestroy,
-  OnInit, ViewChild, inject
+  OnInit, ViewChild, inject, ChangeDetectorRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserProfile } from '../../../../core/models/user-profile.model';
 import { ToastrService } from 'ngx-toastr';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
+import { Subject, forkJoin, of, throwError, Observable } from 'rxjs';
+import { catchError, switchMap, tap, takeUntil, finalize, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageSkeletonComponent, ButtonLoadingComponent],
   templateUrl: './account-settings.page.html',
   styleUrls: ['./account-settings.page.css']
 })
 export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
-  private fb          = inject(FormBuilder);
-  private toastr      = inject(ToastrService);
+  private fb = inject(FormBuilder);
+  private toastr = inject(ToastrService);
+  private cdr = inject(ChangeDetectorRef);
+
+  private readonly destroy$ = new Subject<void>();
+
+  // Password visibility flags
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
 
   // ─── Profile state ───────────────────────────────────────────────────────
   profileForm!: FormGroup;
   securityForm!: FormGroup;
   originalProfile: { firstName: string, lastName: string } | null = null;
   isLoadingProfile = true;
-  isSaving         = false;
+  isSaving = false;
   emailNotifications = true;
-  publicProfile      = false;
+  publicProfile = false;
 
   // ─── Avatar state ────────────────────────────────────────────────────────
   /** URL shown in the avatar circle — either from the server or a local crop preview */
-  avatarPreview:   string | null = null;
+  avatarPreview: string | null = null;
   /** Cropped blob waiting to be uploaded on Save Changes — null if unchanged */
   private _pendingAvatarBlob: Blob | null = null;
   /** Whether the user explicitly clicked "Remove Image" */
@@ -41,14 +54,14 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   showAvatarOptions = false;
 
   // ─── Cropper state ───────────────────────────────────────────────────────
-  isCropperOpen    = false;
+  isCropperOpen = false;
   selectedImageSrc: string | null = null;
-  livePreviewUrl:   string | null = null;
+  livePreviewUrl: string | null = null;
 
   cropTranslateX = 0;
   cropTranslateY = 0;
-  cropScale      = 1;
-  cropRotation   = 0;
+  cropScale = 1;
+  cropRotation = 0;
 
   _isDragging = false;
   private _dragStartX = 0;
@@ -60,15 +73,17 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private _previewObjectUrl: string | null = null;
 
   readonly CONTAINER_SIZE = 380;
-  readonly CROP_RADIUS    = 155;
+  readonly CROP_RADIUS = 155;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('cropImg')   cropImg!:  ElementRef<HTMLImageElement>;
+  @ViewChild('cropImg') cropImg!: ElementRef<HTMLImageElement>;
 
   constructor() { this.initForms(); }
-  ngOnInit()    { this.loadProfile(); }
+  ngOnInit() { this.loadProfile(); }
 
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.revokeSelectedImage();
     // local preview blobs are data: URLs — nothing to revoke
     if (this.avatarPreview?.startsWith('blob:')) {
@@ -77,17 +92,30 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   // ─── Forms ────────────────────────────────────────────────────────────────
+  private passwordMatchValidator = (g: FormGroup) => {
+    const newPassword = g.get('newPassword')?.value;
+    const confirmPassword = g.get('confirmPassword')?.value;
+    return newPassword === confirmPassword ? null : { mismatch: true };
+  };
+
   private initForms() {
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
-      lastName:  ['', Validators.required],
-      email:     [{ value: '', disabled: true }, [Validators.required, Validators.email]]
+      lastName: ['', Validators.required],
+      email: [{ value: '', disabled: true }, [Validators.required, Validators.email]]
     });
     this.securityForm = this.fb.group({
-      currentPassword: [{ value: '', disabled: true }],
-      newPassword:     [{ value: '', disabled: true }],
-      confirmPassword: [{ value: '', disabled: true }]
-    });
+      currentPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
+
+    this.securityForm.get('newPassword')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.securityForm.get('confirmPassword')?.updateValueAndValidity({ emitEvent: false });
+        this.cdr.markForCheck();
+      });
   }
 
   // ─── Profile load ─────────────────────────────────────────────────────────
@@ -108,124 +136,226 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   private populateForm(user: UserProfile) {
     this.profileForm.patchValue({
       firstName: user.firstName || '',
-      lastName:  user.lastName  || '',
-      email:     user.email     || ''
+      lastName: user.lastName || '',
+      email: user.email || ''
     });
     this.originalProfile = {
       firstName: user.firstName || '',
-      lastName:  user.lastName  || ''
+      lastName: user.lastName || ''
     };
-    this.avatarPreview     = user.avatar || null;
+    this.avatarPreview = user.avatar || null;
     this._pendingAvatarBlob = null;
-    this.avatarDeleted      = false;
+    this.avatarDeleted = false;
+    // Cache initials so the template never recomputes it on every CD cycle
+    this._cachedInitials = this.computeInitials();
+    this.cdr.markForCheck();
+  }
+
+  // Cached initials — recomputed only when the form is populated/reset
+  _cachedInitials = 'U';
+
+  private computeInitials(): string {
+    const f = this.profileForm.get('firstName')?.value || '';
+    const l = this.profileForm.get('lastName')?.value || '';
+    if (!f && !l) return 'U';
+    return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
   }
 
   getInitials(): string {
-    const f = this.profileForm.get('firstName')?.value || '';
-    const l = this.profileForm.get('lastName')?.value  || '';
-    if (!f && !l) return 'U';
-    return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
+    return this._cachedInitials;
   }
 
   get hasUnsavedChanges(): boolean {
     if (this.avatarDeleted || this._pendingAvatarBlob) return true;
     if (!this.originalProfile) return false;
-    
+
     const currentFirstName = this.profileForm.get('firstName')?.value;
     const currentLastName = this.profileForm.get('lastName')?.value;
 
-    return currentFirstName !== this.originalProfile.firstName || 
-           currentLastName !== this.originalProfile.lastName;
+    const profileChanged = currentFirstName !== this.originalProfile.firstName ||
+      currentLastName !== this.originalProfile.lastName;
+
+    const currentPassword = this.securityForm.get('currentPassword')?.value;
+    const newPassword = this.securityForm.get('newPassword')?.value;
+    const confirmPassword = this.securityForm.get('confirmPassword')?.value;
+    const passwordFieldsChanged = !!(currentPassword || newPassword || confirmPassword);
+
+    return profileChanged || passwordFieldsChanged;
   }
 
-  // ─── Save Changes ─────────────────────────────────────────────────────────
-  /**
-   * Single save action that handles three cases:
-   *  1. Avatar removed → PATCH { removeAvatar: true } then update profile fields
-   *  2. New avatar pending → upload via FormData (backend → Cloudinary) then update fields
-   *  3. No avatar change → plain JSON PATCH with name fields only
-   */
-  onSaveChanges() {
-    if (this.profileForm.invalid || this.isUploadingAvatar) return;
-    this.isSaving = true;
+  get isSubmitDisabled(): boolean {
+    if (this.isSaving || this.isUploadingAvatar || !this.hasUnsavedChanges) {
+      return true;
+    }
 
+    const currentFirstName = this.profileForm.get('firstName')?.value;
+    const currentLastName = this.profileForm.get('lastName')?.value;
+    const profileChanged = this.avatarDeleted || !!this._pendingAvatarBlob ||
+      currentFirstName !== (this.originalProfile?.firstName ?? '') ||
+      currentLastName !== (this.originalProfile?.lastName ?? '');
+
+    const currentPassword = this.securityForm.get('currentPassword')?.value;
+    const newPassword = this.securityForm.get('newPassword')?.value;
+    const confirmPassword = this.securityForm.get('confirmPassword')?.value;
+    const passwordChanged = !!(currentPassword || newPassword || confirmPassword);
+
+    if (profileChanged && this.profileForm.invalid) {
+      return true;
+    }
+
+    if (passwordChanged && this.securityForm.invalid) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private saveProfileChanges(): Observable<any> {
     const firstName = this.profileForm.get('firstName')?.value as string;
-    const lastName  = this.profileForm.get('lastName')?.value  as string;
+    const lastName = this.profileForm.get('lastName')?.value as string;
 
     if (this.avatarDeleted) {
-      // ── Case 1: remove avatar ──────────────────────────────────────────────
-      this.authService.removeAvatar().subscribe({
-        next: () => {
-          // After avatar removal, update name fields
-          this.authService.updateProfile({ firstName, lastName }).subscribe({
-            next: (r) => {
-              this.isSaving = false;
-              this.toastr.success('Profile updated successfully.');
-              if (r.data) this.populateForm(r.data);
-            },
-            error: (err) => {
-              this.isSaving = false;
-              this.toastr.error(err.error?.message || 'Failed to update profile.');
-            }
-          });
-        },
-        error: (err) => {
-          this.isSaving = false;
-          this.toastr.error(err.error?.message || 'Failed to remove avatar.');
-        }
-      });
-
+      return this.authService.removeAvatar().pipe(
+        switchMap(() => this.authService.updateProfile({ firstName, lastName })),
+        tap({
+          next: (r) => {
+            this.toastr.success('Profile updated successfully.');
+            if (r.data) this.populateForm(r.data);
+          },
+          error: (err) => {
+            this.toastr.error(err.error?.message || 'Failed to update profile.');
+          }
+        })
+      );
     } else if (this._pendingAvatarBlob) {
-      // ── Case 2: new avatar — send file to backend ──────────────────────────
       this.isUploadingAvatar = true;
-
-      // Build FormData with both avatar file and profile fields in one request
-      const formData = new FormData();
-      formData.append('profileImage', this._pendingAvatarBlob, 'avatar.png');
-      formData.append('firstName', firstName);
-      formData.append('lastName',  lastName);
-
-      this.authService.uploadAvatar(this._pendingAvatarBlob).subscribe({
-        next: (r) => {
+      this.cdr.markForCheck();
+      return this.authService.uploadAvatar(this._pendingAvatarBlob).pipe(
+        switchMap(() => this.authService.updateProfile({ firstName, lastName })),
+        tap({
+          next: (r2) => {
+            this.isUploadingAvatar = false;
+            this.toastr.success('Profile updated successfully.');
+            if (r2.data) this.populateForm(r2.data);
+          },
+          error: (err) => {
+            this.isUploadingAvatar = false;
+            this.toastr.error(err.error?.message || 'Failed to update profile fields.');
+          }
+        }),
+        catchError((err) => {
           this.isUploadingAvatar = false;
-          // Now update name fields (avatar was already saved by uploadAvatar)
-          this.authService.updateProfile({ firstName, lastName }).subscribe({
-            next: (r2) => {
-              this.isSaving = false;
-              this.toastr.success('Profile updated successfully.');
-              if (r2.data) this.populateForm(r2.data);
-            },
-            error: (err) => {
-              this.isSaving = false;
-              this.toastr.error(err.error?.message || 'Failed to update profile fields.');
-            }
-          });
-        },
-        error: (err) => {
-          this.isUploadingAvatar = false;
-          this.isSaving = false;
           this.toastr.error(err.error?.message || 'Avatar upload failed. Please try again.');
-        }
-      });
-
+          return throwError(() => err);
+        })
+      );
     } else {
-      // ── Case 3: name-only update ───────────────────────────────────────────
-      this.authService.updateProfile({ firstName, lastName }).subscribe({
-        next: (r) => {
+      return this.authService.updateProfile({ firstName, lastName }).pipe(
+        tap({
+          next: (r) => {
+            this.toastr.success('Profile updated successfully.');
+            if (r.data) this.populateForm(r.data);
+          },
+          error: (err) => {
+            this.toastr.error(err.error?.message || 'Failed to update profile.');
+          }
+        })
+      );
+    }
+  }
+
+  onSaveChanges() {
+    if (this.isSubmitDisabled) return;
+    this.isSaving = true;
+    this.cdr.markForCheck();
+
+    const currentFirstName = this.profileForm.get('firstName')?.value;
+    const currentLastName = this.profileForm.get('lastName')?.value;
+    const profileChanged = this.avatarDeleted || !!this._pendingAvatarBlob ||
+      currentFirstName !== (this.originalProfile?.firstName ?? '') ||
+      currentLastName !== (this.originalProfile?.lastName ?? '');
+
+    const currentPassword = this.securityForm.get('currentPassword')?.value;
+    const newPassword = this.securityForm.get('newPassword')?.value;
+    const confirmPassword = this.securityForm.get('confirmPassword')?.value;
+    const passwordChanged = !!(currentPassword || newPassword || confirmPassword);
+
+    const profile$ = profileChanged 
+      ? this.saveProfileChanges().pipe(
+          map(res => ({ type: 'profile', success: true, res })),
+          catchError(err => of({ type: 'profile', success: false, err }))
+        )
+      : of(null);
+
+    const password$ = passwordChanged
+      ? this.authService.changePassword(currentPassword, newPassword).pipe(
+          map(res => ({ type: 'password', success: true, res })),
+          catchError(err => of({ type: 'password', success: false, err }))
+        )
+      : of(null);
+
+    // Disable forms during saving
+    this.profileForm.disable();
+    this.securityForm.disable();
+
+    forkJoin([profile$, password$])
+      .pipe(
+        finalize(() => {
           this.isSaving = false;
-          this.toastr.success('Profile updated successfully.');
-          if (r.data) this.populateForm(r.data);
-        },
-        error: (err) => {
-          this.isSaving = false;
-          this.toastr.error(err.error?.message || 'Failed to update profile.');
+          // Re-enable forms
+          this.profileForm.enable();
+          this.profileForm.get('email')?.disable(); // Keep email disabled
+          this.securityForm.enable();
+          this.cdr.markForCheck();
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(([profileResult, passwordResult]) => {
+        if (passwordResult) {
+          const passRes = passwordResult as any;
+          if (passRes.success) {
+            const msg = passRes.res?.data?.message || 'Password changed successfully';
+            this.handlePasswordSuccess(msg);
+          } else {
+            this.handlePasswordError(passRes.err);
+          }
         }
       });
+  }
+
+  private handlePasswordSuccess(message: string) {
+    this.toastr.success(message || 'Password changed successfully');
+    this.securityForm.reset();
+    this.showCurrentPassword = false;
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
+  }
+
+  private handlePasswordError(err: any) {
+    const errorMsg = err.error?.message || 'Failed to change password';
+    if (err.status === 401 || errorMsg === 'Current password is incorrect') {
+      const currentPasswordControl = this.securityForm.get('currentPassword');
+      currentPasswordControl?.setErrors({ serverIncorrect: true });
+      this.toastr.error('Current password is incorrect');
+    } else if (err.error?.message && Array.isArray(err.error.message)) {
+      const msgs = err.error.message;
+      let hasNewPasswordError = false;
+      msgs.forEach((msg: string) => {
+        if (msg.includes('newPassword')) {
+          this.securityForm.get('newPassword')?.setErrors({ serverValidationError: msg });
+          hasNewPasswordError = true;
+        }
+      });
+      if (!hasNewPasswordError) {
+        this.toastr.error(msgs.join(', '));
+      }
+    } else {
+      this.toastr.error(errorMsg);
     }
   }
 
   toggleEmailNotifications() { this.emailNotifications = !this.emailNotifications; }
-  togglePublicProfile()      { this.publicProfile      = !this.publicProfile; }
+  togglePublicProfile() { this.publicProfile = !this.publicProfile; }
 
   // ─── Avatar dropdown ──────────────────────────────────────────────────────
   toggleAvatarOptions() { this.showAvatarOptions = !this.showAvatarOptions; }
@@ -236,10 +366,10 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   removePhoto() {
-    this.showAvatarOptions  = false;
-    this.avatarPreview       = null;
-    this._pendingAvatarBlob  = null;
-    this.avatarDeleted       = true;
+    this.showAvatarOptions = false;
+    this.avatarPreview = null;
+    this._pendingAvatarBlob = null;
+    this.avatarDeleted = true;
     this.fileInput.nativeElement.value = '';
   }
 
@@ -252,9 +382,9 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     input.value = '';
 
     this.revokeSelectedImage();
-    this.selectedImageSrc  = URL.createObjectURL(this._selectedFile);
+    this.selectedImageSrc = URL.createObjectURL(this._selectedFile);
     this.showAvatarOptions = false;
-    this.isCropperOpen     = true;
+    this.isCropperOpen = true;
   }
 
   // ─── Cropper: image load ──────────────────────────────────────────────────
@@ -264,10 +394,10 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this._naturalH = img.naturalHeight;
 
     const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW, this._naturalH);
-    this.cropScale      = cover;
+    this.cropScale = cover;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
-    this.cropRotation   = 0;
+    this.cropRotation = 0;
 
     setTimeout(() => this.refreshPreview(), 50);
   }
@@ -277,7 +407,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
       position: 'absolute',
       top: '50%',
       left: '50%',
-      width:  `${this._naturalW}px`,
+      width: `${this._naturalW}px`,
       height: `${this._naturalH}px`,
       'max-width': 'none',
       'transform-origin': 'center center',
@@ -322,7 +452,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   }
 
   // ─── Cropper: controls ────────────────────────────────────────────────────
-  zoomIn()  { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
+  zoomIn() { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
   zoomOut() { this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); this.refreshPreview(); }
 
   updateZoom(e: Event) {
@@ -330,22 +460,22 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this.refreshPreview();
   }
 
-  rotateLeft()  { this.cropRotation -= 90; this.refreshPreview(); }
+  rotateLeft() { this.cropRotation -= 90; this.refreshPreview(); }
   rotateRight() { this.cropRotation += 90; this.refreshPreview(); }
 
   resetCropTransform() {
     const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW || 1, this._naturalH || 1);
-    this.cropScale      = cover;
+    this.cropScale = cover;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
-    this.cropRotation   = 0;
+    this.cropRotation = 0;
     this.refreshPreview();
   }
 
   // ─── Cropper: live preview ────────────────────────────────────────────────
   refreshPreview() {
     if (!this.cropImg?.nativeElement?.complete) return;
-    const img  = this.cropImg.nativeElement;
+    const img = this.cropImg.nativeElement;
     const size = this.CROP_RADIUS * 2;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
@@ -395,11 +525,11 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
 
       // Store blob for upload on Save Changes — no Cloudinary call here
       this._pendingAvatarBlob = blob;
-      this.avatarDeleted      = false;
+      this.avatarDeleted = false;
 
       // Show the crop result as an instant local preview
-      this.avatarPreview  = this.livePreviewUrl ?? canvas.toDataURL('image/png');
-      this.isCropperOpen  = false;
+      this.avatarPreview = this.livePreviewUrl ?? canvas.toDataURL('image/png');
+      this.isCropperOpen = false;
       this.revokeSelectedImage();
     }, 'image/png', 1);
   }
@@ -428,4 +558,5 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     }
     this.selectedImageSrc = null;
   }
+
 }

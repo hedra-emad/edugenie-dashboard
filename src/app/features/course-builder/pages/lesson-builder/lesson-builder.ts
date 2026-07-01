@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { LessonCardComponent } from '../../components/lesson-card/lesson-card.component';
 import { SectionsService } from '../../../../core/services/sections';
 import { LessonsService } from '../../../../core/services/lessons';
+import { QuizzesService } from '../../../../core/services/quizzes';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -19,7 +20,8 @@ import { Lesson } from '../../../../core/models/lesson.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { HasPendingOperations } from '../../../../core/guards/pending-operations.guard';
-import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
+import { PageSkeletonComponent } from '../../../../shared/components/loading';
+import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 
 @Component({
   selector: 'app-lessons-builder',
@@ -34,7 +36,8 @@ import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
     MainButtonComponent,
     DragDropModule,
     EmptyStateComponent,
-    AppLoader
+    PageSkeletonComponent,
+    PublishCourseButtonComponent
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -54,7 +57,10 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   courseId!: string;
   sectionId!: string;
   isLoading = true;
+  course: Course | null = null; // Store course data for publish button
+  hasQuiz = false; // Track if section has a quiz
   private destroy$ = new Subject<void>();
+  private quizzesService = inject(QuizzesService);
 
   lessonsForm = this.fb.group({
     lessons: this.fb.array<FormGroup>([])
@@ -65,6 +71,18 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     this.sectionId = this.route.snapshot.paramMap.get('sectionId')!;
 
     this.loadLessons();
+    this.checkQuizExists();
+  }
+
+  private checkQuizExists() {
+    this.quizzesService.getQuizForSection(this.sectionId).subscribe({
+      next: (quiz) => {
+        this.hasQuiz = !!quiz;
+      },
+      error: () => {
+        this.hasQuiz = false;
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -160,6 +178,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (course: Course) => {
+          this.course = course; // Store course for publish button
 
           const section = course.sections.find(
             (s: Section) => s.id === this.sectionId
@@ -285,7 +304,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   get hasSavedLessons(): boolean {
     return this.lessonsArray.controls.some(lesson => {
       const id = lesson.get('id')?.value;
-      return id && id !== null;
+      return id && id !== null && !this.draftStateService.isDraftId(String(id));
     });
   }
 

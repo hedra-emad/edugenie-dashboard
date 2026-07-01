@@ -27,6 +27,8 @@ export interface Course {
   instructorId?: InstructorDetails;
   createdAt: string;
   updatedAt: string;
+  previewVideoUrl?: string | null;       // add this
+  previewVideoPublicId?: string | null;
 }
 
 export interface CreateCoursePayload {
@@ -38,4 +40,6 @@ export interface CreateCoursePayload {
   categoryId: string;
   goals?: string[];
   requirements?: string[];
+  previewVideoUrl?: string | null;       // add this
+  previewVideoPublicId?: string | null;  // add this
 }

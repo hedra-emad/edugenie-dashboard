@@ -1,8 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CreateLessonDto } from '../models/dto/create-lesson.dto';
-import { Lesson } from '../models/lesson.model';
-import { Observable, map, mergeMap, of, throwError } from 'rxjs';
+import { Observable, map, throwError } from 'rxjs';
 
 
 export interface TranscriptionStatus {

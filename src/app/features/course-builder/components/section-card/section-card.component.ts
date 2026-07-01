@@ -20,7 +20,7 @@ import {
   Validators
 } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // Draft system imports
@@ -40,9 +40,11 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ViewChild } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
-import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
+import { CloudinaryService } from '../../../../core/services/cloudinary';
+import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
+import { AttachmentParentType } from '../../../../core/models/attachment.model';
+import { QuizzesService } from '../../../../core/services/quizzes';
 
 @Component({
   selector: 'app-section-card',
@@ -56,7 +58,8 @@ import { extractId } from '../../pages/section-builder/section-builder.component
     MatMenuModule,
     DragDropModule,
     MatDialogModule,
-    ExpansionPanelComponent
+    ExpansionPanelComponent,
+    AttachmentManagerComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
@@ -69,9 +72,16 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private sectionsService = inject(SectionsService);
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
+  private cloudinaryService = inject(CloudinaryService);
+  private quizzesService = inject(QuizzesService);
+
   
+@ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
+
+  // Quiz state
+  hasQuiz = false;
 
   // ================= Inputs =================
   @Input({ required: true }) sectionForm!: FormGroup;
@@ -90,6 +100,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   isSaving = false;
   isDeleting = false;
   showDeleteConfirm = false;
+  AttachmentParentType = AttachmentParentType;
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog);
 
@@ -115,6 +126,26 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   // ================= Lifecycle =================
   ngOnInit() {
     this.initializeDraftSystem();
+    this.checkQuizExists();
+  }
+
+  private checkQuizExists() {
+    const sectionId = this.sectionForm.get('id')?.value;
+    if (!sectionId || this.draftStateService.isDraftId(sectionId)) {
+      this.hasQuiz = false;
+      return;
+    }
+
+    this.quizzesService.getQuizForSection(sectionId).subscribe({
+      next: (quiz) => {
+        this.hasQuiz = !!quiz;
+        this.cdr.markForCheck(); // Trigger change detection
+      },
+      error: () => {
+        this.hasQuiz = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -128,6 +159,9 @@ export class SectionCardComponent implements OnInit, OnDestroy {
         panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     }
+    
+    // Check quiz exists when section form changes
+    this.checkQuizExists();
   }
 
   private initializeDraftSystem() {
@@ -137,7 +171,7 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       sectionId = this.formDraftIntegration.generateDraftId('section', this.courseId);
       this.sectionForm.get('id')?.setValue(sectionId, { emitEvent: false });
     }
-    
+
     this.draftId = sectionId;
 
     // Check if there's existing draft data for this section
@@ -197,7 +231,73 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const sectionId = isDraft ? null : extractId(rawId);
 
-    const payload = {
+    // Check if there's a pending file in the attachment form that hasn't been added to queue
+    const attachmentMgr = this.attachmentManagerComponent;
+    const hasPendingFileInForm = attachmentMgr 
+      && attachmentMgr.pendingFile() 
+      && attachmentMgr.pendingTitle().trim();
+
+    // Helper to add pending file to queue
+    const addPendingFileToQueue = () => {
+      if (hasPendingFileInForm && attachmentMgr) {
+        const file = attachmentMgr.pendingFile()!;
+        const title = attachmentMgr.pendingTitle().trim();
+        const isPublic = attachmentMgr.isPublicToggle();
+        
+        attachmentMgr.pendingAttachments.update(list => [
+          ...list,
+          { 
+            id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, 
+            file, 
+            title, 
+            isPublic: attachmentMgr.isLessonLevel ? false : isPublic
+          }
+        ]);
+        attachmentMgr.cancelPending();
+      }
+    };
+
+    // If form is pristine and section exists
+    if (this.sectionForm.pristine && sectionId) {
+      // Add pending file to queue if exists
+      addPendingFileToQueue();
+      
+      // Upload any pending attachments before navigating
+      if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0) {
+        this.isSaving = true;
+        this.cdr.markForCheck();
+        attachmentMgr.flushPending(this.courseId, sectionId).subscribe({
+          next: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
+            this.router.navigate([
+              '/course-builder',
+              this.courseId,
+              'sections',
+              sectionId,
+              'lessons'
+            ]);
+          },
+          error: () => {
+            this.isSaving = false;
+            this.cdr.markForCheck();
+            this.toastr.error('Failed to upload some attachments');
+          }
+        });
+      } else {
+        // No pending attachments, navigate directly
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'sections',
+          sectionId,
+          'lessons'
+        ]);
+      }
+      return;
+    }
+
+    const payload: any = {
       title: form.get('title')?.value,
       description: form.get('description')?.value,
       expectedOutcomes: this.expectedOutcomesArray.value
@@ -206,60 +306,87 @@ export class SectionCardComponent implements OnInit, OnDestroy {
       order: this.index
     };
 
-
     this.isSaving = true;
+    this.cdr.markForCheck();
 
-    const request = sectionId
-      ? this.sectionsService.updateSection(this.courseId, sectionId, payload)
+    const saveObs = sectionId
+      ? this.sectionsService.updateSection(this.courseId, String(sectionId), payload)
       : this.sectionsService.addSection(this.courseId, payload);
 
-    request.subscribe({
-      next: (res: any) => {
-        this.isSaving = false;
-
-        const isNewSection = !sectionId;
-
-        if (isNewSection) {
-          const createdSection = Array.isArray(res) ? res[res.length - 1] : res;
-
-          const incomingId = extractId(createdSection);
-
-          if (incomingId) {
-            if (!form.contains('id')) {
-              form.addControl('id', new FormControl(incomingId));
-            } else {
-              form.get('id')?.setValue(incomingId);
-            }
-
-            form.get('id')?.updateValueAndValidity();
+    saveObs.subscribe({
+      next: (sections) => {
+        // For create: find the newly created section
+        let newSectionId = sectionId;
+        if (!sectionId && Array.isArray(sections)) {
+          // Find the section with matching title (most recently created)
+          const newSection = sections.find(s => s.title === payload.title);
+          newSectionId = extractId(newSection?.id);
+          if (newSectionId) {
+            this.sectionForm.get('id')?.setValue(newSectionId, { emitEvent: false });
+            this.sectionCreated.emit(newSectionId);
           }
         }
 
-        const sectionTitle = form.get('title')?.value || 'Section';
-        const truncatedTitle = this.truncateName(sectionTitle);
-        if (!sectionId) {
-          this.toastr.success(`"${truncatedTitle}" created successfully`);
-        } else {
-          this.toastr.success(`"${truncatedTitle}" updated successfully`);
-        }
-
-        // Clear draft state after successful save
+        this.sectionForm.markAsPristine();
         this.clearDraftAfterSave();
 
-        // Disconnect old draft ID explicitly
-        this.formDraftIntegration.disconnectForm(this.draftId);
-
-        // Re-initialize draft system with the new real ID
-        this.initializeDraftSystem();
-
-        form.markAsPristine();
-        form.updateValueAndValidity();
-        this.cdr.markForCheck();
+        const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
+        const truncatedTitle = this.truncateName(sectionTitle);
+        
+        // Add pending file to queue if exists
+        addPendingFileToQueue();
+        
+        // Upload pending attachments if any, then navigate
+        if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0 && newSectionId) {
+          attachmentMgr.flushPending(this.courseId, newSectionId).subscribe({
+            next: () => {
+              this.isSaving = false;
+              this.cdr.markForCheck();
+              this.toastr.success(`"${truncatedTitle}" saved successfully`);
+              this.router.navigate([
+                '/course-builder',
+                this.courseId,
+                'sections',
+                newSectionId,
+                'lessons'
+              ]);
+            },
+            error: () => {
+              this.isSaving = false;
+              this.cdr.markForCheck();
+              this.toastr.warning(`"${truncatedTitle}" saved, but some attachments failed to upload`);
+              this.router.navigate([
+                '/course-builder',
+                this.courseId,
+                'sections',
+                newSectionId,
+                'lessons'
+              ]);
+            }
+          });
+        } else {
+          // No pending attachments, navigate directly
+          this.isSaving = false;
+          this.cdr.markForCheck();
+          this.toastr.success(`"${truncatedTitle}" saved successfully`);
+          if (newSectionId) {
+            this.router.navigate([
+              '/course-builder',
+              this.courseId,
+              'sections',
+              newSectionId,
+              'lessons'
+            ]);
+          }
+        }
       },
-
-      error: () => {
+      error: (err) => {
+        console.error('Save error:', err);
         this.isSaving = false;
         this.cdr.markForCheck();
+        const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
+        const truncatedTitle = this.truncateName(sectionTitle);
+        this.toastr.error(`Failed to save "${truncatedTitle}"`);
       }
     });
   }
@@ -297,10 +424,10 @@ export class SectionCardComponent implements OnInit, OnDestroy {
         next: () => {
           this.isDeleting = false;
           this.cdr.markForCheck();
-          
+
           // Clear draft state after successful delete
           this.clearDraftAfterSave();
-          
+
           this.delete.emit(this.index);
         },
         error: (err) => {
@@ -426,6 +553,14 @@ export class SectionCardComponent implements OnInit, OnDestroy {
 
 
 
+  get hasCreatedLessons(): boolean {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    return lessons.some((lesson: any) => {
+      const id = lesson?.id;
+      return id && id !== null && !this.draftStateService.isDraftId(String(id));
+    });
+  }
+
   get totalSectionDuration(): number {
     const lessons = this.sectionForm.get('lessons')?.value || [];
     return lessons.reduce((sum: number, lesson: any) => {
@@ -446,5 +581,9 @@ export class SectionCardComponent implements OnInit, OnDestroy {
     if (h > 0) return `${h}h ${m}m`;
     if (m > 0) return `${m}m ${s}s`;
     return `${s}s`;
+  }
+
+  get sectionId(): string {
+    return extractId(this.sectionForm.get('id')?.value) ?? '';
   }
 }

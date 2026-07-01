@@ -54,7 +54,7 @@ export class CoursesListComponent implements OnInit {
 
   private destroyRef = inject(DestroyRef);
 
-  readonly pageSize = 6;
+  readonly pageSize = 9;
   currentPage = 1;
 
   // Filter configuration for the FilterBarComponent
@@ -232,6 +232,10 @@ export class CoursesListComponent implements OnInit {
       default:
         return CourseStatus.DRAFT;
     }
+  }
+
+  formatTotalHours(totalHours: number): string {
+    return this.coursesService.formatTotalHours(totalHours);
   }
 
   getResultsText(): string {

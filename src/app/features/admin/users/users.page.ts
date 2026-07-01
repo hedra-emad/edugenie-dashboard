@@ -9,12 +9,15 @@ import { AdminUsersService } from './services/admin-users.service';
 import { UserRole } from '../../../core/models/user-profile.model';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../shared/components/loading';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, MatDividerModule, PageSkeletonComponent, ButtonLoadingComponent, PaginationComponent],
   templateUrl: './users.page.html',
   styleUrl: './users.page.css',
 })
@@ -37,7 +40,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   }
 
   get pageNumbers(): number[] {
-    return Array.from({length: this.totalPages}, (_, i) => i);
+    return Array.from({ length: this.totalPages }, (_, i) => i);
   }
 
   get pageFrom(): number {
@@ -64,13 +67,16 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   deleteTarget: any = null;
   deleteReason = '';
   isDeleting = false;
-  
+
+  // Export state
+  isExporting = false;
+
   private searchSubject = new Subject<string>();
   private sub?: Subscription;
 
   ngOnInit() {
     this.loadUsers();
-    
+
     this.sub = this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged()
@@ -79,11 +85,11 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
       this.applyFilters();
     });
   }
-  
+
   ngOnDestroy() {
     if (this.sub) this.sub.unsubscribe();
   }
-  
+
   onSearchChange(event: any) {
     const value = event?.target?.value || '';
     this.searchQuery = value; // Update instantly so the input field doesn't lag
@@ -106,13 +112,14 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   }
 
   loadUsers() {
+    console.log(this.users);
     this.isLoading = true;
     this.cdr.detectChanges();
     this.adminUsersService.getUsers(this.currentPage, this.limit, this.selectedRole, this.selectedStatus, this.searchQuery).subscribe({
       next: (res: any) => {
         // Backend returns { data: [...], meta: { total, page, ... } }
         let fetchedUsers = res.data || [];
-        
+
         // Exclude admin and superadmin users
         fetchedUsers = fetchedUsers.filter((u: any) => u.role !== 'admin' && u.role !== 'superadmin');
 
@@ -127,12 +134,12 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
           });
         }
         this.users = fetchedUsers;
-        
+
         // Accurate total count logic without modifying backend
         if (this.selectedRole) {
           this.totalUsers = res.meta?.total || this.users.length;
           this.totalPages = res.meta?.totalPages || Math.ceil(this.totalUsers / this.limit) || 1;
-          this.pages = Array.from({length: this.totalPages}, (_, i) => i + 1);
+          this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
         } else {
           // If 'All Roles' is selected, fetch true totals for student + instructor only
           forkJoin({
@@ -141,11 +148,11 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
           }).subscribe(({ students, instructors }) => {
             this.totalUsers = (students.meta?.total || 0) + (instructors.meta?.total || 0);
             this.totalPages = Math.ceil(this.totalUsers / this.limit) || 1;
-            this.pages = Array.from({length: this.totalPages}, (_, i) => i + 1);
+            this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
             this.cdr.detectChanges();
           });
         }
-        
+
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -178,11 +185,32 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.loadUsers();
   }
 
-  getAvatarUrl(user: any): string {
-    const avatar = user.avatar || user.profilePicture;
-    if (!avatar) return '';
-    if (avatar.startsWith('http')) return avatar;
-    return `${import.meta.env.NG_APP_API_URL}/${avatar.replace(/^\//, '')}`;
+  getUserAvatar(user: any): string | null {
+    const avatar = user?.avatar?.trim();
+
+    if (
+      !avatar ||
+      avatar === 'null' ||
+      avatar === 'undefined' ||
+      avatar === '.....'
+    ) {
+      return null;
+    }
+
+    return avatar;
+  }
+
+  /** Returns up to 2 uppercase initials extracted from a user object */
+  getUserInitials(user: any): string {
+    const first = (user.firstName || '').trim();
+    const last = (user.lastName || '').trim();
+    if (first && last) return (first.charAt(0) + last.charAt(0)).toUpperCase();
+    if (first) return first.charAt(0).toUpperCase();
+    // Fallback: try the combined `name` field
+    const parts = (user.name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return 'U';
   }
 
   nextPage() {
@@ -243,11 +271,56 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
         user.status = 'active';
         this.snackBar.open('User reactivated successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
       },
-      error: (err) => {
+      error: (err: any) => {
         const errorMsg = err?.error?.message || 'Failed to reactivate user';
         this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
       }
     });
+  }
+
+  // --- Export Logic ---
+  exportUsers() {
+    if (!this.users || this.users.length === 0) {
+      this.snackBar.open('No users to export', 'Close', { duration: 3000, panelClass: ['bg-amber-600', 'text-white'] });
+      return;
+    }
+
+    this.isExporting = true;
+
+    // Create CSV headers
+    const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Status', 'Created At'];
+
+    // Map user data to CSV rows
+    const rows = this.users.map(user => {
+      return [
+        user.id || '',
+        user.firstName || '',
+        user.lastName || '',
+        user.email || '',
+        user.role || '',
+        user.status || '',
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''
+      ].map(val => `"${val}"`).join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...rows].join('\n');
+
+    // Create a Blob from the CSV string
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.download = `edugenie_users_export_${dateStr}.csv`;
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(url);
+    this.isExporting = false;
+    this.snackBar.open('Export completed successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
   }
 
   // --- Delete User Logic ---
@@ -261,20 +334,50 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.showDeleteModal = false;
     this.deleteTarget = null;
     this.deleteReason = '';
+    this.isDeleting = false;
   }
 
   confirmDelete() {
-    if (!this.deleteReason.trim()) return;
+    const targetUser = this.deleteTarget;
+    const reason = this.deleteReason.trim();
+
+    if (!targetUser || !reason) return;
+
+    const currentUsers = [...this.users];
+    const targetIndex = currentUsers.findIndex((u) => u.id === targetUser.id);
+
+    if (targetIndex >= 0) {
+      currentUsers.splice(targetIndex, 1);
+    }
+
     this.isDeleting = true;
-    
-    setTimeout(() => {
-      this.users = this.users.filter(u => u.id !== this.deleteTarget.id);
-      this.totalUsers--;
-      this.isDeleting = false;
-      this.showDeleteModal = false;
-      this.deleteTarget = null;
-      this.deleteReason = '';
-      this.snackBar.open('User deleted successfully (Simulated)', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
-    }, 1000);
+    this.users = currentUsers;
+    this.totalUsers = Math.max(0, this.totalUsers - 1);
+    this.showDeleteModal = false;
+    this.deleteTarget = null;
+    this.deleteReason = '';
+    this.cdr.detectChanges();
+
+    this.adminUsersService.deleteUser(targetUser.id, reason).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('User deleted successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
+      },
+      error: (err: any) => {
+        this.isDeleting = false;
+
+        if (targetIndex >= 0) {
+          const restoredUsers = [...this.users];
+          restoredUsers.splice(targetIndex, 0, targetUser);
+          this.users = restoredUsers;
+          this.totalUsers = Math.max(0, this.totalUsers + 1);
+        }
+
+        this.cdr.detectChanges();
+        const errorMsg = err?.error?.message || 'Failed to delete user';
+        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+      }
+    });
   }
 }

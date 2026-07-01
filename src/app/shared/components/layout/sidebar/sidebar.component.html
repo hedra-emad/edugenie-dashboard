@@ -28,7 +28,7 @@
   }
 
   <!-- ── Profile section ── -->
-  <div class="sidebar-profile shrink-0" [class.profile--collapsed]="!isOverlay && !sidebarExpanded">
+  <div class="sidebar-profile shrink-0 profile cursor-pointer" (click)="goToSettings()" [class.profile--collapsed]="!isOverlay && !sidebarExpanded">
 
     @if (user?.avatar) {
       <img
