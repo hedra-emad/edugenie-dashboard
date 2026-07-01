@@ -6,11 +6,12 @@ import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SuperadminService } from '../../services/superadmin.service';
 import { AdminListItem, AdminActivityItem, InviteAdminResponse } from '../../models/superadmin.models';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, PaginationComponent],
   templateUrl: './admin-management.page.html',
   styleUrl: './admin-management.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,7 +22,35 @@ export class AdminManagementPageComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   isLoading = true;
-  admins: AdminListItem[] = [];
+  private _allAdmins: AdminListItem[] = [];  // full list from API
+
+  // ── Main table client-side pagination ─────────────────────────────────────
+  adminPageIndex = 0;
+  adminPageSize = 10;
+  readonly adminPageSizeOptions = [10, 25, 50];
+
+  get admins(): AdminListItem[] {
+    const start = this.adminPageIndex * this.adminPageSize;
+    return this._allAdmins.slice(start, start + this.adminPageSize);
+  }
+
+  get adminTotalItems(): number { return this._allAdmins.length; }
+  get adminTotalPages(): number { return Math.ceil(this._allAdmins.length / this.adminPageSize); }
+  get adminPageFrom(): number { return this._allAdmins.length === 0 ? 0 : this.adminPageIndex * this.adminPageSize + 1; }
+  get adminPageTo(): number { return Math.min((this.adminPageIndex + 1) * this.adminPageSize, this._allAdmins.length); }
+
+  setAdminPage(index: number): void {
+    if (index >= 0 && index < this.adminTotalPages) {
+      this.adminPageIndex = index;
+      this.cdr.detectChanges();
+    }
+  }
+
+  setAdminPageSize(size: number): void {
+    this.adminPageSize = size;
+    this.adminPageIndex = 0;
+    this.cdr.detectChanges();
+  }
 
   // Modal State
   showActivityModal = false;
@@ -55,7 +84,8 @@ export class AdminManagementPageComponent implements OnInit {
 
     this.superadminService.getAdmins().subscribe({
       next: (data) => {
-        this.admins = data;
+        this._allAdmins = data;
+        this.adminPageIndex = 0;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
