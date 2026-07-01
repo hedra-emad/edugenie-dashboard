@@ -58,6 +58,7 @@ export class ExpansionPanelComponent {
   @Input() hideMobileExpansionIndicator = false;
   @Input() showQuizButton = false;
   @Input() quizButtonDisabled = false;
+  @Input() quizButtonLabel = 'Generate Quiz'; // Add quiz button label input
   @Input() showUnsavedIndicator = false;
   @Input() showModifiedIndicator = false;
   

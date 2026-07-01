@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,7 @@ import { DraftStateService } from '../../../../core/services/draft-state.service
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
 import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
+import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 
 
 @Component({
@@ -40,6 +41,7 @@ import { PreviewVideoUploadComponent } from "../../components/preview-video-uplo
     ActionBarComponent,
     AppLoader,
     PreviewVideoUploadComponent,
+    PublishCourseButtonComponent,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -81,6 +83,7 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
+  course = computed(() => this.parent?.courseData() || null); // Get course for publish button
   isLoading = signal(true);
   existingThumbnailPublicId: string | null = null;
 
@@ -497,14 +500,13 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'hourglass_top';
-      return 'add';
+      return 'arrow_forward';
     }
 
     if (this.mode() === 'update') {
-      if (this.status() === 'updating') return 'sync';
+      if (this.status() === 'updating') return 'hourglass_top';
 
-      if (this.hasChanges()) return 'save';
-
+      // Always show arrow forward in update mode
       return 'arrow_forward';
     }
 
@@ -517,20 +519,15 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     if (this.mode() === 'update') {
 
-      if (this.status() === 'updating') return 'Updating...';
+      if (this.status() === 'updating') return 'Saving...';
 
-      // ⭐ ALWAYS show Continue if no baseline change detected yet
-      if (!this.hasChanges()) return 'Continue';
-
-      return 'Update';
+      // ⭐ Always show Next in update mode
+      return 'Next';
     }
 
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'Saving...';
-      const invalidKeys = Object.keys(this.courseForm.controls).filter(k => this.courseForm.get(k)?.invalid);
-      if (invalidKeys.length > 0) return `Missing: ${invalidKeys.join(', ')}`;
-      if (!this.selectedThumbnailFile) return `Missing: thumbnail`;
-      return 'Add Course';
+      return 'Next';
     }
 
     return '';
@@ -543,17 +540,19 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     }
 
     if (this.mode() === 'update') {
-
-      if (!this.hasChanges()) {
+      // Always update first if there are changes OR if preview video is marked for deletion
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      
+      if (this.hasChanges() || previewMarkedForDeletion) {
+        this.updateCourse();
+      } else {
+        // If no changes, navigate directly
         this.router.navigate([
           '/course-builder',
           this.courseId,
           'sections'
         ]);
-        return;
       }
-
-      this.updateCourse();
     }
   }
 
@@ -685,6 +684,12 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
         const truncatedTitle = this.truncateName(courseTitle);
         this.toastr.success(`"${truncatedTitle}" updated successfully`);
 
+        // Navigate to sections builder after update
+        this.router.navigate([
+          '/course-builder',
+          this.courseId,
+          'sections'
+        ]);
       },
       error: () => {
         this.isSaving.set(false);
@@ -817,6 +822,13 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     const courseTitle = this.courseForm.get('title')?.value || 'Course';
     const truncatedTitle = this.truncateName(courseTitle);
     this.toastr.success(`"${truncatedTitle}" created successfully`);
+
+    // Navigate to sections builder after course creation
+    this.router.navigate([
+      '/course-builder',
+      courseId,
+      'sections'
+    ]);
   }
 
   formatLevel(level: string): string {

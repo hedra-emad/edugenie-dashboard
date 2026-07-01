@@ -1,13 +1,31 @@
-<button type="button" (click)="publishCourse()" [disabled]="!courseId || loading()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-white
+<!-- Under Review State -->
+@if (isUnderReview()) {
+<div class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm
+         bg-blue-50 border-2 border-blue-200 text-blue-700
+         min-w-[180px]">
+    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">schedule</mat-icon>
+    <span>Waiting for Approval</span>
+</div>
+}
+
+<!-- Send for Review Button (only for draft) -->
+@if (shouldShowButton()) {
+<button type="button" (click)="publishCourse()" [disabled]="isDisabled()" 
+    class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white
          bg-[var(--color-primary)]
          hover:opacity-90
+         hover:shadow-md
          disabled:opacity-50
-         disabled:cursor-not-allowed">
+         disabled:cursor-not-allowed
+         transition-all duration-200
+         min-w-[180px]">
 
     @if (loading()) {
     <span>Sending...</span>
     } @else {
     <span>Send for Review</span>
+    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">send</mat-icon>
     }
 
 </button>
+}
