@@ -20,6 +20,7 @@
       </div>
 
       <button mat-flat-button
+        (click)="exportUsers()"
         class="btn-primary">
         Export Report
       </button>
@@ -334,7 +335,7 @@
           <div class="flex items-center justify-end gap-3">
             <button
               class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-              (click)="cancelDelete()" [disabled]="isDeleting">
+              (click)="cancelDelete()">
               Cancel
             </button>
             <button

@@ -45,6 +45,17 @@ export class AuthService {
   readonly currentUserSignal = signal<UserProfile | null>(null);
 
   private initialization$: Observable<void> | null = null;
+  private readonly inactiveAccountStatuses = new Set([
+    'deactivated',
+    'deleted',
+    'inactive',
+    'disabled',
+    'suspended',
+    'blocked',
+    'banned',
+    'pending_delete',
+    'deletion_pending',
+  ]);
 
   initializeAuth(): Observable<void> {
     if (!this.initialization$) {
@@ -95,12 +106,19 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -113,12 +131,19 @@ export class AuthService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -158,10 +183,16 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/accept-invite`, { token, password })
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            this.setCurrentUser(response.data.user);
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          this.setCurrentUser(user);
+          return response;
         }),
       );
   }
@@ -251,22 +282,67 @@ export class AuthService {
     );
   }
 
-  // auth.service.ts
+  private isAccountActive(user: UserProfile | null | undefined): boolean {
+    if (!user) {
+      return false;
+    }
 
-setCurrentUser(user: UserProfile | null): void {
-  this.currentUserSubject.next(user);
-  this.currentUserSignal.set(user);
+    const maybeUser = user as UserProfile & Record<string, unknown>;
 
-  if (user?.id) {
-    this.notificationsService.connectPusher(user.id);
+    if (typeof maybeUser['isDeleted'] === 'boolean' && maybeUser['isDeleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['deleted'] === 'boolean' && maybeUser['deleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['isActive'] === 'boolean' && !maybeUser['isActive']) {
+      return false;
+    }
+
+    const normalizedStatus = String(maybeUser['status'] ?? '').trim().toLowerCase();
+    if (this.inactiveAccountStatuses.has(normalizedStatus)) {
+      return false;
+    }
+
+    if (normalizedStatus.includes('deleted') || normalizedStatus.includes('deactivated') || normalizedStatus.includes('inactive')) {
+      return false;
+    }
+
+    const deletedAt = maybeUser['deletedAt'] ?? maybeUser['deleted_at'] ?? maybeUser['removedAt'];
+    if (deletedAt !== undefined && deletedAt !== null && deletedAt !== '') {
+      return false;
+    }
+
+    return true;
   }
-}
 
-clearCurrentUser(): void {
-  this.notificationsService.disconnectPusher();
-  this.currentUserSubject.next(null);
-  this.currentUserSignal.set(null);
-}
+  private createInactiveAccountError(): Error {
+    const error = new Error('This account has been deactivated or deleted.');
+    (error as Error & { status?: number }).status = 403;
+    return error;
+  }
+
+  setCurrentUser(user: UserProfile | null): void {
+    if (!this.isAccountActive(user)) {
+      this.clearCurrentUser();
+      return;
+    }
+
+    this.currentUserSubject.next(user);
+    this.currentUserSignal.set(user);
+
+    if (user?.id) {
+      this.notificationsService.connectPusher(user.id);
+    }
+  }
+
+  clearCurrentUser(): void {
+    this.notificationsService.disconnectPusher();
+    this.currentUserSubject.next(null);
+    this.currentUserSignal.set(null);
+  }
 
   getCurrentUser(): UserProfile | null {
     return this.currentUserSubject.value;

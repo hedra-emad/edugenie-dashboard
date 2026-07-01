@@ -16,16 +16,7 @@
       <!-- Date Picker Placeholder -->
 
 
-      @if (platformConfig) {
-      <button
-        class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm shrink-0 h-[44px]"
-        [ngClass]="platformConfig.maintenanceMode ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-[#3B1892] text-white hover:bg-[#2A1069]'"
-        (click)="toggleMaintenanceMode()" [disabled]="isSavingConfig">
-        <mat-icon class="!text-[18px] !w-[18px] !h-[18px]" [class.animate-spin]="isSavingConfig">{{ isSavingConfig ?
-          'autorenew' : (platformConfig.maintenanceMode ? 'warning' : 'build') }}</mat-icon>
-        {{ platformConfig.maintenanceMode ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode' }}
-      </button>
-      }
+
     </div>
   </div>
 
