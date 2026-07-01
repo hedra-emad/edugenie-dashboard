@@ -81,16 +81,11 @@
     </div>
   </div>
 
-      <!-- Minimum Payout Threshold -->
-      <div class="form-group">
-        <label class="form-label">Minimum Payout Threshold</label>
-        <p class="text-xs text-slate-500 mb-3">Instructors must reach this amount before they can be paid out.</p>
-        <div class="relative max-w-xs">
-          <input type="number" min="0" class="form-input pr-14" placeholder="e.g. 500"
-            [(ngModel)]="formConfig.minimumPayoutThreshold" />
-          <span
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px] font-bold pointer-events-none">EGP</span>
-        </div>
+  <!-- Payout Settings Card -->
+  <div class="settings-card mt-6">
+    <div class="card-section-header">
+      <div class="card-section-icon icon-blue">
+        <mat-icon class="icon-mat">account_balance</mat-icon>
       </div>
       <div>
         <h2 class="card-section-title">Payout Settings</h2>
@@ -102,12 +97,52 @@
     <div class="form-field" style="max-width: 320px;">
       <label class="field-label">Minimum Payout Threshold</label>
       <p class="field-hint">Instructors must reach this amount before they can request a payout.</p>
-      <div class="input-icon-wrap input-icon-left">
-        <mat-icon class="input-icon">attach_money</mat-icon>
+      <div class="input-icon-wrap input-icon-right">
         <input
-          type="number" min="0"
-          class="field-input field-input--icon-left"
+          type="number" min="0" placeholder="e.g. 500"
+          class="field-input field-input--icon-right font-bold"
           [(ngModel)]="formConfig.minimumPayoutThreshold" />
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-slate-400 pointer-events-none">EGP</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Settings Card -->
+  <div class="settings-card mt-6">
+    <div class="card-section-header">
+      <div class="card-section-icon icon-amber">
+        <mat-icon class="icon-mat">settings_system_daydream</mat-icon>
+      </div>
+      <div>
+        <h2 class="card-section-title">System Settings</h2>
+        <p class="card-section-desc">Global platform access and maintenance controls.</p>
+      </div>
+    </div>
+
+    <!-- Maintenance Mode -->
+    <div class="form-field" style="max-width: 450px;">
+      <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl" [ngClass]="{'border-amber-300 bg-amber-50/50': formConfig.maintenanceMode}">
+        <div>
+          <label class="field-label flex items-center gap-2 mb-1">
+            Maintenance Mode
+            @if (formConfig.maintenanceMode) {
+            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-700 uppercase">Active</span>
+            }
+          </label>
+          <p class="field-hint mb-0">
+            When active, non-admins will see a maintenance screen.
+          </p>
+        </div>
+        <button type="button" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          role="switch"
+          [class.bg-amber-500]="formConfig.maintenanceMode"
+          [class.bg-slate-200]="!formConfig.maintenanceMode"
+          [attr.aria-checked]="formConfig.maintenanceMode" 
+          (click)="toggleMaintenanceMode()">
+          <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            [class.translate-x-5]="formConfig.maintenanceMode"
+            [class.translate-x-0]="!formConfig.maintenanceMode"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -151,46 +186,14 @@
             <span class="diff-new">{{ formConfig.platformFeePercent }}%</span>
           </div>
         </div>
-
-        <p class="text-sm text-slate-600 mb-5">
-          You are about to change global platform settings. These changes take effect immediately across the entire
-          platform.
-        </p>
-
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-          <ul class="text-sm text-slate-700 font-medium space-y-2">
-            @if (originalConfig?.platformFeePercent !== formConfig.platformFeePercent) {
-            <li class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">Platform Fee:</span>
-              <span class="line-through text-slate-400 mr-2">{{ originalConfig?.platformFeePercent }}%</span>
-              <span class="text-violet-600 font-bold ml-auto">{{ formConfig.platformFeePercent }}%</span>
-            </li>
-            }
-            @if (originalConfig?.minimumPayoutThreshold !== formConfig.minimumPayoutThreshold) {
-            <li class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">Payout Threshold:</span>
-              <span class="line-through text-slate-400 mr-2">{{ originalConfig?.minimumPayoutThreshold }} EGP</span>
-              <span class="text-violet-600 font-bold ml-auto">{{ formConfig.minimumPayoutThreshold }} EGP</span>
-            </li>
-            }
-            @if (originalConfig?.maintenanceMode !== formConfig.maintenanceMode) {
-            <li class="flex justify-between pt-1">
-              <span class="text-slate-500">Maintenance Mode:</span>
-              <span class="text-amber-600 font-bold uppercase ml-auto">
-                {{ formConfig.maintenanceMode ? 'Enabled' : 'Disabled' }}
-              </span>
-            </li>
-            }
-          </ul>
-        </div>
         }
         @if (originalConfig?.minimumPayoutThreshold !== formConfig.minimumPayoutThreshold) {
         <div class="diff-row">
           <span class="diff-label">Payout Threshold</span>
           <div class="diff-values">
-            <span class="diff-old">${{ originalConfig?.minimumPayoutThreshold }}</span>
+            <span class="diff-old">{{ originalConfig?.minimumPayoutThreshold }} EGP</span>
             <mat-icon class="diff-arrow">arrow_forward</mat-icon>
-            <span class="diff-new">${{ formConfig.minimumPayoutThreshold }}</span>
+            <span class="diff-new">{{ formConfig.minimumPayoutThreshold }} EGP</span>
           </div>
         </div>
         }
