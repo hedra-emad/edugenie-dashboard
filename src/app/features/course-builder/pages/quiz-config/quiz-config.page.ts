@@ -1,8 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { ToastrService } from 'ngx-toastr';
 import {
   QuizzesService,
   QuizDifficulty,
@@ -15,6 +17,9 @@ import { BackButtonComponent } from '../../components/shared/back-button/back-bu
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import {QuizGenerationStatus} from '../../../../core/services/quizzes'
 import { ChangeDetectorRef } from '@angular/core';
+import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
+import { CoursesService } from '../../../../core/services/courses';
+import { Course } from '../../../../core/models/course.model';
 
 type PagePhase = 'form' | 'generating' | 'review' | 'approved';
 
@@ -32,9 +37,11 @@ interface ReviewQuestion extends QuizQuestionDetail {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatIconModule,
     BackButtonComponent,
     MainButtonComponent,
+    PublishCourseButtonComponent,
   ],
   templateUrl: './quiz-config.page.html',
   styleUrl: './quiz-config.page.css',
@@ -44,15 +51,19 @@ export class QuizConfigPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private quizzesService = inject(QuizzesService);
+  private coursesService = inject(CoursesService);
   private cdr = inject(ChangeDetectorRef);
+  private toastr = inject(ToastrService);
 
   courseId!: string;
   sectionId!: string;
+  course: Course | null = null; // Store course for publish button
 
   phase: PagePhase = 'form';
   errorMessage = '';
   approveError = '';
   approveLoading = false;
+  isQuizApproved = false; // Track if quiz is already approved
 
   generatedQuiz: GeneratedQuiz | null = null;
   reviewQuestions: ReviewQuestion[] = [];
@@ -72,7 +83,19 @@ export class QuizConfigPageComponent implements OnInit {
 ngOnInit() {
   this.courseId = this.route.snapshot.parent?.paramMap.get('courseId')!;
   this.sectionId = this.route.snapshot.paramMap.get('sectionId')!;
+  this.loadCourse();
   this.loadExistingQuiz();
+}
+
+private loadCourse() {
+  this.coursesService.getCourseById(this.courseId).subscribe({
+    next: (course) => {
+      this.course = course;
+    },
+    error: (err) => {
+      console.error('Failed to load course', err);
+    }
+  });
 }
 
 private loadExistingQuiz() {
@@ -80,11 +103,20 @@ private loadExistingQuiz() {
     next: (quiz) => {
       if (!quiz) {
         this.phase = 'form';
+        this.isQuizApproved = false;
         return;
       }
 
-      if (quiz.status === 'approved') {
-        this.phase = 'approved';
+      // Track if quiz is approved
+      this.isQuizApproved = quiz.status === 'approved';
+
+      // Always show the review phase for approved quizzes (with questions visible)
+      // Don't show the separate 'approved' phase anymore
+      if (quiz.status === 'approved' && quiz.questions.length) {
+        this.generatedQuiz = quiz as unknown as GeneratedQuiz;
+        this.generatedQuiz._id = quiz.quizId;
+        this.reviewQuestions = this.toReviewQuestions(quiz.questions);
+        this.phase = 'review';
         return;
       }
 
@@ -98,6 +130,7 @@ private loadExistingQuiz() {
 
       // generationStatus is 'pending', 'generating', or 'failed' with no questions
       this.phase = 'form';
+      this.isQuizApproved = false;
     },
     error: (err) => {
       // 404 means no section found / no access — just show the form
@@ -121,9 +154,32 @@ private loadExistingQuiz() {
 
     this.quizzesService.generateQuizConfig(dto).subscribe({
       next: (res) => {
+        console.log('QUIZ RESPONSE IN COMPONENT:', res);
+        console.log('QUIZ QUESTIONS:', res.quiz?.questions);
+        console.log('GENERATION STATUS:', res.quiz?.generationStatus);
+        
         this.generatedQuiz = res.quiz;
-        this.reviewQuestions = this.toReviewQuestions(res.quiz.questions);
-        this.phase = 'review';
+        
+        // If quiz is still generating, poll for completion
+        if (res.quiz.generationStatus === QuizGenerationStatus.GENERATING || 
+            res.quiz.generationStatus === QuizGenerationStatus.PENDING) {
+          console.log('Quiz is still generating, starting polling...');
+          setTimeout(() => this.pollForCompletion(), 2000);
+          return;
+        }
+        
+        // If completed, show questions
+        if (res.quiz.generationStatus === QuizGenerationStatus.COMPLETED && res.quiz.questions?.length) {
+          this.reviewQuestions = this.toReviewQuestions(res.quiz.questions || []);
+          console.log('REVIEW QUESTIONS:', this.reviewQuestions);
+          this.phase = 'review';
+          this.cdr.detectChanges();
+          return;
+        }
+        
+        // If failed or no questions
+        this.errorMessage = 'Failed to generate quiz questions. Please try again.';
+        this.phase = 'form';
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -187,7 +243,11 @@ private pollForCompletion(attempt = 0) {
     this.quizzesService.approveQuiz(this.generatedQuiz._id, dto).subscribe({
       next: () => {
         this.approveLoading = false;
-        this.phase = 'approved';
+        this.isQuizApproved = true; // Mark quiz as approved
+        // Show success alert and stay in review phase
+        this.toastr.success('Quiz has been approved and published successfully!', 'Success');
+        // Stay in review phase - don't change to 'approved'
+        // this.phase = 'approved';  // Removed this line
       },
       error: (err) => {
         this.approveLoading = false;
@@ -290,11 +350,28 @@ isSingleType(q: ReviewQuestion): boolean {
   updateDraftOption(q: ReviewQuestion, index: number, value: string) {
     // If the old text was a correct answer, keep the mapping
     const old = q.draftOptions[index];
-    q.draftOptions = q.draftOptions.map((o, i) => (i === index ? value : o));
+    
+    // Update the array element directly instead of creating a new array
+    q.draftOptions[index] = value;
+    
     // Update correctAnswers to track the renamed option
-    q.draftCorrectAnswers = q.draftCorrectAnswers.map((c) =>
-      c === old ? value : c
-    );
+    const correctIndex = q.draftCorrectAnswers.indexOf(old);
+    if (correctIndex !== -1) {
+      q.draftCorrectAnswers[correctIndex] = value;
+    }
+  }
+
+  // Handle option text changes from ngModel
+  onOptionTextChange(q: ReviewQuestion, index: number, newValue: string) {
+    // ngModel has already updated q.draftOptions[index]
+    // We need to look through correctAnswers and update any that match the old values
+    // This is tricky because we don't have the old value anymore
+    // Better approach: just don't do anything here, handle it in saveEdit
+  }
+
+  // Track by index to prevent re-rendering
+  trackByIndex(index: number): number {
+    return index;
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────────

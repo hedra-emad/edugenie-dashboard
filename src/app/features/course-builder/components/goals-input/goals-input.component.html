@@ -4,11 +4,16 @@
       [style.color]="'var(--color-text-primary)'">
       Course Learning Goals
     </label>
-    <app-sub-button
-      [label]="'Add Goal'"
-      [icon]="'add'"
-      (action)="addGoal()">
-    </app-sub-button>
+    <button type="button" (click)="addGoal()" class="inline-flex items-center gap-1 whitespace-nowrap text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-[var(--color-secondary)] text-[var(--color-secondary)] transition-all duration-200
+hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] block leading-none">
+        add
+      </mat-icon>
+
+      <span class="leading-none whitespace-nowrap">
+        Add Goal
+      </span>
+    </button>
   </div>
 
   <div class="space-y-2.5">

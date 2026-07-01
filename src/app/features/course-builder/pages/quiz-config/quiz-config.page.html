@@ -4,9 +4,6 @@
 
   <!-- ══ HEADER (always visible) ══════════════════════════════════════════ -->
   <div class="mb-6" *ngIf="phase !== 'approved'">
-    <div class="mb-4">
-      <app-back-button label="Back" (back)="goBack()"></app-back-button>
-    </div>
     <h1 class="text-2xl sm:text-3xl font-black text-[var(--color-primary)]">
       {{ phase === 'review' ? 'Review Generated Quiz' : 'Quiz Configuration' }}
     </h1>
@@ -123,16 +120,39 @@
           </div>
         </div>
 
-        <div class="pt-6 mt-4 border-t border-[var(--color-border)] flex justify-between items-center gap-4">
-          <app-back-button (back)="goBack()"></app-back-button>
+        <div class="pt-6 mt-4 border-t border-[var(--color-border)] flex justify-center items-center">
           <app-main-button
             [label]="'Generate Quiz'"
             [loading]="false"
-            (action)="submit()"
-            class="w-full sm:w-auto">
+            (action)="submit()">
           </app-main-button>
         </div>
       </form>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-6 flex justify-start">
+      <app-back-button label="Back" (back)="goBack()"></app-back-button>
+    </div>
+
+    <!-- Course Submission Section -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <!-- Helper Text -->
+            <div class="flex items-start justify-center gap-2 px-4">
+                <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block">
+                    info
+                </mat-icon>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                    {{ publishButton.helperText() }}
+                </p>
+            </div>
+            
+            <!-- Send for Review Button -->
+            <div class="flex justify-center">
+                <app-publish-course-button #publishButton [courseId]="courseId" [course]="course"></app-publish-course-button>
+            </div>
+        </div>
     </div>
   </ng-container>
 
@@ -216,7 +236,7 @@
 </p>
 
          <div class="edit-options">
-  <div *ngFor="let opt of q.draftOptions; let oi = index" class="edit-option-row">
+  <div *ngFor="let opt of q.draftOptions; let oi = index; trackBy: trackByIndex" class="edit-option-row">
     <button type="button" class="correct-toggle"
             [class.correct-toggle--on]="isDraftCorrect(q, opt)"
             (click)="toggleDraftCorrect(q, opt)">
@@ -228,8 +248,8 @@
       </mat-icon>
     </button>
     <input type="text" class="edit-option-input"
-           [value]="opt"
-           (input)="updateDraftOption(q, oi, $any($event.target).value)"
+           [(ngModel)]="q.draftOptions[oi]"
+           (ngModelChange)="onOptionTextChange(q, oi, $event)"
            placeholder="Option text" />
   </div>
 </div>
@@ -251,8 +271,8 @@
       </div>
     </div>
 
-    <!-- Approve bar -->
-    <div class="approve-bar">
+    <!-- Approve bar (only show if quiz is not already approved) -->
+    <div *ngIf="!isQuizApproved" class="approve-bar">
       <p class="approve-hint">
         <mat-icon>lightbulb</mat-icon>
         Students won't see this quiz until you approve it.
@@ -262,6 +282,40 @@
         [loading]="approveLoading"
         (action)="approve()">
       </app-main-button>
+    </div>
+
+    <!-- Approved status message (show if quiz is approved) -->
+    <div *ngIf="isQuizApproved" class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+      <mat-icon class="text-green-600">check_circle</mat-icon>
+      <div>
+        <p class="text-sm font-semibold text-green-800">Quiz Approved</p>
+        <p class="text-xs text-green-700">This quiz has been approved and is visible to students.</p>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-6 flex justify-start">
+      <app-back-button label="Back" (back)="goBack()"></app-back-button>
+    </div>
+
+    <!-- Course Submission Section -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <!-- Helper Text -->
+            <div class="flex items-start justify-center gap-2 px-4">
+                <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block">
+                    info
+                </mat-icon>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                    {{ publishButtonReview.helperText() }}
+                </p>
+            </div>
+            
+            <!-- Send for Review Button -->
+            <div class="flex justify-center">
+                <app-publish-course-button #publishButtonReview [courseId]="courseId" [course]="course"></app-publish-course-button>
+            </div>
+        </div>
     </div>
 
   </ng-container>
