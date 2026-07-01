@@ -67,6 +67,9 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   deleteReason = '';
   isDeleting = false;
 
+  // Export state
+  isExporting = false;
+
   private searchSubject = new Subject<string>();
   private sub?: Subscription;
 
@@ -267,11 +270,56 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
         user.status = 'active';
         this.snackBar.open('User reactivated successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
       },
-      error: (err) => {
+      error: (err: any) => {
         const errorMsg = err?.error?.message || 'Failed to reactivate user';
         this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
       }
     });
+  }
+
+  // --- Export Logic ---
+  exportUsers() {
+    if (!this.users || this.users.length === 0) {
+      this.snackBar.open('No users to export', 'Close', { duration: 3000, panelClass: ['bg-amber-600', 'text-white'] });
+      return;
+    }
+
+    this.isExporting = true;
+
+    // Create CSV headers
+    const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Status', 'Created At'];
+
+    // Map user data to CSV rows
+    const rows = this.users.map(user => {
+      return [
+        user.id || '',
+        user.firstName || '',
+        user.lastName || '',
+        user.email || '',
+        user.role || '',
+        user.status || '',
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''
+      ].map(val => `"${val}"`).join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...rows].join('\n');
+
+    // Create a Blob from the CSV string
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.download = `edugenie_users_export_${dateStr}.csv`;
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(url);
+    this.isExporting = false;
+    this.snackBar.open('Export completed successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
   }
 
   // --- Delete User Logic ---
@@ -285,20 +333,50 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.showDeleteModal = false;
     this.deleteTarget = null;
     this.deleteReason = '';
+    this.isDeleting = false;
   }
 
   confirmDelete() {
-    if (!this.deleteReason.trim()) return;
-    this.isDeleting = true;
+    const targetUser = this.deleteTarget;
+    const reason = this.deleteReason.trim();
 
-    setTimeout(() => {
-      this.users = this.users.filter(u => u.id !== this.deleteTarget.id);
-      this.totalUsers--;
-      this.isDeleting = false;
-      this.showDeleteModal = false;
-      this.deleteTarget = null;
-      this.deleteReason = '';
-      this.snackBar.open('User deleted successfully (Simulated)', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
-    }, 1000);
+    if (!targetUser || !reason) return;
+
+    const currentUsers = [...this.users];
+    const targetIndex = currentUsers.findIndex((u) => u.id === targetUser.id);
+
+    if (targetIndex >= 0) {
+      currentUsers.splice(targetIndex, 1);
+    }
+
+    this.isDeleting = true;
+    this.users = currentUsers;
+    this.totalUsers = Math.max(0, this.totalUsers - 1);
+    this.showDeleteModal = false;
+    this.deleteTarget = null;
+    this.deleteReason = '';
+    this.cdr.detectChanges();
+
+    this.adminUsersService.deleteUser(targetUser.id, reason).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('User deleted successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
+      },
+      error: (err: any) => {
+        this.isDeleting = false;
+
+        if (targetIndex >= 0) {
+          const restoredUsers = [...this.users];
+          restoredUsers.splice(targetIndex, 0, targetUser);
+          this.users = restoredUsers;
+          this.totalUsers = Math.max(0, this.totalUsers + 1);
+        }
+
+        this.cdr.detectChanges();
+        const errorMsg = err?.error?.message || 'Failed to delete user';
+        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+      }
+    });
   }
 }

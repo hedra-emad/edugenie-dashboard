@@ -31,4 +31,8 @@ export class AdminUsersService {
   reactivateUser(userId: string): Observable<any> {
     return this.http.patch(`/admin/users/${userId}/reactivate`, {});
   }
+
+  deleteUser(userId: string, reason: string): Observable<any> {
+    return this.http.delete(`/admin/users/${userId}`, { body: { reason } });
+  }
 }
