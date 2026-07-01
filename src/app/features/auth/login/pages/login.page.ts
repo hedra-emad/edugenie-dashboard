@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { environment } from '../../../../../environments/environment';
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
 import { AuthLogoComponent } from '../../../../shared/components/auth-logo/auth-logo.component';
 import { AuthCardComponent } from '../../../../shared/components/auth-card/auth-card.component';
@@ -136,7 +137,8 @@ export class LoginPageComponent implements OnInit {
   }
 
   loginWithGoogle() {
-    // console.log('Google login clicked');
+    // Role only matters for new accounts; existing users keep their role.
+    window.location.href = `${environment.apiUrl}/auth/google?role=instructor`;
   }
 
   loginWithGithub() {
