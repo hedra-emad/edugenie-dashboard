@@ -103,9 +103,12 @@ export class LoginPageComponent implements OnInit {
       error: (err) => {
         this.isLoading.set(false);
         const status = err?.status;
+        const message = err?.message;
 
         if (status === 401) {
           this.errorMessage.set('Invalid email or password');
+        } else if (status === 403 || message?.toLowerCase().includes('deactivated') || message?.toLowerCase().includes('deleted')) {
+          this.errorMessage.set('This account has been deactivated or deleted. Please contact support.');
         } else if (status === 429) {
           this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
         } else if (status === 0) {
