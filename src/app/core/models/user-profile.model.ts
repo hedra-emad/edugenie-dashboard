@@ -32,4 +32,6 @@ export interface LoginResponse {
 export interface LoginCredentials {
   email: string;
   password: string;
+  /** Extends the refresh-token lifetime to 30 days instead of 7. */
+  rememberMe?: boolean;
 }
