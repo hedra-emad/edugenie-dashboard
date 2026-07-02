@@ -88,6 +88,42 @@ export interface QuizDetailResponse {
   questions: QuizQuestionDetail[];
 }
 
+export interface QuizListItem {
+  quizId: string;
+  sectionId: string;
+  difficulty: QuizDifficulty;
+  numberOfQuestions: number;
+  questionType: QuestionType;
+  generationStatus: 'PENDING' | 'GENERATING' | 'COMPLETED' | 'FAILED';
+  status: 'pending_review' | 'approved';
+  timeLimit: number;
+  passingScore: number;
+  maxAttempts: number;
+  enrollmentCountAtGeneration: number;
+  enrollmentCountAtApproval: number;
+  quizGenerationNumber: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AllQuizzesResponse {
+  sectionId: string;
+  totalQuizzes: number;
+  quizzes: QuizListItem[];
+}
+
+export interface EnrollmentStatusResponse {
+  sectionId: string;
+  currentEnrollmentCount: number;
+  baselineEnrollmentCount: number;
+  newEnrollmentsSinceLastApproval: number;
+  enrollmentThreshold: number;
+  enrollmentsNeeded: number;
+  canGenerateQuiz: boolean;
+  hasApprovedQuiz: boolean;
+  lastApprovedQuizGeneration: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class QuizzesService {
   private http = inject(HttpClient);
@@ -168,6 +204,73 @@ private extractId(idField: any): string {
         })),
       };
     })
+  );
+}
+
+getAllQuizzesForSection(sectionId: string): Observable<AllQuizzesResponse> {
+  return this.http.get<any>(
+    `${this.instructorBase}/section/${sectionId}/all`,
+    { withCredentials: true }
+  ).pipe(
+    map((res) => {
+      return {
+        sectionId: res.sectionId,
+        totalQuizzes: res.totalQuizzes,
+        quizzes: (res.quizzes ?? []).map((q: any) => ({
+          quizId: q.quizId,
+          sectionId: res.sectionId,
+          difficulty: q.difficulty,
+          numberOfQuestions: q.numberOfQuestions,
+          questionType: q.questionType,
+          generationStatus: q.generationStatus,
+          status: q.status,
+          timeLimit: q.timeLimit,
+          passingScore: q.passingScore,
+          maxAttempts: q.maxAttempts,
+          enrollmentCountAtGeneration: q.enrollmentCountAtGeneration,
+          enrollmentCountAtApproval: q.enrollmentCountAtApproval,
+          quizGenerationNumber: q.quizGenerationNumber,
+          createdAt: q.createdAt ? new Date(q.createdAt) : null,
+          updatedAt: q.updatedAt ? new Date(q.updatedAt) : null,
+        })),
+      };
+    })
+  );
+}
+
+getQuizById(quizId: string): Observable<QuizDetailResponse | null> {
+  return this.http.get<any>(
+    `${this.instructorBase}/${quizId}`,
+    { withCredentials: true }
+  ).pipe(
+    map((res) => {
+      if (!res) return null;
+      return {
+        quizId: res.quizId,
+        sectionId: res.sectionId,
+        difficulty: res.difficulty,
+        numberOfQuestions: res.numberOfQuestions,
+        questionType: res.questionType,
+        generationStatus: res.generationStatus,
+        status: res.status,
+        questions: (res.questions ?? []).map((q: any) => ({
+          questionId: q.questionId,
+          text: q.text,
+          type: q.type,
+          correctAnswers: q.correctAnswers ?? [],
+          options: (q.options ?? []).map((opt: any) =>
+            typeof opt === 'string' ? { optionId: opt, text: opt } : opt
+          ),
+        })),
+      };
+    })
+  );
+}
+
+getEnrollmentStatus(sectionId: string): Observable<EnrollmentStatusResponse> {
+  return this.http.get<EnrollmentStatusResponse>(
+    `${this.instructorBase}/section/${sectionId}/enrollment-status`,
+    { withCredentials: true }
   );
 }
 }

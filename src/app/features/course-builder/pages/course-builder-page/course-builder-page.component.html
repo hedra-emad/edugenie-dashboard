@@ -22,7 +22,7 @@
         </div>
 
         <!-- line -->
-        <div class="w-20 sm:w-24 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 2"
+        <div class="w-16 sm:w-20 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 2"
           [class.bg-gray-300]="currentStep() < 2">
         </div>
 
@@ -36,16 +36,30 @@
         </div>
 
         <!-- line -->
-        <div class="w-20 sm:w-24 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 3"
+        <div class="w-16 sm:w-20 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 3"
           [class.bg-gray-300]="currentStep() < 3">
         </div>
 
         <!-- Step 3 -->
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
-            [class.bg-[var(--color-primary)]]="currentStep() === 3" [class.text-white]="currentStep() === 3" [class.border-[var(--color-primary)]]="currentStep() === 3"
+            [class.bg-[var(--color-primary)]]="currentStep() >= 3" [class.text-white]="currentStep() >= 3" [class.border-[var(--color-primary)]]="currentStep() >= 3"
             [class.bg-white]="currentStep() < 3" [class.border-[var(--color-border)]]="currentStep() < 3" [class.text-[var(--color-text-secondary)]]="currentStep() < 3">
             3
+          </div>
+        </div>
+
+        <!-- line -->
+        <div class="w-16 sm:w-20 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 4"
+          [class.bg-gray-300]="currentStep() < 4">
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
+            [class.bg-[var(--color-primary)]]="currentStep() >= 4" [class.text-white]="currentStep() >= 4" [class.border-[var(--color-primary)]]="currentStep() >= 4"
+            [class.bg-white]="currentStep() < 4" [class.border-[var(--color-border)]]="currentStep() < 4" [class.text-[var(--color-text-secondary)]]="currentStep() < 4">
+            4
           </div>
         </div>
 
