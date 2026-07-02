@@ -102,6 +102,33 @@ export class AuthService {
     );
   }
 
+  private refreshInFlight$: Observable<LoginResponse> | null = null;
+
+  /**
+   * Silently exchanges the httpOnly refresh-token cookie for a fresh access
+   * JWT (POST /auth/refresh). Concurrent callers share one in-flight request —
+   * several 401s landing together must not each rotate the refresh token.
+   */
+  refreshSession(): Observable<LoginResponse> {
+    if (!this.refreshInFlight$) {
+      this.refreshInFlight$ = this.http
+        .post<LoginResponse>(`${this.authApiUrl}/refresh`, {})
+        .pipe(
+          tap((response) => {
+            const user = response.data?.user;
+            if (user && this.isAccountActive(user) && user.role !== 'student') {
+              this.setCurrentUser(user);
+            }
+          }),
+          finalize(() => {
+            this.refreshInFlight$ = null;
+          }),
+          shareReplay(1),
+        );
+    }
+    return this.refreshInFlight$;
+  }
+
   login(credentials: LoginCredentials): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
