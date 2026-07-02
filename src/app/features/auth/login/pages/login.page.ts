@@ -77,7 +77,7 @@ export class LoginPageComponent implements OnInit {
 
   onSubmit() {
     this.errorMessage.set(null);
-    const { email, password } = this.loginForm.value;
+    const { email, password, rememberMe } = this.loginForm.value;
 
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
@@ -86,7 +86,7 @@ export class LoginPageComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    this.authService.login({ email, password }).subscribe({
+    this.authService.login({ email, password, rememberMe: !!rememberMe }).subscribe({
       next: (res: LoginResponse) => {
         this.isLoading.set(false);
         const role = res.data.user.role;
