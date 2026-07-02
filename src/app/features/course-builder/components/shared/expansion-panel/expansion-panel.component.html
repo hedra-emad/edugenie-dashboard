@@ -80,7 +80,7 @@
         </div>
 
         <!-- Desktop actions -->
-        <div class="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+        <div class="hidden sm:flex items-center gap-2.5 flex-shrink-0 ml-4">
 
           <!-- Move up/down buttons (lesson mode) -->
           <ng-container *ngIf="showMoveButtons">
@@ -129,7 +129,7 @@
         </div>
 
         <!-- Mobile actions: delete only (lesson mode, no menu) -->
-        <div *ngIf="showMoveButtons && !showMobileMenu" class="flex sm:hidden items-center gap-1 flex-shrink-0">
+        <div *ngIf="showMoveButtons && !showMobileMenu" class="flex sm:hidden items-center gap-1 flex-shrink-0 ml-2">
           <button *ngIf="showDeleteButton"
             type="button"
             (click)="onDeleteClicked($event)"
@@ -144,7 +144,7 @@
 
         <!-- Mobile actions: three-dot menu (section mode) -->
         <div *ngIf="showMobileMenu && (showLessonsButton || showQuizButton)"
-  class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-auto">
+  class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-auto ml-2">
           <button type="button"
             [matMenuTriggerFor]="mobileMenu"
             [disabled]="isDeleting"
@@ -157,7 +157,7 @@
 
         <!-- Mobile direct delete (lesson mode with menu) -->
         <div *ngIf="showMobileMenu && showDeleteButton && !showLessonsButton && !showQuizButton"
-          class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center">
+          class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-2">
           <button type="button"
             (click)="onDeleteClicked($event)"
             [disabled]="isDeleting"

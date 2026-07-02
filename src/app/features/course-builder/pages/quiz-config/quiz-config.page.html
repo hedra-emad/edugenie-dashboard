@@ -260,10 +260,10 @@
         The AI is reading your lesson content and crafting questions.<br>
         This usually takes 10–30 seconds.
       </p>
-      <div class="generating-steps">
-        <span class="step step-done"><mat-icon>check_circle</mat-icon> Reading lessons</span>
-        <span class="step step-active"><mat-icon>auto_awesome</mat-icon> Writing questions</span>
-        <span class="step step-pending"><mat-icon>fact_check</mat-icon> Validating answers</span>
+      <div class="generating-steps text-center">
+        <span class="step step-done" ><mat-icon>check_circle</mat-icon> Reading lessons</span>
+        <span class="step step-active "><mat-icon>auto_awesome</mat-icon> Writing questions</span>
+        <span class="step step-pending "><mat-icon>fact_check</mat-icon> Validating answers</span>
       </div>
     </div>
   </div>
@@ -272,7 +272,7 @@
   <ng-container *ngIf="phase === 'form'">
     <!-- Info note -->
     <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2 max-w-xl mb-6">
-      <mat-icon class="text-blue-500 !text-[18px] !w-[18px] !h-[18px] mt-0.5">info</mat-icon>
+      <!-- <mat-icon class="text-blue-500 !text-[18px] !w-[18px] !h-[18px] mt-0.5">info</mat-icon> -->
       <p class="text-xs text-blue-800 font-medium leading-relaxed">
         Questions are generated automatically from the lesson transcripts in this section.
       </p>
@@ -479,9 +479,9 @@
       <div class="max-w-2xl mx-auto text-center space-y-4">
         <!-- Helper Text with Icon -->
         <div class="flex items-start justify-center gap-2 px-4">
-          <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block flex-shrink-0">
+          <!-- <mat-icon class="text-[var(--color-primary)] !text-[20px] !w-[20px] !h-[20px] mt-0.5 hidden sm:block flex-shrink-0">
             info
-          </mat-icon>
+          </mat-icon> -->
           <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
             {{ publishButtonReview.helperText() }}
           </p>
