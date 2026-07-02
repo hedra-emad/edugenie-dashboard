@@ -31,8 +31,14 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
   const redirectToLogin = () => {
+    // Route the expired session to where that role actually signs in:
+    // admins/superadmins re-authenticate on the dashboard's admin-login,
+    // while instructors sign in on the EduGenie app (the `/login` redirect
+    // component bounces them there). Read the role before clearing state.
+    const role = authService.getCurrentUser()?.role;
     authService.clearCurrentUser();
-    void router.navigate(['/login'], {
+    const target = role === 'admin' || role === 'superadmin' ? '/admin-login' : '/login';
+    void router.navigate([target], {
       queryParams: { sessionExpired: true },
     });
   };

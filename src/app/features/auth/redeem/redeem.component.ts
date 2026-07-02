@@ -16,7 +16,7 @@ import { AuthService } from '../../../core/services/auth.service';
       </ng-container>
       <ng-template #errorTpl>
         <p style="color:#c0392b">{{ error }}</p>
-        <a href="/login" style="color:inherit">Back to login</a>
+        <a href="/admin-login" style="color:inherit">Back to login</a>
       </ng-template>
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
     </div>

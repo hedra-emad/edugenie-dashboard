@@ -23,7 +23,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <ng-container *ngIf="!loading() && fatalError()">
           <p style="color:#c0392b">{{ fatalError() }}</p>
-          <a href="/login" style="color:#2e2a91">Back to login</a>
+          <a href="/admin-login" style="color:#2e2a91">Back to login</a>
         </ng-container>
 
         <form

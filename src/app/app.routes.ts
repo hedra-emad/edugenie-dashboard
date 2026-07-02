@@ -53,7 +53,9 @@ const courseBuilderChildren: Routes = [
 ];
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // The dashboard is an admin portal: entering it lands on the admin login.
+  // (Instructors reach the dashboard via SSO handoff → /auth/redeem, not here.)
+  { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
 
   {
     path: 'login',

@@ -316,13 +316,37 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
+    // Capture the role before clearing state so we can send the user back to
+    // where they sign in: admins/superadmins return to the dashboard's
+    // admin-login page, while everyone else (instructors) is bounced to the
+    // EduGenie app's logout route — the app is where they authenticate.
+    const role = this.getCurrentUser()?.role;
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
       tap(() => {
         this.clearCurrentUser();
-        const nextjsUrl = environment.studentAppUrl;
-        window.location.href = `${nextjsUrl}/logout`;
+        if (role === 'admin' || role === 'superadmin') {
+          this.router.navigate(['/admin-login']);
+        } else {
+          const nextjsUrl = environment.studentAppUrl;
+          window.location.href = `${nextjsUrl}/logout`;
+        }
       }),
+      map(() => void 0),
+    );
+  }
+
+  /**
+   * Revoke a just-created session WITHOUT the hard cross-app redirect that
+   * `logout()` performs. Used by the admin-login page to turn away a non-admin
+   * who authenticated there: the backend already minted a session cookie, so we
+   * must clear it server- and client-side while staying on the page to show the
+   * "administrators only" message.
+   */
+  endSessionSilently(): Observable<void> {
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => this.clearCurrentUser()),
       map(() => void 0),
     );
   }
