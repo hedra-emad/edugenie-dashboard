@@ -66,6 +66,46 @@ export class CoursesService {
 
   /**
    * Check if a course can be submitted for review
+   * For the quiz-config page, we cross-reference with loaded quizzes
+   */
+  canSubmitForReviewWithQuizzes(
+    course: Course, 
+    sectionId: string,
+    totalQuizzes: number
+  ): { canSubmit: boolean; missingQuizSections: string[]; hasNoLessons: boolean } {
+    if (!course.sections || course.sections.length === 0) {
+      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true };
+    }
+
+    // Check if course has at least one lesson
+    const totalLessons = course.sections.reduce((count, section) => {
+      return count + (section.lessons?.length || 0);
+    }, 0);
+
+    if (totalLessons === 0) {
+      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true };
+    }
+
+    // For the current section, if we have quizzes loaded, mark it as having a quiz
+    // The backend will do final validation anyway
+    const sectionsWithoutQuiz = course.sections.filter(section => {
+      if (section.id === sectionId && totalQuizzes > 0) {
+        // Current section has quizzes, consider it as having a quiz
+        return false;
+      }
+      // For other sections, use the hasQuiz or hasApprovedQuiz flag
+      return !section.hasQuiz && !section.hasApprovedQuiz;
+    });
+
+    return {
+      canSubmit: sectionsWithoutQuiz.length === 0,
+      missingQuizSections: sectionsWithoutQuiz.map(s => s.title),
+      hasNoLessons: false
+    };
+  }
+
+  /**
+   * Check if a course can be submitted for review
    * Returns true if:
    * 1. Course has at least one lesson
    * 2. All sections have approved quizzes
@@ -85,8 +125,9 @@ export class CoursesService {
     }
 
     // Check if ALL sections have approved quizzes
+    // Use both hasQuiz and hasApprovedQuiz as fallback
     const sectionsWithoutQuiz = course.sections.filter(section => {
-      return !section.hasApprovedQuiz;
+      return !section.hasQuiz && !section.hasApprovedQuiz;
     });
 
     return {

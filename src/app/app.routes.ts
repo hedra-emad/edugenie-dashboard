@@ -46,6 +46,13 @@ const courseBuilderChildren: Routes = [
       ),
   },
   {
+    path: 'sections/:sectionId/quiz-config/:quizId',
+    loadComponent: () =>
+      import('./features/course-builder/pages/quiz-config/quiz-config.page').then(
+        (m) => m.QuizConfigPageComponent
+      ),
+  },
+  {
     path: '',
     redirectTo: 'basic',
     pathMatch: 'full',
