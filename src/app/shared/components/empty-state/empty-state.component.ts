@@ -10,11 +10,11 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './empty-state.component.css'
 })
 export class EmptyStateComponent {
-  @Input() icon: string = 'folder_open';
-  @Input() title: string = 'Nothing here yet';
-  @Input() description: string = 'Get started by adding your first item.';
-  @Input() actionLabel: string = 'Add Item';
-  @Input() showAction: boolean = true;
+  @Input() icon = 'folder_open';
+  @Input() title = 'Nothing here yet';
+  @Input() description = 'Get started by adding your first item.';
+  @Input() actionLabel = 'Add Item';
+  @Input() showAction = true;
   
   @Output() actionClicked = new EventEmitter<void>();
 

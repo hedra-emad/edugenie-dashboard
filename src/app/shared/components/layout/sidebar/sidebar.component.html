@@ -9,7 +9,7 @@
   @if (isOverlay) {
     <div class="overlay-header shrink-0">
       <span class="overlay-brand">EduGenie</span>
-      <button class="overlay-close" (click)="toggle.emit()" aria-label="Close menu">
+      <button class="overlay-close" (click)="toggled.emit()" aria-label="Close menu">
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -20,7 +20,7 @@
     <div class="desktop-toggle-row shrink-0">
       <button
         class="desktop-toggle"
-        (click)="toggle.emit()"
+        (click)="toggled.emit()"
         [title]="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'">
         <mat-icon>{{ sidebarExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
       </button>

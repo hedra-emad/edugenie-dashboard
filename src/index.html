@@ -7,6 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="favicon-modified.png">
   <link rel="apple-touch-icon" href="favicon-modified.png">
+
+  <!-- Pre-warm the API + media connections so the first request doesn't pay the
+       full DNS + TCP + TLS handshake (helps most against cold serverless calls). -->
+  <link rel="preconnect" href="https://edugenie-api.vercel.app" crossorigin>
+  <link rel="dns-prefetch" href="https://edugenie-api.vercel.app">
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <link rel="dns-prefetch" href="https://res.cloudinary.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link

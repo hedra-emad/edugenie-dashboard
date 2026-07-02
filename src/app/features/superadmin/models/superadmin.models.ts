@@ -4,14 +4,14 @@ export interface SuperAdminDashboardOverviewResponse {
   payoutLiability: number;
   activeAdmins: number;
   pendingPayouts: number;
-  criticalAlerts: Array<{
+  criticalAlerts: {
     type: 'webhook_failure' | 'payout_backlog';
     service?: string;
     occurredCount?: number;
     lastOccurredAt?: Date;
     count?: number;
     oldestPendingDate?: Date;
-  }>;
+  }[];
 }
 
 export interface SystemHealthResponse {

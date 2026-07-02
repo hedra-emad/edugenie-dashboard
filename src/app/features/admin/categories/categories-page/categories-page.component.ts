@@ -43,8 +43,8 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
 
   // ── Date Filtering ─────────────────────────────────────────────────────────
   dateFilter: DateFilter = 'all';
-  customDateFrom: string = '';
-  customDateTo: string = '';
+  customDateFrom = '';
+  customDateTo = '';
 
   // ── Modals ─────────────────────────────────────────────────────────────────
   showCategoryModal = false;
@@ -210,7 +210,7 @@ export class CategoriesPageComponent implements OnInit, OnDestroy {
     const total = this.totalPages;
     const cur = this.pageIndex;
     let start = Math.max(0, cur - 2);
-    let end = Math.min(total - 1, start + 4);
+    const end = Math.min(total - 1, start + 4);
     if (end - start < 4) start = Math.max(0, end - 4);
     for (let i = start; i <= end; i++) pages.push(i);
     return pages;

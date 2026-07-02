@@ -34,7 +34,7 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class AvatarSkeletonComponent {
-  @Input() size: string = '40px';
-  @Input() circular: boolean = true;
-  @Input() customClass: string = '';
+  @Input() size = '40px';
+  @Input() circular = true;
+  @Input() customClass = '';
 }

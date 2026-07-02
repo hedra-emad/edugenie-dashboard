@@ -18,7 +18,7 @@ export class RejectCourseDialogComponent {
   @Input() isLoading = false;
 
   @Output() confirm = new EventEmitter<string>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 
   rejectReason = '';
   rejectReasonTouched = false;

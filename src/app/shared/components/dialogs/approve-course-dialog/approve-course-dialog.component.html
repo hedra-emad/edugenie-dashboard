@@ -1,4 +1,4 @@
-<div class="modal-overlay" (click)="cancel.emit()">
+<div class="modal-overlay" (click)="cancelled.emit()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-header-icon approve-icon">
@@ -13,7 +13,7 @@
         <p class="modal-subtitle">{{ selectedCount }} course{{ selectedCount !== 1 ? 's' : '' }} will be published</p>
         }
       </div>
-      <button class="modal-close" (click)="cancel.emit()" [disabled]="isLoading" aria-label="Close">
+      <button class="modal-close" (click)="cancelled.emit()" [disabled]="isLoading" aria-label="Close">
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -25,7 +25,7 @@
       </p>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" (click)="cancel.emit()" [disabled]="isLoading">
+      <button class="btn-cancel" (click)="cancelled.emit()" [disabled]="isLoading">
         Cancel
       </button>
       <button class="btn-approve" (click)="confirm.emit()" [disabled]="isLoading">

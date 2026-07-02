@@ -11,10 +11,10 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './main-button.component.html'
 })
 export class MainButtonComponent {
-  @Input() label: string = '';
+  @Input() label = '';
   @Input() icon?: string;
-  @Input() loading: boolean = false;
-  @Input() disabled: boolean = false;
+  @Input() loading = false;
+  @Input() disabled = false;
 
   @Output() action = new EventEmitter<void>();
 

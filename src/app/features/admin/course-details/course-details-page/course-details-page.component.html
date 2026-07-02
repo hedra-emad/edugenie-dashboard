@@ -35,7 +35,7 @@
           <div class="card overview-card">
             <div class="course-thumbnail">
               @if (course.thumbnail?.url || (course.thumbnail && course.thumbnail.startsWith('http'))) {
-                <img [src]="course.thumbnail?.url || course.thumbnail" alt="Course Thumbnail" />
+                <img [src]="(course.thumbnail?.url || course.thumbnail) | cloudinaryThumb:800" alt="Course Thumbnail" fetchpriority="high" decoding="async" />
               } @else {
                 <div class="placeholder-thumb"><mat-icon>video_library</mat-icon></div>
               }
@@ -115,7 +115,7 @@
                   controls
                   preload="metadata"
                   class="preview-video-player"
-                  [poster]="course.thumbnail?.url || course.thumbnail">
+                  [poster]="(course.thumbnail?.url || course.thumbnail) | cloudinaryThumb:800">
                   <source [src]="previewVideoUrl" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
@@ -462,7 +462,7 @@
     [courseTitle]="course?.title || null"
     [isLoading]="approveLoading"
     (confirm)="confirmApprove()"
-    (cancel)="closeApproveModal()">
+    (cancelled)="closeApproveModal()">
   </app-approve-course-dialog>
 }
 
@@ -471,7 +471,7 @@
     [courseTitle]="course?.title || null"
     [isLoading]="rejectLoading"
     (confirm)="confirmReject($event)"
-    (cancel)="closeRejectModal()">
+    (cancelled)="closeRejectModal()">
   </app-reject-course-dialog>
 }
 

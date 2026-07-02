@@ -19,7 +19,7 @@
 
         <!-- Poster / thumbnail -->
         @if (thumbnail) {
-          <img [src]="thumbnail" alt="Course thumbnail" class="preview-thumb" />
+          <img [src]="thumbnail | cloudinaryThumb:800" alt="Course thumbnail" class="preview-thumb" fetchpriority="high" decoding="async" />
         } @else {
           <div class="preview-placeholder">
             <mat-icon>movie</mat-icon>

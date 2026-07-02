@@ -81,12 +81,10 @@ import { CommonModule } from '@angular/common';
       height: 14px;
       border-radius: 4px;
     }
+    /* Fractional widths (w-5/6, w-2/3, w-1/2, w-1/3, w-1/4) come from Tailwind's
+       global utilities — defining them here duplicated them and the unescaped
+       "/" in the selector was invalid CSS. */
     .w-full { width: 100%; }
-    .w-5/6 { width: 83.333%; }
-    .w-2/3 { width: 66.667%; }
-    .w-1/2 { width: 50%; }
-    .w-1/3 { width: 33.333%; }
-    .w-1/4 { width: 25%; }
     @keyframes shimmer {
       0% {
         background-position: -200% 0;
@@ -98,7 +96,7 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class CardSkeletonComponent {
-  @Input() showImage: boolean = true;
-  @Input() showFooter: boolean = true;
-  @Input() customClass: string = '';
+  @Input() showImage = true;
+  @Input() showFooter = true;
+  @Input() customClass = '';
 }

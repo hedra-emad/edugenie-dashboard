@@ -274,10 +274,10 @@ export type DraftIndicatorType = 'unsaved' | 'modified' | 'uploading' | 'error' 
   `]
 })
 export class DraftIndicatorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() draftId: string = '';
+  @Input() draftId = '';
   @Input() type: DraftIndicatorType = 'unsaved';
   @Input() customTooltip?: string;
-  @Input() autoDetect: boolean = false; // Auto-detect state from draft service
+  @Input() autoDetect = false; // Auto-detect state from draft service
 
   private draftStateService = inject(DraftStateService);
   private destroy$ = new Subject<void>();

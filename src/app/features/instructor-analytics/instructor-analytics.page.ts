@@ -6,10 +6,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription, filter, take, finalize } from 'rxjs';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../shared/components/loading';
+import { CloudinaryThumbPipe } from '../../shared/pipes/cloudinary-thumb.pipe';
 import { StatsCardsComponent } from './components/stats-cards/stats-cards.component';
 import { SalesTableComponent } from './components/sales-table/sales-table.component';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData } from 'chart.js';
+import { Chart, registerables, ChartConfiguration, ChartData } from 'chart.js';
+
+// Register chart.js here, in the lazy analytics chunk, rather than globally via
+// provideCharts() in app.config — keeps all of chart.js out of the initial
+// bundle (it loads only when a user opens an analytics page). ng2-charts'
+// BaseChartDirective renders against this global registry. Idempotent.
+Chart.register(...registerables);
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
 import { AuthService } from '../../core/services/auth.service';
@@ -27,6 +34,7 @@ import { AuthService } from '../../core/services/auth.service';
     SalesTableComponent,
     BaseChartDirective,
     PageSkeletonComponent,
+    CloudinaryThumbPipe,
   ],
   templateUrl: './instructor-analytics.page.html',
   styleUrl: './instructor-analytics.page.css'
@@ -237,8 +245,8 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
           this.hasAdminRevenueChart = true;
           
-          let chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
-          let chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
+          const chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
+          const chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
           
           this.adminRevenueChartData = {
             labels: chartLabels,
@@ -336,8 +344,8 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
               const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
               this.hasAdminRevenueChart = true;
               
-              let chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
-              let chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
+              const chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
+              const chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
               
               this.adminRevenueChartData = {
                 labels: chartLabels,
