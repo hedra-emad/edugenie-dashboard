@@ -214,7 +214,12 @@
                         @if (section.price != null && !section.isBasicSection) {
                           <div class="section-price-badge">
                             <mat-icon>attach_money</mat-icon>
-                            <span>Section Price: {{ section.price > 0 ? ('$' + section.price) : 'Free' }}</span>
+                            <span class="text-[16px] font-black text-slate-800 leading-none">
+                              Section Price: {{ section.price > 0 ? (section.price | number:'1.0-0') : 'Free' }}
+                              @if (section.price > 0) {
+                                <span class="text-[0.8em] font-bold text-slate-800">EGP</span>
+                              }
+                            </span>
                           </div>
                         }
 
@@ -396,7 +401,12 @@
             <ul class="details-list">
               <li><span class="detail-label">Category</span><span class="detail-value">{{ course.category?.name || course.category || 'Uncategorized' }}</span></li>
               <li><span class="detail-label">Level</span><span class="detail-value">{{ (course.level || 'All Levels') | titlecase }}</span></li>
-              <li><span class="detail-label">Price</span><span class="detail-value font-bold">{{ course.price > 0 ? ('$' + course.price) : 'Free' }}</span></li>
+              <li><span class="detail-label">Price</span><span class="detail-value font-black text-[26px] text-slate-800 leading-none">
+                {{ course.price > 0 ? (course.price | number:'1.0-0') : 'Free' }}
+                @if (course.price > 0) {
+                  <span class="text-[0.8em] font-bold text-slate-800">EGP</span>
+                }
+              </span></li>
               <li><span class="detail-label">Total Duration</span><span class="detail-value">{{ course.totalHours ? (course.totalHours + ' Hours') : 'N/A' }}</span></li>
               <li><span class="detail-label">Total Lessons</span><span class="detail-value">{{ course.totalLessons || getTotalLessons() }}</span></li>
               <li><span class="detail-label">Sections</span><span class="detail-value">{{ course.sections?.length || 0 }}</span></li>
