@@ -67,7 +67,8 @@ import { CommonModule } from '@angular/common';
       height: 8px;
       border-radius: 3px;
     }
-    .w-2/3 { width: 66.667%; }
+    /* w-2/3 comes from Tailwind's global utilities; the local rule here was a
+       duplicate with an invalid unescaped "/" selector. */
     @keyframes shimmer {
       0% {
         background-position: -200% 0;
@@ -79,11 +80,11 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class TableSkeletonComponent {
-  @Input() cols: number = 5;
-  @Input() rows: number = 5;
-  @Input() showHeader: boolean = true;
-  @Input() showAvatarCol: boolean = true;
-  @Input() customClass: string = '';
+  @Input() cols = 5;
+  @Input() rows = 5;
+  @Input() showHeader = true;
+  @Input() showAvatarCol = true;
+  @Input() customClass = '';
 
   get colArray(): number[] {
     return Array(this.cols).fill(0);

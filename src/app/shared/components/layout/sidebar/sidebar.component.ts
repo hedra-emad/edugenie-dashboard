@@ -32,7 +32,7 @@ export class SidebarComponent implements OnInit {
   @Input() isMobile = false;
   @Input() isTablet = false;
   @Input() sidebarExpanded = true;
-  @Output() toggle = new EventEmitter<void>();
+  @Output() toggled = new EventEmitter<void>();
 
   readonly adminNavItems: NavItem[] = [
     { icon: 'grid_view', label: 'Overview', route: '/admin/analytics' },
@@ -107,7 +107,7 @@ export class SidebarComponent implements OnInit {
   onNavClick(route: string): void {
     if (this.isOverlay) {
       this.router.navigate([route]).then(() => {
-        this.toggle.emit();
+        this.toggled.emit();
       });
     }
   }

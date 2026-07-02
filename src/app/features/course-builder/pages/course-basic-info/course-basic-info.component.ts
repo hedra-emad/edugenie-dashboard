@@ -96,13 +96,13 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   parent = inject(CourseBuilderPageComponent, { optional: true });
 
   // ================= Draft State =================
-  draftId: string = '';
+  draftId = '';
   hasDraftData = signal(false);
 
 
 
   // Utility function to truncate names for toastr messages
-  private truncateName(name: string, maxLength: number = 40): string {
+  private truncateName(name: string, maxLength = 40): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
   }

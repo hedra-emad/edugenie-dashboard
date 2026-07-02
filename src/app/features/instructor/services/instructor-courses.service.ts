@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, concat, forkJoin, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { InstructorCourse } from '../models/instructor-course.model';
 
@@ -33,7 +33,7 @@ export class InstructorCoursesService {
               )
           );
 
-          return forkJoin(detailRequests).pipe(
+          const enriched$ = forkJoin(detailRequests).pipe(
             map((details) =>
               courses.map((course, i) => {
                 const detail = details[i];
@@ -72,6 +72,11 @@ export class InstructorCoursesService {
               })
             )
           );
+
+          // Emit the base list first so the page renders immediately, then the
+          // enriched list (totalHours/totalLessons) once the per-course detail
+          // calls resolve — same final data, no longer blocked on the slowest call.
+          return concat(of(courses), enriched$);
         })
       );
   }

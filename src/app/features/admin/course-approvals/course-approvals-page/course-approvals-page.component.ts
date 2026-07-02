@@ -16,12 +16,13 @@ import { ApproveCourseDialogComponent } from '../../../../shared/components/dial
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { ToastrService } from 'ngx-toastr';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
+import { CloudinaryThumbPipe } from '../../../../shared/pipes/cloudinary-thumb.pipe';
 
 @Component({
   selector: 'app-course-approvals-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent, ApproveCourseDialogComponent, RejectCourseDialogComponent, PageSkeletonComponent, ButtonLoadingComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, ApprovalsTableComponent, ApproveCourseDialogComponent, RejectCourseDialogComponent, PageSkeletonComponent, ButtonLoadingComponent, CloudinaryThumbPipe],
   templateUrl: './course-approvals-page.component.html',
   styleUrl: './course-approvals-page.component.css'
 })

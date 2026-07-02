@@ -10,7 +10,7 @@
   <div class="course-info">
     <div class="thumbnail-container">
       @if (course.thumbnail && course.thumbnail.startsWith('http')) {
-      <img [src]="course.thumbnail" [alt]="course.title" class="thumb-img" />
+      <img [src]="course.thumbnail | cloudinaryThumb:200" [alt]="course.title" class="thumb-img" loading="lazy" decoding="async" />
       } @else {
       <mat-icon class="thumbnail-icon">video_library</mat-icon>
       }

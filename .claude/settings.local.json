@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('angular.json','utf8'\\)\\); console.log\\('angular.json: valid JSON ✓'\\)\")",
+      "Bash(node -e \"const b=require\\('./angular.json'\\).projects['edugenie-dashboard'].architect.build.configurations.production.budgets; console.log\\(JSON.stringify\\(b,null,2\\)\\)\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const all={...p.dependencies,...p.devDependencies}; Object.keys\\(all\\).filter\\(k=>/eslint/i.test\\(k\\)\\).forEach\\(k=>console.log\\(k, all[k]\\)\\) || 0; \")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const all={...p.dependencies,...p.devDependencies}; const m=Object.keys\\(all\\).filter\\(k=>/eslint/i.test\\(k\\)\\); console.log\\(m.length? m.join\\(', '\\):'\\(none\\)'\\)\")",
+      "Bash(node -e \"const a={...require\\('./package.json'\\).dependencies,...require\\('./package.json'\\).devDependencies}; console.log\\('angular/core', a['@angular/core']\\); console.log\\('typescript', a['typescript']\\); console.log\\('@angular/cli', a['@angular/cli']\\);\")",
+      "Bash(npm -v)",
+      "Bash(npx ng *)",
+      "Bash(node -e \"const b=require\\('./angular.json'\\).projects['edugenie-dashboard'].architect.build.configurations.production.budgets; console.log\\(JSON.stringify\\(b\\)\\)\")",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./package.json'\\).scripts,null,2\\)\\)\")",
+      "Bash(node -e \"const d=require\\('./package.json'\\).devDependencies; Object.keys\\(d\\).filter\\(k=>/eslint|typescript-eslint/.test\\(k\\)\\).forEach\\(k=>console.log\\(k,d[k]\\)\\)\")",
+      "Bash(npx eslint *)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

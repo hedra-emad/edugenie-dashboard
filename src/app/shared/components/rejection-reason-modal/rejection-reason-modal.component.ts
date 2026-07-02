@@ -350,7 +350,7 @@ export interface RejectionReasonModalData {
   `]
 })
 export class RejectionReasonModalComponent {
-  reason: string = '';
+  reason = '';
   reasonTouched = false;
 
   constructor(

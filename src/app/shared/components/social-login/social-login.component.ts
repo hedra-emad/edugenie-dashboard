@@ -7,6 +7,6 @@ import { Component, Output, EventEmitter } from '@angular/core';
   styleUrl: './social-login.component.css'
 })
 export class SocialLoginComponent {
-  @Output() onGoogle = new EventEmitter<void>();
-  @Output() onGithub = new EventEmitter<void>();
+  @Output() googleLogin = new EventEmitter<void>();
+  @Output() githubLogin = new EventEmitter<void>();
 }

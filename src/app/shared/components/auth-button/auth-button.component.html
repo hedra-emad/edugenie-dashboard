@@ -1,7 +1,7 @@
 <button
       [type]="type"
       [disabled]="disabled || loading"
-      (click)="onClick.emit()"
+      (click)="clicked.emit()"
       class="w-full bg-primary hover:bg-primary-light text-white font-medium py-3 px-4 rounded-[var(--radius-md)] shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
     >
       @if (loading) {
