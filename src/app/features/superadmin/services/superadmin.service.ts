@@ -7,6 +7,8 @@ import {
   AdminActivityPaginatedResponse,
   PendingPayoutPaginatedResponse,
   PayoutProcessResponse,
+  ApprovePayoutPayload,
+  RejectPayoutPayload,
   PlatformConfigResponse,
   UpdatePlatformConfigDto,
   AuditLogPaginatedResponse,
@@ -69,8 +71,14 @@ export class SuperadminService {
     return this.http.get<PendingPayoutPaginatedResponse>(`${this.baseUrl}/payouts/pending`, { params });
   }
 
-  processPayout(instructorId: string, amount: number): Observable<PayoutProcessResponse> {
-    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${instructorId}/process`, { amount });
+  /** Approve an instructor's payout request (records the transfer method + reference). */
+  approvePayout(requestId: string, payload: ApprovePayoutPayload): Observable<PayoutProcessResponse> {
+    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${requestId}/approve`, payload);
+  }
+
+  /** Reject an instructor's payout request (records the reason). */
+  rejectPayout(requestId: string, payload: RejectPayoutPayload): Observable<PayoutProcessResponse> {
+    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${requestId}/reject`, payload);
   }
 
   getPlatformConfig(): Observable<PlatformConfigResponse> {

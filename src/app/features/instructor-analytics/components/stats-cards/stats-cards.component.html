@@ -11,10 +11,10 @@
         <div>
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalEarnings |
                 number:'1.0-0' }} EGP</h3>
-            <div *ngIf="stats.earningsChangePercent !== 0"
-                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-2"
-                [ngClass]="stats.earningsChangePercent > 0 ? 'bg-green-50 text-green-600' : 'bg-rose-50 text-rose-600'">
-                {{ stats.earningsChangePercent > 0 ? '+' : '' }}{{ stats.earningsChangePercent | number:'1.0-0' }}%
+            <div class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-2"
+                [ngClass]="(stats.earningsChangePercent ?? 0) >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                {{ (stats.earningsChangePercent ?? 0) >= 0 ? '+' : '' }}{{ (stats.earningsChangePercent ?? 0) |
+                number:'1.0-1' }}% vs prev.
             </div>
             <div *ngIf="stats.earningsChangePercent === 0" class="mt-2 h-[18px]"></div>
         </div>
@@ -32,11 +32,16 @@
         <div>
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents |
                 number }}</h3>
-            <div *ngIf="stats.newStudentsThisWeek > 0"
+            @if (stats.newStudentsThisWeek > 0) {
+            <div
                 class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
-                +{{ stats.newStudentsThisWeek | number }} New
+                +{{ stats.newStudentsThisWeek | number }} New this week
             </div>
-            <div *ngIf="stats.newStudentsThisWeek === 0" class="mt-2 h-[18px]"></div>
+            } @else {
+            <div class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold text-slate-400 uppercase mt-2">
+                No new this week
+            </div>
+            }
         </div>
     </div>
 
