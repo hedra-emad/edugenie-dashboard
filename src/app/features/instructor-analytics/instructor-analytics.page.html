@@ -37,7 +37,7 @@
               Total<br>Revenue</p>
           </div>
           <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.totalRevenue
-            || 0 | number:'1.0-0' }} EGP</p>
+            || 0 | number:'1.2-2' }} EGP</p>
           <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
             <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
               <defs>
@@ -205,7 +205,7 @@
           <div>
             <p class="text-[12px] font-bold text-slate-500 mb-1">Today's Revenue</p>
             <p class="text-[28px] font-black text-violet-700 leading-none">{{ (adminStatsData?.todayRevenue ||
-              adminStatsData?.totalRevenue / 30) | number:'1.0-0' }} EGP</p>
+              adminStatsData?.totalRevenue / 30) | number:'1.2-2' }} EGP</p>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-500 mb-1">Best Day</p>
@@ -289,7 +289,7 @@
 
                 <div class="text-right shrink-0">
                   <p class="text-[14px] font-black text-slate-800 leading-none">{{ (course.revenue ||
-                    course.totalRevenue || 0) | number:'1.0-0' }} EGP</p>
+                    course.totalRevenue || 0) | number:'1.2-2' }} EGP</p>
                   <p class="text-[11px] font-semibold text-slate-400 mt-1">{{ course.enrollments | number }}
                     students</p>
                 </div>
@@ -446,7 +446,7 @@
                 <div class="text-right shrink-0 flex items-center gap-6">
                   <div>
                     <p class="text-[16px] font-black leading-none" style="color:#7C3AED;">{{ inst.totalRevenue |
-                      number:'1.0-0' }} EGP</p>
+                      number:'1.2-2' }} EGP</p>
                   </div>
                   <!-- Rating badge (matching design) -->
                   <div *ngIf="inst.rating || inst.averageRating" class="flex items-center gap-1">
@@ -658,10 +658,10 @@
             <ng-container *ngIf="instructorPayoutHasData">
               <p class="text-[10px] text-slate-500 uppercase tracking-[0.18em]">Total</p>
               <p class="text-[18px] sm:text-[20px] font-black text-slate-800 leading-none mt-1">
-                {{ analyticsData.totalEarnings | number:'1.0-0' }} EGP
+                {{ analyticsData.totalEarnings | number:'1.2-2' }} EGP
               </p>
               <p class="text-[10px] mt-1 text-[#f43f5e]">
-                Pending: {{ analyticsData.pendingPayouts | number:'1.0-0' }} EGP
+                Pending: {{ analyticsData.pendingPayouts | number:'1.2-2' }} EGP
               </p>
             </ng-container>
             <ng-container *ngIf="!instructorPayoutHasData">
