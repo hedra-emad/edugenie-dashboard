@@ -12,7 +12,8 @@ export interface Section {
   previewVideoUrl?: string | null;
   previewVideoPublicId?: string | null;
   lessons: Lesson[];
-  hasApprovedQuiz?: boolean; // Added to track if section has an approved quiz
+  hasQuiz?: boolean; // Set by backend to indicate if section has an approved quiz with questions  
+  hasApprovedQuiz?: boolean; // Legacy field - use hasQuiz instead
   createdAt: string;
   updatedAt: string;
 }

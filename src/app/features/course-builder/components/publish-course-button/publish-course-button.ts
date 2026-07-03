@@ -142,10 +142,19 @@ export class PublishCourseButtonComponent {
     this.loading.set(true);
 
     this.coursesService.submitForReview(this.courseId).subscribe({
-      next: (res) => {
+      next: () => {
         this.loading.set(false);
 
         this.toastr.success('Your course has been sent for review and will be available once approved.');
+        
+        // Update the local course object status immediately
+        const currentCourse = this._course();
+        if (currentCourse) {
+          this._course.set({
+            ...currentCourse,
+            courseStatus: 'UNDER_REVIEW'
+          });
+        }
         
         if (this.courseId) {
           this.coursesService.notifyCourseStatusChanged(this.courseId, CourseStatus.UNDER_REVIEW);

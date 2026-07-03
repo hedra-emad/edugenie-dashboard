@@ -81,13 +81,22 @@
             [class.nav-link--icon-only]="!isOverlay && !sidebarExpanded"
             [class.nav-link--overlay]="isOverlay"
             [title]="item.label">
-            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
-            @if (showLabel) {
-              <span class="nav-label">{{ item.label }}</span>
-            }
             @if (item.route.endsWith('notifications')) {
-              @if ((unreadCount$ | async)! > 0) {
-                <span class="nav-unread-badge">{{ unreadCount$ | async }}</span>
+              <div class="notification-icon-wrapper" [class.notification-icon-wrapper--expanded]="showLabel">
+                <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+                @if (showLabel) {
+                  <span class="nav-label">{{ item.label }}</span>
+                }
+                @if ((unreadCount$ | async)! > 0) {
+                  <span class="nav-unread-badge" [class.nav-unread-badge--collapsed]="!isOverlay && !sidebarExpanded">
+                    {{ unreadCount$ | async }}
+                  </span>
+                }
+              </div>
+            } @else {
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              @if (showLabel) {
+                <span class="nav-label">{{ item.label }}</span>
               }
             }
           </a>

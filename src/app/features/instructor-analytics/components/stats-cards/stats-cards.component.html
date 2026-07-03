@@ -1,4 +1,4 @@
-<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- 1. Total Earnings -->
     <div
         class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -16,6 +16,7 @@
                 {{ (stats.earningsChangePercent ?? 0) >= 0 ? '+' : '' }}{{ (stats.earningsChangePercent ?? 0) |
                 number:'1.0-1' }}% vs prev.
             </div>
+            <div *ngIf="stats.earningsChangePercent === 0" class="mt-2 h-[18px]"></div>
         </div>
     </div>
 

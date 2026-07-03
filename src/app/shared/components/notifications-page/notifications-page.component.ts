@@ -105,6 +105,7 @@ export class NotificationsPageComponent implements OnInit {
 
   markAsRead(id: string): void {
     this.notificationsService.markAsRead(id);
+    this.cdr.markForCheck();
   }
 
   deleteNotification(id: string): void {
@@ -136,6 +137,11 @@ export class NotificationsPageComponent implements OnInit {
   openRejectionReasonModal(notification: UiNotification): void {
     if (!notification.reason) return;
     
+    // Mark as read when opening rejection reason modal
+    if (!notification.isRead) {
+      this.markAsRead(notification.id);
+    }
+    
     this.dialog.open(RejectionReasonModalComponent, {
       data: {
         reason: notification.reason,
@@ -148,6 +154,7 @@ export class NotificationsPageComponent implements OnInit {
 
   markAsReadAndNavigate(id: string): void {
     this.notificationsService.markAsRead(id);
+    this.cdr.markForCheck();
   }
 
   // Dynamic swipe limit: 160px for unread cards (2 buttons), 80px for read cards (1 button)
@@ -305,6 +312,13 @@ export class NotificationsPageComponent implements OnInit {
     this.isDragging[id] = false;
   }
 
+  // Helper to mark notification as read if not already read
+  private ensureMarkedAsRead(notification: UiNotification): void {
+    if (!notification.isRead) {
+      this.markAsRead(notification.id);
+    }
+  }
+
   getCursorStyle(id: string): string {
     if (this.isDragging[id]) {
       return 'grabbing';
@@ -372,14 +386,19 @@ export class NotificationsPageComponent implements OnInit {
     if (lowerType === 'course_approved' || lowerTitle.includes('approved')) {
       type = 'approved';
       icon = 'check_circle';
-      link = '/my-courses';
+      link = n.courseId ? `/course-builder/${n.courseId}/basic` : '/my-courses';
       linkText = 'View Course';
     } else if (lowerType === 'course_rejected' || lowerTitle.includes('rejected')) {
       type = 'rejected';
       icon = 'cancel';
       // Deep link to course-builder/basic if courseId is available
       link = n.courseId ? `/course-builder/${n.courseId}/basic` : '/my-courses';
-      linkText = 'Go To Course';
+      linkText = 'View Course';
+    } else if (lowerType === 'course_submitted_for_review' || lowerTitle.includes('submitted for review')) {
+      type = 'info';
+      icon = 'info';
+      link = '/admin/course-approvals';
+      linkText = 'View Course';
     } else if (lowerType === 'system' || lowerTitle.includes('maintenance') || lowerTitle.includes('system')) {
       type = 'system';
       icon = 'notifications';
@@ -394,7 +413,7 @@ export class NotificationsPageComponent implements OnInit {
       type = 'info';
       icon = 'menu_book';
       link = '/notifications';
-      linkText = 'Review Course';
+      linkText = 'View Course';
     }
 
     // Reason parsing refactor: separate main text from rejection reason

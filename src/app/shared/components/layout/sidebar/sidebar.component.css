@@ -328,7 +328,7 @@
 .nav-link--btn {
   border: none;
   background: transparent;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
 }
 
@@ -338,7 +338,6 @@
 }
 
 .nav-unread-badge {
-  margin-left: auto;
   background: var(--color-primary);
   color: #fff;
   border-radius: 9999px;
@@ -346,6 +345,47 @@
   font-weight: 700;
   padding: 2px 8px;
   min-width: 18px;
+  height: auto;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* When sidebar is expanded: badge sits on far right */
+.notification-icon-wrapper--expanded .nav-unread-badge {
+  position: absolute;
+  /* top: -6px; */
+  right: 0;
+  margin-left: 0;
+}
+
+/* When sidebar is collapsed: position badge on top-right of icon */
+.nav-unread-badge--collapsed {
+  position: absolute !important;
+  top: -4px !important;
+  /* right: -1px !important; */
+  margin-left: 0 !important;
+  padding: 0px 4px !important;
+  font-size: 0.5rem !important;
+  min-width: 14px !important;
+  height: 14px !important;
+  line-height: 14px !important;
+}
+
+/* Container for notification icon to allow absolute positioning of badge */
+.notification-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10px;
+  width: 100%;
+}
+
+.notification-icon-wrapper--expanded {
+  gap: 10px;
 }
 
