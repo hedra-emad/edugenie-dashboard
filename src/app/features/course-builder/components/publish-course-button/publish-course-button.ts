@@ -35,9 +35,9 @@ export class PublishCourseButtonComponent {
     // Effect to log course changes
     effect(() => {
       const course = this._course();
-      console.log('🔄 Course Updated:', course);
+      // console.log('🔄 Course Updated:', course);
       if (course) {
-        console.log('📊 Course Status:', course.courseStatus);
+        // console.log('📊 Course Status:', course.courseStatus);
       }
     });
   }
@@ -56,12 +56,12 @@ export class PublishCourseButtonComponent {
   courseStatus = computed(() => {
     const course = this._course();
     const status = course?.courseStatus?.trim().toUpperCase() || 'DRAFT';
-    console.log('🔍 Publish Button - Course Status Check:', {
-      rawStatus: course?.courseStatus,
-      normalizedStatus: status,
-      courseId: course?.id,
-      fullCourse: course
-    });
+    // console.log('🔍 Publish Button - Course Status Check:', {
+    //   rawStatus: course?.courseStatus,
+    //   normalizedStatus: status,
+    //   courseId: course?.id,
+    //   fullCourse: course
+    // });
     return status;
   });
 
@@ -69,7 +69,7 @@ export class PublishCourseButtonComponent {
   isPublished = computed(() => {
     const status = this.courseStatus();
     const result = status === 'PUBLISHED';
-    console.log('✅ Is Published:', result, 'Status:', status);
+    // console.log('✅ Is Published:', result, 'Status:', status);
     return result;
   });
 
@@ -77,7 +77,7 @@ export class PublishCourseButtonComponent {
   isUnderReview = computed(() => {
     const status = this.courseStatus();
     const result = status === 'UNDER_REVIEW' || status === 'UNDER REVIEW' || status === 'UNDERREVIEW';
-    console.log('⏳ Is Under Review:', result, 'Status:', status);
+    // console.log('⏳ Is Under Review:', result, 'Status:', status);
     return result;
   });
 
