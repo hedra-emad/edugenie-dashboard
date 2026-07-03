@@ -35,6 +35,10 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     expanded = signal(false);
     videoError: string | null = null;
 
+    // Drag-and-drop state
+    isDragging = signal(false);
+    private dragCounter = 0;
+
     // Local state / file
     selectedFile: File | null = null;
     localPreviewUrl: string | null = null;
@@ -141,6 +145,38 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
         if (!file) return;
         this.handleFile(file);
         (event.target as HTMLInputElement).value = '';
+    }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragCounter = 0;
+        this.isDragging.set(false);
+        const file = event.dataTransfer?.files?.[0];
+        if (!file) return;
+        this.handleFile(file);
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragging.set(true);
+    }
+
+    onDragLeave(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragCounter--;
+        if (this.dragCounter === 0) {
+            this.isDragging.set(false);
+        }
+    }
+
+    onDragEnter(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragCounter++;
+        this.isDragging.set(true);
     }
 
     private handleFile(file: File) {
