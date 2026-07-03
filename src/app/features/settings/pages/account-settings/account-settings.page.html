@@ -32,52 +32,64 @@
       <!-- Avatar column -->
       <div class="avatar-col">
 
-        <!-- Clickable avatar — triggers file input on click -->
-        <button
-          type="button"
-          class="avatar-trigger"
-          (click)="triggerFileInput()"
-          [disabled]="isUploadingAvatar"
-          aria-label="Change profile photo">
+        <!-- Avatar wrapper — hover shows camera overlay + optional trash icon -->
+        <div class="avatar-wrapper" [class.avatar-wrapper--uploading]="isUploadingAvatar">
 
-          <!-- Upload-in-progress spinner (highest z-index) -->
-          @if (isUploadingAvatar) {
-            <div class="avatar-uploading-overlay">
-              <svg class="animate-spin w-7 h-7 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+          <!-- Clickable camera button — triggers file input -->
+          <button
+            type="button"
+            class="avatar-trigger"
+            (click)="triggerFileInput()"
+            [disabled]="isUploadingAvatar"
+            aria-label="Change profile photo">
+
+            <!-- Upload-in-progress spinner (highest z-index) -->
+            @if (isUploadingAvatar) {
+              <div class="avatar-uploading-overlay">
+                <svg class="animate-spin w-7 h-7 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+              </div>
+            }
+
+            <!-- Avatar image or initials -->
+            <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Avatar" class="avatar-img">
+            <span *ngIf="!avatarPreview" class="avatar-initials">{{ getInitials() }}</span>
+
+            <!-- Hover overlay with camera icon -->
+            <div class="avatar-hover-overlay" aria-hidden="true">
+              <svg class="avatar-camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
             </div>
+          </button>
+
+          <!-- Trash icon — only when a real avatar exists, revealed on wrapper hover -->
+          @if (avatarPreview) {
+            <button
+              type="button"
+              class="avatar-delete-btn"
+              (click)="openRemoveAvatarDialog()"
+              [disabled]="isUploadingAvatar"
+              aria-label="Remove profile photo">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
           }
 
-          <!-- Avatar image or initials -->
-          <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Avatar" class="avatar-img">
-          <span *ngIf="!avatarPreview" class="avatar-initials">{{ getInitials() }}</span>
-
-          <!-- Hover overlay with camera icon -->
-          <div class="avatar-hover-overlay" aria-hidden="true">
-            <svg class="avatar-camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-          </div>
-        </button>
+        </div><!-- /avatar-wrapper -->
 
         <!-- Hidden file input — unchanged -->
         <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
 
         <p class="avatar-hint">JPG, GIF or PNG · Max 800 KB</p>
-
-        <!-- Remove photo button — shown only when avatar exists -->
-        <button *ngIf="avatarPreview" type="button" class="avatar-remove-btn" (click)="removePhoto()">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-          Remove photo
-        </button>
 
       </div>
 
@@ -237,6 +249,73 @@
   </div>
 
 </div><!-- end settings-page -->
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     REMOVE AVATAR CONFIRMATION DIALOG
+     ══════════════════════════════════════════════════════════════ -->
+@if (showRemoveAvatarDialog) {
+<div
+  class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="remove-avatar-title"
+  (keydown.escape)="closeRemoveAvatarDialog()">
+
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+    (click)="closeRemoveAvatarDialog()"
+    aria-hidden="true">
+  </div>
+
+  <!-- Dialog panel -->
+  <div class="remove-avatar-dialog">
+
+    <!-- Icon -->
+    <div class="rad-icon-wrap">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+    </div>
+
+    <!-- Text -->
+    <h3 id="remove-avatar-title" class="rad-title">Remove Profile Photo?</h3>
+    <p class="rad-desc">
+      Your profile photo will be removed and your initials will be displayed instead.
+      You can upload a new photo at any time.
+    </p>
+
+    <!-- Actions -->
+    <div class="rad-footer">
+      <button
+        type="button"
+        class="rad-btn-cancel"
+        (click)="closeRemoveAvatarDialog()"
+        [disabled]="isRemovingAvatar">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="rad-btn-confirm"
+        (click)="confirmRemoveAvatar()"
+        [disabled]="isRemovingAvatar">
+        @if (isRemovingAvatar) {
+          <svg class="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          Removing...
+        } @else {
+          Remove Photo
+        }
+      </button>
+    </div>
+
+  </div>
+</div>
 }
 
 <!-- ══════════════════════════════════════════════════════════════
