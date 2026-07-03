@@ -31,51 +31,11 @@
              ════════════════════════════════ -->
       <div class="main-column">
 
-<<<<<<< HEAD
         <!-- Course Overview Card -->
         <div class="card overview-card">
           <div class="course-thumbnail">
             @if (course.thumbnail?.url || (course.thumbnail && course.thumbnail.startsWith('http'))) {
             <img [src]="course.thumbnail?.url || course.thumbnail" alt="Course Thumbnail" />
-=======
-          <!-- Course Overview Card -->
-          <div class="card overview-card">
-            <div class="course-thumbnail">
-              @if (course.thumbnail?.url || (course.thumbnail && course.thumbnail.startsWith('http'))) {
-                <img [src]="(course.thumbnail?.url || course.thumbnail) | cloudinaryThumb:800" alt="Course Thumbnail" fetchpriority="high" decoding="async" />
-              } @else {
-                <div class="placeholder-thumb"><mat-icon>video_library</mat-icon></div>
-              }
-            </div>
-            <div class="course-header-info">
-              <div class="badges-row">
-                <span class="status-badge" [ngClass]="'status-' + (course.status || 'pending')">
-                  <span class="status-dot"></span>
-                  {{ getStatusLabel(course.status) }}
-                </span>
-                <span class="date-badge">
-                  <mat-icon>calendar_today</mat-icon>
-                  Submitted: {{ (course.createdAt | date:'mediumDate') || 'N/A' }}
-                </span>
-              </div>
-              <h1 class="course-title">{{ course.title }}</h1>
-              <p class="course-description">{{ course.description || 'No description provided.' }}</p>
-            </div>
-          </div>
-
-          <!-- Goals -->
-          <div class="card content-card">
-            <h2 class="card-title">
-              <mat-icon class="card-title-icon">emoji_objects</mat-icon>
-              What Students Will Learn
-            </h2>
-            @if (course.goals && course.goals.length > 0) {
-              <div class="tags-container">
-                @for (goal of course.goals; track goal) {
-                  <div class="goal-tag"><mat-icon>check_circle</mat-icon><span>{{ goal }}</span></div>
-                }
-              </div>
->>>>>>> 52da6c1702d1b977a904357815d5a581a7c73710
             } @else {
             <div class="placeholder-thumb"><mat-icon>video_library</mat-icon></div>
             }
@@ -200,17 +160,6 @@
                   }
                 </div>
                 }
-            <!-- ── 1. Preview Video (only if exists, no placeholder) ── -->
-            @if (previewVideoUrl) {
-              <div class="content-preview-player">
-                <video
-                  controls
-                  preload="metadata"
-                  class="preview-video-player"
-                  [poster]="(course.thumbnail?.url || course.thumbnail) | cloudinaryThumb:800">
-                  <source [src]="previewVideoUrl" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
               </div>
               }
 
@@ -529,21 +478,6 @@
 <app-reject-course-dialog [courseTitle]="course?.title || null" [isLoading]="rejectLoading"
   (confirm)="confirmReject($event)" (cancel)="closeRejectModal()">
 </app-reject-course-dialog>
-  <app-approve-course-dialog
-    [courseTitle]="course?.title || null"
-    [isLoading]="approveLoading"
-    (confirm)="confirmApprove()"
-    (cancelled)="closeApproveModal()">
-  </app-approve-course-dialog>
-}
-
-@if (showRejectModal) {
-  <app-reject-course-dialog
-    [courseTitle]="course?.title || null"
-    [isLoading]="rejectLoading"
-    (confirm)="confirmReject($event)"
-    (cancelled)="closeRejectModal()">
-  </app-reject-course-dialog>
 }
 
 <!-- ══════════════════════════════════════

@@ -305,9 +305,6 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
           this.hasAdminRevenueChart = true;
 
-          let chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
-          let chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
-
 
           const chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
           const chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
@@ -411,9 +408,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
               let chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
               let chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
 
-
-              const chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
-              const chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
+            
 
               this.adminRevenueChartData = {
                 labels: chartLabels,
