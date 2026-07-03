@@ -92,76 +92,64 @@ export class FileDraftService {
    * Upload file to Cloudinary
    */
   uploadFile(
-    fileId: string, 
-    uploadType: 'thumbnail' | 'video', 
-    courseId?: string, 
-    sectionId?: string
-  ): Observable<string> {
-    const file = this.draftStateService.getFile(fileId);
-    if (!file) {
-      return throwError(() => new Error('File not found in draft storage'));
-    }
-
-    // Update status to uploading
-    this.updateUploadProgress(fileId, { status: 'uploading', progress: 0 });
-    this.draftStateService.updateFileStatus(fileId, 'uploading');
-
-    let uploadObservable: Observable<any>;
-
-    switch (uploadType) {
-      case 'thumbnail':
-        uploadObservable = this.cloudinaryService.uploadThumbnail(file, courseId);
-        break;
-      case 'video':
-        if (!courseId || !sectionId) {
-          return throwError(() => new Error('Course ID and Section ID required for video upload'));
-        }
-        uploadObservable = this.cloudinaryService.uploadVideo(file, courseId, sectionId, undefined).pipe(
-          tap(event => {
-            if (event.progress !== undefined) {
-              this.updateUploadProgress(fileId, {
-                status: 'uploading',
-                progress: event.progress
-              });
-            }
-          }),
-          filter(event => !!event.response),
-          map(event => event.response!)
-        );
-        break;
-      default:
-        return throwError(() => new Error('Invalid upload type'));
-    }
-
-    return uploadObservable.pipe(
-      map(response => {
-        const url = response.secure_url;
-        
-        // Update progress and draft state
-        this.updateUploadProgress(fileId, { 
-          status: 'uploaded', 
-          progress: 100, 
-          url 
-        });
-        this.draftStateService.updateFileStatus(fileId, 'uploaded', url);
-        
-        return url;
-      }),
-      catchError(error => {
-        const errorMessage = error?.message || 'Upload failed';
-        
-        // Update progress and draft state
-        this.updateUploadProgress(fileId, { 
-          status: 'error', 
-          progress: 0, 
-          error: errorMessage 
-        });
-        this.draftStateService.updateFileStatus(fileId, 'error', undefined, errorMessage);
-        
-        return throwError(() => new Error(errorMessage));
-      })
-    );
+  fileId: string, 
+  uploadType: 'thumbnail' | 'video', 
+  ownerId?: string,
+  sectionId?: string
+): Observable<string> {
+  const file = this.draftStateService.getFile(fileId);
+  if (!file) {
+    return throwError(() => new Error('File not found in draft storage'));
   }
+
+  this.updateUploadProgress(fileId, { status: 'uploading', progress: 0 });
+  this.draftStateService.updateFileStatus(fileId, 'uploading');
+
+  let uploadObservable: Observable<any>;
+
+  switch (uploadType) {
+    case 'thumbnail':
+      if (!ownerId) {
+        return throwError(() => new Error('User ID required for thumbnail upload'));
+      }
+      uploadObservable = this.cloudinaryService.uploadThumbnail(file, ownerId);
+      break;
+    case 'video':
+      if (!ownerId || !sectionId) {
+        return throwError(() => new Error('Course ID and Section ID required for video upload'));
+      }
+      uploadObservable = this.cloudinaryService.uploadVideo(file, ownerId, sectionId, undefined).pipe(
+        tap(event => {
+          if (event.progress !== undefined) {
+            this.updateUploadProgress(fileId, {
+              status: 'uploading',
+              progress: event.progress
+            });
+          }
+        }),
+        filter(event => !!event.response),
+        map(event => event.response!)
+      );
+      break;
+    default:
+      return throwError(() => new Error('Invalid upload type'));
+  }
+
+  return uploadObservable.pipe(
+    map(response => {
+      const url = response.secure_url;
+      this.updateUploadProgress(fileId, { status: 'uploaded', progress: 100, url });
+      this.draftStateService.updateFileStatus(fileId, 'uploaded', url);
+      return url;
+    }),
+    catchError(error => {
+      const errorMessage = error?.message || 'Upload failed';
+      this.updateUploadProgress(fileId, { status: 'error', progress: 0, error: errorMessage });
+      this.draftStateService.updateFileStatus(fileId, 'error', undefined, errorMessage);
+      return throwError(() => new Error(errorMessage));
+    })
+  );
+}
 
   /**
    * Get upload progress observable

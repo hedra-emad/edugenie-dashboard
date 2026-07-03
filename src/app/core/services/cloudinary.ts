@@ -4,7 +4,7 @@ import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/comm
 import { Observable, switchMap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-interface SignatureResponse {
+export interface SignatureResponse {
   signature: string;
   timestamp: number;
   apiKey: string;
@@ -35,22 +35,6 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: request a signed signature from backend
   // ─────────────────────────────────────────────────────────────
-  private getSignature(
-    folder: string,
-    context?: string
-  ): Observable<SignatureResponse> {
-
-    return this.http.post<SignatureResponse>(
-      `${this.apiBase}/cloudinary/sign`,
-      {
-        folder,
-        context
-      },
-      {
-        withCredentials: true
-      }
-    );
-  }
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: delete an old asset via backend (fire-and-forget safe)
@@ -94,50 +78,48 @@ export class CloudinaryService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // PUBLIC: upload course thumbnail (signed)
-  // Pass oldPublicId when replacing an existing thumbnail
-  // ─────────────────────────────────────────────────────────────
-  uploadThumbnail(
-    file: File,
-    courseId?: string | null,
-    oldPublicId?: string | null,
-  ): Observable<CloudinaryUploadResponse> {
-    // courseId is unknown during initial creation → stage in 'pending' subfolder
-    const folder = courseId
-      ? `edugenie/courses/thumbnails/${courseId}`
-      : 'edugenie/courses/thumbnails/pending';
 
-    return this.getSignature(folder).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', folder);
-        formData.append('timestamp', String(timestamp));
-        formData.append('signature', signature);
-        formData.append('api_key', apiKey);
-        // formData.append('raw_convert', raw_convert);
+// change getSignature from private → public (or add a thin public wrapper)
+getSignature(folder: string, context?: string): Observable<SignatureResponse> {
+  return this.http.post<SignatureResponse>(
+    `${this.apiBase}/cloudinary/sign`,
+    { folder, context },
+    { withCredentials: true }
+  );
+}
 
+uploadThumbnail(
+  file: File,
+  userId: string,
+  oldPublicId?: string | null,
+  prefetchedSignature?: SignatureResponse,
+): Observable<CloudinaryUploadResponse> {
+  const folder = `edugenie/courses/thumbnails/${userId}`;
+  const signature$ = prefetchedSignature ? of(prefetchedSignature) : this.getSignature(folder);
 
-        return this.http
-          .post<CloudinaryUploadResponse>(
-            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-            formData,
-          )
-          .pipe(
-            switchMap((res) => {
-              // Delete old thumbnail AFTER successful upload, then pass result through
-              if (oldPublicId) {
-                return this.deleteOldAsset(oldPublicId, 'image').pipe(
-                  switchMap(() => of(res)),
-                );
-              }
-              return of(res);
-            }),
-          );
-      }),
-    );
-  }
+  return signature$.pipe(
+    switchMap(({ signature, timestamp, apiKey, cloudName }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder);
+      formData.append('timestamp', String(timestamp));
+      formData.append('signature', signature);
+      formData.append('api_key', apiKey);
+
+      return this.http
+        .post<CloudinaryUploadResponse>(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          formData,
+        )
+        .pipe(
+          switchMap((res) => {
+            if (oldPublicId) this.deleteOldAsset(oldPublicId, 'image').subscribe();
+            return of(res);
+          }),
+        );
+    }),
+  );
+}
 
   // ─────────────────────────────────────────────────────────────
   // PUBLIC: upload lesson video (signed)
