@@ -8,4 +8,3 @@ export const environment = {
   pusherKey: '3a59a972cbaf38e1fb97',             // Pusher public key (realtime notifications)
   pusherCluster: 'us2',
 };
-  
