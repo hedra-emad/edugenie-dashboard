@@ -83,7 +83,23 @@ export class PublishCourseButtonComponent {
 
   // Check if button should be shown
   shouldShowButton = computed(() => {
-    return !this.isPublished() && !this.isUnderReview();
+    const published = this.isPublished();
+    const underReview = this.isUnderReview();
+    const course = this._course();
+    
+    // Hide if published or under review
+    if (published || underReview) {
+      return false;
+    }
+    
+    // Hide if no course data yet
+    if (!course) {
+      return false;
+    }
+    
+    // Hide if requirements not met (has no lessons OR missing quizzes in sections)
+    const { canSubmit } = this.coursesService.canSubmitForReview(course);
+    return canSubmit; // Only show when canSubmit is true (course is ready)
   });
 
   // Helper text based on course status
