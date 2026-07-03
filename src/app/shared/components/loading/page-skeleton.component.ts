@@ -114,7 +114,7 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class PageSkeletonComponent {
-  @Input() showBadge: boolean = true;
-  @Input() showStats: boolean = true;
-  @Input() customClass: string = '';
+  @Input() showBadge = true;
+  @Input() showStats = true;
+  @Input() customClass = '';
 }

@@ -398,7 +398,7 @@ export class AttachmentManagerComponent implements OnInit {
     return p.id;
   }
 
-  private truncateName(name: string, maxLength: number = 40): string {
+  private truncateName(name: string, maxLength = 40): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
   }

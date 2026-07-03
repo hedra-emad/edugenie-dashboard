@@ -16,8 +16,8 @@ export class CourseHeaderComponent {
   @Input() hasUnsavedChanges = false;
   @Input() courseTitle: string | null = null;
   @Input() courseId: string | null = null;
-  @Input() courseDuration: number = 0;
-  @Input() canPublish: boolean = false;
+  @Input() courseDuration = 0;
+  @Input() canPublish = false;
 
   formatDuration(seconds: number): string {
     if (!seconds || seconds <= 0) return '';

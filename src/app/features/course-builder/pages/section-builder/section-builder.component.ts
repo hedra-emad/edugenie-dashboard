@@ -79,7 +79,7 @@ export function extractId(val: any): string | null {
 })
 
 
-export class SectionBuilderComponent implements OnInit {
+export class SectionBuilderComponent implements OnInit, AfterViewInit {
   courseTitle: string | null = null;
   course: Course | null = null; // Store course data for publish button
   private fb = inject(FormBuilder);

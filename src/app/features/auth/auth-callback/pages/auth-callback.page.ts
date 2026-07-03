@@ -19,7 +19,7 @@ export class AuthCallbackPageComponent implements OnInit {
     this.route.queryParams.subscribe((params) => {
       const token = params['token'];
       if (!token) {
-        this.router.navigate(['/login'], { queryParams: { error: 'invalid_token' } });
+        this.router.navigate(['/admin-login'], { queryParams: { error: 'invalid_token' } });
         return;
       }
 
@@ -41,7 +41,7 @@ export class AuthCallbackPageComponent implements OnInit {
         },
         error: (err) => {
           console.error('Auth callback error:', err);
-          this.router.navigate(['/login'], { queryParams: { error: 'auth_failed' } });
+          this.router.navigate(['/admin-login'], { queryParams: { error: 'auth_failed' } });
         },
       });
     });

@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,17 +17,28 @@ export class CategorySelectorComponent implements OnInit {
 
   @Input({ required: true }) control!: FormControl<string>;
 
-  availableCategories: any[] = [];
+  availableCategories = signal<any[]>([]);
 
   selectedCategory = signal<string | null>(null);
 
   openCategory = false;
 
+  // Computed property that reactively finds the selected category name
+  selectedCategoryName = computed(() => {
+    const val = this.control.value;
+    if (!val) return '';
+    return (
+      this.availableCategories().find(
+        c => String(c.id || c._id) === String(val)
+      )?.name || ''
+    );
+  });
+
   ngOnInit() {
     // 1. load categories from backend
     this.categoriesService.getCategories().subscribe({
       next: (cats) => {
-        this.availableCategories = cats;
+        this.availableCategories.set(cats);
       },
       error: (err) => {
         console.error('Categories error:', err);
@@ -48,15 +59,5 @@ export class CategorySelectorComponent implements OnInit {
     this.control.updateValueAndValidity();
 
     this.openCategory = false;
-  }
-
-  get selectedCategoryName(): string {
-    const val = this.control.value;
-    if (!val) return '';
-    return (
-      this.availableCategories.find(
-        c => String(c.id || c._id) === String(val)
-      )?.name || ''
-    );
   }
 }

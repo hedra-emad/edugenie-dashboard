@@ -102,6 +102,33 @@ export class AuthService {
     );
   }
 
+  private refreshInFlight$: Observable<LoginResponse> | null = null;
+
+  /**
+   * Silently exchanges the httpOnly refresh-token cookie for a fresh access
+   * JWT (POST /auth/refresh). Concurrent callers share one in-flight request —
+   * several 401s landing together must not each rotate the refresh token.
+   */
+  refreshSession(): Observable<LoginResponse> {
+    if (!this.refreshInFlight$) {
+      this.refreshInFlight$ = this.http
+        .post<LoginResponse>(`${this.authApiUrl}/refresh`, {})
+        .pipe(
+          tap((response) => {
+            const user = response.data?.user;
+            if (user && this.isAccountActive(user) && user.role !== 'student') {
+              this.setCurrentUser(user);
+            }
+          }),
+          finalize(() => {
+            this.refreshInFlight$ = null;
+          }),
+          shareReplay(1),
+        );
+    }
+    return this.refreshInFlight$;
+  }
+
   login(credentials: LoginCredentials): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
@@ -289,13 +316,37 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
+    // Capture the role before clearing state so we can send the user back to
+    // where they sign in: admins/superadmins return to the dashboard's
+    // admin-login page, while everyone else (instructors) is bounced to the
+    // EduGenie app's logout route — the app is where they authenticate.
+    const role = this.getCurrentUser()?.role;
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
       tap(() => {
         this.clearCurrentUser();
-        const nextjsUrl = environment.studentAppUrl;
-        window.location.href = `${nextjsUrl}/logout`;
+        if (role === 'admin' || role === 'superadmin') {
+          this.router.navigate(['/admin-login']);
+        } else {
+          const nextjsUrl = environment.studentAppUrl;
+          window.location.href = `${nextjsUrl}/logout`;
+        }
       }),
+      map(() => void 0),
+    );
+  }
+
+  /**
+   * Revoke a just-created session WITHOUT the hard cross-app redirect that
+   * `logout()` performs. Used by the admin-login page to turn away a non-admin
+   * who authenticated there: the backend already minted a session cookie, so we
+   * must clear it server- and client-side while staying on the page to show the
+   * "administrators only" message.
+   */
+  endSessionSilently(): Observable<void> {
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => this.clearCurrentUser()),
       map(() => void 0),
     );
   }

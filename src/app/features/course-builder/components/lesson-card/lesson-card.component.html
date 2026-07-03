@@ -48,7 +48,7 @@
 
     <!-- ── VIDEO ─────────────────────────────────────── -->
     <div class="space-y-4">
-      <label class="text-xs font-bold uppercase text-gray-700">Lesson Video *</label>
+      <label class="text-xs font-bold uppercase text-gray-700">Lesson Video * <span class="text-[10px] font-normal text-gray-500">(Maximum size: 500MB, Maximum duration: 15 minutes)</span></label>
       <input #fileInput hidden type="file" accept="video/*" (change)="onFileChange($event)" />
 
       <!-- (A) DROP ZONE – no file selected, no uploaded URL -->
@@ -167,8 +167,8 @@
           </app-sub-button>
 
           <!-- save_failed state: Change Video (always shown so user isn't stuck) -->
-          <button *ngIf="s === 'save_failed'" type="button" (click)="replaceInput.click()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300
-                   text-[11px] font-semibold text-gray-600 bg-white hover:bg-gray-50
+          <button *ngIf="s === 'save_failed'" type="button" (click)="replaceInput.click()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-primary)]
+                   text-[11px] font-semibold text-[var(--color-primary)] bg-white hover:bg-[var(--color-primary)] hover:text-white
                    transition-colors duration-150 shadow-sm">
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">swap_horiz</mat-icon>
             Change Video instead
@@ -262,34 +262,12 @@
             <span>Upload Video</span>
           </div>
 
-          <div class="flex-1 mx-3 h-px bg-gray-200"></div>
-
-          <!-- Step 2: Save Lesson -->
-          <div class="flex items-center gap-2" [ngClass]="{
-        'text-gray-400':   s === 'uploading' || s === 'upload_success' || s === 'uploading_recovered' || s === 'video_selected',
-        'text-[#3B1892]':  s === 'saving' || s === 'retrying' || s === 'saving_recovered',
-        'text-green-600':  s === 'saved',
-        'text-red-500':    s === 'save_failed'
-      }">
-            <span class="flex items-center justify-center">
-              <mat-icon
-                *ngIf="s === 'uploading' || s === 'upload_success' || s === 'uploading_recovered' || s === 'video_selected'"
-                class="!text-[16px] !w-[16px] !h-[16px] text-gray-300">radio_button_unchecked</mat-icon>
-              <mat-icon *ngIf="s === 'saving_recovered'"
-                class="!text-[16px] !w-[16px] !h-[16px] text-amber-500">pause_circle</mat-icon>
-              <app-loading *ngIf="s === 'saving' || s === 'retrying'" [size]="16" color="#00B0FF"></app-loading>
-              <mat-icon *ngIf="s === 'saved'"
-                class="!text-[16px] !w-[16px] !h-[16px] text-green-500">check_circle</mat-icon>
-              <mat-icon *ngIf="s === 'save_failed'"
-                class="!text-[16px] !w-[16px] !h-[16px] text-red-500">error</mat-icon>
-            </span>
-            <span>Save Lesson</span>
-          </div>
         </div>
 
         <!-- Progress bar -->
         <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
           <div class="h-full rounded-full transition-all duration-300 shadow-sm" [ngClass]="progressBarClass"
+            [ngStyle]="progressBarStyle"
             [style.width.%]="snap.progress">
           </div>
         </div>

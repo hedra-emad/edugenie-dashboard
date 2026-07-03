@@ -3,7 +3,10 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": "ad9136f7-3e35-4b42-b860-1940259c2c86"
+    "analytics": "ad9136f7-3e35-4b42-b860-1940259c2c86",
+    "schematicCollections": [
+      "angular-eslint"
+    ]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -22,7 +25,9 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["pusher-js"],
+            "allowedCommonJsDependencies": [
+              "pusher-js"
+            ],
             "assets": [
               {
                 "glob": "*/",
@@ -43,17 +48,17 @@
                 }
               ],
               "budgets": [
-  {
-  "type": "anyComponentStyle",
-  "maximumWarning": "18kb",
-  "maximumError": "25kb"
-},
-  {
-    "type": "anyComponentStyle",
-    "maximumWarning": "10kb",
-    "maximumError": "20kb"
-  }
-],
+                {
+                  "type": "initial",
+                  "maximumWarning": "900kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "18kb",
+                  "maximumError": "20kb"
+                }
+              ],
               "outputHashing": "all"
             },
             "development": {
@@ -95,6 +100,15 @@
             ],
             "styles": [
               "src/styles.css"
+            ]
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
             ]
           }
         }

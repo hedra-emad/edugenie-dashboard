@@ -1318,10 +1318,18 @@ export class LessonCardComponent implements OnInit, OnDestroy {
     if (this.s === 'saved') return 'bg-green-500';
     if (this.s === 'save_failed' || this.s === 'upload_error' || this.s === 'max_retries_exceeded') return 'bg-red-500';
     if (this.s === 'upload_stalled') return 'bg-amber-500';
-    if (this.s === 'uploading' || this.s === 'uploading_recovered') return 'bg-[#00B0FF]';
-    if (this.s === 'saving' || this.s === 'saving_recovered' || this.s === 'retrying') return 'bg-[#3B1892]';
-    if (this.s === 'upload_success') return 'bg-[#3B1892]';
-    return 'bg-[#3B1892]'; // default
+    // Return empty string - use inline style for primary color
+    return '';
+  }
+
+  /** Get progress bar background color based on state */
+  get progressBarStyle(): { [key: string]: string } {
+    if (this.s === 'uploading' || this.s === 'uploading_recovered' || 
+        this.s === 'saving' || this.s === 'saving_recovered' || this.s === 'retrying' || 
+        this.s === 'upload_success') {
+      return { 'background-color': 'var(--color-primary)' };
+    }
+    return {};
   }
 
   /** Whether to show a recovery message for the user */

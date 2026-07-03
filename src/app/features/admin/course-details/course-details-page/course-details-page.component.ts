@@ -15,6 +15,7 @@ import { ToastrService } from 'ngx-toastr';
 import { ApproveCourseDialogComponent } from '../../../../shared/components/dialogs/approve-course-dialog/approve-course-dialog.component';
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
+import { CloudinaryThumbPipe } from '../../../../shared/pipes/cloudinary-thumb.pipe';
 import { CourseAttachmentsService, Attachment } from '../services/course-attachments.service';
 
 type AttachState = 'idle' | 'loading' | 'loaded' | 'error';
@@ -34,7 +35,8 @@ type AttachState = 'idle' | 'loading' | 'loaded' | 'error';
     ApproveCourseDialogComponent,
     RejectCourseDialogComponent,
     PageSkeletonComponent,
-    ButtonLoadingComponent
+    ButtonLoadingComponent,
+    CloudinaryThumbPipe
   ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'

@@ -46,6 +46,13 @@ const courseBuilderChildren: Routes = [
       ),
   },
   {
+    path: 'sections/:sectionId/quiz-config/:quizId',
+    loadComponent: () =>
+      import('./features/course-builder/pages/quiz-config/quiz-config.page').then(
+        (m) => m.QuizConfigPageComponent
+      ),
+  },
+  {
     path: '',
     redirectTo: 'basic',
     pathMatch: 'full',
@@ -53,7 +60,9 @@ const courseBuilderChildren: Routes = [
 ];
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // The dashboard is an admin portal: entering it lands on the admin login.
+  // (Instructors reach the dashboard via SSO handoff → /auth/redeem, not here.)
+  { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
 
   {
     path: 'login',

@@ -1,40 +1,75 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-// Endpoints whose own 401 must NOT trigger a global logout/redirect.
-// - Auth paths: a failed login should not bounce the user around.
+// Endpoints whose own 401 must NOT trigger a refresh or global logout/redirect.
+// - Auth paths: a failed login should not bounce the user around, and a failed
+//   /auth/refresh must never recurse into another refresh.
 // - change-password: a 401 here means the *current* password is wrong,
 //   not that the session has expired — the component handles it locally.
 const AUTH_PATHS = [
   '/auth/login',
   '/auth/redeem-code',
   '/auth/verify-exchange-token',
+  '/auth/refresh',
   '/users/change-password',   // 401 = wrong current password, not expired session
 ];
 
 /**
- * Global handler for expired / invalid sessions. When any non-auth request
- * comes back 401 (or 403 for a deactivated account), clear the in-memory user
- * and send them to the login page instead of leaving a broken "logged-in" UI.
+ * Global handler for expired / invalid sessions.
+ *
+ * On a 401 for any non-auth request, first try a silent session refresh
+ * (the access JWT only lives 15 min; POST /auth/refresh rotates the httpOnly
+ * refresh cookie) and retry the request once. Only when the refresh itself
+ * fails — session truly over — clear the in-memory user and go to login.
+ * 403 (deactivated account) keeps the old immediate clear-and-redirect.
  */
 export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
 
+  const redirectToLogin = () => {
+    // Route the expired session to where that role actually signs in:
+    // admins/superadmins re-authenticate on the dashboard's admin-login,
+    // while instructors sign in on the EduGenie app (the `/login` redirect
+    // component bounces them there). Read the role before clearing state.
+    const role = authService.getCurrentUser()?.role;
+    authService.clearCurrentUser();
+    const target = role === 'admin' || role === 'superadmin' ? '/admin-login' : '/login';
+    void router.navigate([target], {
+      queryParams: { sessionExpired: true },
+    });
+  };
+
   return next(req).pipe(
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse) {
         const isAuthCall = AUTH_PATHS.some((p) => req.url.includes(p));
-        const isSessionError = error.status === 401 || error.status === 403;
 
-        if (isSessionError && !isAuthCall && authService.isAuthenticated()) {
-          authService.clearCurrentUser();
-          void router.navigate(['/login'], {
-            queryParams: { sessionExpired: true },
-          });
+        if (error.status === 401 && !isAuthCall) {
+          // Concurrent 401s share one in-flight refresh (deduped in the service).
+          return authService.refreshSession().pipe(
+            // `next(req)` re-runs only the downstream chain, so a second 401
+            // on the retry surfaces as an error here instead of looping.
+            switchMap(() => next(req)),
+            catchError((retryError: unknown) => {
+              if (authService.isAuthenticated()) {
+                redirectToLogin();
+              }
+              // Surface the original failure shape to the caller.
+              return throwError(() => retryError ?? error);
+            }),
+          );
+        }
+
+        if (
+          error.status === 403 &&
+          !isAuthCall &&
+          authService.isAuthenticated()
+        ) {
+          redirectToLogin();
         }
       }
       return throwError(() => error);

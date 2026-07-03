@@ -126,7 +126,9 @@ export class CourseBuilderPageComponent implements OnInit {
   }
 
   private updateStep(url: string) {
-    if (url.includes('lessons')) {
+    if (url.includes('quiz-config')) {
+      this.currentStep.set(4);
+    } else if (url.includes('lessons')) {
       this.currentStep.set(3);
     } else if (url.includes('sections')) {
       this.currentStep.set(2);

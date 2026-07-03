@@ -37,7 +37,7 @@ import { SectionsService } from '../../../../core/services/sections';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 
-import { ViewChild } from '@angular/core';
+import { ViewChild, OnChanges } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
@@ -65,7 +65,7 @@ import { QuizzesService } from '../../../../core/services/quizzes';
   styleUrl: './section-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SectionCardComponent implements OnInit, OnDestroy {
+export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
@@ -105,11 +105,11 @@ export class SectionCardComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
 
   // ================= Draft State =================
-  draftId: string = '';
+  draftId = '';
   hasDraftData = false;
 
   // Utility function to truncate names for toastr messages
-  private truncateName(name: string, maxLength: number = 40): string {
+  private truncateName(name: string, maxLength = 40): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
   }

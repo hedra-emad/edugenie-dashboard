@@ -49,6 +49,6 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class ButtonLoadingComponent {
-  @Input() loading: boolean = false;
-  @Input() spinnerColor: string = 'inherit';
+  @Input() loading = false;
+  @Input() spinnerColor = 'inherit';
 }

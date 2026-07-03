@@ -55,15 +55,15 @@ export class SuperadminService {
     );
   }
 
-  getAdminActivity(id: string, page: number = 1, limit: number = 10): Observable<AdminActivityPaginatedResponse> {
-    let params = new HttpParams()
+  getAdminActivity(id: string, page = 1, limit = 10): Observable<AdminActivityPaginatedResponse> {
+    const params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
     return this.http.get<AdminActivityPaginatedResponse>(`${this.baseUrl}/admins/${id}/activity`, { params });
   }
 
-  getPendingPayouts(page: number = 1, limit: number = 10): Observable<PendingPayoutPaginatedResponse> {
-    let params = new HttpParams()
+  getPendingPayouts(page = 1, limit = 10): Observable<PendingPayoutPaginatedResponse> {
+    const params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
     return this.http.get<PendingPayoutPaginatedResponse>(`${this.baseUrl}/payouts/pending`, { params });
@@ -81,7 +81,7 @@ export class SuperadminService {
     return this.http.patch<PlatformConfigResponse>(`${this.baseUrl}/platform-config`, config);
   }
 
-  getAuditLogs(userId: string = '', action: string = '', startDate: string = '', endDate: string = '', page: number = 1, limit: number = 10): Observable<AuditLogPaginatedResponse> {
+  getAuditLogs(userId = '', action = '', startDate = '', endDate = '', page = 1, limit = 10): Observable<AuditLogPaginatedResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());

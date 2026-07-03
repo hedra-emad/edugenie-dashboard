@@ -12,5 +12,5 @@ export class AuthButtonComponent {
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
   @Input() disabled = false;
   @Input() loading = false;
-  @Output() onClick = new EventEmitter<void>();
+  @Output() clicked = new EventEmitter<void>();
 }

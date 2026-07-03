@@ -47,6 +47,6 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class LoadingOverlayComponent {
-  @Input() show: boolean = false;
-  @Input() text: string = '';
+  @Input() show = false;
+  @Input() text = '';
 }
