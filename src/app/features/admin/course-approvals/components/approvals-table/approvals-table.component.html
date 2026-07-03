@@ -42,7 +42,7 @@
     <!-- Filter Tabs -->
     <div class="filter-tabs" role="tablist">
       <button role="tab" class="filter-tab" [class.active-all]="currentFilter === 'all'" (click)="setFilter('all')">
-        All <span class="tab-count">{{ totalCount }}</span>
+        All Submitted <span class="tab-count">{{ totalCount }}</span>
       </button>
       <button role="tab" class="filter-tab" [class.active-pending]="currentFilter === 'pending'" (click)="setFilter('pending')">
         Pending Review <span class="tab-count pending-count">{{ pendingCount }}</span>
