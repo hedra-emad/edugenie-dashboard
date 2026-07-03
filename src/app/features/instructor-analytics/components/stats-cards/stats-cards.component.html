@@ -1,4 +1,4 @@
-<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- 1. Total Earnings -->
     <div
         class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -11,10 +11,12 @@
         <div>
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalEarnings |
                 number:'1.0-0' }} EGP</h3>
-            <div
-                class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 uppercase mt-2">
-                +14%
+            <div *ngIf="stats.earningsChangePercent !== 0"
+                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-2"
+                [ngClass]="stats.earningsChangePercent > 0 ? 'bg-green-50 text-green-600' : 'bg-rose-50 text-rose-600'">
+                {{ stats.earningsChangePercent > 0 ? '+' : '' }}{{ stats.earningsChangePercent | number:'1.0-0' }}%
             </div>
+            <div *ngIf="stats.earningsChangePercent === 0" class="mt-2 h-[18px]"></div>
         </div>
     </div>
 
@@ -30,10 +32,11 @@
         <div>
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents |
                 number }}</h3>
-            <div
+            <div *ngIf="stats.newStudentsThisWeek > 0"
                 class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
-                +52 New
+                +{{ stats.newStudentsThisWeek | number }} New
             </div>
+            <div *ngIf="stats.newStudentsThisWeek === 0" class="mt-2 h-[18px]"></div>
         </div>
     </div>
 

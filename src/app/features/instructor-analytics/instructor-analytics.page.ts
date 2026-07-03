@@ -12,6 +12,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
+import { InstructorCoursesService } from '../instructor/services/instructor-courses.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -33,14 +34,33 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   private analyticsService = inject(InstructorAnalyticsService);
+  private instructorCoursesService = inject(InstructorCoursesService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   // Instructor view
   analyticsData: InstructorAnalyticsResponse | null = null;
+  publishedCoursesCount: number | undefined = undefined;
   recentSalesData: any[] = [];
   isLoading = true;
   error = false;
+
+  get hasDataToExport(): boolean {
+    if (this.isAdmin) return true;
+    if (!this.analyticsData) return false;
+    return this.analyticsData.totalEarnings > 0 ||
+      this.analyticsData.totalStudents > 0 ||
+      this.displayedTotalCourses > 0;
+  }
+
+  get displayedTotalCourses(): number {
+    // While loading, show 0 to avoid stale value
+    if (this.isLoading) return 0;
+    if (this.publishedCoursesCount !== undefined) {
+      return this.publishedCoursesCount;
+    }
+    return this.analyticsData?.totalCourses ?? 0;
+  }
 
   // Admin view
   isAdmin = false;
@@ -135,6 +155,45 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
 
   // Instructor charts
   instructorPayoutDonutData: ChartData<'doughnut'> = { labels: [], datasets: [] };
+  payoutCircleRadius = 62;
+  payoutCircleStrokeWidth = 16;
+  payoutCircleCircumference = 2 * Math.PI * this.payoutCircleRadius;
+  payoutPendingColor = '#f43f5e';
+  payoutPaidColor = '#10b981';
+
+  get payoutTotal(): number {
+    return this.analyticsData?.totalEarnings ?? 0;
+  }
+
+  get payoutPending(): number {
+    return this.analyticsData?.pendingPayouts ?? 0;
+  }
+
+  get payoutAvailable(): number {
+    return Math.max(0, this.payoutTotal - this.payoutPending);
+  }
+
+  get payoutPaidDashArray(): number {
+    if (!this.instructorPayoutHasData || this.payoutTotal <= 0) {
+      return this.payoutCircleCircumference;
+    }
+    return (this.payoutAvailable / this.payoutTotal) * this.payoutCircleCircumference;
+  }
+
+  get payoutPendingDashArray(): number {
+    if (!this.instructorPayoutHasData || this.payoutTotal <= 0) {
+      return 0;
+    }
+    return (this.payoutPending / this.payoutTotal) * this.payoutCircleCircumference;
+  }
+
+  get payoutPendingOffset(): number {
+    if (!this.instructorPayoutHasData || this.payoutTotal <= 0) {
+      return 0;
+    }
+    return -this.payoutPaidDashArray;
+  }
+
   instructorStudentsBarData: ChartData<'bar'> = { labels: [], datasets: [] };
   instructorEarningsLineData: ChartData<'line'> = { labels: [], datasets: [] };
   instructorEarningsChangeData: ChartData<'bar'> = { labels: [], datasets: [] };
@@ -170,6 +229,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   };
 
   instructorPayoutHasData = false;
+  instructorDataLoaded = false;
 
   instructorStudentsOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'x',
@@ -222,7 +282,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   }
 
   // Public refresh for manual re-fetching
-    setRevenuePeriod(period: string) {
+  setRevenuePeriod(period: string) {
     this.revenuePeriod = period;
     this.revenueChartLoading = true;
     let apiPeriod = '30d';
@@ -236,10 +296,10 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           // Admin Revenue Chart logic
           const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
           this.hasAdminRevenueChart = true;
-          
+
           let chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
           let chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
-          
+
           this.adminRevenueChartData = {
             labels: chartLabels,
             datasets: [{
@@ -286,7 +346,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
     rows.push(['Total Students', String(this.analyticsData.totalStudents ?? '')]);
     rows.push(['New Students This Week', String(this.analyticsData.newStudentsThisWeek ?? '')]);
     rows.push(['Average Rating', String(this.analyticsData.averageRating ?? '')]);
-    rows.push(['Total Courses', String(this.analyticsData.totalCourses ?? '')]);
+    rows.push(['Total Courses', String(this.displayedTotalCourses)]);
     rows.push(['Pending Payouts', String(this.analyticsData.pendingPayouts ?? '')]);
     rows.push(['Next Payout Date', String(this.analyticsData.nextPayoutDate ?? '')]);
 
@@ -331,14 +391,14 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
             if (!data) {
               this.platformData = { error: true, topCourses: [], topInstructors: [], totalUsers: 0, totalStudents: 0, totalInstructors: 0 };
             } else {
-                            this.platformData = data;
+              this.platformData = data;
               // Admin Revenue Chart logic
               const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
               this.hasAdminRevenueChart = true;
-              
+
               let chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
               let chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
-              
+
               this.adminRevenueChartData = {
                 labels: chartLabels,
                 datasets: [{
@@ -427,6 +487,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (data) => {
             this.analyticsData = data;
+            this.loadPublishedCoursesCount();
             this.analyticsService.getRecentSales().subscribe({
               next: (sales) => {
                 this.recentSalesData = sales;
@@ -441,14 +502,18 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
             const pending = data.pendingPayouts ?? 0;
             const total = data.totalEarnings ?? 0;
             const available = Math.max(0, total - pending);
-            this.instructorPayoutHasData = (pending > 0 || available > 0);
-            if (this.instructorPayoutHasData) {
+            const hasRealValues = (pending > 0 || available > 0);
+            // Show the donut whenever the API responded — only hide chart with "No earnings yet"
+            // when the API returned null/undefined (handled by !instructorDataLoaded)
+            this.instructorPayoutHasData = hasRealValues;
+            this.instructorDataLoaded = true;
+            if (hasRealValues) {
               this.instructorPayoutDonutData = {
                 labels: ['Pending', 'Available'],
                 datasets: [{ data: [pending, available], backgroundColor: ['#f43f5e', '#10b981'] }]
               };
             } else {
-              // show neutral slice when no data
+              // Data loaded but all zeros — show a neutral placeholder donut
               this.instructorPayoutDonutData = {
                 labels: ['No Data'],
                 datasets: [{ data: [1], backgroundColor: ['#e6e9ee'] }]
@@ -488,6 +553,21 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  private loadPublishedCoursesCount(): void {
+    this.instructorCoursesService.getMyCourses().subscribe({
+      next: (courses) => {
+        this.publishedCoursesCount = courses.filter(
+          course => (course.courseStatus || '').toLowerCase() === 'published'
+        ).length;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.publishedCoursesCount = undefined;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   ngOnDestroy() {
