@@ -74,10 +74,10 @@ export class NotificationsService implements OnDestroy {
 
     // ─── Call this once after the user logs in ───────────────────────────────
     connectPusher(userId: string): void {
-        console.log('🔌 connectPusher called for:', userId);
+        // console.log('🔌 connectPusher called for:', userId);
         // Guard: already connected for this exact user — do nothing.
         if (this.pusher && this.channel && this.connectedUserId === userId) {
-            console.log('⚡ Pusher already connected for user, skipping duplicate init.');
+            // console.log('⚡ Pusher already connected for user, skipping duplicate init.');
             return;
         }
 
@@ -90,7 +90,7 @@ export class NotificationsService implements OnDestroy {
 
         // ── Task 5: connection diagnostics ──────────────────────────────────────
         this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
-            console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
+            // console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
         });
         this.pusher.connection.bind('error', (err: any) => {
             console.error('🔴 Pusher connection error:', err);
@@ -99,7 +99,7 @@ export class NotificationsService implements OnDestroy {
 
         this.channel = this.pusher.subscribe(`user-${userId}`);
         this.connectedUserId = userId;
-        console.log('📡 Subscribed to channel:', `user-${userId}`);
+        // console.log('📡 Subscribed to channel:', `user-${userId}`);
 
         this.channel.bind('new-notification', (notification: AppNotification) => {
             console.log('📩 Received new-notification event:', notification);

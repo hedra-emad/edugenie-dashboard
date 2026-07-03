@@ -6,6 +6,8 @@ import {
   signal,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -47,6 +49,9 @@ export class AttachmentManagerComponent implements OnInit {
   @Input() sectionId?: string;
   @Input() lessonId?: string;
 
+  // ─── ViewChild ─────────────────────────────────────────────
+  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
+
   // ─── Services ──────────────────────────────────────────────
   private attachmentsService = inject(AttachmentsService);
   private cloudinaryService = inject(CloudinaryService);
@@ -71,6 +76,9 @@ export class AttachmentManagerComponent implements OnInit {
 
   // Expand/collapse state (mirrors PreviewVideoUploadComponent)
   expanded = signal(false);
+
+  // Drag and drop state
+  isDraggingOver = signal(false);
 
   // Constants exposed to template
   readonly MAX_SIZE = MAX_ATTACHMENT_FILE_SIZE_BYTES;
@@ -141,6 +149,12 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   // ─── File Selection ────────────────────────────────────────
+  onUploadZoneClick(): void {
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -482,5 +496,52 @@ export class AttachmentManagerComponent implements OnInit {
 
     this.pendingAttachments.update(list => list.map(p => p.id === id ? { ...p, failed: false, error: undefined } : p));
     this.flushPending(courseId, sectionId, lessonId).subscribe();
+  }
+
+  // ─── Drag and Drop ────────────────────────────────────────
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.isAtLimit) {
+      this.isDraggingOver.set(true);
+    }
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingOver.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    // Only take the first file if multiple are dropped
+    const file = files[0];
+    this.fileError.set(null);
+
+    // Validate size
+    if (file.size > this.MAX_SIZE) {
+      this.fileError.set(`File exceeds the 25 MB limit (${this.formatFileSize(file.size)})`);
+      return;
+    }
+
+    // Validate count
+    if (this.isAtLimit) {
+      this.fileError.set(`Maximum ${this.MAX_COUNT} attachments reached`);
+      return;
+    }
+
+    // Default title from filename (without extension)
+    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    this.pendingTitle.set(nameWithoutExt);
+    this.pendingFile.set(file);
+    this.isPublicToggle.set(false);
+    this.expanded.set(true);
   }
 }

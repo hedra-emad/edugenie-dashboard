@@ -219,7 +219,7 @@ export class DraftStateService {
         }
       }
       this.loadFileMetadata();
-      console.log('[DraftStateService] Loaded', this.draftItems.size, 'drafts from storage');
+      // console.log('[DraftStateService] Loaded', this.draftItems.size, 'drafts from storage');
       this.notifyChanges();
     } catch (error) {
       console.warn('Failed to load draft state:', error);

@@ -126,7 +126,7 @@
                 'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]': outcomeCtrl.valid && outcomeCtrl.dirty && !isExistingSection,
                 'border-purple-500 !shadow-[0_0_8px_rgba(168,85,247,0.2)]': outcomeCtrl.valid && outcomeCtrl.dirty && isExistingSection,
                 'border-[var(--color-border)]': !(outcomeCtrl.invalid && outcomeCtrl.touched) && !outcomeCtrl.dirty
-              }">
+              }" />
 
             <div *ngIf="outcomeCtrl.touched && outcomeCtrl.errors?.['required']"
               class="text-xs text-red-500 mt-1 font-medium">
