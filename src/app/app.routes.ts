@@ -138,6 +138,15 @@ export const routes: Routes = [
             (m) => m.InstructorAnalyticsPageComponent
           ),
       },
+      {
+        path: 'earnings',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor'] },
+        loadComponent: () =>
+          import('./features/instructor/earnings/earnings.page').then(
+            (m) => m.InstructorEarningsPageComponent
+          ),
+      },
 
       // -- YOUR COURSE BUILDER ROUTES MERGED WITH MAIN'S GUARDS --
       {

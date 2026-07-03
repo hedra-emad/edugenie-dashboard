@@ -71,12 +71,13 @@ export interface AdminActivityPaginatedResponse {
 }
 
 export interface PendingPayoutListItem {
+  requestId: string;
   instructorId: string;
   instructorName: string;
+  instructorEmail: string;
   amount: number;
   earningsCount: number;
-  periodStart: string;
-  periodEnd: string;
+  requestedAt: string;
 }
 
 export interface PendingPayoutPaginatedResponse {
@@ -91,13 +92,26 @@ export interface PendingPayoutPaginatedResponse {
   };
 }
 
+export type PayoutMethod = 'bank_transfer' | 'paypal';
+
+export interface ApprovePayoutPayload {
+  method: PayoutMethod;
+  reference: string;
+}
+
+export interface RejectPayoutPayload {
+  reason: string;
+}
+
 export interface PayoutProcessResponse {
+  requestId: string;
   instructorId: string;
   amount: number;
   status: string;
   processedBy: string;
   processedAt: string;
-  reference: string;
+  reference?: string;
+  note?: string;
 }
 
 export interface PlatformConfigResponse {
