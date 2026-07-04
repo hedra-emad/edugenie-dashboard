@@ -24,7 +24,6 @@ import { DraftStateService } from '../../../../core/services/draft-state.service
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
 import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
-import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { AuthService } from '../../../../core/services/auth.service';
 
 
@@ -41,7 +40,6 @@ import { AuthService } from '../../../../core/services/auth.service';
     ActionBarComponent,
     AppLoader,
     PreviewVideoUploadComponent,
-    PublishCourseButtonComponent,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -103,7 +101,6 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
-  course = computed(() => this.parent?.courseData() || null); // Get course for publish button
   isLoading = signal(true);
   existingThumbnailPublicId: string | null = null;
 

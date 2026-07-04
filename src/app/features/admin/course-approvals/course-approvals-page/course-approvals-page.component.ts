@@ -16,6 +16,7 @@ import { ApproveCourseDialogComponent } from '../../../../shared/components/dial
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { ToastrService } from 'ngx-toastr';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
+import { NotificationsService } from '../../../../core/services/notifications';
 
 @Component({
   selector: 'app-course-approvals-page',
@@ -30,6 +31,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly toastr = inject(ToastrService);
+  private readonly notificationsService = inject(NotificationsService);
   private readonly destroy$ = new Subject<void>();
 
   courses: CourseApproval[] = [];
@@ -83,6 +85,13 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
         }
 
         this.cdr.markForCheck();
+      });
+
+    // BUG 1 FIX: Subscribe to courseSubmittedForReview$ to refresh stats and pending page when an instructor submits a course
+    this.notificationsService.courseSubmittedForReview$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.service.refreshPendingSummary();
       });
   }
 

@@ -68,7 +68,24 @@
       <!-- Main Course Creation Form -->
       <router-outlet></router-outlet>
 
+      <!-- Course Submission Section (Centralized) -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+          <!-- Send for Review Button -->
+          <div class="flex justify-center">
+            <app-publish-course-button #publishButton [courseId]="courseId()" [course]="courseData()"></app-publish-course-button>
+          </div>
 
+          <!-- Helper Text - Only show when button is visible -->
+          @if (publishButton.shouldShowButton()) {
+            <div class="flex items-start justify-center gap-2 px-4">
+              <p class="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-md">
+                {{ publishButton.helperText() }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
 
     </div>
   }

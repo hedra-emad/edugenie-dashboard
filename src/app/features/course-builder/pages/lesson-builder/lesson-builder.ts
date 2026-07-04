@@ -21,7 +21,6 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { HasPendingOperations } from '../../../../core/guards/pending-operations.guard';
 import { PageSkeletonComponent } from '../../../../shared/components/loading';
-import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 
 @Component({
   selector: 'app-lessons-builder',
@@ -36,8 +35,7 @@ import { PublishCourseButtonComponent } from '../../components/publish-course-bu
     MainButtonComponent,
     DragDropModule,
     EmptyStateComponent,
-    PageSkeletonComponent,
-    PublishCourseButtonComponent
+    PageSkeletonComponent
   ],
   templateUrl: './lesson-builder.html',
   styleUrl: './lesson-builder.css'
@@ -57,7 +55,6 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   courseId!: string;
   sectionId!: string;
   isLoading = true;
-  course: Course | null = null; // Store course data for publish button
   hasQuiz = false; // Track if section has a quiz
   private destroy$ = new Subject<void>();
   private quizzesService = inject(QuizzesService);
@@ -177,9 +174,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     this.sectionsService.getCourse(this.courseId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (course: Course) => {
-          this.course = course; // Store course for publish button
-
+        next: (course) => {
           const section = course.sections.find(
             (s: Section) => s.id === this.sectionId
           );

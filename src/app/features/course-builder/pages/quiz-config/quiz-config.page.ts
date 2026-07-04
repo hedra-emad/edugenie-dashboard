@@ -21,10 +21,10 @@ import {
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
-import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 import { CoursesService } from '../../../../core/services/courses';
 import { Course } from '../../../../core/models/course.model';
 import { PageSkeletonComponent, CardSkeletonComponent } from '../../../../shared/components/loading';
+import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
 
 type PagePhase = 'list' | 'form' | 'generating' | 'review';
 
@@ -47,7 +47,6 @@ interface ReviewQuestion extends QuizQuestionDetail {
     MatTooltipModule,
     BackButtonComponent,
     MainButtonComponent,
-    PublishCourseButtonComponent,
     PageSkeletonComponent,
     CardSkeletonComponent,
   ],
@@ -63,10 +62,10 @@ export class QuizConfigPageComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
   private toastr = inject(ToastrService);
+  private parent = inject(CourseBuilderPageComponent, { optional: true });
 
   courseId!: string;
   sectionId!: string;
-  course: Course | null = null;
 
   // Quiz list
   quizzes: QuizListItem[] = [];
@@ -162,7 +161,6 @@ ngOnInit() {
 private loadCourse() {
   this.coursesService.getCourseById(this.courseId).subscribe({
     next: (course) => {
-      this.course = course;
       console.log('📚 Course loaded in quiz-config:', {
         courseId: course.id,
         totalLessons: course.totalLessons,
@@ -424,7 +422,7 @@ backToList() {
     this.navigateBackToList();
   } else {
     // Already on list route, just change phase and clear data
-    console.log('Already on list route, clearing data and setting list phase');
+    // console.log('Already on list route, clearing data and setting list phase');
     this.clearCurrentQuizData();
     this.phase = 'list';
     this.loadAllQuizzes();
@@ -633,11 +631,11 @@ private pollForCompletion(attempt = 0) {
           
           // Small delay to ensure backend has processed the quiz approval before reloading course
           setTimeout(() => {
-            console.log('⏳ Reloading course data after quiz approval...');
             this.loadEnrollmentStatus();
-            this.loadAllQuizzes(); 
-            this.loadCourse();
+            this.loadAllQuizzes();
+            this.parent?.refreshCourseData(); // Updates course data in parent, keeping publish button in sync
           }, 500);
+
         });
       },
       error: (err) => {

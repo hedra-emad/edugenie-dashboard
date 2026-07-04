@@ -5,6 +5,8 @@ import { ToastrService } from 'ngx-toastr';
 import Pusher, { Channel } from 'pusher-js';
 import { environment } from '../../../environments/environment';
 // import { AuthService } from './auth.service'; // adjust path if needed
+import { CoursesService } from './courses';
+import { CourseStatus } from '../enums/course-status';
 
 // notifications.ts (frontend)
 export type BackendNotificationType =
@@ -27,7 +29,9 @@ export type BackendNotificationType =
     | 'NEW_LOGIN_ATTEMPT'
     | 'WEEKLY_SUMMARY'
     | 'MONTHLY_SUMMARY'
-    | 'MILESTONE_REACHED';
+    | 'MILESTONE_REACHED'
+    | 'REMEDIATION_READY'
+    | 'QUIZ_GENERATION_AVAILABLE';
 
 
 export interface AppNotification {
@@ -64,6 +68,25 @@ export class NotificationsService implements OnDestroy {
     readonly error$ = this.errorSubject.asObservable();
     readonly hasNextPage$ = this.hasNextPageSubject.asObservable();
 
+    // Dedicated observables for high-impact real-time events
+    private readonly courseSubmittedForReviewSource = new BehaviorSubject<{ courseId: string } | null>(null);
+    readonly courseSubmittedForReview$ = this.courseSubmittedForReviewSource.asObservable();
+
+    private readonly courseApprovedSource = new BehaviorSubject<{ courseId: string } | null>(null);
+    readonly courseApproved$ = this.courseApprovedSource.asObservable();
+
+    private readonly courseRejectedSource = new BehaviorSubject<{ courseId: string; reason: string } | null>(null);
+    readonly courseRejected$ = this.courseRejectedSource.asObservable();
+
+    private readonly newEnrollmentSource = new BehaviorSubject<{ courseId: string } | null>(null);
+    readonly newEnrollment$ = this.newEnrollmentSource.asObservable();
+
+    private readonly certificateEarnedSource = new BehaviorSubject<{ courseId: string } | null>(null);
+    readonly certificateEarned$ = this.certificateEarnedSource.asObservable();
+
+    private readonly milestoneReachedSource = new BehaviorSubject<{ message: string } | null>(null);
+    readonly milestoneReached$ = this.milestoneReachedSource.asObservable();
+
     private currentPage = 1;
     private readonly pageSize = 10;
 
@@ -71,13 +94,14 @@ export class NotificationsService implements OnDestroy {
     private pusher: Pusher | null = null;
     private channel: Channel | null = null;
     private connectedUserId: string | null = null;
+    private readonly coursesService = inject(CoursesService);
 
     // ─── Call this once after the user logs in ───────────────────────────────
     connectPusher(userId: string): void {
-        // console.log('🔌 connectPusher called for:', userId);
+        console.log(`[PUSHER-CONNECT] Connecting Pusher for user: ${userId}`);
         // Guard: already connected for this exact user — do nothing.
         if (this.pusher && this.channel && this.connectedUserId === userId) {
-            // console.log('⚡ Pusher already connected for user, skipping duplicate init.');
+            console.log(`[PUSHER-CONNECT] Already connected for this user, skipping`);
             return;
         }
 
@@ -88,30 +112,50 @@ export class NotificationsService implements OnDestroy {
             cluster: environment.pusherCluster,
         });
 
-        // ── Task 5: connection diagnostics ──────────────────────────────────────
-        this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
-            // console.log('🔌 Pusher connection state changed:', states.previous, '->', states.current);
-        });
-        this.pusher.connection.bind('error', (err: any) => {
-            console.error('🔴 Pusher connection error:', err);
-        });
-        // ────────────────────────────────────────────────────────────────────────
-
-        this.channel = this.pusher.subscribe(`user-${userId}`);
+        const channelName = `user-${userId}`;
+        console.log(`[PUSHER-CONNECT] Subscribing to channel: ${channelName}`);
+        this.channel = this.pusher.subscribe(channelName);
         this.connectedUserId = userId;
-        // console.log('📡 Subscribed to channel:', `user-${userId}`);
 
         this.channel.bind('new-notification', (notification: AppNotification) => {
-            console.log('📩 Received new-notification event:', notification);
-            this.ngZone.run(() => {
-                this.notificationsSubject.next([
-                    notification,
-                    ...this.notificationsSubject.value,
-                ]);
-                this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
-                this.showToast(notification);
-            });
-        });
+    this.ngZone.run(() => {
+        console.log('[PUSHER-RX] Received notification:', notification);
+        this.notificationsSubject.next([
+            notification,
+            ...this.notificationsSubject.value,
+        ]);
+        this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+        this.showToast(notification);
+
+        // Emit dedicated observables for high-impact events
+        const type = (notification.type || '').toUpperCase();
+        const normalizedCourseId = notification.courseId ? String(notification.courseId).trim() : '';
+        
+        console.log(`[COURSE-STATUS] Received notification: type=${type}, courseId=${normalizedCourseId}`);
+        
+        // Course-related events that need UI updates
+        if (type === 'COURSE_APPROVED' && normalizedCourseId) {
+            this.coursesService.notifyCourseStatusChanged(normalizedCourseId, CourseStatus.PUBLISHED);
+            this.courseApprovedSource.next({ courseId: normalizedCourseId });
+        } else if (type === 'COURSE_REJECTED' && normalizedCourseId) {
+            this.coursesService.notifyCourseStatusChanged(normalizedCourseId, CourseStatus.REJECTED);
+            const reason = notification.message || '';
+            this.courseRejectedSource.next({ courseId: normalizedCourseId, reason });
+        } else if (type === 'COURSE_SUBMITTED_FOR_REVIEW' && normalizedCourseId) {
+            this.coursesService.notifyCourseStatusChanged(normalizedCourseId, CourseStatus.UNDER_REVIEW);
+            this.courseSubmittedForReviewSource.next({ courseId: normalizedCourseId });
+        }
+        
+        // Enrollment and achievement events
+        if (type === 'NEW_ENROLLMENT' && normalizedCourseId) {
+            this.newEnrollmentSource.next({ courseId: normalizedCourseId });
+        } else if (type === 'CERTIFICATE_EARNED' && normalizedCourseId) {
+            this.certificateEarnedSource.next({ courseId: normalizedCourseId });
+        } else if (type === 'MILESTONE_REACHED') {
+            this.milestoneReachedSource.next({ message: notification.message });
+        }
+    });
+});
     }
 
 
@@ -134,19 +178,27 @@ export class NotificationsService implements OnDestroy {
         const title = notification.title;
         const message = notification.message?.split('Reason:')[0].trim() ?? '';
 
-        switch (type) {
-            case 'COURSE_APPROVED':
-                this.toastr.success(message, title);
-                break;
-            case 'COURSE_REJECTED':
-                this.toastr.error(message, title);
-                break;
-            case 'COURSE_SUBMITTED_FOR_REVIEW':  // ← ADD THIS
-                this.toastr.info(message, title);
-                break;
-            default:
-                this.toastr.info(message, title);
+        // Success toasts (green)
+        if (['COURSE_APPROVED', 'PURCHASE_COMPLETED', 'CERTIFICATE_EARNED', 'NEW_ENROLLMENT', 
+             'MILESTONE_REACHED', 'EARNING_RECORDED', 'QUIZ_GENERATION_AVAILABLE'].includes(type)) {
+            this.toastr.success(message, title);
+            return;
         }
+
+        // Error toasts (red)
+        if (['COURSE_REJECTED', 'PAYMENT_FAILED', 'LOW_RATING', 'CONTENT_REMOVED'].includes(type)) {
+            this.toastr.error(message, title);
+            return;
+        }
+
+        // Warning toasts (orange)
+        if (['INACTIVITY_REMINDER', 'NEW_LOGIN_ATTEMPT'].includes(type)) {
+            this.toastr.warning(message, title);
+            return;
+        }
+
+        // Info toasts (blue) - default for all other types
+        this.toastr.info(message, title);
     }
 
     // ─── Existing HTTP methods (unchanged) ───────────────────────────────────
@@ -230,4 +282,7 @@ export class NotificationsService implements OnDestroy {
                 catchError((err) => { this.toastr.error(err.error?.message || 'Failed to clear notifications'); return of(null); })
             ).subscribe();
     }
+
+
+    
 }
