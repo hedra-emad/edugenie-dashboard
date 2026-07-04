@@ -1,4 +1,4 @@
-﻿<!-- <div class="min-h-screen bg-[#f5f7fa] font-sans antialiased"> -->
+<!-- <div class="min-h-screen bg-[#f5f7fa] font-sans antialiased"> -->
 
 
 <ng-container *ngIf="isAdmin">
@@ -36,8 +36,8 @@
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.09em] text-right leading-snug pt-0.5">
               Total<br>Revenue</p>
           </div>
-          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.totalRevenue
-            || 0 | number:'1.2-2' }} EGP</p>
+          <p class="text-[26px] font-black text-slate-800 leading-none mt-1.5 z-10">{{ adminStatsData?.platformRevenue
+            || 0 | number:'1.0-0' }} EGP</p>
           <div class="absolute bottom-0 left-0 right-0 h-[52px] pointer-events-none">
             <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="w-full h-full">
               <defs>
@@ -208,15 +208,17 @@
               adminStatsData?.totalRevenue / 30) | number:'1.2-2' }} EGP</p>
           </div>
           <div>
-            <p class="text-[12px] font-bold text-slate-500 mb-1">Best Day</p>
-            <p class="text-[16px] font-black text-slate-800">Monday</p>
+            <p class="text-[12px] font-bold text-slate-500 mb-1">{{ bestPeriodLabel }}</p>
+            <p class="text-[16px] font-black text-slate-800">{{ bestPeriodValue }}</p>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-500 mb-1">Growth</p>
-            <p class="text-[18px] font-black text-emerald-500 flex items-center gap-1">
-              <mat-icon class="!text-[20px] !w-5 !h-5">arrow_upward</mat-icon> 18%
+            <p class="text-[18px] font-black flex items-center gap-1"
+              [ngClass]="(platformData?.revenueGrowthPercent || 0) > 0 ? 'text-emerald-500' : ((platformData?.revenueGrowthPercent || 0) < 0 ? 'text-rose-500' : 'text-slate-500')">
+              <mat-icon class="!text-[20px] !w-5 !h-5">{{ (platformData?.revenueGrowthPercent || 0) > 0 ? 'arrow_upward' : ((platformData?.revenueGrowthPercent || 0) < 0 ? 'arrow_downward' : 'remove') }}</mat-icon> 
+              {{ (platformData?.revenueGrowthPercent || 0) | number:'1.0-1' }}%
             </p>
-            <p class="text-[11px] text-slate-400 mt-1">vs last 30 days</p>
+            <p class="text-[11px] text-slate-400 mt-1">vs {{ revenuePeriod === 'week' ? 'last 7 days' : revenuePeriod === 'year' ? 'last year' : 'last 30 days' }}</p>
           </div>
         </div>
       </div>
@@ -518,7 +520,7 @@
               <div class="w-10 h-10 rounded-[11px] flex items-center justify-center bg-slate-100">
                 <mat-icon class="!text-[20px] !w-5 !h-5 text-slate-500">settings</mat-icon>
               </div>
-              <span class="text-[12px] font-bold text-slate-500 group-hover:text-slate-700 text-center">Settings</span>
+              <span class="text-[12px] font-bold text-slate-500 group-hover:text-slate-700 text-center">Account Settings</span>
             </a>
 
           </div>

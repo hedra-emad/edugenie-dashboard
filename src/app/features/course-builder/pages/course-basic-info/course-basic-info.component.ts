@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy, ViewChild, computed } from '@angular/core';
+import { Component, Input, ElementRef, signal, inject, DestroyRef, effect, OnInit, OnDestroy, ViewChild, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,24 +8,23 @@ import { RequirementsInputComponent } from '../../components/requirements-input/
 import { Output, EventEmitter } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CoursesService } from '../../../../core/services/courses';
-import { CloudinaryService } from '../../../../core/services/cloudinary';
+import { CloudinaryService, SignatureResponse, CloudinaryUploadResponse } from '../../../../core/services/cloudinary';
 import { FormBuilder } from '@angular/forms';
 import { CreateCoursePayload } from '../../../../core/models/course.model';
 import { ActionBarComponent } from "../../components/shared/action-bar/action-bar.component";
-import { Subject, of } from 'rxjs';
+import { Subject, of, Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, switchMap } from 'rxjs/operators';
 import { CourseLevel } from '../../../../core/enums/course-level.enum';
 import { ToastrService } from 'ngx-toastr';
 import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 
-// Draft system imports
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
 import { PreviewVideoUploadComponent } from "../../components/preview-video-upload/preview-video-upload.component";
-import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
+import { AuthService } from '../../../../core/services/auth.service';
 
 
 @Component({
@@ -41,7 +40,6 @@ import { PublishCourseButtonComponent } from '../../components/publish-course-bu
     ActionBarComponent,
     AppLoader,
     PreviewVideoUploadComponent,
-    PublishCourseButtonComponent,
   ],
   templateUrl: './course-basic-info.component.html',
   styleUrl: './course-basic-info.component.css'
@@ -57,11 +55,31 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private fileDraftService = inject(FileDraftService);
-
+ private authService = inject(AuthService);
   // Preview Video Fields
   coursePreviewVideoUrl: string | null = null;
   coursePreviewVideoPublicId: string | null = null;
   @ViewChild(PreviewVideoUploadComponent) previewVideoUploadComponent?: PreviewVideoUploadComponent;
+
+  // ─── Thumbnail Cropper State ────────────────────────────────
+  isCropperOpen = signal(false);
+  selectedImageSrc: string | null = null;
+  livePreviewUrl: string | null = null;
+  cropTranslateX = 0;
+  cropTranslateY = 0;
+  cropScale = 1;
+  cropRotation = 0;
+  _isDragging = false;
+  private _dragStartX = 0;
+  private _dragStartY = 0;
+  private _translateAtDragStart = { x: 0, y: 0 };
+  private _naturalW = 0;
+  private _naturalH = 0;
+  @ViewChild('cropImg') cropImg!: ElementRef<HTMLImageElement>;
+  
+  readonly CONTAINER_SIZE = 380;
+  readonly CROP_WIDTH = 300;
+  readonly CROP_HEIGHT = 200;
 
   // Lifecycle management
   private destroy$ = new Subject<void>();
@@ -83,7 +101,6 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   openLevel = false;
   mode = signal<'create' | 'update'>('create');
   courseId: string | null = null;
-  course = computed(() => this.parent?.courseData() || null); // Get course for publish button
   isLoading = signal(true);
   existingThumbnailPublicId: string | null = null;
 
@@ -98,6 +115,8 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   // ================= Draft State =================
   draftId = '';
   hasDraftData = signal(false);
+  private pendingThumbnailSignature: { sig: SignatureResponse; fetchedAt: number } | null = null;
+
 
 
 
@@ -134,6 +153,26 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
 
     this.connectDraftSystem();
   }
+
+
+
+
+// call this inside handleFile(), right after processedFile is set, non-blocking
+private prefetchThumbnailSignature(userId: string) {
+  const folder = `edugenie/courses/thumbnails/${userId}`;
+  this.cloudinaryService.getSignature(folder).subscribe({
+    next: (sig) => { this.pendingThumbnailSignature = { sig, fetchedAt: Date.now() }; },
+    error: () => { this.pendingThumbnailSignature = null; } // silent — fall back to live fetch later
+  });
+}
+
+private getUsableSignature(): SignatureResponse | undefined {
+  if (!this.pendingThumbnailSignature) return undefined;
+  const ageMs = Date.now() - this.pendingThumbnailSignature.fetchedAt;
+  // Cloudinary allows ~1hr skew on signed timestamps — 10 min gives comfortable margin
+  return ageMs < 10 * 60 * 1000 ? this.pendingThumbnailSignature.sig : undefined;
+}
+
 
   private connectDraftSystem() {
     // Connect form to draft system
@@ -247,72 +286,142 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     this.listenToArraysChanges();
   }
 
-  handleFile(file: File) {
+  /**
+ * Resize + compress an image client-side before upload.
+ * Keeps thumbnails well under 300KB regardless of the original
+ * file size, since Cloudinary upload time is dominated by raw
+ * bytes transmitted on slow connections.
+ */
+private async compressImage(
+  file: File,
+  maxWidth = 1280,
+  maxHeight = 720,
+  quality = 0.8
+): Promise<File> {
+  const bitmap = await createImageBitmap(file);
 
-    this.imageError = null;
-
-    const maxSize = 2 * 1024 * 1024;
-
-    // 1) VALIDATION FIRST
-    if (file.size > maxSize) {
-      this.imageError = 'Image must be less than 2MB';
-      this.selectedThumbnailFile = null;
-      this.hasThumbnail.set(false);
-
-      this.courseForm.get('thumbnail')?.reset();
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      this.imageError = 'Please upload a valid image';
-      this.selectedThumbnailFile = null;
-      this.hasThumbnail.set(false);
-
-      this.courseForm.get('thumbnail')?.reset();
-      return;
-    }
-
-    // 2) ONLY IF VALID → SET STATE
-    this.selectedThumbnailFile = file;
-    this.hasThumbnail.set(true);
-
-    // Store file in draft system
-    this.fileDraftService.addFileToDraft(
-      this.draftId,
-      'thumbnail',
-      file,
-      {
-        maxSize: 2 * 1024 * 1024, // 2MB
-        allowedTypes: ['image']
-      }
-    ).subscribe({
-      next: (fileId) => {
-        console.log('Thumbnail stored in draft system:', fileId);
-      },
-      error: (error) => {
-        console.error('Failed to store thumbnail in draft:', error);
-      }
-    });
-
-    this.courseForm.get('thumbnail')?.setValue(file.name);
-    this.courseForm.get('thumbnail')?.markAsDirty();
-    this.courseForm.get('thumbnail')?.updateValueAndValidity();
-
-    // 3) preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.thumbnailPreview.set(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  let { width, height } = bitmap;
+  if (width > maxWidth || height > maxHeight) {
+    const ratio = Math.min(maxWidth / width, maxHeight / height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
   }
 
-  onFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-
-    if (!file) return;
-
-    this.handleFile(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    // Fallback: if canvas isn't available for some reason, use original file
+    bitmap.close?.();
+    return file;
   }
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close?.();
+
+  const blob: Blob = await new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error('Image compression failed'))),
+      'image/jpeg',
+      quality
+    )
+  );
+
+  // If compression somehow produced a larger file than the original
+  // (rare, e.g. tiny already-optimized PNGs), just keep the original.
+  if (blob.size >= file.size) {
+    return file;
+  }
+
+  const newName = file.name.replace(/\.\w+$/, '.jpg');
+  return new File([blob], newName, { type: 'image/jpeg' });
+}
+
+  async handleFile(file: File) {
+
+  this.imageError = null;
+
+  const maxSize = 2 * 1024 * 1024;
+
+  // 1) VALIDATION FIRST (on the original file, before compression)
+  if (file.size > maxSize) {
+    this.imageError = 'Image must be less than 2MB';
+    this.selectedThumbnailFile = null;
+    this.hasThumbnail.set(false);
+
+    this.courseForm.get('thumbnail')?.reset();
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    this.imageError = 'Please upload a valid image';
+    this.selectedThumbnailFile = null;
+    this.hasThumbnail.set(false);
+
+    this.courseForm.get('thumbnail')?.reset();
+    return;
+  }
+
+  // 2) COMPRESS before storing/uploading
+  let processedFile: File;
+  try {
+    processedFile = await this.compressImage(file);
+  } catch (err) {
+    console.error('Thumbnail compression failed, using original file:', err);
+    processedFile = file; // graceful fallback — don't block the user
+  }
+
+  // 3) ONLY IF VALID → SET STATE
+  this.selectedThumbnailFile = processedFile;
+  this.hasThumbnail.set(true);
+
+  // Store file in draft system
+  this.fileDraftService.addFileToDraft(
+    this.draftId,
+    'thumbnail',
+    processedFile,
+    {
+      maxSize: 2 * 1024 * 1024, // 2MB
+      allowedTypes: ['image']
+    }
+  ).subscribe({
+    next: (fileId) => {
+      console.log('Thumbnail stored in draft system:', fileId);
+    },
+    error: (error) => {
+      console.error('Failed to store thumbnail in draft:', error);
+    }
+  });
+
+  this.courseForm.get('thumbnail')?.setValue(processedFile.name);
+  this.courseForm.get('thumbnail')?.markAsDirty();
+  this.courseForm.get('thumbnail')?.updateValueAndValidity();
+
+  // 4) preview
+  const reader = new FileReader();
+  reader.onload = () => {
+    this.thumbnailPreview.set(reader.result as string);
+  };
+  reader.readAsDataURL(processedFile);
+}
+
+  async onFileSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  
+  // Open cropper instead of directly processing the file
+  this.openThumbnailCropper(file);
+}
+
+async onDrop(event: DragEvent) {
+  event.preventDefault();
+  this.isDragging.set(false);
+
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
+
+  await this.handleFile(file);
+}
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -324,15 +433,182 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     this.isDragging.set(false);
   }
 
-  onDrop(event: DragEvent) {
+  // ─── Thumbnail Cropper Methods ─────────────────────────────────────────────
+  private openThumbnailCropper(file: File) {
+    this.selectedImageSrc = URL.createObjectURL(file);
+    this.isCropperOpen.set(true);
+  }
+
+  onCropImageLoaded(event: Event) {
+    const img = event.target as HTMLImageElement;
+    this._naturalW = img.naturalWidth;
+    this._naturalH = img.naturalHeight;
+
+    const coverWidth = this.CROP_WIDTH / this._naturalW;
+    const coverHeight = this.CROP_HEIGHT / this._naturalH;
+    const cover = Math.max(coverWidth, coverHeight);
+    this.cropScale = cover;
+    this.cropTranslateX = 0;
+    this.cropTranslateY = 0;
+    this.cropRotation = 0;
+
+    setTimeout(() => this.refreshThumbnailPreview(), 50);
+  }
+
+  get cropImageStyle(): Record<string, string> {
+    return {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      width: `${this._naturalW}px`,
+      height: `${this._naturalH}px`,
+      'max-width': 'none',
+      'transform-origin': 'center center',
+      transform: `translate(calc(-50% + ${this.cropTranslateX}px), calc(-50% + ${this.cropTranslateY}px)) rotate(${this.cropRotation}deg) scale(${this.cropScale})`,
+      'will-change': 'transform',
+      'user-select': 'none',
+      'pointer-events': 'none'
+    };
+  }
+
+  onCropPointerDown(event: MouseEvent | TouchEvent) {
     event.preventDefault();
-    this.isDragging.set(false);
+    this._isDragging = true;
+    const pt = this.getPoint(event);
+    this._dragStartX = pt.x;
+    this._dragStartY = pt.y;
+    this._translateAtDragStart = { x: this.cropTranslateX, y: this.cropTranslateY };
+  }
 
-    const file = event.dataTransfer?.files?.[0];
+  @HostListener('document:mousemove', ['$event'])
+  @HostListener('document:touchmove', ['$event'])
+  onDocumentMove(event: MouseEvent | TouchEvent) {
+    if (!this._isDragging || !this.isCropperOpen()) return;
+    event.preventDefault();
+    const pt = this.getPoint(event);
+    this.cropTranslateX = this._translateAtDragStart.x + (pt.x - this._dragStartX);
+    this.cropTranslateY = this._translateAtDragStart.y + (pt.y - this._dragStartY);
+    this.refreshThumbnailPreview();
+  }
 
-    if (!file) return;
+  @HostListener('document:mouseup')
+  @HostListener('document:touchend')
+  onDocumentUp() { this._isDragging = false; }
 
-    this.handleFile(file);
+  onCropWheel(event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaY < 0 ? 0.08 : -0.08;
+    this.cropScale = Math.min(10, Math.max(0.1, this.cropScale + delta));
+    this.refreshThumbnailPreview();
+  }
+
+  zoomIn() { 
+    this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); 
+    this.refreshThumbnailPreview(); 
+  }
+
+  zoomOut() { 
+    this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); 
+    this.refreshThumbnailPreview(); 
+  }
+
+  updateZoom(e: Event) {
+    this.cropScale = parseFloat((e.target as HTMLInputElement).value);
+    this.refreshThumbnailPreview();
+  }
+
+  rotateLeft() { 
+    this.cropRotation -= 90; 
+    this.refreshThumbnailPreview(); 
+  }
+
+  rotateRight() { 
+    this.cropRotation += 90; 
+    this.refreshThumbnailPreview(); 
+  }
+
+  resetCropTransform() {
+    const coverWidth = this.CROP_WIDTH / (this._naturalW || 1);
+    const coverHeight = this.CROP_HEIGHT / (this._naturalH || 1);
+    const cover = Math.max(coverWidth, coverHeight);
+    this.cropScale = cover;
+    this.cropTranslateX = 0;
+    this.cropTranslateY = 0;
+    this.cropRotation = 0;
+    this.refreshThumbnailPreview();
+  }
+
+  refreshThumbnailPreview() {
+    if (!this.cropImg?.nativeElement?.complete) return;
+    const img = this.cropImg.nativeElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = this.CROP_WIDTH;
+    canvas.height = this.CROP_HEIGHT;
+    const ctx = canvas.getContext('2d')!;
+    this.drawToCanvas(ctx, img, this.CROP_WIDTH, this.CROP_HEIGHT);
+    this.livePreviewUrl = canvas.toDataURL('image/png');
+  }
+
+  private drawToCanvas(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(width / 2 + this.cropTranslateX, height / 2 + this.cropTranslateY);
+    ctx.rotate(this.cropRotation * Math.PI / 180);
+    ctx.scale(this.cropScale, this.cropScale);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.restore();
+  }
+
+  confirmThumbnailCrop() {
+    const img = this.cropImg?.nativeElement;
+    if (!img) return;
+
+    const OUT_W = 1280;
+    const OUT_H = 720;
+    const canvas = document.createElement('canvas');
+    canvas.width = OUT_W;
+    canvas.height = OUT_H;
+    const ctx = canvas.getContext('2d')!;
+
+    const scaleX = OUT_W / this.CROP_WIDTH;
+    const scaleY = OUT_H / this.CROP_HEIGHT;
+    ctx.save();
+    ctx.translate(
+      OUT_W / 2 + this.cropTranslateX * scaleX,
+      OUT_H / 2 + this.cropTranslateY * scaleY
+    );
+    ctx.rotate(this.cropRotation * Math.PI / 180);
+    ctx.scale(this.cropScale * scaleX, this.cropScale * scaleY);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.restore();
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) { this.toastr.error('Failed to process image.'); return; }
+
+      const croppedFile = new File([blob], 'thumbnail-cropped.jpg', { type: 'image/jpeg' });
+      await this.handleFile(croppedFile);
+      this.isCropperOpen.set(false);
+      this.revokeCropImage();
+    }, 'image/jpeg', 0.85);
+  }
+
+  cancelThumbnailCrop() {
+    this.isCropperOpen.set(false);
+    this.revokeCropImage();
+  }
+
+  private revokeCropImage() {
+    if (this.selectedImageSrc?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.selectedImageSrc);
+    }
+    this.selectedImageSrc = null;
+  }
+
+  private getPoint(e: MouseEvent | TouchEvent): { x: number; y: number } {
+    if (e instanceof TouchEvent && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
   }
 
   selectLevel(level: CourseLevel) {
@@ -556,7 +832,9 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateCourse() {
+
+
+    updateCourse() {
     if (this.courseForm.invalid) {
       this.courseForm.markAllAsTouched();
       return;
@@ -589,63 +867,63 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
       requirements: formValue.requirements || [],
     };
 
-    const previewComp = this.previewVideoUploadComponent;
-    const previewUpload$ = previewComp ? previewComp.upload() : of(null);
+    const userId = this.authService.currentUserSignal()?.id;
+    const thumbnailUpload$: Observable<CloudinaryUploadResponse | null> = this.selectedThumbnailFile && userId
+      ? this.cloudinaryService.uploadThumbnail(
+          this.selectedThumbnailFile,
+          userId,
+          this.existingThumbnailPublicId,
+        )
+      : of<CloudinaryUploadResponse | null>(null);
 
-    previewUpload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (videoRes) => {
-        if (videoRes) {
-          // A new video was uploaded
-          payload.previewVideoUrl = videoRes.url;
-          payload.previewVideoPublicId = videoRes.publicId;
-          this.coursePreviewVideoUrl = videoRes.url;
-          this.coursePreviewVideoPublicId = videoRes.publicId;
+    // Sequential: thumbnail (small, fast) first, then video (large, slow).
+    thumbnailUpload$
+      .pipe(
+        switchMap((thumbRes) => {
+          if (thumbRes) {
+            payload.thumbnail = thumbRes.secure_url;
+            payload.thumbnailPublicId = thumbRes.public_id;
+            this.existingThumbnailPublicId = thumbRes.public_id;
+          } else {
+            payload.thumbnail = formValue.thumbnail;
+          }
 
-          this.courseForm.patchValue({
-            previewVideoUrl: videoRes.url,
-            previewVideoPublicId: videoRes.publicId
-          }, { emitEvent: false });
-        } else if (previewComp?.markedForDeletion()) {
-          // User removed the video — send nulls now (form controls were kept intact)
-          payload.previewVideoUrl = null;
-          payload.previewVideoPublicId = null;
-        } else {
-          payload.previewVideoUrl = formValue.previewVideoUrl;
-          payload.previewVideoPublicId = formValue.previewVideoPublicId;
-        }
+          const previewComp = this.previewVideoUploadComponent;
+          return previewComp ? previewComp.upload() : of(null);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (videoRes: any) => {
+          const previewComp = this.previewVideoUploadComponent;
 
-        const upload$ = this.selectedThumbnailFile
-          ? this.cloudinaryService.uploadThumbnail(
-            this.selectedThumbnailFile,
-            this.courseId!,
-            this.existingThumbnailPublicId,
-          )
-          : null;
+          if (videoRes) {
+            payload.previewVideoUrl = videoRes.url;
+            payload.previewVideoPublicId = videoRes.publicId;
+            this.coursePreviewVideoUrl = videoRes.url;
+            this.coursePreviewVideoPublicId = videoRes.publicId;
 
-        if (upload$) {
-          upload$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-            next: (res) => {
-              payload.thumbnail = res.secure_url;
-              payload.thumbnailPublicId = res.public_id;
-              this.existingThumbnailPublicId = res.public_id;
-              this.sendUpdate(payload);
-            },
-            error: (err) => {
-              this.status.set('ready');
-              console.error(err);
-            }
-          });
-        } else {
-          payload.thumbnail = formValue.thumbnail;
+            this.courseForm.patchValue({
+              previewVideoUrl: videoRes.url,
+              previewVideoPublicId: videoRes.publicId
+            }, { emitEvent: false });
+          } else if (previewComp?.markedForDeletion()) {
+            payload.previewVideoUrl = null;
+            payload.previewVideoPublicId = null;
+          } else {
+            payload.previewVideoUrl = formValue.previewVideoUrl;
+            payload.previewVideoPublicId = formValue.previewVideoPublicId;
+          }
+
           this.sendUpdate(payload);
+        },
+        error: (err: unknown) => {
+          this.status.set('ready');
+          console.error('Update upload failed:', err);
         }
-      },
-      error: (err) => {
-        this.status.set('ready');
-        console.error('Preview video upload failed:', err);
-      }
-    });
-  }
+      });
+    }
+
 
   sendUpdate(payload: any) {
     this.coursesService.updateCourse(this.courseId!, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -702,109 +980,82 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   }
 
   createCourse() {
-    // 1) Validate form + thumbnail presence
-    if (this.courseForm.invalid || !this.selectedThumbnailFile) {
-      this.courseForm.markAllAsTouched();
-      if (!this.selectedThumbnailFile) {
-        this.imageError = 'Thumbnail is required';
-      }
-      return;
+  if (this.courseForm.invalid || !this.selectedThumbnailFile) {
+    this.courseForm.markAllAsTouched();
+    if (!this.selectedThumbnailFile) {
+      this.imageError = 'Thumbnail is required';
     }
-
-    // 2) Set loading state
-    this.status.set('saving');
-    this.isSaving.set(true);
-
-    const form = this.courseForm.getRawValue();
-
-    // 3) Strict guard
-    if (!form.title || !form.description || !form.level || !form.category) {
-      this.courseForm.markAllAsTouched();
-      this.status.set('idle');
-      this.isSaving.set(false);
-      return;
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // PHASE 1: Stage thumbnail in pending folder to get a valid
-    //          URL (backend requires non-empty URL to create course)
-    // ─────────────────────────────────────────────────────────
-    this.cloudinaryService
-      .uploadThumbnail(this.selectedThumbnailFile!)   // no courseId → pending folder
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (stagingRes) => {
-          const stagingPublicId = stagingRes.public_id;
-
-          // PHASE 2: Create course with the staging thumbnail URL
-          const payload: CreateCoursePayload = {
-            title: form.title!.trim(),
-            description: form.description!.trim(),
-            level: form.level as CourseLevel,
-            categoryId: form.category as string,
-            goals: (form.goals || []).map((g: any) =>
-              typeof g === 'string' ? g : g?.value
-            ),
-            requirements: (form.requirements || []).map((r: any) =>
-              typeof r === 'string' ? r : r?.value
-            ),
-            thumbnail: stagingRes.secure_url,
-            thumbnailPublicId: stagingRes.public_id,
-          };
-
-          this.coursesService.createCourse(payload)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: (course) => {
-                this.courseId = course.id;
-
-                // PHASE 3: Re-upload to correct courseId folder,
-                //          delete staging asset, patch course with final URL
-                this.cloudinaryService
-                  .uploadThumbnail(
-                    this.selectedThumbnailFile!,
-                    this.courseId,          // now we have the real courseId
-                    stagingPublicId,        // delete the pending asset after upload
-                  )
-                  .pipe(takeUntilDestroyed(this.destroyRef))
-                  .subscribe({
-                    next: (finalRes) => {
-                      this.existingThumbnailPublicId = finalRes.public_id;
-
-                      this.coursesService
-                        .updateCourse(this.courseId!, {
-                          thumbnail: finalRes.secure_url,
-                          thumbnailPublicId: finalRes.public_id,
-                        })
-                        .pipe(takeUntilDestroyed(this.destroyRef))
-                        .subscribe({
-                          next: () => this.finalizeCourseCreation(course.id),
-                          error: () => this.finalizeCourseCreation(course.id), // non-blocking
-                        });
-                    },
-                    error: (err) => {
-                      // Staging URL is still valid — course works, just folder is not ideal
-                      console.error('PHASE 3 RE-UPLOAD ERROR:', err);
-                      this.existingThumbnailPublicId = stagingPublicId;
-                      this.finalizeCourseCreation(course.id);
-                    }
-                  });
-              },
-              error: (err) => {
-                console.error('CREATE COURSE ERROR:', err);
-                this.status.set('idle');
-                this.isSaving.set(false);
-              }
-            });
-        },
-        error: (err) => {
-          console.error('STAGING UPLOAD ERROR:', err);
-          this.status.set('idle');
-          this.isSaving.set(false);
-          this.imageError = 'Failed to upload thumbnail';
-        }
-      });
+    return;
   }
+
+  this.status.set('saving');
+  this.isSaving.set(true);
+
+  const form = this.courseForm.getRawValue();
+
+  if (!form.title || !form.description || !form.level || !form.category) {
+    this.courseForm.markAllAsTouched();
+    this.status.set('idle');
+    this.isSaving.set(false);
+    return;
+  }
+
+  const userId = this.authService.currentUserSignal()?.id;
+if (!userId) {
+  this.status.set('idle');
+  this.isSaving.set(false);
+  this.imageError = 'You must be logged in to upload a thumbnail';
+  return;
+}
+
+  // ─────────────────────────────────────────────────────────
+  // Single upload: folder is keyed by userId, so no staging/
+  // re-upload dance is needed.
+  // ─────────────────────────────────────────────────────────
+  this.cloudinaryService
+    .uploadThumbnail(this.selectedThumbnailFile!, userId)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: (uploadRes) => {
+        this.existingThumbnailPublicId = uploadRes.public_id;
+
+        const payload: CreateCoursePayload = {
+          title: form.title!.trim(),
+          description: form.description!.trim(),
+          level: form.level as CourseLevel,
+          categoryId: form.category as string,
+          goals: (form.goals || []).map((g: any) =>
+            typeof g === 'string' ? g : g?.value
+          ),
+          requirements: (form.requirements || []).map((r: any) =>
+            typeof r === 'string' ? r : r?.value
+          ),
+          thumbnail: uploadRes.secure_url,
+          thumbnailPublicId: uploadRes.public_id,
+        };
+
+        this.coursesService.createCourse(payload)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (course) => {
+              this.courseId = course.id;
+              this.finalizeCourseCreation(course.id);
+            },
+            error: (err) => {
+              console.error('CREATE COURSE ERROR:', err);
+              this.status.set('idle');
+              this.isSaving.set(false);
+            }
+          });
+      },
+      error: (err) => {
+        console.error('THUMBNAIL UPLOAD ERROR:', err);
+        this.status.set('idle');
+        this.isSaving.set(false);
+        this.imageError = 'Failed to upload thumbnail';
+      }
+    });
+}
 
   /** Shared finalization after all phases of course creation succeed */
   private finalizeCourseCreation(courseId: string) {

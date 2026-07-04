@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, DestroyRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CourseHeaderComponent } from '../../components/course-header/course-header.component';
@@ -20,14 +20,17 @@ import { PageSkeletonComponent } from '../../../../shared/components/loading';
     MatIconModule,
     CourseHeaderComponent,
     RouterOutlet,
-    PageSkeletonComponent
+    PageSkeletonComponent,
+    PublishCourseButtonComponent
   ],
   templateUrl: './course-builder-page.component.html',
-  styleUrl: './course-builder-page.component.css'
+  styleUrl: './course-builder-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CourseBuilderPageComponent implements OnInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   currentStep = signal(1);
   courseId = signal<string | null>(null);
   courseTitle = signal<string | null>(null);
@@ -44,8 +47,34 @@ export class CourseBuilderPageComponent implements OnInit {
     this.coursesService.courseStatusChanged$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ courseId, status }) => {
-        if (courseId === this.courseId()) {
+        // BUG 2 FIX: Normalize courseId comparison to handle format/type mismatches
+        const incoming = String(courseId ?? '').trim();
+        const current = String(this.courseId() ?? '').trim();
+        
+        console.log(`[COURSE-BUILDER] Received status change: incoming=${incoming}, current=${current}, status=${status}`);
+        
+        if (incoming && current && incoming === current) {
+          console.log(`[COURSE-BUILDER] IDs match! Updating course status to ${status}`);
           this.courseStatus.set(status);
+
+          // Update courseData so anything reading course() (e.g. the publish button) updates too
+          this.courseData.update(course => {
+            if (course) {
+              // Create a NEW object reference to ensure Angular detects the change
+              const updatedCourse = { 
+                ...course, 
+                courseStatus: status,
+                __lastUpdate: Date.now()
+              };
+              return updatedCourse;
+            }
+            return course;
+          });
+          
+          // Trigger change detection for OnPush strategy
+          this.cdr.markForCheck();
+        } else {
+          console.log(`[COURSE-BUILDER] ID mismatch - skipping update`);
         }
       });
 
@@ -93,6 +122,10 @@ export class CourseBuilderPageComponent implements OnInit {
         }
       });
   }
+
+  public refreshCourseData() {
+  this.fetchCourseData();
+}
 
   private fetchCourseData() {
     const id = this.courseId();

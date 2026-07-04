@@ -1,8 +1,9 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-requirements-input',
@@ -13,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class RequirementsInputComponent {
   private fb = inject(FormBuilder);
+  private ngZone = inject(NgZone);
   @Input({ required: true }) requirementsArray!: FormArray;
 
   get requirements(): FormControl[] {
@@ -28,14 +30,14 @@ export class RequirementsInputComponent {
     this.requirementsArray.push(newControl);
     this.requirementsArray.markAsDirty();
     
-    // Focus the new input after a short delay
-    setTimeout(() => {
+    // Focus the new input after Angular's change detection completes
+    this.ngZone.onStable.pipe(take(1)).subscribe(() => {
       const inputs = document.querySelectorAll('app-requirements-input input[type="text"]');
       const lastInput = inputs[inputs.length - 1] as HTMLInputElement;
       if (lastInput) {
         lastInput.focus();
       }
-    }, 100);
+    });
   }
 
   removeRequirement(index: number) {

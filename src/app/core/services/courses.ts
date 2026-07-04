@@ -42,7 +42,7 @@ export class CoursesService {
       .pipe(map((res) => res.data));
   }
 
-  updateCourse(id: string, payload: Partial<CreateCoursePayload>) {
+  updateCourse(id: string, payload: Partial<CreateCoursePayload>): Observable<Course> {
     return this.http
       .patch<{ success: boolean; data: Course }>(`${this.baseUrl}/${id}`, payload)
       .pipe(map((res) => res.data));

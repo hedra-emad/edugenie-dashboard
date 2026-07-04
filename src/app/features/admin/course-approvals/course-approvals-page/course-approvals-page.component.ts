@@ -16,6 +16,7 @@ import { ApproveCourseDialogComponent } from '../../../../shared/components/dial
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { ToastrService } from 'ngx-toastr';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
+import { NotificationsService } from '../../../../core/services/notifications';
 import { CloudinaryThumbPipe } from '../../../../shared/pipes/cloudinary-thumb.pipe';
 
 @Component({
@@ -31,6 +32,7 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly toastr = inject(ToastrService);
+  private readonly notificationsService = inject(NotificationsService);
   private readonly destroy$ = new Subject<void>();
 
   courses: CourseApproval[] = [];
@@ -63,6 +65,8 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   isBulkRejectMode = false;
 
   ngOnInit(): void {
+    // BUG 2 FIX: mark pending tab active on initial load so real-time refresh works immediately
+    this.service.setPendingTabActive();
     this.service.loadData();
 
     combineLatest([
@@ -84,6 +88,13 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
         }
 
         this.cdr.markForCheck();
+      });
+
+    // BUG 1 FIX: Subscribe to courseSubmittedForReview$ to refresh stats and pending page when an instructor submits a course
+    this.notificationsService.courseSubmittedForReview$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.service.refreshPendingSummary();
       });
   }
 
@@ -239,6 +250,19 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   onSelectionChange(selectedIds: Set<string>): void {
     this.selectedCourseIds = selectedIds;
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Handle tab filter changes from the approvals table component.
+   * Updates the active filter and keeps the service's isPendingTabActive flag in sync.
+   */
+  onFilterChange(filter: FilterType): void {
+    this.activeTableFilter = filter;
+    if (filter === 'pending') {
+      this.service.setPendingTabActive();
+    } else {
+      this.service.setPendingTabInactive();
+    }
   }
 
   get selectedCourses(): CourseApproval[] {

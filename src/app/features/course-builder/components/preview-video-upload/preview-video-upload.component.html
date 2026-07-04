@@ -40,8 +40,16 @@
 
         <!-- ── (A) IDLE: no video yet ── -->
         <div *ngIf="snapshot.state === 'idle' && !markedForDeletion()"
-            class="py-8 px-4 bg-white border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-center space-y-4 animate-fade-in">
-            <div class="space-y-1">
+            class="py-10 px-4 bg-white border border-dashed rounded-xl flex flex-col items-center justify-center text-center space-y-4 animate-fade-in"
+            (dragenter)="onDragEnter($event)"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            [ngClass]="{
+      'border-primary bg-blue-50': isDragging(),
+      'border-slate-200': !isDragging()
+    }">
+            <div class="space-y-1 pointer-events-none">
                 <h4 class="text-sm font-bold text-slate-700">No preview video uploaded yet</h4>
                 <p class="text-xs text-slate-400 max-w-xs">Upload a short video that students can watch before
                     enrolling.</p>
@@ -53,6 +61,7 @@
                 <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">add</mat-icon>
                 <span>Upload Preview Video</span>
             </label>
+            <p class="text-xs text-slate-500 italic">or drag and drop a video file here</p>
         </div>
 
         <!-- ── (B) VIDEO PLAYER ── -->
@@ -61,9 +70,9 @@
             class="space-y-3 animate-scale-in">
 
             <!-- Player wrapper -->
-            <div class="relative bg-black rounded-lg overflow-hidden max-h-52 flex justify-center items-center shadow-inner"
+            <div class="relative bg-black rounded-lg overflow-hidden max-h-96 flex justify-center items-center shadow-inner"
                 [class.opacity-40]="markedForDeletion()">
-                <video [src]="previewUrl" controls class="w-full rounded-lg max-h-52 bg-black"></video>
+                <video [src]="previewUrl" controls class="w-full rounded-lg max-h-96 bg-black"></video>
             </div>
 
             <!-- MARKED FOR REMOVAL notice -->

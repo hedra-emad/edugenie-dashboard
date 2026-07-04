@@ -26,17 +26,18 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
     @for (reqCtrl of requirements; track $index; let i = $index) {
       <div class="flex items-start gap-2">
         <div class="flex-1">
-          <input type="text" 
+          <textarea 
                  [formControl]="reqCtrl" 
                  placeholder="e.g. Basic knowledge of HTML, CSS, and JavaScript"
                  (blur)="reqCtrl.markAsTouched()"
-                 class="w-full px-4 py-3 rounded-lg border outline-none transition-all text-sm text-gray-800
+                 rows="2"
+                 class="w-full px-4 py-3 rounded-lg border outline-none transition-all text-sm text-gray-800 resize-none
                         focus:ring-2 focus:ring-[var(--color-primary)]
                         focus:border-[var(--color-primary)]" 
                  [ngClass]="{
                    'border-red-500': shouldShowRequirementError(reqCtrl),
                    'border-gray-300': !shouldShowRequirementError(reqCtrl)
-                 }">
+                 }"></textarea>
 
           @if (shouldShowRequirementError(reqCtrl) && reqCtrl.errors?.['required']) {
             <div class="text-xs text-red-500 mt-1 font-medium">
@@ -52,7 +53,7 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
         </div>
 
         <button type="button" (click)="removeRequirement(i)"
-          class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-red-50 hover:text-[var(--color-error)]">
+          class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-red-50 hover:text-[var(--color-error)] flex-shrink-0 mt-1">
           <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">
             delete_outline
           </mat-icon>

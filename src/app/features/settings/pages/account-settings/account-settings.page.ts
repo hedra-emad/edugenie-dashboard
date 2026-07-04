@@ -53,6 +53,29 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   isUploadingAvatar = false;
   showAvatarOptions = false;
 
+  // ─── Remove-avatar confirmation dialog ───────────────────────────────────
+  showRemoveAvatarDialog = false;
+  isRemovingAvatar = false;
+
+  openRemoveAvatarDialog() {
+    this.showRemoveAvatarDialog = true;
+    this.cdr.markForCheck();
+  }
+
+  closeRemoveAvatarDialog() {
+    if (this.isRemovingAvatar) return;
+    this.showRemoveAvatarDialog = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmRemoveAvatar() {
+    if (this.isRemovingAvatar) return;
+    // Execute the existing removePhoto logic exactly as-is
+    this.removePhoto();
+    this.showRemoveAvatarDialog = false;
+    this.cdr.markForCheck();
+  }
+
   // ─── Cropper state ───────────────────────────────────────────────────────
   isCropperOpen = false;
   selectedImageSrc: string | null = null;

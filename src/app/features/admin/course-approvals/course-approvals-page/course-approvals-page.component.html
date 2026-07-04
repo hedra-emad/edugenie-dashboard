@@ -93,7 +93,7 @@
   <!-- Approvals Table -->
   <div class="table-col">
     <app-approvals-table [courses]="courses" [actionLoading]="actionLoading" [selectedIds]="selectedCourseIds"
-      [currentFilter]="activeTableFilter" (filterChange)="activeTableFilter = $event"
+      [currentFilter]="activeTableFilter" (filterChange)="onFilterChange($event)"
       [rejectConfirmedId]="isRejectLoading && !isBulkRejectMode ? rejectTargetId : null"
       [approveConfirmedId]="isApproveLoading && !isBulkApproveMode ? approveTargetId : null"
       (viewDetails)="onViewCourse($event)" (approve)="onApproveRequest($event)" (reject)="onRejectRequest($event)"

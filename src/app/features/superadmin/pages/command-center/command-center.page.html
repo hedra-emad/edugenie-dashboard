@@ -213,7 +213,9 @@
           <span class="text-[26px] font-black text-slate-800 leading-none">{{ overview?.platformRevenue | number
             }} EGP</span>
           <span class="block text-[11.5px] font-semibold text-slate-500 mt-1">Total Revenue</span>
-          <span class="block text-[11px] font-bold text-emerald-500 mt-1">+12% vs previous 7 days</span>
+          <span class="block text-[11px] font-bold mt-1" [ngClass]="revenueGrowthClass">
+            {{ revenueGrowthLabel }}
+          </span>
         </div>
 
         <div class="flex-1 relative min-h-[120px]">

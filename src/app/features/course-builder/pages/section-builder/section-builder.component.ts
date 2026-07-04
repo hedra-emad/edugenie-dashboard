@@ -13,7 +13,6 @@ import { BackButtonComponent } from '../../components/shared/back-button/back-bu
 import { ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { take } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Course } from '../../../../core/models/course.model';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -21,7 +20,6 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { PageSkeletonComponent } from '../../../../shared/components/loading';
-import { PublishCourseButtonComponent } from '../../components/publish-course-button/publish-course-button';
 
 export function maxArrayLength(max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -71,8 +69,7 @@ export function extractId(val: any): string | null {
     SectionCardComponent,
     DragDropModule,
     EmptyStateComponent,
-    PageSkeletonComponent,
-    PublishCourseButtonComponent
+    PageSkeletonComponent
   ],
   templateUrl: './section-builder.component.html',
   styleUrl: './section-builder.component.css'
@@ -81,7 +78,6 @@ export function extractId(val: any): string | null {
 
 export class SectionBuilderComponent implements OnInit, AfterViewInit {
   courseTitle: string | null = null;
-  course: Course | null = null; // Store course data for publish button
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private sectionsService = inject(SectionsService);
@@ -283,8 +279,7 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
   loadSections() {
     if (!this.courseId) return;
     this.coursesService.findOne(this.courseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (course: Course) => {
-        this.course = course; // Store course for publish button
+      next: (course) => {
         const sections = course.sections || [];
         this.sectionsArray.clear();
         console.log('expandedSectionId from route:', this.expandedSectionId);

@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal, computed, effect } from '@angular/core';
+import { Component, Input, inject, signal, computed, effect, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CoursesService } from '../../../../core/services/courses';
@@ -11,10 +11,12 @@ import { Course } from '../../../../core/models/course.model';
   standalone: true,
   imports: [CommonModule, MatIconModule],
   templateUrl: './publish-course-button.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublishCourseButtonComponent {
   private coursesService = inject(CoursesService);
   private toastr = inject(ToastrService);
+  private cdr = inject(ChangeDetectorRef);
 
   @Input({ required: true })
   courseId: string | null = null;
@@ -22,6 +24,7 @@ export class PublishCourseButtonComponent {
   @Input()
   set course(value: Course | null) {
     this._course.set(value);
+    this.cdr.markForCheck();
   }
   get course(): Course | null {
     return this._course();
@@ -32,12 +35,11 @@ export class PublishCourseButtonComponent {
   loading = signal(false);
 
   constructor() {
-    // Effect to log course changes
+    // Mark component for check to ensure OnPush detects the signal change
     effect(() => {
       const course = this._course();
-      console.log('🔄 Course Updated:', course);
       if (course) {
-        console.log('📊 Course Status:', course.courseStatus);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -56,12 +58,6 @@ export class PublishCourseButtonComponent {
   courseStatus = computed(() => {
     const course = this._course();
     const status = course?.courseStatus?.trim().toUpperCase() || 'DRAFT';
-    console.log('🔍 Publish Button - Course Status Check:', {
-      rawStatus: course?.courseStatus,
-      normalizedStatus: status,
-      courseId: course?.id,
-      fullCourse: course
-    });
     return status;
   });
 
@@ -69,7 +65,6 @@ export class PublishCourseButtonComponent {
   isPublished = computed(() => {
     const status = this.courseStatus();
     const result = status === 'PUBLISHED';
-    console.log('✅ Is Published:', result, 'Status:', status);
     return result;
   });
 
@@ -77,13 +72,28 @@ export class PublishCourseButtonComponent {
   isUnderReview = computed(() => {
     const status = this.courseStatus();
     const result = status === 'UNDER_REVIEW' || status === 'UNDER REVIEW' || status === 'UNDERREVIEW';
-    console.log('⏳ Is Under Review:', result, 'Status:', status);
     return result;
   });
 
   // Check if button should be shown
   shouldShowButton = computed(() => {
-    return !this.isPublished() && !this.isUnderReview();
+    const published = this.isPublished();
+    const underReview = this.isUnderReview();
+    const course = this._course();
+    
+    // Hide if published or under review
+    if (published || underReview) {
+      return false;
+    }
+    
+    // Hide if no course data yet
+    if (!course) {
+      return false;
+    }
+    
+    // Hide if requirements not met (has no lessons OR missing quizzes in sections)
+    const { canSubmit } = this.coursesService.canSubmitForReview(course);
+    return canSubmit; // Only show when canSubmit is true (course is ready)
   });
 
   // Helper text based on course status

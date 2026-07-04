@@ -77,6 +77,27 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
   adminStatsLoading = true;
   adminStatsError = false;
 
+  get bestPeriodLabel(): string {
+    return this.revenuePeriod === 'year' ? 'Best Month' : 'Best Day';
+  }
+
+  get bestPeriodValue(): string {
+    const rc = this.platformData?.revenueChart;
+    if (!rc || !rc.data || !rc.labels || rc.data.length === 0) return 'N/A';
+    
+    let maxVal = -1;
+    let maxIdx = -1;
+    for (let i = 0; i < rc.data.length; i++) {
+      if (rc.data[i] > maxVal) {
+        maxVal = rc.data[i];
+        maxIdx = i;
+      }
+    }
+    
+    if (maxVal === 0 || maxIdx === -1) return 'N/A';
+    return rc.labels[maxIdx];
+  }
+
   // Admin Revenue Chart
   adminRevenueChartData: ChartData<'line'> = { labels: [], datasets: [] };
   hasAdminRevenueChart = false;
@@ -301,13 +322,15 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.revenueChartLoading = false;
         if (data) {
+          // Update platform data entirely so all other dependent sections (Top courses, growth) update too!
+          this.platformData = data; 
+          
           // Admin Revenue Chart logic
-          const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
+          const rc = data?.revenueChart;
           this.hasAdminRevenueChart = true;
 
-
-          const chartLabels = rc?.labels?.length ? rc.labels : (period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : period === 'year' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14']);
-          const chartDataPoints = rc?.data?.length ? rc.data : (period === 'week' ? [1200, 1500, 900, 2200, 1800, 3100, 2900] : period === 'year' ? [20000, 25000, 22000, 30000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 60000] : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000]);
+          const chartLabels = rc?.labels?.length ? rc.labels : [];
+          const chartDataPoints = rc?.data?.length ? rc.data : [];
 
           this.adminRevenueChartData = {
             labels: chartLabels,
@@ -402,13 +425,11 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
             } else {
               this.platformData = data;
               // Admin Revenue Chart logic
-              const rc = data?.revenueChart || this.adminStatsData?.revenueChart;
+              const rc = data?.revenueChart;
               this.hasAdminRevenueChart = true;
 
-              let chartLabels = rc?.labels?.length ? rc.labels : ['Jun 16', 'Jun 20', 'Jun 23', 'Jun 27', 'Jun 30', 'Jul 4', 'Jul 7', 'Jul 10', 'Jul 14'];
-              let chartDataPoints = rc?.data?.length ? rc.data : [10000, 11500, 9000, 15000, 22000, 18000, 28540, 29000, 31000];
-
-            
+              let chartLabels = rc?.labels?.length ? rc.labels : [];
+              let chartDataPoints = rc?.data?.length ? rc.data : [];
 
               this.adminRevenueChartData = {
                 labels: chartLabels,
