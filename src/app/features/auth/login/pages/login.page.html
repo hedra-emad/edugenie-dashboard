@@ -42,8 +42,11 @@
           [showSuccessWhenValid]="true">
         </app-password-input>
 
-        <div *ngIf="!isWatchMode()">
+        <div *ngIf="!isWatchMode()" class="flex items-center justify-between gap-3">
           <app-remember-me formControlName="rememberMe"></app-remember-me>
+          <a href="/forgot-password" class="text-sm font-medium text-[#2e2a91] hover:underline whitespace-nowrap">
+            Forgot password?
+          </a>
         </div>
       </div>
 

@@ -4,19 +4,22 @@
 .page-subtitle { margin: 0; color: var(--color-text-secondary, #6b7280); font-size: 0.9375rem; }
 
 /* Stats Grid Layout: 5 Cards Total */
-.stats-grid { display: grid; gap: 20px; }
+.stats-grid { display: grid; gap: 16px; }
 
-/* Desktop: 6 columns total. Top row 2 cards (span 3), bottom row 3 cards (span 2) */
+/* Desktop: all 5 cards in one row */
 @media (min-width: 1024px) {
-  .stats-grid { grid-template-columns: repeat(6, 1fr); }
-  .stat-card:nth-child(1), .stat-card:nth-child(2) { grid-column: span 3; }
-  .stat-card:nth-child(3), .stat-card:nth-child(4), .stat-card:nth-child(5) { grid-column: span 2; }
+  .stats-grid { grid-template-columns: repeat(5, 1fr); }
+  .stat-card { grid-column: span 1 !important; }
 }
 
-/* Tablet: 2 columns */
+/* Tablet: 3 + 2 layout */
 @media (max-width: 1023px) and (min-width: 641px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .stat-card { grid-column: span 1 !important; }
+  .stats-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .stat-card:nth-child(1),
+  .stat-card:nth-child(2),
+  .stat-card:nth-child(3) { grid-column: span 2; }
+  .stat-card:nth-child(4),
+  .stat-card:nth-child(5) { grid-column: span 3; }
 }
 
 /* Mobile: 1 column */
@@ -43,7 +46,7 @@
 .icon-gray   { background: #f3f4f6; color: #6b7280; }
 .icon-purple { background: #ede9fe; color: #7c3aed; }
 .stat-info { display: flex; flex-direction: column; }
-.stat-label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary, #6b7280); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-label { font-size: 0.7125rem; font-weight: 600; color: var(--color-text-secondary, #6b7280); text-transform: uppercase; letter-spacing: 0.5px; }
 .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--color-text-primary, #1f2937); line-height: 1.2; }
 
 /* Bulk toolbar */

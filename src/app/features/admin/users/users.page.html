@@ -20,6 +20,7 @@
       </div>
 
       <button mat-flat-button
+        (click)="exportUsers()"
         class="btn-primary">
         Export Report
       </button>
@@ -233,24 +234,17 @@
       </div>
 
       <!-- ─── Pagination ──────────────────────────────────────────── -->
-      <div *ngIf="totalPages > 1" class="pagination-bar" style="justify-content: center;">
-        <div class="pagination-controls">
-          <button class="page-btn" (click)="setPage(pageIndex - 1)" [disabled]="pageIndex === 0"
-            aria-label="Previous page">
-            <mat-icon>chevron_left</mat-icon>
-          </button>
-
-          <button *ngFor="let p of pageNumbers" class="page-btn" [class.page-btn--active]="p === pageIndex"
-            (click)="setPage(p)">
-            {{ p + 1 }}
-          </button>
-
-          <button class="page-btn" (click)="setPage(pageIndex + 1)" [disabled]="pageIndex >= totalPages - 1"
-            aria-label="Next page">
-            <mat-icon>chevron_right</mat-icon>
-          </button>
-        </div>
-      </div>
+      <app-pagination
+        [pageIndex]="pageIndex"
+        [totalPages]="totalPages"
+        [pageFrom]="pageFrom"
+        [pageTo]="pageTo"
+        [totalItems]="totalUsers"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageSize]="limit"
+        (pageChange)="setPage($event)"
+        (pageSizeChange)="setPageSize($event)">
+      </app-pagination>
 
     </div><!-- /um-table-card -->
 
@@ -334,7 +328,7 @@
           <div class="flex items-center justify-end gap-3">
             <button
               class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-              (click)="cancelDelete()" [disabled]="isDeleting">
+              (click)="cancelDelete()">
               Cancel
             </button>
             <button

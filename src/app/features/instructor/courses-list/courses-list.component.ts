@@ -9,6 +9,7 @@ import { BadgeComponent } from '../../../shared/components/badge-component/badge
 import { CourseStatus } from '../../../core/enums/course-status';
 import { FilterBarComponent, FilterConfig, FilterState } from '../../../shared/components/filter-bar/filter-bar.component';
 import { MainButtonComponent } from '../../../shared/components/main-button/main-button.component';
+import { CloudinaryThumbPipe } from '../../../shared/pipes/cloudinary-thumb.pipe';
 
 // Angular Material
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -30,6 +31,7 @@ import { MatButtonModule } from '@angular/material/button';
     BadgeComponent,
     FilterBarComponent,
     MainButtonComponent,
+    CloudinaryThumbPipe,
   ],
   templateUrl: './courses-list.component.html',
   styleUrls: ['./courses-list.component.css'],
@@ -200,6 +202,9 @@ export class CoursesListComponent implements OnInit {
         next: (data) => {
           this.courses.set(data);
           this.currentPage = 1;
+          // getMyCourses() emits twice: the base list first (render now), then
+          // the enriched list. Drop the spinner on the first emission.
+          this.isLoading.set(false);
         },
         error: (err) => {
           this.hasError.set(true);

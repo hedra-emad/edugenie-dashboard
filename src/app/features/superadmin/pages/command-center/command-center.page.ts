@@ -40,10 +40,10 @@ export class CommandCenterPageComponent implements OnInit {
   maxActivityValue = 10;
 
 
-  dateRangeLabel = 'Jun 18 – Jun 25, 2026';
-  revenueDays = ['Jun 18', 'Jun 19', 'Jun 20', 'Jun 21', 'Jun 22', 'Jun 23', 'Jun 24', 'Jun 25'];
-  activityDays = ['Jun 18', 'Jun 19', 'Jun 20', 'Jun 21', 'Jun 22', 'Jun 23', 'Jun 24', 'Jun 25'];
-  activityValues = [32, 28, 41, 62, 48, 35, 29, 33];
+  revenueDays: string[] = [];
+  revenueValues: number[] = [];
+  activityDays: string[] = [];
+  activityValues: number[] = [];
   kpiSkeletons = [1, 2, 3, 4, 5, 6];
 
 
@@ -76,6 +76,10 @@ export class CommandCenterPageComponent implements OnInit {
         this.platformConfig = res.config;
         this.admins = res.admins || [];
         this.recentEvents = res.logs?.data?.slice(0, 3) || [];
+
+        // Wire real chart data from backend
+        this.revenueDays = res.overview?.revenueChart?.labels ?? [];
+        this.revenueValues = res.overview?.revenueChart?.data ?? [];
 
         this.buildPayoutStatus();
         this.generateSparklines();
@@ -152,24 +156,26 @@ export class CommandCenterPageComponent implements OnInit {
 
 
   getRevenuePoints(): { x: number; y: number; val: number }[] {
-    const rev = this.overview?.platformRevenue ?? 0;
-    const ratios = [0.08, 0.12, 0.10, 0.15, 0.18, 0.14, 0.20, 0.23];
-    const xCoords = [50, 100, 160, 220, 280, 340, 400, 470];
+    const values = this.revenueValues;
+    if (!values || values.length === 0) return [];
+
+    const n = values.length;
+    const maxVal = Math.max(...values, 0.01); // avoid div by 0
     const yTop = 15;
     const yBot = 140;
+    const chartW = 405; // from x=65 to x=470
 
-    const maxRatio = Math.max(...ratios);
-    return ratios.map((r, idx) => {
-      const y = yBot - (r / maxRatio) * (yBot - yTop);
-      const val = Math.round((r / maxRatio) * (rev / 2));
-      return { x: xCoords[idx], y, val };
+    return values.map((v, idx) => {
+      const x = 65 + (idx / Math.max(n - 1, 1)) * chartW;
+      const y = yBot - (v / maxVal) * (yBot - yTop);
+      return { x, y, val: v };
     });
   }
 
   getRevenuePath(): string {
     const pts = this.getRevenuePoints();
     if (!pts.length) return '';
-    return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
   }
 
   getRevenueFillPath(): string {
@@ -178,13 +184,33 @@ export class CommandCenterPageComponent implements OnInit {
     const pts = this.getRevenuePoints();
     const lastX = pts[pts.length - 1].x;
     const firstX = pts[0].x;
-    return `${linePath} L ${lastX} 140 L ${firstX} 140 Z`;
+    return `${linePath} L ${lastX.toFixed(1)} 140 L ${firstX.toFixed(1)} 140 Z`;
   }
 
   getRevenueYLabel(step: number): string {
-    const rev = this.overview?.platformRevenue ?? 0;
-    const val = Math.round((rev / 2) * (step / 3));
-    return '$' + val.toLocaleString();
+    const maxVal = Math.max(...(this.revenueValues.length ? this.revenueValues : [0]));
+    const val = Math.round(maxVal * (step / 3));
+    if (val >= 1000) {
+      return (val / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + 'k EGP';
+    }
+    return val.toLocaleString() + ' EGP';
+  }
+
+  get revenueGrowthPercent(): number {
+    return this.overview?.revenueGrowthPercent ?? 0;
+  }
+
+  get revenueGrowthLabel(): string {
+    const g = this.revenueGrowthPercent;
+    const sign = g > 0 ? '+' : '';
+    return `${sign}${g.toFixed(1)}% vs previous 7 days`;
+  }
+
+  get revenueGrowthClass(): string {
+    const g = this.revenueGrowthPercent;
+    if (g > 0) return 'text-emerald-500';
+    if (g < 0) return 'text-rose-500';
+    return 'text-slate-400';
   }
 
 

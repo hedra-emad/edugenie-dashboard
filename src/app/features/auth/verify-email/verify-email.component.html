@@ -1,0 +1,42 @@
+<div class="min-h-screen flex flex-col items-center justify-center px-4 text-center bg-gray-50">
+  <ng-container [ngSwitch]="phase()">
+    <div *ngSwitchCase="'verifying'">
+      <div
+        class="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-gray-200 border-t-[#2e2a91] animate-spin"
+      ></div>
+      <h1 class="text-2xl font-bold text-gray-800">Verifying your email…</h1>
+    </div>
+
+    <div *ngSwitchCase="'success'">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Email verified</h1>
+      <p class="mt-2 max-w-sm text-gray-500">
+        Your email is confirmed. You can now sign in to your account.
+      </p>
+      <a
+        routerLink="/admin-login"
+        class="mt-6 inline-block rounded-xl bg-[#2e2a91] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#241f75]"
+        >Go to sign in</a
+      >
+    </div>
+
+    <div *ngSwitchCase="'error'">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-500 text-white">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Verification failed</h1>
+      <p class="mt-2 max-w-sm text-gray-500">{{ message() }}</p>
+      <a
+        routerLink="/admin-login"
+        class="mt-6 inline-block rounded-xl border border-[#2e2a91] px-6 py-3 text-sm font-bold text-[#2e2a91] transition-colors hover:bg-violet-50"
+        >Back to sign in</a
+      >
+    </div>
+  </ng-container>
+</div>

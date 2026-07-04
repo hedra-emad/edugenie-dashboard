@@ -110,7 +110,7 @@
 @if (showApproveModal) {
 <app-approve-course-dialog [courseTitle]="approveTargetTitle" [isBulkMode]="isBulkApproveMode"
   [selectedCount]="selectedCourseIds.size" [isLoading]="isApproveLoading" (confirm)="confirmApprove()"
-  (cancel)="closeApproveModal()">
+  (cancelled)="closeApproveModal()">
 </app-approve-course-dialog>
 }
 
@@ -120,7 +120,7 @@
 @if (showRejectModal) {
 <app-reject-course-dialog [courseTitle]="rejectTargetTitle" [isBulkMode]="isBulkRejectMode"
   [selectedCount]="selectedCourseIds.size" [isLoading]="isRejectLoading" (confirm)="confirmReject($event)"
-  (cancel)="closeRejectModal()">
+  (cancelled)="closeRejectModal()">
 </app-reject-course-dialog>
 }
 
@@ -152,7 +152,7 @@
         <div class="selected-item">
           <div class="selected-item-thumb">
             @if (course.thumbnail && course.thumbnail.startsWith('http')) {
-            <img [src]="course.thumbnail" [alt]="course.title" />
+            <img [src]="course.thumbnail | cloudinaryThumb:200" [alt]="course.title" loading="lazy" decoding="async" />
             } @else {
             <mat-icon>video_library</mat-icon>
             }

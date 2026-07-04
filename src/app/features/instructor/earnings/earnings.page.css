@@ -1,0 +1,74 @@
+:host { display: block; }
+
+.table-card {
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.page-subtitle {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin: 0;
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--color-primary, #3b1892); color: white;
+  padding: 10px 20px; border-radius: 8px; border: none;
+  font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.2); transition: all 0.2s;
+}
+.btn-primary:hover:not(:disabled) { background: #2d1073; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.btn-sm { padding: 8px 16px; font-size: 0.875rem; }
+
+/* Share transparency banner */
+.share-banner {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(120deg, #1a0b59 0%, #3b1892 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 18px 22px;
+  box-shadow: 0 8px 24px rgba(26, 11, 89, 0.25);
+}
+
+/* Stat cards */
+.stat-card {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.stat-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.stat-label {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: #6b7280;
+}
+.stat-value { font-size: 1.6rem; font-weight: 900; line-height: 1.1; }
+.stat-sub { font-size: 0.75rem; color: #9ca3af; font-weight: 500; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 9999px;
+  font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.03em; white-space: nowrap;
+}
+.badge-course { background: #ede9fe; color: #3b1892; }
+.badge-section { background: #e0f2fe; color: #0369a1; }
+
+.badge-status-paid { background: #d1fae5; color: #047857; }
+.badge-status-requested { background: #fef3c7; color: #b45309; }
+.badge-status-cleared { background: #dbeafe; color: #1d4ed8; }
+.badge-status-pending { background: #f1f5f9; color: #475569; }
+.badge-status-rejected { background: #ffe4e6; color: #be123c; }

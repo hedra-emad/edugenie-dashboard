@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ViewChild, ElementRef } from '@angular/core';
+import { environment } from '../../../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthLayoutComponent } from '../../../../shared/components/auth-layout/auth-layout.component';
@@ -171,6 +172,15 @@ export class RegisterPageComponent implements OnInit {
 
   get role(): 'student' | 'instructor' {
     return this.roleSelection.get('role')?.value ?? 'student';
+  }
+
+  /**
+   * Start Google OAuth for the selected role. Full-page redirect to the NestJS
+   * backend (backend → Google → backend → /auth-callback, which swaps the
+   * one-time token for a session). `environment.apiUrl` already includes `/api`.
+   */
+  registerWithGoogle(): void {
+    window.location.href = `${environment.apiUrl}/auth/google?role=${encodeURIComponent(this.role)}`;
   }
 
   /** Total steps depend on the selected role */

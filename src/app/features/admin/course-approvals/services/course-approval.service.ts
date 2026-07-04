@@ -78,12 +78,12 @@ export class CourseApprovalService {
     forkJoin({
       pending: this.http.get<any>(pendingUrl, { withCredentials: true }).pipe(
         map(res => {
-          // Backend may return { data: [...], total, page, limit } or { data: { data:[...], total } }
-          const raw = res?.data;
-          const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-          const total = raw?.total ?? res?.total ?? list.length;
-          const page = raw?.page ?? res?.page ?? 1;
-          const limit = raw?.limit ?? res?.limit ?? 10;
+          // Backend returns { data: [...], meta: { total, page, limit, totalPages } }
+          const list = Array.isArray(res?.data) ? res.data
+            : Array.isArray(res?.data?.data) ? res.data.data : [];
+          const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
+          const page  = res?.meta?.page  ?? res?.data?.page  ?? res?.page  ?? 1;
+          const limit = res?.meta?.limit ?? res?.data?.limit ?? res?.limit ?? 10;
           this.pendingPageSubject.next({ total, page, limit });
           return list.map((c: any) => this.mapCourseApproval(c, 'pending'));
         }),
@@ -126,9 +126,10 @@ export class CourseApprovalService {
       finalize(() => this.loadingSubject.next(false))
     ).subscribe({
       next: res => {
-        const raw = res?.data;
-        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-        const total = raw?.total ?? res?.total ?? list.length;
+        // Backend returns { data: [...], meta: { total, page, limit, totalPages } }
+        const list = Array.isArray(res?.data) ? res.data
+          : Array.isArray(res?.data?.data) ? res.data.data : [];
+        const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
 
         this.pendingPageSubject.next({ total, page, limit });
 

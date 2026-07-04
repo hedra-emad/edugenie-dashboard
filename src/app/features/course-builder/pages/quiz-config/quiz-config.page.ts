@@ -110,7 +110,7 @@ export class QuizConfigPageComponent implements OnInit {
   });
 
 ngOnInit() {
-  this.courseId = this.route.snapshot.parent?.paramMap.get('courseId')!;
+  this.courseId = this.route.snapshot.parent?.paramMap.get('courseId') ?? '';
   this.sectionId = this.route.snapshot.paramMap.get('sectionId')!;
   
   console.log('ngOnInit - courseId:', this.courseId, 'sectionId:', this.sectionId);

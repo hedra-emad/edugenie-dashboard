@@ -4,12 +4,13 @@ import {
 } from '@angular/core';
 import { CommonModule, TitleCasePipe, DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { CloudinaryThumbPipe } from '../../../../../shared/pipes/cloudinary-thumb.pipe';
 
 @Component({
   selector: 'app-course-preview',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, TitleCasePipe, DecimalPipe],
+  imports: [CommonModule, MatIconModule, TitleCasePipe, DecimalPipe, CloudinaryThumbPipe],
   templateUrl: './course-preview.component.html',
   styleUrl: './course-preview.component.css'
 })

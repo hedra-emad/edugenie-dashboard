@@ -17,5 +17,5 @@ export class ApproveCourseDialogComponent {
   @Input() isLoading = false;
 
   @Output() confirm = new EventEmitter<void>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 }

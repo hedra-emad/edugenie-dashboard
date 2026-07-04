@@ -10,10 +10,10 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class SubButtonComponent {
 
-  @Input() label: string = '';
-  @Input() icon: string = '';
-  @Input() disabled: boolean = false;
-  @Input() loading: boolean = false;
+  @Input() label = '';
+  @Input() icon = '';
+  @Input() disabled = false;
+  @Input() loading = false;
 
   @Output() action = new EventEmitter<void>();
 

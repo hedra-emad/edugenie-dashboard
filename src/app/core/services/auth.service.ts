@@ -45,6 +45,17 @@ export class AuthService {
   readonly currentUserSignal = signal<UserProfile | null>(null);
 
   private initialization$: Observable<void> | null = null;
+  private readonly inactiveAccountStatuses = new Set([
+    'deactivated',
+    'deleted',
+    'inactive',
+    'disabled',
+    'suspended',
+    'blocked',
+    'banned',
+    'pending_delete',
+    'deletion_pending',
+  ]);
 
   initializeAuth(): Observable<void> {
     if (!this.initialization$) {
@@ -91,16 +102,50 @@ export class AuthService {
     );
   }
 
+  private refreshInFlight$: Observable<LoginResponse> | null = null;
+
+  /**
+   * Silently exchanges the httpOnly refresh-token cookie for a fresh access
+   * JWT (POST /auth/refresh). Concurrent callers share one in-flight request —
+   * several 401s landing together must not each rotate the refresh token.
+   */
+  refreshSession(): Observable<LoginResponse> {
+    if (!this.refreshInFlight$) {
+      this.refreshInFlight$ = this.http
+        .post<LoginResponse>(`${this.authApiUrl}/refresh`, {})
+        .pipe(
+          tap((response) => {
+            const user = response.data?.user;
+            if (user && this.isAccountActive(user) && user.role !== 'student') {
+              this.setCurrentUser(user);
+            }
+          }),
+          finalize(() => {
+            this.refreshInFlight$ = null;
+          }),
+          shareReplay(1),
+        );
+    }
+    return this.refreshInFlight$;
+  }
+
   login(credentials: LoginCredentials): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/login`, credentials)
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -113,12 +158,19 @@ export class AuthService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            if (response.data.user.role !== 'student') {
-              this.setCurrentUser(response.data.user);
-            }
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          if (user.role !== 'student') {
+            this.setCurrentUser(user);
+          }
+
+          return response;
         }),
       );
   }
@@ -137,6 +189,24 @@ export class AuthService {
 
   register(data: Record<string, unknown>): Observable<unknown> {
     return this.http.post(`${this.authApiUrl}/register`, data);
+  }
+
+  /** Request a password-reset link (Phase 4). */
+  forgotPassword(email: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/forgot-password`, { email });
+  }
+
+  /** Complete a password reset using the token from the email link. */
+  resetPassword(token: string, password: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/reset-password`, {
+      token,
+      password,
+    });
+  }
+
+  /** Confirm an email-verification token. */
+  verifyEmail(token: string): Observable<unknown> {
+    return this.http.post(`${this.authApiUrl}/verify-email`, { token });
   }
 
   /** Looks up the invitee details for an admin invite token. */
@@ -158,10 +228,16 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${this.authApiUrl}/accept-invite`, { token, password })
       .pipe(
-        tap((response) => {
-          if (response.data && response.data.user) {
-            this.setCurrentUser(response.data.user);
+        map((response) => {
+          const user = response.data?.user;
+
+          if (!user || !this.isAccountActive(user)) {
+            this.clearCurrentUser();
+            throw this.createInactiveAccountError();
           }
+
+          this.setCurrentUser(user);
+          return response;
         }),
       );
   }
@@ -240,33 +316,102 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
+    // Capture the role before clearing state so we can send the user back to
+    // where they sign in: admins/superadmins return to the dashboard's
+    // admin-login page, while everyone else (instructors) is bounced to the
+    // EduGenie app's logout route — the app is where they authenticate.
+    const role = this.getCurrentUser()?.role;
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
       tap(() => {
         this.clearCurrentUser();
-        const nextjsUrl = environment.studentAppUrl;
-        window.location.href = `${nextjsUrl}/logout`;
+        if (role === 'admin' || role === 'superadmin') {
+          this.router.navigate(['/admin-login']);
+        } else {
+          const nextjsUrl = environment.studentAppUrl;
+          window.location.href = `${nextjsUrl}/logout`;
+        }
       }),
       map(() => void 0),
     );
   }
 
-  // auth.service.ts
-
-setCurrentUser(user: UserProfile | null): void {
-  this.currentUserSubject.next(user);
-  this.currentUserSignal.set(user);
-
-  if (user?.id) {
-    this.notificationsService.connectPusher(user.id);
+  /**
+   * Revoke a just-created session WITHOUT the hard cross-app redirect that
+   * `logout()` performs. Used by the admin-login page to turn away a non-admin
+   * who authenticated there: the backend already minted a session cookie, so we
+   * must clear it server- and client-side while staying on the page to show the
+   * "administrators only" message.
+   */
+  endSessionSilently(): Observable<void> {
+    return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => this.clearCurrentUser()),
+      map(() => void 0),
+    );
   }
-}
 
-clearCurrentUser(): void {
-  this.notificationsService.disconnectPusher();
-  this.currentUserSubject.next(null);
-  this.currentUserSignal.set(null);
-}
+  private isAccountActive(user: UserProfile | null | undefined): boolean {
+    if (!user) {
+      return false;
+    }
+
+    const maybeUser = user as UserProfile & Record<string, unknown>;
+
+    if (typeof maybeUser['isDeleted'] === 'boolean' && maybeUser['isDeleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['deleted'] === 'boolean' && maybeUser['deleted']) {
+      return false;
+    }
+
+    if (typeof maybeUser['isActive'] === 'boolean' && !maybeUser['isActive']) {
+      return false;
+    }
+
+    const normalizedStatus = String(maybeUser['status'] ?? '').trim().toLowerCase();
+    if (this.inactiveAccountStatuses.has(normalizedStatus)) {
+      return false;
+    }
+
+    if (normalizedStatus.includes('deleted') || normalizedStatus.includes('deactivated') || normalizedStatus.includes('inactive')) {
+      return false;
+    }
+
+    const deletedAt = maybeUser['deletedAt'] ?? maybeUser['deleted_at'] ?? maybeUser['removedAt'];
+    if (deletedAt !== undefined && deletedAt !== null && deletedAt !== '') {
+      return false;
+    }
+
+    return true;
+  }
+
+  private createInactiveAccountError(): Error {
+    const error = new Error('This account has been deactivated or deleted.');
+    (error as Error & { status?: number }).status = 403;
+    return error;
+  }
+
+  setCurrentUser(user: UserProfile | null): void {
+    if (!this.isAccountActive(user)) {
+      this.clearCurrentUser();
+      return;
+    }
+
+    this.currentUserSubject.next(user);
+    this.currentUserSignal.set(user);
+
+    if (user?.id) {
+      this.notificationsService.connectPusher(user.id);
+    }
+  }
+
+  clearCurrentUser(): void {
+    this.notificationsService.disconnectPusher();
+    this.currentUserSubject.next(null);
+    this.currentUserSignal.set(null);
+  }
 
   getCurrentUser(): UserProfile | null {
     return this.currentUserSubject.value;

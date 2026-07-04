@@ -60,7 +60,7 @@ export class FilterBarComponent {
     priceOptions: [],
     sortOptions: []
   };
-  @Input() placeholder: string = 'Search...';
+  @Input() placeholder = 'Search...';
   
   @Output() filterChange = new EventEmitter<FilterState>();
   @Output() clearFilters = new EventEmitter<void>();

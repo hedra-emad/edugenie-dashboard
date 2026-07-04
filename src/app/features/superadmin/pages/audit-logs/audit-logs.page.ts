@@ -8,11 +8,12 @@ import { SuperadminService } from '../../services/superadmin.service';
 import { AuditLogItem } from '../../models/superadmin.models';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatMenuModule, MatSnackBarModule, PaginationComponent],
   providers: [DatePipe],
   templateUrl: './audit-logs.page.html',
   styleUrl: './audit-logs.page.css',

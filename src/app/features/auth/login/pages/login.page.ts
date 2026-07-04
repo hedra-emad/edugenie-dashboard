@@ -10,8 +10,6 @@ import { AuthInputComponent } from '../../../../shared/components/auth-input/aut
 import { PasswordInputComponent } from '../../../../shared/components/password-input/password-input.component';
 import { RememberMeComponent } from '../../../../shared/components/remember-me/remember-me.component';
 import { AuthButtonComponent } from '../../../../shared/components/auth-button/auth-button.component';
-import { AuthDividerComponent } from '../../../../shared/components/auth-divider/auth-divider.component';
-import { SocialLoginComponent } from '../../../../shared/components/social-login/social-login.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LoginResponse } from '../../../../core/models/user-profile.model';
 import { environment } from '../../../../../environments/environment';
@@ -31,8 +29,6 @@ const ADMIN_ROLES = new Set(['admin', 'superadmin']);
     PasswordInputComponent,
     RememberMeComponent,
     AuthButtonComponent,
-    AuthDividerComponent,
-    SocialLoginComponent,
   ],
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',
@@ -81,7 +77,7 @@ export class LoginPageComponent implements OnInit {
 
   onSubmit() {
     this.errorMessage.set(null);
-    const { email, password } = this.loginForm.value;
+    const { email, password, rememberMe } = this.loginForm.value;
 
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
@@ -90,22 +86,39 @@ export class LoginPageComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    this.authService.login({ email, password }).subscribe({
+    this.authService.login({ email, password, rememberMe: !!rememberMe }).subscribe({
       next: (res: LoginResponse) => {
-        this.isLoading.set(false);
         const role = res.data.user.role;
 
-        // Admin / SuperAdmin — continue exactly as before
-        const homeRoute = this.authService.getHomeRouteForRole(role);
-        this.router.navigate([homeRoute]);
+        // This portal is admin-only. Instructors sign in from the EduGenie app
+        // (they reach the dashboard via SSO handoff) and students stay there —
+        // so a non-admin who authenticates here is turned away and the session
+        // the backend just minted is revoked.
+        if (!ADMIN_ROLES.has(role)) {
+          this.authService.endSessionSilently().subscribe({
+            next: () => {
+              this.isLoading.set(false);
+              this.errorMessage.set(
+                'This portal is for administrators only. Instructors and students should sign in through the EduGenie app.',
+              );
+            },
+          });
+          return;
+        }
+
+        this.isLoading.set(false);
+        this.router.navigate([this.authService.getHomeRouteForRole(role)]);
       },
 
       error: (err) => {
         this.isLoading.set(false);
         const status = err?.status;
+        const message = err?.message;
 
         if (status === 401) {
           this.errorMessage.set('Invalid email or password');
+        } else if (status === 403 || message?.toLowerCase().includes('deactivated') || message?.toLowerCase().includes('deleted')) {
+          this.errorMessage.set('This account has been deactivated or deleted. Please contact support.');
         } else if (status === 429) {
           this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
         } else if (status === 0) {

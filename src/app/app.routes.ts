@@ -60,7 +60,9 @@ const courseBuilderChildren: Routes = [
 ];
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // The dashboard is an admin portal: entering it lands on the admin login.
+  // (Instructors reach the dashboard via SSO handoff → /auth/redeem, not here.)
+  { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
 
   {
     path: 'login',
@@ -90,6 +92,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/reset-password/pages/reset-password.page').then(
         (m) => m.ResetPasswordPageComponent
+      ),
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./features/auth/verify-email/verify-email.component').then(
+        (m) => m.VerifyEmailComponent
       ),
   },
   {
@@ -134,6 +143,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/instructor-analytics/instructor-analytics.page').then(
             (m) => m.InstructorAnalyticsPageComponent
+          ),
+      },
+      {
+        path: 'earnings',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor'] },
+        loadComponent: () =>
+          import('./features/instructor/earnings/earnings.page').then(
+            (m) => m.InstructorEarningsPageComponent
           ),
       },
 

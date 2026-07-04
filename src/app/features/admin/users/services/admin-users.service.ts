@@ -10,8 +10,8 @@ export class AdminUsersService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/users';
 
-  getUsers(page: number = 1, limit: number = 10, role?: string, status?: string, search?: string): Observable<any> {
-    let params: any = { page, limit };
+  getUsers(page = 1, limit = 10, role?: string, status?: string, search?: string): Observable<any> {
+    const params: any = { page, limit };
     if (role) params.role = role;
     if (status) params.status = status;
     if (search) params.search = search;
@@ -30,5 +30,9 @@ export class AdminUsersService {
 
   reactivateUser(userId: string): Observable<any> {
     return this.http.patch(`/admin/users/${userId}/reactivate`, {});
+  }
+
+  deleteUser(userId: string, reason: string): Observable<any> {
+    return this.http.delete(`/admin/users/${userId}`, { body: { reason } });
   }
 }

@@ -4,7 +4,6 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -12,6 +11,7 @@ import { provideToastr } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
+import { cacheInterceptor } from './core/interceptors/cache.interceptor';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
 import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 import { NotificationsService } from './core/services/notifications';
@@ -40,7 +40,9 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([apiInterceptor, authErrorInterceptor])),
+    // Order matters: cacheInterceptor keys on the clean relative URL and can
+    // serve a cached/in-flight GET before apiInterceptor prefixes + hits network.
+    provideHttpClient(withInterceptors([cacheInterceptor, apiInterceptor, authErrorInterceptor])),
     provideAnimations(),
     provideToastr({
       positionClass: 'toast-bottom-left',
@@ -58,7 +60,9 @@ export const appConfig: ApplicationConfig = {
       titleClass: 'toast-title',
       messageClass: 'toast-message',
     }),
-    provideCharts(withDefaultRegisterables()),
+    // NOTE: chart.js is intentionally NOT registered here. It is registered
+    // inside the lazy analytics chunk (instructor-analytics.page.ts) so all of
+    // chart.js stays out of the initial bundle.
     {
   provide: APP_INITIALIZER,
   useFactory: initializeAuth,

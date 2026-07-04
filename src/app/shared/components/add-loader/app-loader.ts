@@ -9,8 +9,8 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./app-loader.css']
 })
 export class AppLoader {
-  @Input() size: number = 40;
-  @Input() color: string = '#00B0FF';
-  @Input() fullScreen: boolean = false;
-  @Input() text: string = '';
+  @Input() size = 40;
+  @Input() color = '#00B0FF';
+  @Input() fullScreen = false;
+  @Input() text = '';
 }

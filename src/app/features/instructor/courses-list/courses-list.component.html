@@ -105,8 +105,10 @@
 
       <!-- Thumbnail with Gradient Overlay -->
       <div class="card-thumbnail-wrap">
-        <img [src]="course.thumbnail || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
-          [alt]="course.title" class="card-thumbnail" />
+        <img [src]="(course.thumbnail | cloudinaryThumb) || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
+          [alt]="course.title" class="card-thumbnail" width="600" height="340" decoding="async"
+          [attr.loading]="$index === 0 ? 'eager' : 'lazy'"
+          [attr.fetchpriority]="$index === 0 ? 'high' : 'auto'" />
         <div class="thumbnail-overlay"></div>
 
         <!-- Hover Overlay -->
@@ -134,7 +136,7 @@
         <div class="price-row">
           <div>
             <span class="price" *ngIf="course.price > 0">
-              EGP {{ course.price | number:'1.2-2' }}
+              {{ course.price | number:'1.0-0' }} EGP
             </span>
             <span class="price free" *ngIf="course.price === 0">Free</span>
           </div>

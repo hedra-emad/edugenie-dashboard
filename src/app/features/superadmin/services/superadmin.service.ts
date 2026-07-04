@@ -7,6 +7,8 @@ import {
   AdminActivityPaginatedResponse,
   PendingPayoutPaginatedResponse,
   PayoutProcessResponse,
+  ApprovePayoutPayload,
+  RejectPayoutPayload,
   PlatformConfigResponse,
   UpdatePlatformConfigDto,
   AuditLogPaginatedResponse,
@@ -55,22 +57,28 @@ export class SuperadminService {
     );
   }
 
-  getAdminActivity(id: string, page: number = 1, limit: number = 10): Observable<AdminActivityPaginatedResponse> {
-    let params = new HttpParams()
+  getAdminActivity(id: string, page = 1, limit = 10): Observable<AdminActivityPaginatedResponse> {
+    const params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
     return this.http.get<AdminActivityPaginatedResponse>(`${this.baseUrl}/admins/${id}/activity`, { params });
   }
 
-  getPendingPayouts(page: number = 1, limit: number = 10): Observable<PendingPayoutPaginatedResponse> {
-    let params = new HttpParams()
+  getPendingPayouts(page = 1, limit = 10): Observable<PendingPayoutPaginatedResponse> {
+    const params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
     return this.http.get<PendingPayoutPaginatedResponse>(`${this.baseUrl}/payouts/pending`, { params });
   }
 
-  processPayout(instructorId: string, amount: number): Observable<PayoutProcessResponse> {
-    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${instructorId}/process`, { amount });
+  /** Approve an instructor's payout request (records the transfer method + reference). */
+  approvePayout(requestId: string, payload: ApprovePayoutPayload): Observable<PayoutProcessResponse> {
+    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${requestId}/approve`, payload);
+  }
+
+  /** Reject an instructor's payout request (records the reason). */
+  rejectPayout(requestId: string, payload: RejectPayoutPayload): Observable<PayoutProcessResponse> {
+    return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${requestId}/reject`, payload);
   }
 
   getPlatformConfig(): Observable<PlatformConfigResponse> {
@@ -81,7 +89,7 @@ export class SuperadminService {
     return this.http.patch<PlatformConfigResponse>(`${this.baseUrl}/platform-config`, config);
   }
 
-  getAuditLogs(userId: string = '', action: string = '', startDate: string = '', endDate: string = '', page: number = 1, limit: number = 10): Observable<AuditLogPaginatedResponse> {
+  getAuditLogs(userId = '', action = '', startDate = '', endDate = '', page = 1, limit = 10): Observable<AuditLogPaginatedResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());

@@ -1,4 +1,4 @@
-<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div *ngIf="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- 1. Total Earnings -->
     <div
         class="bg-white rounded-2xl border border-slate-100 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -9,12 +9,14 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Earnings</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.totalEarnings |
-                number:'1.2-2' }}</h3>
-            <div
-                class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 uppercase mt-2">
-                +14%
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalEarnings |
+                number:'1.0-0' }} EGP</h3>
+            <div class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-2"
+                [ngClass]="(stats.earningsChangePercent ?? 0) >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                {{ (stats.earningsChangePercent ?? 0) >= 0 ? '+' : '' }}{{ (stats.earningsChangePercent ?? 0) |
+                number:'1.0-1' }}% vs prev.
             </div>
+            <div *ngIf="stats.earningsChangePercent === 0" class="mt-2 h-[18px]"></div>
         </div>
     </div>
 
@@ -30,10 +32,16 @@
         <div>
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalStudents |
                 number }}</h3>
+            @if (stats.newStudentsThisWeek > 0) {
             <div
                 class="inline-flex items-center bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold text-indigo-600 uppercase mt-2">
-                +52 New
+                +{{ stats.newStudentsThisWeek | number }} New this week
             </div>
+            } @else {
+            <div class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold text-slate-400 uppercase mt-2">
+                No new this week
+            </div>
+            }
         </div>
     </div>
 
@@ -47,8 +55,8 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pending Payouts</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.pendingPayouts |
-                number:'1.2-2' }}</h3>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.pendingPayouts |
+                number:'1.0-0' }} EGP</h3>
             <div class="mt-2 h-[18px]"></div>
         </div>
     </div>

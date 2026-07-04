@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { FormGroup, AbstractControl } from '@angular/forms';
-import { Observable, Subject, merge, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { FormGroup } from '@angular/forms';
+import { Observable, Subject, debounceTime, takeUntil } from 'rxjs';
 import { DraftStateService, DraftItem } from './draft-state.service';
 import { FileDraftService } from './file-draft.service';
 import { CloudinaryDraftCleanupService } from './cloudinary-draft-cleanup.service.ts';
@@ -24,19 +24,17 @@ export interface FormDraftConfig {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FormDraftIntegrationService {
-  
   private formSubscriptions = new Map<string, Subject<void>>();
   private originalFormValues = new Map<string, any>();
 
   constructor(
-  private draftStateService: DraftStateService,
-  private fileDraftService: FileDraftService,
-  private cloudinaryCleanup : CloudinaryDraftCleanupService
-) {}
-  
+    private draftStateService: DraftStateService,
+    private fileDraftService: FileDraftService,
+    private cloudinaryCleanup: CloudinaryDraftCleanupService,
+  ) {}
 
   // ═══════════════════════════════════════
   // FORM INTEGRATION
@@ -88,7 +86,7 @@ export class FormDraftIntegrationService {
    */
   saveDraftNow(form: FormGroup, config: FormDraftConfig): void {
     const formData = this.getFormDataForDraft(form, config);
-    
+
     this.draftStateService.saveDraft({
       id: config.draftId,
       type: config.type,
@@ -106,7 +104,7 @@ export class FormDraftIntegrationService {
 
     try {
       // Load regular form data
-      Object.keys(draft.data).forEach(key => {
+      Object.keys(draft.data).forEach((key) => {
         if (form.contains(key) && !this.isExcludedField(key, config)) {
           const control = form.get(key);
           if (control) {
@@ -118,7 +116,7 @@ export class FormDraftIntegrationService {
       // Handle file fields separately
       if (config.fileFields && draft.files) {
         for (const fileField of config.fileFields) {
-          const fileMetadata = draft.files.find(f => f.fieldName === fileField.fieldName);
+          const fileMetadata = draft.files.find((f) => f.fieldName === fileField.fieldName);
           if (fileMetadata) {
             this.handleFileRestore(form, fileField.fieldName, fileMetadata, config);
           }
@@ -129,7 +127,7 @@ export class FormDraftIntegrationService {
       if (draft.isDirty) {
         form.markAsDirty();
         // Also mark controls populated from draft as dirty, but ONLY if they actually have a value
-        Object.keys(draft.data).forEach(key => {
+        Object.keys(draft.data).forEach((key) => {
           if (form.contains(key) && !this.isExcludedField(key, config)) {
             const val = draft.data[key];
             // Only mark as dirty if it has a non-empty value, or it's a number/boolean
@@ -150,36 +148,36 @@ export class FormDraftIntegrationService {
    * Clear draft data for form
    */
   clearDraft(config: FormDraftConfig): void {
-  const draft = this.draftStateService.getDraft(config.draftId);
+    const draft = this.draftStateService.getDraft(config.draftId);
 
-  if (draft) {
-    // const cleanup = inject(CloudinaryDraftCleanupService);
-    this.cloudinaryCleanup .cleanupDraft(draft);
+    if (draft) {
+      // const cleanup = inject(CloudinaryDraftCleanupService);
+      this.cloudinaryCleanup.cleanupDraft(draft);
+    }
+
+    this.draftStateService.removeDraft(config.draftId);
+    this.disconnectForm(config.draftId);
   }
-
-  this.draftStateService.removeDraft(config.draftId);
-  this.disconnectForm(config.draftId);
-}
 
   /**
    * Handle file upload for draft
    */
   handleFileUpload(
-    form: FormGroup, 
-    config: FormDraftConfig, 
-    fieldName: string, 
-    file: File
+    form: FormGroup,
+    config: FormDraftConfig,
+    fieldName: string,
+    file: File,
   ): Observable<string> {
-    const fileField = config.fileFields?.find(f => f.fieldName === fieldName);
+    const fileField = config.fileFields?.find((f) => f.fieldName === fieldName);
     if (!fileField) {
       throw new Error(`File field ${fieldName} not configured in draft config`);
     }
 
     return this.fileDraftService.addFileToDraft(
-      config.draftId, 
-      fieldName, 
-      file, 
-      fileField.validation
+      config.draftId,
+      fieldName,
+      file,
+      fileField.validation,
     );
   }
 
@@ -187,11 +185,11 @@ export class FormDraftIntegrationService {
    * Upload files from draft
    */
   uploadDraftFiles(
-    config: FormDraftConfig, 
-    courseId?: string, 
-    sectionId?: string
-  ): Observable<{ [fieldName: string]: string }> {
-    return new Observable(observer => {
+    config: FormDraftConfig,
+    courseId?: string,
+    sectionId?: string,
+  ): Observable<Record<string, string>> {
+    return new Observable((observer) => {
       const draft = this.draftStateService.getDraft(config.draftId);
       if (!draft?.files || draft.files.length === 0) {
         observer.next({});
@@ -199,7 +197,7 @@ export class FormDraftIntegrationService {
         return;
       }
 
-      const results: { [fieldName: string]: string } = {};
+      const results: Record<string, string> = {};
       const uploadPromises: Promise<void>[] = [];
 
       for (const fileMetadata of draft.files) {
@@ -209,21 +207,20 @@ export class FormDraftIntegrationService {
         }
 
         if (fileMetadata.status === 'pending') {
-          const fileField = config.fileFields?.find(f => f.fieldName === fileMetadata.fieldName);
+          const fileField = config.fileFields?.find((f) => f.fieldName === fileMetadata.fieldName);
           if (fileField) {
-            const uploadPromise = this.fileDraftService.uploadFile(
-              fileMetadata.id,
-              fileField.uploadType,
-              courseId,
-              sectionId
-            ).toPromise().then(url => {
-              if (url) {
-                results[fileMetadata.fieldName] = url;
-              }
-            }).catch(error => {
-              console.error(`Failed to upload file ${fileMetadata.fieldName}:`, error);
-            });
-            
+            const uploadPromise = this.fileDraftService
+              .uploadFile(fileMetadata.id, fileField.uploadType, courseId, sectionId)
+              .toPromise()
+              .then((url) => {
+                if (url) {
+                  results[fileMetadata.fieldName] = url;
+                }
+              })
+              .catch((error) => {
+                console.error(`Failed to upload file ${fileMetadata.fieldName}:`, error);
+              });
+
             uploadPromises.push(uploadPromise);
           }
         }
@@ -233,12 +230,14 @@ export class FormDraftIntegrationService {
         observer.next(results);
         observer.complete();
       } else {
-        Promise.all(uploadPromises).then(() => {
-          observer.next(results);
-          observer.complete();
-        }).catch(error => {
-          observer.error(error);
-        });
+        Promise.all(uploadPromises)
+          .then(() => {
+            observer.next(results);
+            observer.complete();
+          })
+          .catch((error) => {
+            observer.error(error);
+          });
       }
     });
   }
@@ -262,23 +261,24 @@ export class FormDraftIntegrationService {
   // ═══════════════════════════════════════
 
   private setupFormChangeListener(
-    form: FormGroup, 
-    config: FormDraftConfig, 
-    destroy$: Subject<void>
+    form: FormGroup,
+    config: FormDraftConfig,
+    destroy$: Subject<void>,
   ): void {
     const delay = config.autoSaveDelay || 1000;
 
     const checkAndSaveDraft = () => {
       const originalValue = this.originalFormValues.get(config.draftId);
       const currentValue = form.getRawValue();
-      
+
       let hasChanges = false;
-      
-      Object.keys(currentValue).forEach(key => {
+
+      Object.keys(currentValue).forEach((key) => {
         if (!this.isExcludedField(key, config)) {
-          const normalize = (v: any) => (v === null || v === undefined || v === '') ? null : JSON.stringify(v);
+          const normalize = (v: any) =>
+            v === null || v === undefined || v === '' ? null : JSON.stringify(v);
           const isChanged = normalize(currentValue[key]) !== normalize(originalValue?.[key]);
-          
+
           if (isChanged) {
             hasChanges = true;
           } else {
@@ -302,41 +302,29 @@ export class FormDraftIntegrationService {
       }
     };
 
-    form.valueChanges
-      .pipe(
-        debounceTime(delay),
-        takeUntil(destroy$)
-      )
-      .subscribe(() => {
-        checkAndSaveDraft();
-      });
+    form.valueChanges.pipe(debounceTime(delay), takeUntil(destroy$)).subscribe(() => {
+      checkAndSaveDraft();
+    });
 
     // Also save on status changes (validation state changes)
-    form.statusChanges
-      .pipe(
-        debounceTime(delay),
-        takeUntil(destroy$)
-      )
-      .subscribe(() => {
-        checkAndSaveDraft();
-      });
+    form.statusChanges.pipe(debounceTime(delay), takeUntil(destroy$)).subscribe(() => {
+      checkAndSaveDraft();
+    });
   }
 
   private setupFileFieldListeners(
-    form: FormGroup, 
-    config: FormDraftConfig, 
-    destroy$: Subject<void>
+    form: FormGroup,
+    config: FormDraftConfig,
+    destroy$: Subject<void>,
   ): void {
     // Listen for file changes in file fields
     for (const fileField of config.fileFields!) {
       const control = form.get(fileField.fieldName);
       if (control) {
-        control.valueChanges
-          .pipe(takeUntil(destroy$))
-          .subscribe(value => {
-            // Update draft when file field changes
-            this.saveDraftNow(form, config);
-          });
+        control.valueChanges.pipe(takeUntil(destroy$)).subscribe((value) => {
+          // Update draft when file field changes
+          this.saveDraftNow(form, config);
+        });
       }
     }
   }
@@ -363,36 +351,39 @@ export class FormDraftIntegrationService {
 
   private isExcludedField(fieldName: string, config: FormDraftConfig): boolean {
     if (config.excludeFields?.includes(fieldName)) return true;
-    if (config.fileFields?.some(f => f.fieldName === fieldName)) return true;
+    if (config.fileFields?.some((f) => f.fieldName === fieldName)) return true;
     return false;
   }
 
   private handleFileRestore(
-    form: FormGroup, 
-    fieldName: string, 
-    fileMetadata: any, 
-    config: FormDraftConfig
+    form: FormGroup,
+    fieldName: string,
+    fileMetadata: any,
+    config: FormDraftConfig,
   ): void {
     // Check if file still exists in memory
     const file = this.fileDraftService.getFileFromDraft(config.draftId, fieldName);
-    
+
     if (file) {
       // File exists, create preview URL if needed
       const previewUrl = this.fileDraftService.createPreviewUrl(config.draftId, fieldName);
-      
+
       // Update form with file information
       const control = form.get(fieldName);
       if (control) {
-        control.setValue({
-          file: file,
-          preview: previewUrl,
-          metadata: fileMetadata
-        }, { emitEvent: false });
+        control.setValue(
+          {
+            file: file,
+            preview: previewUrl,
+            metadata: fileMetadata,
+          },
+          { emitEvent: false },
+        );
       }
     } else {
       // File doesn't exist in memory, show message to user
       console.warn(`File ${fileMetadata.name} not found in memory. User needs to re-upload.`);
-      
+
       // Could emit an event here to show notification to user
       // or set a flag in the form to show missing file indicator
     }
@@ -409,7 +400,7 @@ export class FormDraftIntegrationService {
     if (existingId && !this.draftStateService.isDraftId(existingId)) {
       return existingId; // Use existing real ID
     }
-    
+
     return this.draftStateService.generateDraftId(type, parentId);
   }
 

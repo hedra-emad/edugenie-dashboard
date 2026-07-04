@@ -32,7 +32,7 @@ export class SidebarComponent implements OnInit {
   @Input() isMobile = false;
   @Input() isTablet = false;
   @Input() sidebarExpanded = true;
-  @Output() toggle = new EventEmitter<void>();
+  @Output() toggled = new EventEmitter<void>();
 
   readonly adminNavItems: NavItem[] = [
     { icon: 'grid_view', label: 'Overview', route: '/admin/analytics' },
@@ -45,6 +45,7 @@ export class SidebarComponent implements OnInit {
   readonly instructorNavItems: NavItem[] = [
     { icon: 'menu_book', label: 'My Courses', route: '/my-courses' },
     { icon: 'analytics', label: 'Analytics', route: '/analytics' },
+    { icon: 'account_balance_wallet', label: 'Earnings', route: '/earnings' },
     { icon: 'notifications', label: 'Notifications', route: '/notifications' },
   ];
 
@@ -64,6 +65,7 @@ export class SidebarComponent implements OnInit {
     { icon: 'history', label: 'Audit Logs', route: '/admin/audit-logs' },
     { icon: 'group', label: 'Users', route: '/admin/users' },
     { icon: 'fact_check', label: 'Approvals', route: '/admin/course-approvals' },
+    { icon: 'category', label: 'Categories', route: '/admin/categories' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' },
   ];
 
@@ -106,7 +108,7 @@ export class SidebarComponent implements OnInit {
   onNavClick(route: string): void {
     if (this.isOverlay) {
       this.router.navigate([route]).then(() => {
-        this.toggle.emit();
+        this.toggled.emit();
       });
     }
   }

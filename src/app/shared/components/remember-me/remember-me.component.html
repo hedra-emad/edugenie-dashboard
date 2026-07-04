@@ -1,22 +1,12 @@
 <div class="flex items-center justify-between">
-      <div class="flex items-center">
-        <input
-          id="remember-me"
-  type="checkbox"
-  [checked]="value"
-  (change)="toggle($event)"
-          class="w-4 border-primary accent-primary
+  <div class="flex items-center">
+    <input id="remember-me" type="checkbox" [checked]="value" (change)="toggle($event)" class="w-4 border-primary accent-primary
                 focus:ring-primary
-                rounded cursor-pointer"
-        />
-        <label for="remember-me" class="ml-2 block text-sm text-text-primary cursor-pointer">
-          Remember me
-        </label>
-      </div>
+                rounded cursor-pointer" />
+    <label for="remember-me" class="ml-2 block text-sm text-text-primary cursor-pointer">
+      Remember me
+    </label>
+  </div>
 
-      <div class="text-sm">
-        <a href="#" class=" text-secondary hover:text-blue-100 transition-colors">
-          Forgot Password?
-        </a>
-      </div>
-    </div>
+
+</div>

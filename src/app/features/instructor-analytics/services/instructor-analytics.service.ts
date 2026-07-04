@@ -67,7 +67,9 @@ export class InstructorAnalyticsService {
           studentAvatar: item.studentAvatar || null,
           course: item.courseName || item.course || item.courseTitle || '-',
           date: item.date || item.createdAt || item.enrolledAt || item.purchasedAt,
-          amount: item.amount ?? item.price ?? item.total ?? 0,
+          // Backend sends `price` = the instructor's Earning.amount (their share).
+          // Never fall back to a full order total — instructors only see their share.
+          amount: item.amount ?? item.price ?? 0,
           status: item.status || 'COMPLETED',
         }));
       })
