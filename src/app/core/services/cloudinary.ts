@@ -10,6 +10,7 @@ interface SignatureResponse {
   apiKey: string;
   cloudName: string;
   raw_convert: string;
+  notification_url?: string;
 }
 
 export interface CloudinaryUploadResponse {
@@ -37,14 +38,16 @@ export class CloudinaryService {
   // ─────────────────────────────────────────────────────────────
   private getSignature(
     folder: string,
-    context?: string
+    context?: string,
+    transcribe?: boolean,
   ): Observable<SignatureResponse> {
 
     return this.http.post<SignatureResponse>(
       `${this.apiBase}/cloudinary/sign`,
       {
         folder,
-        context
+        context,
+        transcribe,
       },
       {
         withCredentials: true
@@ -72,6 +75,23 @@ export class CloudinaryService {
   resourceType: 'image' | 'video' | 'raw' = 'video'
 ): Observable<any> {
     return this.deleteOldAsset(publicId, resourceType);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PUBLIC: re-run transcription in place for an already-uploaded
+  // lesson video (used by the "Regenerate transcript" action).
+  // ─────────────────────────────────────────────────────────────
+  retryTranscription(
+    publicId: string,
+    courseId: string,
+    sectionId: string,
+    lessonId: string,
+  ): Observable<{ queued: boolean }> {
+    return this.http.post<{ queued: boolean }>(
+      `${this.apiBase}/cloudinary/trigger-transcription`,
+      { publicId, courseId, sectionId, lessonId },
+      { withCredentials: true },
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -160,8 +180,10 @@ export class CloudinaryService {
       ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
       : `courseId=${courseId}|sectionId=${sectionId}`;
 
-    return this.getSignature(folder, context).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
+    // transcribe: true → backend signs raw_convert (google_speech) + notification_url
+    // so the video is transcribed on THIS upload (no separate re-upload pass).
+    return this.getSignature(folder, context, true).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert, notification_url }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -169,7 +191,9 @@ export class CloudinaryService {
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
-        // formData.append('raw_convert', raw_convert);
+        // Append the EXACT signed strings, or Cloudinary rejects the signature.
+        if (raw_convert) formData.append('raw_convert', raw_convert);
+        if (notification_url) formData.append('notification_url', notification_url);
 
 
         const req = new HttpRequest(

@@ -18,12 +18,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Subject, timer, of } from 'rxjs';
-import { takeUntil, finalize, take, switchMap, takeWhile, filter, catchError } from 'rxjs/operators';
+import { takeUntil, finalize, take, switchMap, takeWhile, filter, catchError, tap } from 'rxjs/operators';
 
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
 import { FileDraftService } from '../../../../core/services/file-draft.service';
-import { LessonsService } from '../../../../core/services/lessons';
+import { LessonsService, TranscriptionStatus } from '../../../../core/services/lessons';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { ActionBarComponent } from '../shared/action-bar/action-bar.component';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
@@ -140,6 +140,8 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private readonly TRANSCRIPT_POLL_INTERVAL_MS = 5000;
   // No timeout - poll indefinitely until transcript is ready
   isPollingTranscript = false; // For template binding
+  /** Latest transcript lifecycle reported by the backend (drives the card UI). */
+  transcriptStatusValue: 'pending' | 'ready' | 'failed' | null = null;
 
   // ── Video drop-zone flags ─────────────────────────────────
   videoTouched = false;
@@ -385,6 +387,24 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────────────────
   ngOnInit() {
     this.initDraft();
+
+    // Seed the transcript UI from whatever the form already holds.
+    if (this.lessonForm.get('transcript')?.value) {
+      this.transcriptStatusValue = 'ready';
+    }
+
+    // Editing an existing saved lesson that has a video but no transcript yet →
+    // resume polling so the transcript surfaces on load (valueChanges below only
+    // fires for a freshly attached video, not one already present on init).
+    const existingId = this.lessonForm.get('id')?.value as string | null;
+    if (
+      existingId &&
+      !existingId.startsWith('draft_') &&
+      this.lessonForm.get('videoPublicId')?.value &&
+      !this.lessonForm.get('transcript')?.value
+    ) {
+      this.startTranscriptPolling(existingId);
+    }
 
     this.lessonForm.get('videoPublicId')?.valueChanges.pipe(
       takeUntil(this.destroy$),
@@ -1421,6 +1441,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private startTranscriptPolling(lessonId: string): void {
     this.stopTranscriptPolling(); // safety: clear any existing poll
     this.isPollingTranscript = true;
+    if (this.transcriptStatusValue !== 'ready') this.transcriptStatusValue = 'pending';
     this.cdr.markForCheck();
 
     timer(0, this.TRANSCRIPT_POLL_INTERVAL_MS).pipe(
@@ -1433,16 +1454,35 @@ export class LessonCardComponent implements OnInit, OnDestroy {
               sectionId: this.sectionId,
               lessonId,
             });
-            return of({ videoReady: true, transcriptReady: false, transcript: null });
+            return of({
+              videoReady: true,
+              transcriptReady: false,
+              transcript: null,
+              transcriptStatus: null,
+            } as TranscriptionStatus);
           })
         )
       ),
-      takeWhile(status => !status.transcriptReady || !status.transcript, true),
+      // Mirror the backend lifecycle into the card; a 'failed' result ends the poll.
+      tap((status) => {
+        if (status.transcriptStatus) this.transcriptStatusValue = status.transcriptStatus;
+        if (status.transcriptStatus === 'failed') {
+          this.stopTranscriptPolling();
+          this.cdr.markForCheck();
+        }
+      }),
+      takeWhile(
+        (status) =>
+          (!status.transcriptReady || !status.transcript) &&
+          status.transcriptStatus !== 'failed',
+        true,
+      ),
       filter(status => status.transcriptReady && !!status.transcript),
     ).subscribe({
       next: (status) => {
         if (status.transcript) {
           this.lessonForm.patchValue({ transcript: status.transcript }, { emitEvent: false });
+          this.transcriptStatusValue = 'ready';
           this.stopTranscriptPolling();
           this.toastr.success('Transcript generated successfully');
           this.cdr.markForCheck();
@@ -1452,6 +1492,64 @@ export class LessonCardComponent implements OnInit, OnDestroy {
         console.warn('[LessonCard] Transcript poll failed (will retry):', err);
       },
     });
+  }
+
+  // ── Transcript display state (template-facing) ────────────────
+  /** The saved transcript text, if any. */
+  get transcriptText(): string | null {
+    return this.lessonForm.get('transcript')?.value || null;
+  }
+
+  /** Show the transcript block only for a saved lesson that has a video. */
+  get showTranscriptSection(): boolean {
+    return (
+      this.isUpdateMode &&
+      !!this.lessonForm.get('videoUrl')?.value &&
+      !this.selectedVideoFile
+    );
+  }
+
+  get isTranscriptReady(): boolean {
+    return !!this.transcriptText;
+  }
+
+  get isTranscriptGenerating(): boolean {
+    return (
+      !this.transcriptText &&
+      this.transcriptStatusValue !== 'failed' &&
+      (this.isPollingTranscript || this.transcriptStatusValue === 'pending')
+    );
+  }
+
+  get isTranscriptFailed(): boolean {
+    return !this.transcriptText && this.transcriptStatusValue === 'failed';
+  }
+
+  /** Re-run transcription in place for an already-uploaded lesson video. */
+  regenerateTranscript(): void {
+    const lessonId = this.lessonForm.get('id')?.value as string | null;
+    const publicId = this.lessonForm.get('videoPublicId')?.value as string | null;
+    if (!lessonId || String(lessonId).startsWith('draft_') || !publicId) return;
+
+    this.transcriptStatusValue = 'pending';
+    this.lessonForm.patchValue({ transcript: null }, { emitEvent: false });
+    this.cdr.markForCheck();
+
+    this.cloudinaryService
+      .retryTranscription(publicId, this.courseId, this.sectionId, lessonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toastr.info('Regenerating transcript…');
+          this.startTranscriptPolling(lessonId);
+        },
+        error: (err) => {
+          console.warn('[LessonCard] Regenerate transcript failed:', err);
+          this.toastr.error('Could not start transcript regeneration');
+          this.transcriptStatusValue = 'failed';
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   private stopTranscriptPolling(): void {
