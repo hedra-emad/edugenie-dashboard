@@ -455,27 +455,30 @@ async onDrop(event: DragEvent) {
     this.isCropperOpen.set(true);
   }
 
-  onCropImageLoaded(event: Event) {
-    const img = event.target as HTMLImageElement;
-    this._naturalW = img.naturalWidth;
-    this._naturalH = img.naturalHeight;
-
-    const coverWidth = this.CROP_WIDTH / this._naturalW;
-    const coverHeight = this.CROP_HEIGHT / this._naturalH;
-    const cover = Math.max(coverWidth, coverHeight);
-    this.cropScale = cover;
-    this.cropTranslateX = 0;
-    this.cropTranslateY = 0;
-    this.cropRotation = 0;
-
-    // Initialize dynamic crop box to default centered position
-    this.cropBoxX = 0;
-    this.cropBoxY = 0;
-    this.cropBoxWidth = this.CROP_WIDTH;
-    this.cropBoxHeight = this.CROP_HEIGHT;
-
-    setTimeout(() => this.refreshThumbnailPreview(), 50);
+  /**
+   * Compute effective image dimensions accounting for rotation.
+   * At 90°/270°, the image's bounding box swaps width ↔ height.
+   */
+  private getEffectiveDims(): { w: number; h: number } {
+    const swapped = Math.abs(this.cropRotation % 180) === 90;
+    return swapped
+      ? { w: this._naturalH, h: this._naturalW }
+      : { w: this._naturalW, h: this._naturalH };
   }
+
+  /**
+   * Compute the minimum scale needed so the image fully covers a given box.
+   * Policy: Always cover the CURRENT crop box (cropBoxWidth/cropBoxHeight),
+   * not the fixed arena. This minimizes unnecessary zoom (and resulting blur)
+   * and produces a tight, accurate framing match between preview and final crop.
+   */
+  private computeCoverScale(boxW: number, boxH: number): number {
+    const effectiveDims = this.getEffectiveDims();
+    const coverWidth = boxW / effectiveDims.w;
+    const coverHeight = boxH / effectiveDims.h;
+    return Math.max(coverWidth, coverHeight);
+  }
+
 
   get cropImageStyle(): Record<string, string> {
     return {
@@ -512,6 +515,7 @@ async onDrop(event: DragEvent) {
       const pt = this.getPoint(event);
       this.cropTranslateX = this._translateAtDragStart.x + (pt.x - this._dragStartX);
       this.cropTranslateY = this._translateAtDragStart.y + (pt.y - this._dragStartY);
+      this.clampTranslate();
       this.refreshThumbnailPreview();
     }
   }
@@ -527,48 +531,112 @@ async onDrop(event: DragEvent) {
     event.preventDefault();
     const delta = event.deltaY < 0 ? 0.08 : -0.08;
     this.cropScale = Math.min(10, Math.max(0.1, this.cropScale + delta));
+    this.enforceInvariant();
     this.refreshThumbnailPreview();
   }
 
   zoomIn() { 
-    this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); 
+    this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2));
+    this.enforceInvariant();
     this.refreshThumbnailPreview(); 
   }
 
-  zoomOut() { 
-    this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); 
-    this.refreshThumbnailPreview(); 
+  zoomOut() {
+    this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2));
+    this.enforceInvariant();
+    this.refreshThumbnailPreview();
+  }
+
+
+  /**
+   * Enforce the core invariant: the (rotated, panned, zoomed) image must fully
+   * cover the current crop box. Re-check and re-clamp after any mutation that
+   * changes scale, translate, box dimensions, or rotation.
+   * 
+   * Order matters: enforce cover scale first, then clamp translate to the new bounds.
+   */
+  private enforceInvariant() {
+    // 1. Ensure scale is sufficient to cover the crop box
+    const minScale = this.computeCoverScale(this.cropBoxWidth, this.cropBoxHeight);
+    if (this.cropScale < minScale) {
+      this.cropScale = minScale;
+    }
+
+    // 2. Clamp translate to keep image in bounds at current scale
+    this.clampTranslate();
+  }
+
+  /**
+   * Clamp cropTranslateX/Y so the scaled image stays within bounds,
+   * preventing the crop box from seeing empty arena background.
+   */
+  private clampTranslate() {
+    const effectiveDims = this.getEffectiveDims();
+    const scaledW = effectiveDims.w * this.cropScale;
+    const scaledH = effectiveDims.h * this.cropScale;
+    const maxX = Math.max(0, (scaledW - this.cropBoxWidth) / 2);
+    const maxY = Math.max(0, (scaledH - this.cropBoxHeight) / 2);
+    this.cropTranslateX = Math.min(maxX, Math.max(-maxX, this.cropTranslateX));
+    this.cropTranslateY = Math.min(maxY, Math.max(-maxY, this.cropTranslateY));
   }
 
   updateZoom(e: Event) {
-    this.cropScale = parseFloat((e.target as HTMLInputElement).value);
+    this.cropScale = Math.max(0.1, parseFloat((e.target as HTMLInputElement).value));
+    this.enforceInvariant();
     this.refreshThumbnailPreview();
   }
 
   rotateLeft() { 
-    this.cropRotation -= 90; 
+    this.cropRotation -= 90;
+    this.enforceInvariant();
     this.refreshThumbnailPreview(); 
   }
 
   rotateRight() { 
-    this.cropRotation += 90; 
+    this.cropRotation += 90;
+    this.enforceInvariant();
     this.refreshThumbnailPreview(); 
   }
 
-  resetCropTransform() {
-    const coverWidth = this.CROP_WIDTH / (this._naturalW || 1);
-    const coverHeight = this.CROP_HEIGHT / (this._naturalH || 1);
-    const cover = Math.max(coverWidth, coverHeight);
-    this.cropScale = cover;
+
+  onCropImageLoaded(event: Event) {
+    const img = event.target as HTMLImageElement;
+    this._naturalW = img.naturalWidth;
+    this._naturalH = img.naturalHeight;
+
+    // Initialize dynamic crop box to default centered position
+    this.cropBoxX = 0;
+    this.cropBoxY = 0;
+    this.cropBoxWidth = this.CROP_WIDTH;
+    this.cropBoxHeight = this.CROP_HEIGHT;
+
+    // Reset transform (no rotation initially)
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
     this.cropRotation = 0;
 
+    // Enforce the invariant: ensure image covers the NEW default crop box size,
+    // not the full arena. This avoids unnecessary zoom blur.
+    this.enforceInvariant();
+
+    setTimeout(() => this.refreshThumbnailPreview(), 50);
+  }
+
+
+  resetCropTransform() {
     // Reset crop box to default centered position
     this.cropBoxX = 0;
     this.cropBoxY = 0;
     this.cropBoxWidth = this.CROP_WIDTH;
     this.cropBoxHeight = this.CROP_HEIGHT;
+
+    // Reset transform (no rotation, no pan)
+    this.cropTranslateX = 0;
+    this.cropTranslateY = 0;
+    this.cropRotation = 0;
+
+    // Enforce the invariant: image must cover the default crop box
+    this.enforceInvariant();
 
     this.refreshThumbnailPreview();
   }
@@ -653,17 +721,44 @@ async onDrop(event: DragEvent) {
     if (boxRight > this.CONTAINER_SIZE) newX -= (boxRight - this.CONTAINER_SIZE);
     if (boxBottom > this.CONTAINER_SIZE) newY -= (boxBottom - this.CONTAINER_SIZE);
 
+    // Auto-zoom: if current scale doesn't cover the new box size, bump it up
+    const minScale = this.computeCoverScale(newW, newH);
+    if (this.cropScale < minScale) {
+      this.cropScale = minScale;
+    }
+
     this.cropBoxX = newX;
     this.cropBoxY = newY;
     this.cropBoxWidth = newW;
     this.cropBoxHeight = newH;
 
+    this.enforceInvariant();
     this.refreshThumbnailPreview();
   }
 
   onHandleUp(): void {
     this._isResizingHandle = false;
     this._resizeHandleType = null;
+  }
+
+  /**
+   * Shared canvas transform logic used by both live preview and final crop rendering.
+   * Applies translation, rotation, and scale transforms to position and render the image.
+   */
+  private applyCanvasTransform(
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    canvasWidth: number,
+    canvasHeight: number,
+    translateX: number,
+    translateY: number
+  ) {
+    ctx.save();
+    ctx.translate(canvasWidth / 2 + translateX, canvasHeight / 2 + translateY);
+    ctx.rotate(this.cropRotation * Math.PI / 180);
+    ctx.scale(this.cropScale, this.cropScale);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.restore();
   }
 
   refreshThumbnailPreview() {
@@ -673,18 +768,14 @@ async onDrop(event: DragEvent) {
     canvas.width = this.cropBoxWidth;
     canvas.height = this.cropBoxHeight;
     const ctx = canvas.getContext('2d')!;
-    this.drawToCanvas(ctx, img, this.cropBoxWidth, this.cropBoxHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.applyCanvasTransform(ctx, img, canvas.width, canvas.height, this.cropTranslateX, this.cropTranslateY);
     this.livePreviewUrl = canvas.toDataURL('image/png');
   }
 
   private drawToCanvas(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
     ctx.clearRect(0, 0, width, height);
-    ctx.save();
-    ctx.translate(width / 2 + this.cropTranslateX, height / 2 + this.cropTranslateY);
-    ctx.rotate(this.cropRotation * Math.PI / 180);
-    ctx.scale(this.cropScale, this.cropScale);
-    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-    ctx.restore();
+    this.applyCanvasTransform(ctx, img, width, height, this.cropTranslateX, this.cropTranslateY);
   }
 
   confirmThumbnailCrop() {
@@ -698,13 +789,14 @@ async onDrop(event: DragEvent) {
     canvas.height = OUT_H;
     const ctx = canvas.getContext('2d')!;
 
+    // Scale the translate values to match the output canvas dimensions relative to crop box
     const scaleX = OUT_W / this.cropBoxWidth;
     const scaleY = OUT_H / this.cropBoxHeight;
+    const scaledTranslateX = this.cropTranslateX * scaleX;
+    const scaledTranslateY = this.cropTranslateY * scaleY;
+
     ctx.save();
-    ctx.translate(
-      OUT_W / 2 + this.cropTranslateX * scaleX,
-      OUT_H / 2 + this.cropTranslateY * scaleY
-    );
+    ctx.translate(OUT_W / 2 + scaledTranslateX, OUT_H / 2 + scaledTranslateY);
     ctx.rotate(this.cropRotation * Math.PI / 180);
     ctx.scale(this.cropScale * scaleX, this.cropScale * scaleY);
     ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);

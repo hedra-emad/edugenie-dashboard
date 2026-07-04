@@ -17,10 +17,19 @@
 }
 
 /* ─── Cropper Styles ─────────────────────────────────────────── */
+
+/**
+ * The arena is a fixed 380×380px container. The image inside (positioned absolute)
+ * must not affect the arena's own dimensions—the arena must stay exactly 380px
+ * wide and tall regardless of the loaded image's intrinsic dimensions or aspect ratio.
+ */
 .cropper-arena {
   position: relative;
   width: 380px;
   height: 380px;
+  min-width: 380px;
+  min-height: 380px;
+  flex-shrink: 0;
   background: #f3f4f6;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
