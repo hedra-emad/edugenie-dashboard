@@ -418,6 +418,13 @@ export class CourseApprovalService {
   }
 
   /**
+   * Call this when the pending tab becomes active (e.g., landing on page or switching to 'pending').
+   */
+  setPendingTabActive(): void {
+    this.isPendingTabActive = true;
+  }
+
+  /**
    * Call this when the pending tab becomes inactive (e.g., switching to 'all' or 'rejected').
    */
   setPendingTabInactive(): void {
