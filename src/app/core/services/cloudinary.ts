@@ -172,10 +172,10 @@ export class CloudinaryService {
       ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
       : `courseId=${courseId}|sectionId=${sectionId}`;
 
-    // transcribe: true → backend signs raw_convert (google_speech) + notification_url
-    // so the video is transcribed on THIS upload (no separate re-upload pass).
+    // transcribe: true → backend signs notification_url so Cloudinary fires the
+    // upload webhook, which transcribes the audio via Gemini server-side.
     return this.getSignature(folder, context, true).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert, notification_url }) => {
+      switchMap(({ signature, timestamp, apiKey, cloudName, notification_url }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -183,8 +183,7 @@ export class CloudinaryService {
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
-        // Append the EXACT signed strings, or Cloudinary rejects the signature.
-        if (raw_convert) formData.append('raw_convert', raw_convert);
+        // Append the EXACT signed string, or Cloudinary rejects the signature.
         if (notification_url) formData.append('notification_url', notification_url);
 
 
