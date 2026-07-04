@@ -176,6 +176,45 @@
         </div>
       </div>
 
+      <!-- (C2) TRANSCRIPT — auto-generated captions for a saved lesson video -->
+      <div *ngIf="showTranscriptSection"
+        class="p-4 bg-white rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-sm space-y-3">
+
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold uppercase text-gray-700 flex items-center gap-1.5">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-text-secondary)]">subtitles</mat-icon>
+            Transcript
+          </label>
+
+          <button *ngIf="isTranscriptReady || isTranscriptFailed" type="button" (click)="regenerateTranscript()"
+            class="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline">
+            <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">autorenew</mat-icon>
+            Regenerate
+          </button>
+        </div>
+
+        <!-- Generating -->
+        <div *ngIf="isTranscriptGenerating"
+          class="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+          <app-loading [size]="14" color="#3B1892"></app-loading>
+          Generating transcript… this can take a minute after the video uploads.
+        </div>
+
+        <!-- Ready -->
+        <div *ngIf="isTranscriptReady"
+          class="text-sm text-[var(--color-text-primary)] text-left leading-relaxed whitespace-pre-wrap
+                 max-h-48 overflow-y-auto pr-1 bg-[var(--color-background)]
+                 rounded-lg p-3 border border-[var(--color-border)]">
+          {{ transcriptText }}
+        </div>
+
+        <!-- Failed -->
+        <div *ngIf="isTranscriptFailed" class="flex items-start gap-1.5 text-xs text-amber-600">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mt-0.5">info</mat-icon>
+          <span>We couldn't generate a transcript for this video (it may have no clear speech). You can try again.</span>
+        </div>
+      </div>
+
       <!-- (D) Generic message (file unavailable, duration error, upload_error, max_retries) -->
       <!-- Upload Error State (Cloudinary failed) -->
       <div *ngIf="s === 'upload_error'" class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">

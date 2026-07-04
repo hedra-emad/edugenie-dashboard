@@ -8,6 +8,7 @@ export interface TranscriptionStatus {
   videoReady: boolean;
   transcriptReady: boolean;
   transcript: string | null;
+  transcriptStatus?: 'pending' | 'ready' | 'failed' | null;
 }
 
 @Injectable({ providedIn: 'root' })
