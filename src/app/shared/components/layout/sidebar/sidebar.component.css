@@ -328,7 +328,7 @@
 .nav-link--btn {
   border: none;
   background: transparent;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
 }
 
