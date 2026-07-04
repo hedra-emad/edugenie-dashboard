@@ -34,9 +34,12 @@ export class CloudinaryService {
   private readonly apiBase = ''; // intercepted by api.interceptor.ts
 
   // ─────────────────────────────────────────────────────────────
-  // PRIVATE: request a signed signature from backend
+  // PUBLIC: request a signed signature from backend. Public so callers can
+  // prefetch a signature ahead of upload (e.g. thumbnail prefetch in
+  // course-basic-info). `transcribe` adds signed raw_convert + notification_url
+  // for lesson-video uploads only.
   // ─────────────────────────────────────────────────────────────
-  private getSignature(
+  getSignature(
     folder: string,
     context?: string,
     transcribe?: boolean,
@@ -115,16 +118,7 @@ export class CloudinaryService {
   }
 
 
-// change getSignature from private → public (or add a thin public wrapper)
-getSignature(folder: string, context?: string): Observable<SignatureResponse> {
-  return this.http.post<SignatureResponse>(
-    `${this.apiBase}/cloudinary/sign`,
-    { folder, context },
-    { withCredentials: true }
-  );
-}
-
-uploadThumbnail(
+  uploadThumbnail(
   file: File,
   userId: string,
   oldPublicId?: string | null,
