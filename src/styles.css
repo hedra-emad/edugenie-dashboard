@@ -46,6 +46,22 @@
   border-radius: var(--radius-md);
 }
 
+/* Info toast styling */
+.toast-container .ngx-toastr.toast-info {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
+
+/* Warning toast styling */
+.toast-container .ngx-toastr.toast-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+}
+
 /* Slide-in animation from left */
 @keyframes slideInFromLeft {
   0% {

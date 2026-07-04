@@ -65,6 +65,8 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   isBulkRejectMode = false;
 
   ngOnInit(): void {
+    // BUG 2 FIX: mark pending tab active on initial load so real-time refresh works immediately
+    this.service.setPendingTabActive();
     this.service.loadData();
 
     combineLatest([
@@ -248,6 +250,19 @@ export class CourseApprovalsPageComponent implements OnInit, OnDestroy {
   onSelectionChange(selectedIds: Set<string>): void {
     this.selectedCourseIds = selectedIds;
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Handle tab filter changes from the approvals table component.
+   * Updates the active filter and keeps the service's isPendingTabActive flag in sync.
+   */
+  onFilterChange(filter: FilterType): void {
+    this.activeTableFilter = filter;
+    if (filter === 'pending') {
+      this.service.setPendingTabActive();
+    } else {
+      this.service.setPendingTabInactive();
+    }
   }
 
   get selectedCourses(): CourseApproval[] {
