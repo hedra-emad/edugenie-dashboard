@@ -1,19 +1,29 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideToastr } from 'ngx-toastr';
 
-import { PublishCourseButton } from './publish-course-button';
+import { PublishCourseButtonComponent } from './publish-course-button';
 
-describe('PublishCourseButton', () => {
-  let component: PublishCourseButton;
-  let fixture: ComponentFixture<PublishCourseButton>;
+describe('PublishCourseButtonComponent', () => {
+  let component: PublishCourseButtonComponent;
+  let fixture: ComponentFixture<PublishCourseButtonComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PublishCourseButton]
-    })
-    .compileComponents();
+      imports: [PublishCourseButtonComponent, NoopAnimationsModule],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideToastr(),
+      ],
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(PublishCourseButton);
+    fixture = TestBed.createComponent(PublishCourseButtonComponent);
     component = fixture.componentInstance;
+    // courseId is a required input — set it before the first change detection.
+    fixture.componentRef.setInput('courseId', 'test-course-id');
     fixture.detectChanges();
   });
 
