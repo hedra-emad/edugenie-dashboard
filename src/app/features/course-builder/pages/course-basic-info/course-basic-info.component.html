@@ -293,8 +293,53 @@
           (wheel)="onCropWheel($event)" [class.cursor-grabbing]="_isDragging" style="cursor:grab">
           <img *ngIf="selectedImageSrc" #cropImg [src]="selectedImageSrc" [ngStyle]="cropImageStyle"
             alt="Image to crop" draggable="false" (load)="onCropImageLoaded($event)">
-          <div class="cropper-overlay" aria-hidden="true"></div>
-          <div class="cropper-ring" aria-hidden="true"></div>
+          
+          <!-- Dynamic Overlay (darkened area outside crop box) -->
+          <div class="cropper-overlay" 
+            [style]="'clip-path: polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%, ' + cropBoxLeft + 'px ' + cropBoxTop + 'px, ' + (cropBoxLeft + cropBoxWidth) + 'px ' + cropBoxTop + 'px, ' + (cropBoxLeft + cropBoxWidth) + 'px ' + (cropBoxTop + cropBoxHeight) + 'px, ' + cropBoxLeft + 'px ' + (cropBoxTop + cropBoxHeight) + 'px, ' + cropBoxLeft + 'px ' + cropBoxTop + 'px)'"
+            aria-hidden="true"></div>
+          
+          <!-- Crop Box Ring + Handles -->
+          <div class="cropper-ring" 
+            [style]="'left:' + cropBoxLeft + 'px;top:' + cropBoxTop + 'px;width:' + cropBoxWidth + 'px;height:' + cropBoxHeight + 'px'"
+            aria-hidden="true">
+            
+            <!-- Corner Handles -->
+            <div class="crop-handle crop-handle--nw" 
+              (mousedown)="onHandlePointerDown($event, 'nw')" 
+              (touchstart)="onHandlePointerDown($event, 'nw')"
+              title="Resize (top-left corner)"></div>
+            <div class="crop-handle crop-handle--ne" 
+              (mousedown)="onHandlePointerDown($event, 'ne')" 
+              (touchstart)="onHandlePointerDown($event, 'ne')"
+              title="Resize (top-right corner)"></div>
+            <div class="crop-handle crop-handle--sw" 
+              (mousedown)="onHandlePointerDown($event, 'sw')" 
+              (touchstart)="onHandlePointerDown($event, 'sw')"
+              title="Resize (bottom-left corner)"></div>
+            <div class="crop-handle crop-handle--se" 
+              (mousedown)="onHandlePointerDown($event, 'se')" 
+              (touchstart)="onHandlePointerDown($event, 'se')"
+              title="Resize (bottom-right corner)"></div>
+            
+            <!-- Edge Handles -->
+            <div class="crop-handle crop-handle--n" 
+              (mousedown)="onHandlePointerDown($event, 'n')" 
+              (touchstart)="onHandlePointerDown($event, 'n')"
+              title="Resize (top edge)"></div>
+            <div class="crop-handle crop-handle--s" 
+              (mousedown)="onHandlePointerDown($event, 's')" 
+              (touchstart)="onHandlePointerDown($event, 's')"
+              title="Resize (bottom edge)"></div>
+            <div class="crop-handle crop-handle--w" 
+              (mousedown)="onHandlePointerDown($event, 'w')" 
+              (touchstart)="onHandlePointerDown($event, 'w')"
+              title="Resize (left edge)"></div>
+            <div class="crop-handle crop-handle--e" 
+              (mousedown)="onHandlePointerDown($event, 'e')" 
+              (touchstart)="onHandlePointerDown($event, 'e')"
+              title="Resize (right edge)"></div>
+          </div>
         </div>
         <p class="text-xs text-gray-400">Drag to reposition · Scroll or slider to zoom</p>
         <div class="w-full max-w-[380px] bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">

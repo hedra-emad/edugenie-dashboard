@@ -302,11 +302,14 @@
                 <button
                   type="button"
                   (click)="editAttachment(att)"
-                  [disabled]="deletingId() === att.id || editingAttachment() !== null"
+                  [disabled]="deletingId() === att.id"
                   class="w-7 h-7 flex items-center justify-center rounded-lg
                          hover:bg-[var(--color-primary)]/10 transition-colors disabled:opacity-50"
-                  title="Edit attachment">
-                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-primary)]">edit</mat-icon>
+                  [title]="editingAttachment()?.id === att.id ? 'Cancel edit' : 'Edit attachment'">
+                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px]"
+                            [ngClass]="editingAttachment()?.id === att.id ? 'text-red-500' : 'text-[var(--color-primary)]'">
+                    {{ editingAttachment()?.id === att.id ? 'close' : 'edit' }}
+                  </mat-icon>
                 </button>
 
                 <!-- Open/download -->

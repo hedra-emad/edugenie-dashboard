@@ -20,8 +20,8 @@ import {
   Validators
 } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { Subject, of } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil, take } from 'rxjs/operators';
 
 // Draft system imports
 import { DraftStateService } from '../../../../core/services/draft-state.service';
@@ -41,7 +41,6 @@ import { ViewChild, OnChanges } from '@angular/core';
 import { ExpansionPanelComponent } from '../shared/expansion-panel/expansion-panel.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { extractId } from '../../pages/section-builder/section-builder.component';
-import { CloudinaryService } from '../../../../core/services/cloudinary';
 import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
 import { AttachmentParentType } from '../../../../core/models/attachment.model';
 import { QuizzesService } from '../../../../core/services/quizzes';
@@ -72,7 +71,6 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
   private sectionsService = inject(SectionsService);
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
-  private cloudinaryService = inject(CloudinaryService);
   private quizzesService = inject(QuizzesService);
 
   
@@ -153,11 +151,13 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges() {
-    if (this.expanded) {
-      setTimeout(() => {
-        const panel = document.querySelector('.mat-expansion-panel.mat-expanded');
-        panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+    if (this.expanded && this.panel) {
+      // Wait for Material expansion animation to complete before scrolling
+      // This is more reliable than setTimeout since it listens to the actual animation event
+      this.panel.opened.pipe(take(1), takeUntil(this.destroy$)).subscribe(() => {
+        const panelElement = document.querySelector('.mat-expansion-panel.mat-expanded');
+        panelElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     }
     
     // Check quiz exists when section form changes

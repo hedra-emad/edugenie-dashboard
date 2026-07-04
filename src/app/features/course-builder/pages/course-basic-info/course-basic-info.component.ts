@@ -70,9 +70,12 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   cropScale = 1;
   cropRotation = 0;
   _isDragging = false;
+  _isResizingHandle = false;
+  _resizeHandleType: string | null = null;
   private _dragStartX = 0;
   private _dragStartY = 0;
   private _translateAtDragStart = { x: 0, y: 0 };
+  private _cropBoxAtDragStart = { x: 0, y: 0, width: 0, height: 0 };
   private _naturalW = 0;
   private _naturalH = 0;
   @ViewChild('cropImg') cropImg!: ElementRef<HTMLImageElement>;
@@ -80,6 +83,19 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   readonly CONTAINER_SIZE = 380;
   readonly CROP_WIDTH = 300;
   readonly CROP_HEIGHT = 200;
+  readonly MIN_CROP_SIZE = 60;
+
+  // Dynamic crop box state
+  cropBoxX = 0;
+  cropBoxY = 0;
+  cropBoxWidth = this.CROP_WIDTH;
+  cropBoxHeight = this.CROP_HEIGHT;
+  
+  // Computed crop box properties
+  get cropBoxLeft(): number { return this.CONTAINER_SIZE / 2 - this.cropBoxWidth / 2 + this.cropBoxX; }
+  get cropBoxTop(): number { return this.CONTAINER_SIZE / 2 - this.cropBoxHeight / 2 + this.cropBoxY; }
+  get cropBoxRight(): number { return this.cropBoxLeft + this.cropBoxWidth; }
+  get cropBoxBottom(): number { return this.cropBoxTop + this.cropBoxHeight; }
 
   // Lifecycle management
   private destroy$ = new Subject<void>();
@@ -452,6 +468,12 @@ async onDrop(event: DragEvent) {
     this.cropTranslateY = 0;
     this.cropRotation = 0;
 
+    // Initialize dynamic crop box to default centered position
+    this.cropBoxX = 0;
+    this.cropBoxY = 0;
+    this.cropBoxWidth = this.CROP_WIDTH;
+    this.cropBoxHeight = this.CROP_HEIGHT;
+
     setTimeout(() => this.refreshThumbnailPreview(), 50);
   }
 
@@ -483,17 +505,23 @@ async onDrop(event: DragEvent) {
   @HostListener('document:mousemove', ['$event'])
   @HostListener('document:touchmove', ['$event'])
   onDocumentMove(event: MouseEvent | TouchEvent) {
-    if (!this._isDragging || !this.isCropperOpen()) return;
-    event.preventDefault();
-    const pt = this.getPoint(event);
-    this.cropTranslateX = this._translateAtDragStart.x + (pt.x - this._dragStartX);
-    this.cropTranslateY = this._translateAtDragStart.y + (pt.y - this._dragStartY);
-    this.refreshThumbnailPreview();
+    if (this._isResizingHandle && this.isCropperOpen()) {
+      this.onHandleMove(event);
+    } else if (this._isDragging && this.isCropperOpen()) {
+      event.preventDefault();
+      const pt = this.getPoint(event);
+      this.cropTranslateX = this._translateAtDragStart.x + (pt.x - this._dragStartX);
+      this.cropTranslateY = this._translateAtDragStart.y + (pt.y - this._dragStartY);
+      this.refreshThumbnailPreview();
+    }
   }
 
   @HostListener('document:mouseup')
   @HostListener('document:touchend')
-  onDocumentUp() { this._isDragging = false; }
+  onDocumentUp() {
+    this._isDragging = false;
+    this.onHandleUp();
+  }
 
   onCropWheel(event: WheelEvent) {
     event.preventDefault();
@@ -535,17 +563,117 @@ async onDrop(event: DragEvent) {
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
     this.cropRotation = 0;
+
+    // Reset crop box to default centered position
+    this.cropBoxX = 0;
+    this.cropBoxY = 0;
+    this.cropBoxWidth = this.CROP_WIDTH;
+    this.cropBoxHeight = this.CROP_HEIGHT;
+
     this.refreshThumbnailPreview();
+  }
+
+  // ─── Handle Resize ───────────────────────────────────────────
+  onHandlePointerDown(event: MouseEvent | TouchEvent, handleType: string): void {
+    event.stopPropagation(); // Prevent image pan when resizing
+    event.preventDefault();
+    
+    this._isResizingHandle = true;
+    this._resizeHandleType = handleType;
+    const pt = this.getPoint(event);
+    this._dragStartX = pt.x;
+    this._dragStartY = pt.y;
+    this._cropBoxAtDragStart = {
+      x: this.cropBoxX,
+      y: this.cropBoxY,
+      width: this.cropBoxWidth,
+      height: this.cropBoxHeight
+    };
+  }
+
+  onHandleMove(event: MouseEvent | TouchEvent): void {
+    if (!this._isResizingHandle || !this._resizeHandleType || !this.isCropperOpen()) return;
+    event.preventDefault();
+
+    const pt = this.getPoint(event);
+    const deltaX = pt.x - this._dragStartX;
+    const deltaY = pt.y - this._dragStartY;
+    const box = this._cropBoxAtDragStart;
+
+    let newX = box.x;
+    let newY = box.y;
+    let newW = box.width;
+    let newH = box.height;
+
+    // Handle corner resizes (resize both dimensions)
+    if (this._resizeHandleType === 'nw') {
+      newX = box.x + deltaX;
+      newY = box.y + deltaY;
+      newW = box.width - deltaX;
+      newH = box.height - deltaY;
+    } else if (this._resizeHandleType === 'ne') {
+      newY = box.y + deltaY;
+      newW = box.width + deltaX;
+      newH = box.height - deltaY;
+    } else if (this._resizeHandleType === 'sw') {
+      newX = box.x + deltaX;
+      newW = box.width - deltaX;
+      newH = box.height + deltaY;
+    } else if (this._resizeHandleType === 'se') {
+      newW = box.width + deltaX;
+      newH = box.height + deltaY;
+    }
+    // Handle edge resizes (resize one dimension)
+    else if (this._resizeHandleType === 'n') {
+      newY = box.y + deltaY;
+      newH = box.height - deltaY;
+    } else if (this._resizeHandleType === 's') {
+      newH = box.height + deltaY;
+    } else if (this._resizeHandleType === 'w') {
+      newX = box.x + deltaX;
+      newW = box.width - deltaX;
+    } else if (this._resizeHandleType === 'e') {
+      newW = box.width + deltaX;
+    }
+
+    // Clamp crop box: min size, max bounds
+    newW = Math.max(this.MIN_CROP_SIZE, Math.min(newW, this.CONTAINER_SIZE));
+    newH = Math.max(this.MIN_CROP_SIZE, Math.min(newH, this.CONTAINER_SIZE));
+
+    const centerX = this.CONTAINER_SIZE / 2;
+    const centerY = this.CONTAINER_SIZE / 2;
+    const boxLeft = centerX - newW / 2 + newX;
+    const boxTop = centerY - newH / 2 + newY;
+    const boxRight = boxLeft + newW;
+    const boxBottom = boxTop + newH;
+
+    // Clamp position within arena
+    if (boxLeft < 0) newX += -boxLeft;
+    if (boxTop < 0) newY += -boxTop;
+    if (boxRight > this.CONTAINER_SIZE) newX -= (boxRight - this.CONTAINER_SIZE);
+    if (boxBottom > this.CONTAINER_SIZE) newY -= (boxBottom - this.CONTAINER_SIZE);
+
+    this.cropBoxX = newX;
+    this.cropBoxY = newY;
+    this.cropBoxWidth = newW;
+    this.cropBoxHeight = newH;
+
+    this.refreshThumbnailPreview();
+  }
+
+  onHandleUp(): void {
+    this._isResizingHandle = false;
+    this._resizeHandleType = null;
   }
 
   refreshThumbnailPreview() {
     if (!this.cropImg?.nativeElement?.complete) return;
     const img = this.cropImg.nativeElement;
     const canvas = document.createElement('canvas');
-    canvas.width = this.CROP_WIDTH;
-    canvas.height = this.CROP_HEIGHT;
+    canvas.width = this.cropBoxWidth;
+    canvas.height = this.cropBoxHeight;
     const ctx = canvas.getContext('2d')!;
-    this.drawToCanvas(ctx, img, this.CROP_WIDTH, this.CROP_HEIGHT);
+    this.drawToCanvas(ctx, img, this.cropBoxWidth, this.cropBoxHeight);
     this.livePreviewUrl = canvas.toDataURL('image/png');
   }
 
@@ -570,8 +698,8 @@ async onDrop(event: DragEvent) {
     canvas.height = OUT_H;
     const ctx = canvas.getContext('2d')!;
 
-    const scaleX = OUT_W / this.CROP_WIDTH;
-    const scaleY = OUT_H / this.CROP_HEIGHT;
+    const scaleX = OUT_W / this.cropBoxWidth;
+    const scaleY = OUT_H / this.cropBoxHeight;
     ctx.save();
     ctx.translate(
       OUT_W / 2 + this.cropTranslateX * scaleX,
