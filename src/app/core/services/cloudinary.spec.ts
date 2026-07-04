@@ -1,13 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { Cloudinary } from './cloudinary';
+import { CloudinaryService } from './cloudinary';
 
-describe('Cloudinary', () => {
-  let service: Cloudinary;
+describe('CloudinaryService', () => {
+  let service: CloudinaryService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Cloudinary);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(CloudinaryService);
   });
 
   it('should be created', () => {

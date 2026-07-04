@@ -42,25 +42,25 @@
     <div class="stat-card">
       <div class="stat-icon bg-emerald-100 text-emerald-600"><mat-icon>account_balance_wallet</mat-icon></div>
       <span class="stat-label">Available to withdraw</span>
-      <span class="stat-value text-emerald-600">{{ data.totals.pending | number:'1.0-0' }} EGP</span>
+      <span class="stat-value text-emerald-600">{{ data.totals.pending | number:'1.2-2' }} EGP</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-amber-100 text-amber-600"><mat-icon>hourglass_top</mat-icon></div>
       <span class="stat-label">In review</span>
-      <span class="stat-value text-slate-800">{{ data.totals.inReview | number:'1.0-0' }} EGP</span>
+      <span class="stat-value text-slate-800">{{ data.totals.inReview | number:'1.2-2' }} EGP</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-violet-100 text-[#3b1892]"><mat-icon>paid</mat-icon></div>
       <span class="stat-label">Paid out</span>
-      <span class="stat-value text-slate-800">{{ data.totals.paidOut | number:'1.0-0' }} EGP</span>
+      <span class="stat-value text-slate-800">{{ data.totals.paidOut | number:'1.2-2' }} EGP</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-slate-100 text-slate-600"><mat-icon>trending_up</mat-icon></div>
       <span class="stat-label">Total earned</span>
-      <span class="stat-value text-slate-800">{{ data.totals.totalEarned | number:'1.0-0' }} EGP</span>
+      <span class="stat-value text-slate-800">{{ data.totals.totalEarned | number:'1.2-2' }} EGP</span>
       <span class="stat-sub">your share</span>
     </div>
   </div>
@@ -72,7 +72,7 @@
       <mat-icon class="text-amber-600 shrink-0">hourglass_top</mat-icon>
       <div>
         <p class="text-[15px] font-bold text-amber-800">
-          Payout of {{ data.openRequest.amount | number:'1.0-0' }} EGP requested — awaiting superadmin approval.
+          Payout of {{ data.openRequest.amount | number:'1.2-2' }} EGP requested — awaiting superadmin approval.
         </p>
         <p class="text-[13px] text-amber-700 mt-0.5">
           Requested {{ data.openRequest.requestedAt | date:'mediumDate' }} ·
@@ -92,11 +92,11 @@
         <p class="text-[15px] font-bold text-slate-800">Ready to get paid?</p>
         @if (data.canRequest) {
         <p class="text-[13px] text-slate-500 mt-0.5">
-          You can request a payout of {{ data.totals.pending | number:'1.0-0' }} EGP.
+          You can request a payout of {{ data.totals.pending | number:'1.2-2' }} EGP.
         </p>
         } @else {
         <p class="text-[13px] text-slate-500 mt-0.5">
-          You need at least {{ data.config.minimumPayoutThreshold | number:'1.0-0' }} EGP available to request a payout.
+          You need at least {{ data.config.minimumPayoutThreshold | number:'1.2-2' }} EGP available to request a payout.
         </p>
         }
       </div>
@@ -153,7 +153,7 @@
                 }
               </td>
               <td class="px-6 py-4 align-middle">
-                <span class="text-[14px] font-black text-emerald-600">{{ item.amount | number:'1.0-0' }} EGP</span>
+                <span class="text-[14px] font-black text-emerald-600">{{ item.amount | number:'1.2-2' }} EGP</span>
               </td>
               <td class="px-6 py-4 align-middle">
                 <span class="badge"
@@ -197,7 +197,7 @@
         <li class="rounded-xl border border-slate-200 p-4 flex flex-col gap-2">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <span class="text-[16px] font-black text-slate-800">{{ req.amount | number:'1.0-0' }} EGP</span>
+              <span class="text-[16px] font-black text-slate-800">{{ req.amount | number:'1.2-2' }} EGP</span>
               <p class="text-[12px] text-slate-500 mt-0.5">
                 Requested {{ req.requestedAt | date:'medium' }} · {{ req.earningsCount }} item(s)
               </p>

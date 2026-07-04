@@ -15,10 +15,10 @@ describe('FilterBarComponent', () => {
       ]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(FilterBarComponent);
     component = fixture.componentInstance;
-    
+
     // Set required config
     component.config = {
       statusOptions: [
@@ -38,7 +38,7 @@ describe('FilterBarComponent', () => {
         { value: 'oldest', label: 'Oldest First' }
       ]
     };
-    
+
     fixture.detectChanges();
   });
 
@@ -49,25 +49,24 @@ describe('FilterBarComponent', () => {
   it('should calculate active filter count correctly', () => {
     component.searchTerm.set('test');
     component.selectedStatuses.set(['published']);
-    
+
     expect(component.activeFilterCount()).toBe(2);
   });
 
   it('should emit filter change on search', () => {
     spyOn(component.filterChange, 'emit');
-    
-    component.searchTerm.set('test query');
-    component.onSearchChange();
-    
+
+    component.onSearchChange('test query');
+
     expect(component.filterChange.emit).toHaveBeenCalled();
   });
 
   it('should toggle drawer state', () => {
     expect(component.isDrawerOpen()).toBeFalse();
-    
+
     component.toggleDrawer();
     expect(component.isDrawerOpen()).toBeTrue();
-    
+
     component.closeDrawer();
     expect(component.isDrawerOpen()).toBeFalse();
   });
@@ -75,7 +74,7 @@ describe('FilterBarComponent', () => {
   it('should toggle status filter correctly', () => {
     component.toggleStatusFilter('published');
     expect(component.selectedStatuses()).toContain('published');
-    
+
     component.toggleStatusFilter('published');
     expect(component.selectedStatuses()).not.toContain('published');
   });

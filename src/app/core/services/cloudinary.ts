@@ -10,6 +10,7 @@ export interface SignatureResponse {
   apiKey: string;
   cloudName: string;
   raw_convert: string;
+  notification_url?: string;
 }
 
 export interface CloudinaryUploadResponse {
@@ -33,8 +34,29 @@ export class CloudinaryService {
   private readonly apiBase = ''; // intercepted by api.interceptor.ts
 
   // ─────────────────────────────────────────────────────────────
-  // PRIVATE: request a signed signature from backend
+  // PUBLIC: request a signed signature from backend. Public so callers can
+  // prefetch a signature ahead of upload (e.g. thumbnail prefetch in
+  // course-basic-info). `transcribe` adds signed raw_convert + notification_url
+  // for lesson-video uploads only.
   // ─────────────────────────────────────────────────────────────
+  getSignature(
+    folder: string,
+    context?: string,
+    transcribe?: boolean,
+  ): Observable<SignatureResponse> {
+
+    return this.http.post<SignatureResponse>(
+      `${this.apiBase}/cloudinary/sign`,
+      {
+        folder,
+        context,
+        transcribe,
+      },
+      {
+        withCredentials: true
+      }
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────
   // PRIVATE: delete an old asset via backend (fire-and-forget safe)
@@ -59,6 +81,23 @@ export class CloudinaryService {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // PUBLIC: re-run transcription in place for an already-uploaded
+  // lesson video (used by the "Regenerate transcript" action).
+  // ─────────────────────────────────────────────────────────────
+  retryTranscription(
+    publicId: string,
+    courseId: string,
+    sectionId: string,
+    lessonId: string,
+  ): Observable<{ queued: boolean }> {
+    return this.http.post<{ queued: boolean }>(
+      `${this.apiBase}/cloudinary/trigger-transcription`,
+      { publicId, courseId, sectionId, lessonId },
+      { withCredentials: true },
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // PUBLIC: upload avatar image (signed)
   // No deletion needed for avatars — pass nothing
   // ─────────────────────────────────────────────────────────────
@@ -79,16 +118,7 @@ export class CloudinaryService {
   }
 
 
-// change getSignature from private → public (or add a thin public wrapper)
-getSignature(folder: string, context?: string): Observable<SignatureResponse> {
-  return this.http.post<SignatureResponse>(
-    `${this.apiBase}/cloudinary/sign`,
-    { folder, context },
-    { withCredentials: true }
-  );
-}
-
-uploadThumbnail(
+  uploadThumbnail(
   file: File,
   userId: string,
   oldPublicId?: string | null,
@@ -142,8 +172,10 @@ uploadThumbnail(
       ? `courseId=${courseId}|sectionId=${sectionId}|lessonId=${lessonId}`
       : `courseId=${courseId}|sectionId=${sectionId}`;
 
-    return this.getSignature(folder, context).pipe(
-      switchMap(({ signature, timestamp, apiKey, cloudName, raw_convert }) => {
+    // transcribe: true → backend signs notification_url so Cloudinary fires the
+    // upload webhook, which transcribes the audio via Gemini server-side.
+    return this.getSignature(folder, context, true).pipe(
+      switchMap(({ signature, timestamp, apiKey, cloudName, notification_url }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -151,7 +183,8 @@ uploadThumbnail(
         formData.append('signature', signature);
         formData.append('api_key', apiKey);
         formData.append('context', context);
-        // formData.append('raw_convert', raw_convert);
+        // Append the EXACT signed string, or Cloudinary rejects the signature.
+        if (notification_url) formData.append('notification_url', notification_url);
 
 
         const req = new HttpRequest(
