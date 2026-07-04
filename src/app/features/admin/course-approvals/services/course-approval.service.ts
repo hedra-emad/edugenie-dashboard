@@ -38,6 +38,12 @@ export class CourseApprovalService {
     total: 0, page: 1, limit: 10
   });
 
+  // Store last-used pagination params for refreshPendingSummary
+  private lastPendingPage = 1;
+  private lastPendingLimit = 10;
+  private lastPendingSearch = '';
+  private isPendingTabActive = false;
+
   readonly courses$ = this.coursesSubject.asObservable();
   readonly categories$ = this.categoriesSubject.asObservable();
   readonly stats$ = this.statsSubject.asObservable();
@@ -62,7 +68,7 @@ export class CourseApprovalService {
           else if (Array.isArray(res?.data?.data)) courses = res.data.data;
           return courses.map(c => this.mapCourseApproval(c, forcedStatus));
         }),
-        catchError(err => { console.error(`Failed to fetch ${url}`, err); return of([] as CourseApproval[]); })
+        catchError(() => of([] as CourseApproval[]))
       );
 
     // Pending uses the paginated endpoint (page 1, limit 10 initially)
@@ -94,12 +100,6 @@ export class CourseApprovalService {
       (pending as CourseApproval[]).forEach(c => map.set(c.id, c));
       
       const allCourses = Array.from(map.values());
-      
-      console.log('Pending Courses', pending);
-      console.log('Published Courses', published);
-      console.log('Rejected Courses', rejected);
-      console.log('All Tab Data', allCourses);
-      
       this.coursesSubject.next(allCourses);
     });
 
@@ -111,6 +111,12 @@ export class CourseApprovalService {
   // Backend pagination for the Pending tab
   // ────────────────────────────────────────────────────────────────────────────
   loadPendingPage(page: number, limit: number, search = ''): void {
+    // Store for later use by refreshPendingSummary
+    this.lastPendingPage = page;
+    this.lastPendingLimit = limit;
+    this.lastPendingSearch = search;
+    this.isPendingTabActive = true;
+
     this.loadingSubject.next(true);
 
     let url = `${this.adminCoursesApiUrl}/pending-review?page=${page}&limit=${limit}`;
@@ -135,7 +141,7 @@ export class CourseApprovalService {
         newPending.forEach((c: CourseApproval) => map.set(c.id, c));
         this.coursesSubject.next(Array.from(map.values()));
       },
-      error: err => console.error('Failed to load pending page', err)
+      error: () => { /* Handle error silently */ }
     });
   }
 
@@ -333,7 +339,7 @@ export class CourseApprovalService {
             this.categoriesSubject.next(mapped);
           }
         },
-        error: err => console.error('Failed to load categories', err)
+        error: () => { /* Handle error silently */ }
       });
   }
 
@@ -395,6 +401,27 @@ export class CourseApprovalService {
   // Kept for backwards compatibility (drag-drop reorder)
   updateCategoriesList(categories: Category[]): void {
     this.categoriesSubject.next(categories.map((c, i) => ({ ...c, order: i })));
+  }
+
+  /**
+   * Refresh stats and conditionally re-fetch pending page if it's currently active.
+   * Called when a new course is submitted for review (from NotificationsService via courseSubmittedForReview$).
+   */
+  refreshPendingSummary(): void {
+    // Always refresh stats (cheap operation, updates badge counts)
+    this.refreshStats();
+
+    // Only re-fetch pending page if the admin is currently viewing it
+    if (this.isPendingTabActive) {
+      this.loadPendingPage(this.lastPendingPage, this.lastPendingLimit, this.lastPendingSearch);
+    }
+  }
+
+  /**
+   * Call this when the pending tab becomes inactive (e.g., switching to 'all' or 'rejected').
+   */
+  setPendingTabInactive(): void {
+    this.isPendingTabActive = false;
   }
 
   clearSuccess(): void { this.successSubject.next(null); }
