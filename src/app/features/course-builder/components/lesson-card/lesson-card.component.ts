@@ -1046,11 +1046,6 @@ export class LessonCardComponent implements OnInit, OnDestroy {
               : `"${this.trunc(title)}" created successfully`
           );
 
-
-          // Auto-dismiss progress bar after 2 s
-          // setTimeout(() => {
-          //   this.setState({ state: 'idle', progress: 0 });
-          // }, 2000);
         },
         error: (err) => {
           console.error('[LessonCard] DB save failed:', err);

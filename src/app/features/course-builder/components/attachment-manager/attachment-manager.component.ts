@@ -191,6 +191,18 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   editAttachment(attachment: Attachment): void {
+    // If already editing this attachment, allow toggling to cancel
+    if (this.editingAttachment()?.id === attachment.id) {
+      this.cancelPending();
+      return;
+    }
+    
+    // Cancel any existing edit mode first
+    if (this.editingAttachment()) {
+      this.cancelPending();
+    }
+    
+    // Now enter edit mode for the clicked attachment
     this.editingAttachment.set(attachment);
     this.pendingTitle.set(attachment.title);
     this.isPublicToggle.set(attachment.isPublic);
