@@ -5,10 +5,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToastrService } from 'ngx-toastr';
 import { AdminUsersService } from './services/admin-users.service';
 import { UserRole } from '../../../core/models/user-profile.model';
 import { Subject, Subscription, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../shared/components/loading';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -25,6 +26,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   private readonly adminUsersService = inject(AdminUsersService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly toastr = inject(ToastrService);
 
   users: any[] = [];
   isLoading = true;
@@ -61,12 +63,14 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   blockTarget: any = null;
   blockReason = '';
   isBlocking = false;
+  blockSuccess = false;
 
-  // Delete modal state
-  showDeleteModal = false;
-  deleteTarget: any = null;
-  deleteReason = '';
-  isDeleting = false;
+  // Deactivate modal state
+  showDeactivateModal = false;
+  deactivateTarget: any = null;
+  deactivateReason = '';
+  isDeactivating = false;
+  deactivateSuccess = false;
 
   // Export state
   isExporting = false;
@@ -112,7 +116,6 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   }
 
   loadUsers() {
-    console.log(this.users);
     this.isLoading = true;
     this.cdr.detectChanges();
     this.adminUsersService.getUsers(this.currentPage, this.limit, this.selectedRole, this.selectedStatus, this.searchQuery).subscribe({
@@ -237,6 +240,7 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.showBlockModal = false;
     this.blockTarget = null;
     this.blockReason = '';
+    this.blockSuccess = false;
   }
 
   canBlock(user: any): boolean {
@@ -246,34 +250,103 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
   confirmBlock() {
     if (!this.blockReason.trim()) return;
     this.isBlocking = true;
+    this.cdr.detectChanges();
 
-    this.adminUsersService.deactivateUser(this.blockTarget.id, this.blockReason.trim()).subscribe({
-      next: () => {
-        this.blockTarget.status = 'deactivated';
-        this.isBlocking = false;
-        this.showBlockModal = false;
-        this.blockTarget = null;
-        this.blockReason = '';
-        this.cdr.detectChanges();
-        this.snackBar.open('User blocked successfully.', 'Close', { duration: 3000 });
-      },
-      error: (err) => {
-        this.isBlocking = false;
-        const errorMsg = err?.error?.message || 'Failed to block user';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
-      }
-    });
+    this.adminUsersService.blockUser(this.blockTarget.id, this.blockReason.trim())
+      .pipe(
+        finalize(() => {
+          this.isBlocking = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          const userName = `${this.blockTarget.firstName || ''} ${this.blockTarget.lastName || ''}`.trim() || this.blockTarget.name || 'User';
+          this.blockTarget.status = 'blocked';
+
+          this.showBlockModal = false;
+          this.blockTarget = null;
+          this.blockReason = '';
+
+          this.loadUsers();
+          this.toastr.success(`"${userName}" blocked successfully`);
+        },
+        error: (err) => {
+          const errorMsg = err?.error?.message || 'Failed to block user';
+          this.toastr.error(errorMsg, 'Error');
+        }
+      });
+  }
+
+  deactivateUser(user: any) {
+    this.deactivateTarget = user;
+    this.deactivateReason = '';
+    this.showDeactivateModal = true;
+  }
+
+  cancelDeactivate() {
+    this.showDeactivateModal = false;
+    this.deactivateTarget = null;
+    this.deactivateReason = '';
+    this.deactivateSuccess = false;
+  }
+
+  confirmDeactivate() {
+    if (!this.deactivateReason.trim()) return;
+    this.isDeactivating = true;
+    this.cdr.detectChanges();
+
+    this.adminUsersService.deactivateUser(this.deactivateTarget.id, this.deactivateReason.trim())
+      .pipe(
+        finalize(() => {
+          this.isDeactivating = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          const userName = `${this.deactivateTarget.firstName || ''} ${this.deactivateTarget.lastName || ''}`.trim() || this.deactivateTarget.name || 'User';
+          this.deactivateTarget.status = 'deactivated';
+
+          this.showDeactivateModal = false;
+          this.deactivateTarget = null;
+          this.deactivateReason = '';
+
+          this.loadUsers();
+          this.toastr.success(`"${userName}" deactivated successfully`);
+        },
+        error: (err) => {
+          const errorMsg = err?.error?.message || 'Failed to deactivate user';
+          this.toastr.error(errorMsg, 'Error');
+        }
+      });
   }
 
   reactivateUser(user: any) {
     this.adminUsersService.reactivateUser(user.id).subscribe({
       next: () => {
+        const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || 'User';
         user.status = 'active';
-        this.snackBar.open('User reactivated successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
+        this.toastr.success(`"${userName}" reactivated successfully`);
       },
       error: (err: any) => {
         const errorMsg = err?.error?.message || 'Failed to reactivate user';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+        this.toastr.error(errorMsg, 'Error');
+      }
+    });
+  }
+
+  unblockUser(user: any) {
+    this.adminUsersService.reactivateUser(user.id).subscribe({
+      next: () => {
+        const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || 'User';
+        user.status = 'active';
+        this.loadUsers();
+        this.toastr.success(`"${userName}" has been unblocked`);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.message || 'Failed to unblock user';
+        this.toastr.error(errorMsg, 'Error');
       }
     });
   }
@@ -323,61 +396,4 @@ export class AdminUsersPageComponent implements OnInit, OnDestroy {
     this.snackBar.open('Export completed successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
   }
 
-  // --- Delete User Logic ---
-  deleteUser(user: any) {
-    this.deleteTarget = user;
-    this.deleteReason = '';
-    this.showDeleteModal = true;
-  }
-
-  cancelDelete() {
-    this.showDeleteModal = false;
-    this.deleteTarget = null;
-    this.deleteReason = '';
-    this.isDeleting = false;
-  }
-
-  confirmDelete() {
-    const targetUser = this.deleteTarget;
-    const reason = this.deleteReason.trim();
-
-    if (!targetUser || !reason) return;
-
-    const currentUsers = [...this.users];
-    const targetIndex = currentUsers.findIndex((u) => u.id === targetUser.id);
-
-    if (targetIndex >= 0) {
-      currentUsers.splice(targetIndex, 1);
-    }
-
-    this.isDeleting = true;
-    this.users = currentUsers;
-    this.totalUsers = Math.max(0, this.totalUsers - 1);
-    this.showDeleteModal = false;
-    this.deleteTarget = null;
-    this.deleteReason = '';
-    this.cdr.detectChanges();
-
-    this.adminUsersService.deleteUser(targetUser.id, reason).subscribe({
-      next: () => {
-        this.isDeleting = false;
-        this.cdr.detectChanges();
-        this.snackBar.open('User deleted successfully', 'Close', { duration: 3000, panelClass: ['bg-green-600', 'text-white'] });
-      },
-      error: (err: any) => {
-        this.isDeleting = false;
-
-        if (targetIndex >= 0) {
-          const restoredUsers = [...this.users];
-          restoredUsers.splice(targetIndex, 0, targetUser);
-          this.users = restoredUsers;
-          this.totalUsers = Math.max(0, this.totalUsers + 1);
-        }
-
-        this.cdr.detectChanges();
-        const errorMsg = err?.error?.message || 'Failed to delete user';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
-      }
-    });
-  }
 }

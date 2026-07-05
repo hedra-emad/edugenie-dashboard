@@ -389,7 +389,11 @@ export class AuthService {
 
   private createInactiveAccountError(): Error {
     const error = new Error('This account has been deactivated or deleted.');
-    (error as Error & { status?: number }).status = 403;
+    (error as Error & { status?: number; error?: unknown }).status = 403;
+    (error as Error & { status?: number; error?: unknown }).error = {
+      deactivated: true,
+      message: 'This account has been deactivated or deleted.',
+    };
     return error;
   }
 

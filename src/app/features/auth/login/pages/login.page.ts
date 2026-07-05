@@ -51,7 +51,17 @@ export class LoginPageComponent implements OnInit {
   ngOnInit() {
     this.onResize();
     this.route.queryParams.subscribe((params) => {
-      if (params['error']) {
+      if (params['blocked']) {
+        this.errorMessage.set(
+          'Your account has been blocked for violating platform policies. Please contact support to appeal.',
+        );
+      } else if (params['deactivated']) {
+        this.errorMessage.set(
+          'Your account has been deactivated. Please contact support to reactivate it.',
+        );
+      } else if (params['sessionExpired']) {
+        this.errorMessage.set('Your session has expired. Please sign in again.');
+      } else if (params['error']) {
         if (params['error'] === 'invalid_token') {
           this.errorMessage.set('Invalid or missing authentication token.');
         } else if (params['error'] === 'auth_failed') {
@@ -113,18 +123,56 @@ export class LoginPageComponent implements OnInit {
       error: (err) => {
         this.isLoading.set(false);
         const status = err?.status;
-        const message = err?.message;
+        const errObj = err?.error;
 
-        if (status === 401) {
-          this.errorMessage.set('Invalid email or password');
-        } else if (status === 403 || message?.toLowerCase().includes('deactivated') || message?.toLowerCase().includes('deleted')) {
-          this.errorMessage.set('This account has been deactivated or deleted. Please contact support.');
+        // Pull the clean message string from the backend response
+        let displayMsg = '';
+        if (errObj?.message) {
+          displayMsg = Array.isArray(errObj.message) ? errObj.message[0] : String(errObj.message);
+        } else if (typeof errObj === 'string') {
+          displayMsg = errObj;
+        }
+        const msgLower = displayMsg.toLowerCase();
+
+        if (status === 403) {
+          // Backend returns explicit flags: { isBlocked: true } or { deactivated: true }
+          // Fall back to keyword matching on the message for safety.
+          const isBlocked =
+            errObj?.isBlocked === true ||
+            errObj?.blocked === true ||
+            msgLower.includes('blocked') ||
+            msgLower.includes('violating');
+
+          if (isBlocked) {
+            this.errorMessage.set(
+              'Your account has been blocked for violating platform policies. Please contact support to appeal.',
+            );
+          } else {
+            // deactivated, deleted, email-not-verified, or any other 403 reason
+            const isDeactivated =
+              errObj?.deactivated === true ||
+              msgLower.includes('deactivated');
+
+            if (isDeactivated) {
+              this.errorMessage.set(
+                'Your account has been deactivated. Please contact support to reactivate it.',
+              );
+            } else if (errObj?.code === 'EMAIL_NOT_VERIFIED') {
+              this.errorMessage.set(
+                'Please verify your email before signing in. Check your inbox for the verification link.',
+              );
+            } else {
+              this.errorMessage.set(displayMsg || 'Access denied. Please contact support.');
+            }
+          }
+        } else if (status === 401) {
+          this.errorMessage.set('Invalid email or password.');
         } else if (status === 429) {
           this.errorMessage.set('Too many login attempts. Please try again in 15 minutes.');
         } else if (status === 0) {
-          this.errorMessage.set('Network error. Please check your connection');
+          this.errorMessage.set('Network error. Please check your connection.');
         } else {
-          this.errorMessage.set('Something went wrong. Please try again later');
+          this.errorMessage.set(displayMsg || 'Something went wrong. Please try again later.');
         }
       },
     });

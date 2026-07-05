@@ -21,12 +21,14 @@ export class PlatformConfigPageComponent implements OnInit {
 
   isLoading = true;
   originalConfig: PlatformConfigResponse | null = null;
-  formConfig: PlatformConfigResponse = {
-    platformFeePercent: 15,
-    instructorSharePercent: 85,
+  formConfig: Partial<PlatformConfigResponse> = {
+    platformFeePercent: undefined,
+    instructorSharePercent: undefined,
     maintenanceMode: false,
-    minimumPayoutThreshold: 50
+    minimumPayoutThreshold: undefined
   };
+
+  hasInput = false;
 
   showConfirmModal = false;
   isSaving = false;
@@ -42,7 +44,13 @@ export class PlatformConfigPageComponent implements OnInit {
     this.superadminService.getPlatformConfig().subscribe({
       next: (config) => {
         this.originalConfig = config;
-        this.formConfig = { ...config };
+        this.formConfig = { 
+          platformFeePercent: undefined,
+          instructorSharePercent: undefined,
+          minimumPayoutThreshold: undefined,
+          maintenanceMode: config.maintenanceMode 
+        };
+        this.hasInput = false;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -56,15 +64,26 @@ export class PlatformConfigPageComponent implements OnInit {
   }
 
   get isDirty(): boolean {
-    if (!this.originalConfig) return false;
-    return this.originalConfig.platformFeePercent !== this.formConfig.platformFeePercent ||
-      this.originalConfig.instructorSharePercent !== this.formConfig.instructorSharePercent ||
-      this.originalConfig.maintenanceMode !== this.formConfig.maintenanceMode ||
-      this.originalConfig.minimumPayoutThreshold !== this.formConfig.minimumPayoutThreshold;
+    if (!this.hasInput) return false;
+    const hasFee = this.formConfig.platformFeePercent !== null &&
+      this.formConfig.platformFeePercent !== undefined &&
+      String(this.formConfig.platformFeePercent).trim() !== '';
+    const hasThreshold = this.formConfig.minimumPayoutThreshold !== null &&
+      this.formConfig.minimumPayoutThreshold !== undefined &&
+      String(this.formConfig.minimumPayoutThreshold).trim() !== '';
+    const maintenanceChanged = this.originalConfig ? this.formConfig.maintenanceMode !== this.originalConfig.maintenanceMode : false;
+    
+    return hasFee || hasThreshold || maintenanceChanged;
+  }
+
+  onFieldInput() {
+    this.hasInput = true;
+    this.cdr.detectChanges();
   }
 
   toggleMaintenanceMode() {
     this.formConfig.maintenanceMode = !this.formConfig.maintenanceMode;
+    this.hasInput = true;
     this.cdr.detectChanges();
   }
 
@@ -85,7 +104,13 @@ export class PlatformConfigPageComponent implements OnInit {
     this.superadminService.updatePlatformConfig(this.formConfig).subscribe({
       next: (config) => {
         this.originalConfig = config;
-        this.formConfig = { ...config };
+        this.formConfig = { 
+          platformFeePercent: undefined,
+          instructorSharePercent: undefined,
+          minimumPayoutThreshold: undefined,
+          maintenanceMode: config.maintenanceMode 
+        };
+        this.hasInput = false;
         this.isSaving = false;
         this.showConfirmModal = false;
         this.cdr.detectChanges();
@@ -98,11 +123,5 @@ export class PlatformConfigPageComponent implements OnInit {
         this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
       }
     });
-  }
-
-  discardChanges() {
-    if (this.originalConfig) {
-      this.formConfig = { ...this.originalConfig };
-    }
   }
 }

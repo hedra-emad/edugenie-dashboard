@@ -11,12 +11,6 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-3 shrink-0">
-      @if (isDirty) {
-      <button class="btn-discard" (click)="discardChanges()">
-        <mat-icon class="btn-icon">undo</mat-icon>
-        Discard
-      </button>
-      }
       <button class="btn-save" [class.btn-save--disabled]="!isDirty" [disabled]="!isDirty" (click)="openConfirmModal()">
         <mat-icon class="btn-icon">save</mat-icon>
         Save Configuration
@@ -58,23 +52,20 @@
         <label class="field-label">Platform Fee Percentage</label>
         <p class="field-hint">The percentage of each course sale taken by the platform.</p>
         <div class="input-icon-wrap input-icon-right">
-          <input
-            type="number" min="0" max="100"
-            class="field-input field-input--icon-right"
-            [(ngModel)]="formConfig.platformFeePercent" />
+          <input type="number" min="0" max="100" [placeholder]="originalConfig?.platformFeePercent || 0" class="field-input field-input--icon-right"
+            [(ngModel)]="formConfig.platformFeePercent" (input)="onFieldInput()" />
           <mat-icon class="input-icon">percent</mat-icon>
         </div>
       </div>
 
-      <!-- Instructor Share -->
+      <!-- Instructor Share — auto-calculated -->
       <div class="form-field">
         <label class="field-label">Instructor Share Percentage</label>
-        <p class="field-hint">The percentage of each course sale given to the instructor.</p>
+        <p class="field-hint">Automatically calculated as 100% minus the platform fee.</p>
         <div class="input-icon-wrap input-icon-right">
-          <input
-            type="number" min="0" max="100"
-            class="field-input field-input--icon-right"
-            [(ngModel)]="formConfig.instructorSharePercent" />
+          <input type="number" [placeholder]="originalConfig?.instructorSharePercent || 0"
+            class="field-input field-input--icon-right bg-slate-50 text-slate-500 cursor-not-allowed"
+            [value]="formConfig.platformFeePercent != null ? 100 - formConfig.platformFeePercent : ''" readonly />
           <mat-icon class="input-icon">percent</mat-icon>
         </div>
       </div>
@@ -98,11 +89,10 @@
       <label class="field-label">Minimum Payout Threshold</label>
       <p class="field-hint">Instructors must reach this amount before they can request a payout.</p>
       <div class="input-icon-wrap input-icon-right">
-        <input
-          type="number" min="0" placeholder="e.g. 500"
-          class="field-input field-input--icon-right font-bold"
-          [(ngModel)]="formConfig.minimumPayoutThreshold" />
-        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-slate-400 pointer-events-none">EGP</span>
+        <input type="number" min="0" [placeholder]="originalConfig?.minimumPayoutThreshold || 0" class="field-input field-input--icon-right font-bold"
+          [(ngModel)]="formConfig.minimumPayoutThreshold" (input)="onFieldInput()" />
+        <span
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-slate-400 pointer-events-none">EGP</span>
       </div>
     </div>
   </div>
@@ -121,7 +111,8 @@
 
     <!-- Maintenance Mode -->
     <div class="form-field" style="max-width: 450px;">
-      <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl" [ngClass]="{'border-amber-300 bg-amber-50/50': formConfig.maintenanceMode}">
+      <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl"
+        [ngClass]="{'border-amber-300 bg-amber-50/50': formConfig.maintenanceMode}">
         <div>
           <label class="field-label flex items-center gap-2 mb-1">
             Maintenance Mode
@@ -133,13 +124,13 @@
             When active, non-admins will see a maintenance screen.
           </p>
         </div>
-        <button type="button" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-          role="switch"
-          [class.bg-amber-500]="formConfig.maintenanceMode"
-          [class.bg-slate-200]="!formConfig.maintenanceMode"
-          [attr.aria-checked]="formConfig.maintenanceMode" 
+        <button type="button"
+          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          role="switch" [class.bg-amber-500]="formConfig.maintenanceMode"
+          [class.bg-slate-200]="!formConfig.maintenanceMode" [attr.aria-checked]="formConfig.maintenanceMode"
           (click)="toggleMaintenanceMode()">
-          <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          <span
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
             [class.translate-x-5]="formConfig.maintenanceMode"
             [class.translate-x-0]="!formConfig.maintenanceMode"></span>
         </button>
