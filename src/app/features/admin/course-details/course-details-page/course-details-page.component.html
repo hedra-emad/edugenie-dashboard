@@ -82,7 +82,7 @@
           @if (course.requirements && course.requirements.length > 0) {
           <div class="tags-container">
             @for (req of course.requirements; track req) {
-            <div class="req-tag"><mat-icon>arrow_right</mat-icon><span>{{ req }}</span></div>
+            <div class="req-tag"><span class="req-bullet">•</span><span>{{ req }}</span></div>
             }
           </div>
           } @else {
@@ -291,7 +291,7 @@
                       <div class="lesson-right">
                         @if (lesson.videoDuration) {
                         <span class="lesson-duration">
-                          <mat-icon>schedule</mat-icon>{{ lesson.videoDuration }}s
+                          <mat-icon>schedule</mat-icon>{{ lesson.videoDuration | duration }}
                         </span>
                         }
                         @if (lesson.videoUrl) {
@@ -413,8 +413,7 @@
                 <span class="text-[0.8em] font-bold text-slate-800">EGP</span>
                 }
               </span></li>
-            <li><span class="detail-label">Total Duration</span><span class="detail-value">{{ course.totalHours ?
-                (course.totalHours + ' Hours') : 'N/A' }}</span></li>
+            <li><span class="detail-label">Total Duration</span><span class="detail-value">{{ (course.totalHours + 'h') | duration }}</span></li>
             <li><span class="detail-label">Total Lessons</span><span class="detail-value">{{ course.totalLessons ||
                 getTotalLessons() }}</span></li>
             <li><span class="detail-label">Sections</span><span class="detail-value">{{ course.sections?.length || 0
