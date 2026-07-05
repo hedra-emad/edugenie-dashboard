@@ -36,7 +36,6 @@ type AttachState = 'idle' | 'loading' | 'loaded' | 'error';
     RejectCourseDialogComponent,
     PageSkeletonComponent,
     ButtonLoadingComponent,
-    CloudinaryThumbPipe
   ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'

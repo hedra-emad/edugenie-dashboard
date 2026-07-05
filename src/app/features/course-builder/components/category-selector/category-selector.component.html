@@ -28,21 +28,21 @@
 
       <!-- Search input -->
       <input
-        #searchInput
-        type="text"
-        [value]="selectedCategoryName() || searchTerm()"
-        (input)="onSearchInput($event)"
-        (focus)="onFocus()"
-        (blur)="onBlur()"
-        (keydown.escape)="onEscape()"
-        (keydown.arrowdown)="onArrowDown()"
-        (keydown.arrowup)="onArrowUp()"
-        (keydown.enter)="onEnter()"
-        [disabled]="isDisabled()"
-        [placeholder]="selectedCategoryId() ? selectedCategoryName() : 'Select category'"
-        class="flex-1 px-4 py-3 pl-10 pr-16 bg-transparent outline-none text-sm placeholder:text-gray-400"
-        aria-label="Search or select a category"
-        [attr.aria-readonly]="isDisabled()" />
+  #searchInput
+  type="text"
+  [value]="selectedCategoryName() || searchTerm()"
+  (input)="onSearchInput($event)"
+  (focus)="onFocus()"
+  (blur)="onBlur()"
+  (keydown.escape)="onEscape()"
+  (keydown.arrowdown)="onArrowDown($event)"
+  (keydown.arrowup)="onArrowUp($event)"
+  (keydown.enter)="onEnter()"
+  [disabled]="isDisabled()"
+  [placeholder]="selectedCategoryId() ? selectedCategoryName() : 'Select category'"
+  class="flex-1 px-4 py-3 pl-10 pr-16 bg-transparent outline-none text-sm placeholder:text-gray-400"
+  aria-label="Search or select a category"
+  [attr.aria-readonly]="isDisabled()" />
 
       <!-- Trailing icon cluster -->
       <div class="absolute right-3 flex items-center gap-1">
@@ -99,16 +99,17 @@
         *ngIf="!isLoadingCategories() && filteredCategories().length > 0"
         class="max-h-64 overflow-y-auto">
         <button
-          *ngFor="let cat of filteredCategories(); let i = index; trackBy: trackByCategoryId"
-          type="button"
-          (click)="selectCategory(cat)"
-          class="w-full px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors text-left"
-          [class.bg-primary/5]="i === activeIndex() && selectedCategoryId() !== cat.id"
-          [style.backgroundColor]="selectedCategoryId() === cat.id ? 'var(--color-primary)' : ''"
-          [style.color]="selectedCategoryId() === cat.id ? '#ffffff' : 'inherit'"
-          role="option"
-          [attr.aria-selected]="selectedCategoryId() === cat.id">
-
+  *ngFor="let cat of filteredCategories(); let i = index; trackBy: trackByCategoryId"
+  #optionItem
+  type="button"
+  (click)="selectCategory(cat)"
+  (mouseenter)="setActiveIndex(i)"
+  class="w-full px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors text-left"
+  [class.bg-gray-100]="i === activeIndex() && selectedCategoryId() !== cat.id"
+  [style.backgroundColor]="selectedCategoryId() === cat.id ? 'var(--color-primary)' : ''"
+  [style.color]="selectedCategoryId() === cat.id ? '#ffffff' : 'inherit'"
+  role="option"
+  [attr.aria-selected]="selectedCategoryId() === cat.id">
           <!-- Category icon or placeholder -->
           <div
             class="w-6 h-6 rounded-md flex-shrink-0 bg-gray-200 overflow-hidden"
