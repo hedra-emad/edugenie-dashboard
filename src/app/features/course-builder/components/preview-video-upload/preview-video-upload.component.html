@@ -119,22 +119,7 @@
             </div>
         </div>
 
-        <!-- ── (D) UPLOADING ── -->
-        <div *ngIf="snapshot.state === 'uploading'"
-            class="p-4 bg-white border border-slate-100 rounded-xl shadow-sm space-y-3.5 animate-fade-in">
-            <div class="flex items-center justify-between text-xs font-semibold">
-                <span class="flex items-center gap-2 text-slate-700">
-                    <span class="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping"></span>
-                    Uploading preview video…
-                </span>
-                <span class="font-bold text-[var(--color-primary)]">{{ snapshot.progress }}%</span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-                <div class="bg-[var(--color-primary)] h-2 rounded-full transition-all duration-300 ease-out"
-                    [style.width.%]="snapshot.progress">
-                </div>
-            </div>
-        </div>
+        <!-- ── (D) UPLOADING — progress bar rendered in parent course-basic-info ── -->
 
         <!-- ── (E) UPLOAD ERROR ── -->
         <div *ngIf="snapshot.state === 'upload_error'"

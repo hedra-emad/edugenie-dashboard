@@ -17,12 +17,6 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
   </div>
 
   <div class="space-y-2.5">
-    @if (requirements.length === 0) {
-      <div class="text-sm italic py-2" [style.color]="'var(--color-text-secondary)'">
-        No requirements added yet. Add prerequisites or setup instructions for this course.
-      </div>
-    }
-
     @for (reqCtrl of requirements; track $index; let i = $index) {
       <div class="flex items-start gap-2">
         <div class="flex-1">
@@ -38,6 +32,13 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
                    'border-red-500': shouldShowRequirementError(reqCtrl),
                    'border-gray-300': !shouldShowRequirementError(reqCtrl)
                  }"></textarea>
+
+          <!-- Optional hint for first input -->
+          @if (i === 0) {
+            <div class="text-xs mt-1.5" [style.color]="'var(--color-text-secondary)'">
+              Optional — you can delete this requirement
+            </div>
+          }
 
           @if (shouldShowRequirementError(reqCtrl) && reqCtrl.errors?.['required']) {
             <div class="text-xs text-red-500 mt-1 font-medium">

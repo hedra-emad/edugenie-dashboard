@@ -133,10 +133,62 @@ export class CourseBasicInfoComponent implements OnInit, OnDestroy {
   hasDraftData = signal(false);
   private pendingThumbnailSignature: { sig: SignatureResponse; fetchedAt: number } | null = null;
 
+  // ================= Preview Upload Bar =================
+  /** Controls visibility of the upload progress bar at the bottom of the page */
+  showPreviewUploadBar = false;
+  /** -1 = error, 0–99 = in progress, 100 = done */
+  previewUploadProgress = 0;
+  private previewUploadCompleteTimer: ReturnType<typeof setTimeout> | null = null;
 
 
+  // ── Preview Upload Handlers ────────────────────────────────────────────────
+
+  onPreviewUploadStarted() {
+    // Clear any pending hide timer
+    if (this.previewUploadCompleteTimer !== null) {
+      clearTimeout(this.previewUploadCompleteTimer);
+      this.previewUploadCompleteTimer = null;
+    }
+    this.previewUploadProgress = 0;
+    this.showPreviewUploadBar = true;
+
+    this.toastr.info(
+      'Your preview video is uploading in the background.',
+      'Upload Started',
+      {
+        timeOut: 4000,
+        positionClass: 'toast-bottom-left',
+        toastClass: 'ngx-toastr custom-toast-info',
+        progressBar: true,
+      }
+    );
+  }
+
+  onPreviewUploadComplete() {
+    this.previewUploadProgress = 100;
+    this.toastr.success(
+      'Preview video uploaded successfully!',
+      'Upload Complete',
+      {
+        timeOut: 3500,
+        positionClass: 'toast-bottom-left',
+        progressBar: true,
+      }
+    );
+    // Hide the progress bar after a short delay so the user sees the green "done" state
+    this.previewUploadCompleteTimer = setTimeout(() => {
+      this.showPreviewUploadBar = false;
+      this.previewUploadCompleteTimer = null;
+    }, 3000);
+  }
+
+  onPreviewUploadError() {
+    this.previewUploadProgress = -1;
+    // Keep the bar visible so the user sees the error state; it will hide on next upload
+  }
 
   // Utility function to truncate names for toastr messages
+
   private truncateName(name: string, maxLength = 40): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
@@ -934,22 +986,15 @@ async onDrop(event: DragEvent) {
     }
 
     if (this.mode() === 'create') {
-      // Find invalid controls
-      const invalidControls = Object.keys(this.courseForm.controls).filter(key => {
-        return this.courseForm.get(key)?.invalid;
-      });
-      if (invalidControls.length > 0) {
-        // console.log('Invalid controls:', invalidControls);
-      }
-      if (!this.selectedThumbnailFile) {
-        // console.log('Thumbnail file missing');
-      }
-
+      // In create mode: disable until all validations pass and thumbnail is selected
       return this.courseForm.invalid || !this.selectedThumbnailFile;
     }
 
     if (this.mode() === 'update') {
-      return this.courseForm.invalid;
+      // In update mode: disable if form is invalid OR no changes detected
+      // Check both form changes and preview video marked for deletion
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      return this.courseForm.invalid || (!this.hasChanges() && !previewMarkedForDeletion);
     }
 
     return false;
@@ -993,37 +1038,19 @@ async onDrop(event: DragEvent) {
 
 
   getButtonIcon(): string {
-
-    if (this.mode() === 'create') {
-      if (this.status() === 'saving') return 'hourglass_top';
-      return 'arrow_forward';
-    }
-
-    if (this.mode() === 'update') {
-      if (this.status() === 'updating') return 'hourglass_top';
-
-      // Always show arrow forward in update mode
-      return 'arrow_forward';
-    }
-
-
-    return 'arrow_forward';
+    // No icons for buttons
+    return '';
   }
 
-
   getButtonLabel(): string {
-
-    if (this.mode() === 'update') {
-
-      if (this.status() === 'updating') return 'Saving...';
-
-      // ⭐ Always show Next in update mode
-      return 'Next';
-    }
-
     if (this.mode() === 'create') {
       if (this.status() === 'saving') return 'Saving...';
-      return 'Next';
+      return 'Set Course';
+    }
+
+    if (this.mode() === 'update') {
+      if (this.status() === 'updating') return 'Updating...';
+      return 'Update Course';
     }
 
     return '';
@@ -1036,19 +1063,8 @@ async onDrop(event: DragEvent) {
     }
 
     if (this.mode() === 'update') {
-      // Always update first if there are changes OR if preview video is marked for deletion
-      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
-      
-      if (this.hasChanges() || previewMarkedForDeletion) {
-        this.updateCourse();
-      } else {
-        // If no changes, navigate directly
-        this.router.navigate([
-          '/course-builder',
-          this.courseId,
-          'sections'
-        ]);
-      }
+      // Always attempt update in update mode (button only enabled when hasChanges)
+      this.updateCourse();
     }
   }
 

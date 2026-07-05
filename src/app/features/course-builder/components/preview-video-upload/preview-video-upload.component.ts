@@ -1,5 +1,5 @@
 import {
-    Component, Input, OnInit, OnDestroy, signal, inject
+    Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,6 +27,15 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     @Input({ required: true }) ownerId!: string;
     /** Parent form containing previewVideoUrl and previewVideoPublicId controls */
     @Input({ required: true }) parentForm!: FormGroup;
+
+    /** Emits the upload progress (0–100) while uploading is active. Emits -1 on error. */
+    @Output() uploadStarted = new EventEmitter<void>();
+    /** Emits the current upload progress percentage (0–100). */
+    @Output() uploadProgress = new EventEmitter<number>();
+    /** Emits when the upload completes successfully. */
+    @Output() uploadComplete = new EventEmitter<void>();
+    /** Emits when the upload fails. */
+    @Output() uploadError = new EventEmitter<void>();
 
     private cloudinaryService = inject(CloudinaryService);
     private fileDraftService = inject(FileDraftService);
@@ -135,6 +144,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
             }
         } else if (url) {
             this.updateSnapshot({ state: 'saved' });
+            this.expanded.set(true);
         } else {
             this.updateSnapshot({ state: 'idle' });
         }
@@ -147,6 +157,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
                     // Only transition if we aren't managing the state ourselves
                     if (newUrl && this.snapshot.state === 'idle' && !this.markedForDeletion()) {
                         this.updateSnapshot({ state: 'saved' });
+                        this.expanded.set(true);
                     } else if (!newUrl && this.snapshot.state === 'saved' && !this.markedForDeletion()) {
                         this.updateSnapshot({ state: 'idle' });
                     }
@@ -412,6 +423,8 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
         }
 
         this.updateSnapshot({ state: 'uploading', progress: 0, message: 'Uploading preview video...' });
+        this.uploadStarted.emit();
+        this.uploadProgress.emit(0);
 
         return new Observable<{ url: string; publicId: string } | null>((subscriber) => {
             this.cloudinaryService.uploadPreviewVideo(
@@ -425,12 +438,15 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
                 next: (event: VideoUploadEvent) => {
                     if (event.progress !== undefined) {
                         this.updateSnapshot({ progress: event.progress });
+                        this.uploadProgress.emit(event.progress);
                     }
                     if (event.response) {
                         const url = event.response.secure_url;
                         const publicId = event.response.public_id;
 
                         this.updateSnapshot({ state: 'saved', progress: 100, message: 'Upload Complete' });
+                        this.uploadProgress.emit(100);
+                        this.uploadComplete.emit();
 
                         this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
                         this.selectedFile = null;
@@ -446,6 +462,8 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
                 },
                 error: (err) => {
                     this.updateSnapshot({ state: 'upload_error', message: 'Upload failed. Please try again.' });
+                    this.uploadProgress.emit(-1);
+                    this.uploadError.emit();
                     subscriber.error(err);
                 }
             });
