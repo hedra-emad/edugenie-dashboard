@@ -2,13 +2,14 @@ import { Component, inject, OnInit, ChangeDetectorRef, ChangeDetectionStrategy }
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { FormsModule } from '@angular/forms';
 import { EarningsService } from './earnings.service';
-import { EarningsPayoutResponse } from './earnings.models';
+import { EarningsPayoutResponse, PayoutMethodResponse } from './earnings.models';
 
 @Component({
   selector: 'app-instructor-earnings',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule],
   templateUrl: './earnings.page.html',
   styleUrl: './earnings.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -22,8 +23,107 @@ export class InstructorEarningsPageComponent implements OnInit {
   isRequesting = false;
   data: EarningsPayoutResponse | null = null;
 
+  // PayPal payout destination
+  payoutMethod: PayoutMethodResponse | null = null;
+  isEditingEmail = false;
+  emailInput = '';
+  isSavingEmail = false;
+
   ngOnInit() {
     this.loadPayouts();
+    this.loadPayoutMethod();
+  }
+
+  get hasPayoutEmail(): boolean {
+    return !!this.payoutMethod?.paypalEmail;
+  }
+
+  loadPayoutMethod() {
+    this.earningsService.getPayoutMethod().subscribe({
+      next: (res) => {
+        this.payoutMethod = res;
+        // Open the editor automatically when nothing is saved yet.
+        this.isEditingEmail = !res?.paypalEmail;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.payoutMethod = { paypalEmail: null, updatedAt: null };
+        this.isEditingEmail = true;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  startEditEmail() {
+    this.emailInput = '';
+    this.isEditingEmail = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelEditEmail() {
+    if (this.isSavingEmail) return;
+    // Only allow cancel when an email already exists to fall back to.
+    if (this.hasPayoutEmail) {
+      this.isEditingEmail = false;
+      this.emailInput = '';
+      this.cdr.detectChanges();
+    }
+  }
+
+  savePayoutEmail() {
+    const email = this.emailInput.trim();
+    if (!email || this.isSavingEmail) return;
+    this.isSavingEmail = true;
+    this.cdr.detectChanges();
+
+    this.earningsService.setPayoutMethod(email).subscribe({
+      next: (res) => {
+        this.payoutMethod = res;
+        this.isEditingEmail = false;
+        this.emailInput = '';
+        this.isSavingEmail = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('PayPal email saved', 'Close', {
+          duration: 3000,
+          panelClass: ['bg-green-600', 'text-white'],
+        });
+      },
+      error: (err) => {
+        this.isSavingEmail = false;
+        this.cdr.detectChanges();
+        const msg = err?.error?.message || 'Failed to save PayPal email';
+        this.snackBar.open(Array.isArray(msg) ? msg[0] : msg, 'Close', {
+          duration: 4000,
+          panelClass: ['bg-red-600', 'text-white'],
+        });
+      },
+    });
+  }
+
+  clearPayoutEmail() {
+    if (this.isSavingEmail) return;
+    this.isSavingEmail = true;
+    this.cdr.detectChanges();
+
+    this.earningsService.clearPayoutMethod().subscribe({
+      next: () => {
+        this.payoutMethod = { paypalEmail: null, updatedAt: null };
+        this.isEditingEmail = true;
+        this.emailInput = '';
+        this.isSavingEmail = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('PayPal email removed', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        this.isSavingEmail = false;
+        this.cdr.detectChanges();
+        const msg = err?.error?.message || 'Failed to remove PayPal email';
+        this.snackBar.open(msg, 'Close', {
+          duration: 4000,
+          panelClass: ['bg-red-600', 'text-white'],
+        });
+      },
+    });
   }
 
   loadPayouts() {
@@ -94,6 +194,13 @@ export class InstructorEarningsPageComponent implements OnInit {
 
   requestPayout() {
     if (!this.data?.canRequest || this.isRequesting) return;
+    if (!this.hasPayoutEmail) {
+      this.snackBar.open('Add a PayPal payout email first.', 'Close', {
+        duration: 4000,
+        panelClass: ['bg-red-600', 'text-white'],
+      });
+      return;
+    }
     this.isRequesting = true;
     this.cdr.detectChanges();
 

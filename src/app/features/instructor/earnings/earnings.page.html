@@ -65,14 +65,91 @@
     </div>
   </div>
 
+  <!-- PayPal payout destination -->
+  <div class="table-card p-6 animate-fade-in flex flex-col gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center shrink-0">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div>
+        <p class="text-[15px] font-bold text-slate-800">PayPal payout destination</p>
+        <p class="text-[13px] text-slate-500">Approved payouts are sent to this PayPal account.</p>
+      </div>
+    </div>
+
+    @if (!isEditingEmail && hasPayoutEmail) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4">
+      <div class="flex items-center gap-2 min-w-0">
+        <mat-icon class="text-[#1a73e8] !w-5 !h-5 !text-[20px] shrink-0">mail</mat-icon>
+        <span class="text-[15px] font-bold text-slate-800 truncate">{{ payoutMethod?.paypalEmail }}</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="btn-sm px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors disabled:opacity-50"
+          [disabled]="isSavingEmail"
+          (click)="startEditEmail()">
+          Change
+        </button>
+        <button
+          class="btn-sm px-3 py-1.5 rounded-lg text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50"
+          [disabled]="isSavingEmail"
+          (click)="clearPayoutEmail()">
+          Remove
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div class="flex flex-col gap-2">
+      @if (!hasPayoutEmail) {
+      <div class="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3">
+        <mat-icon class="text-amber-600 !w-4 !h-4 !text-[16px] shrink-0">info</mat-icon>
+        <span class="text-[13px] text-amber-800">Add your PayPal email so we know where to send your payouts.</span>
+      </div>
+      }
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="email"
+          class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent"
+          placeholder="you@paypal.com"
+          [(ngModel)]="emailInput"
+          [disabled]="isSavingEmail"
+          (keyup.enter)="savePayoutEmail()" />
+        <button
+          class="btn-primary shrink-0"
+          [disabled]="isSavingEmail || !emailInput.trim()"
+          (click)="savePayoutEmail()">
+          @if (isSavingEmail) {
+          <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+          Saving...
+          } @else {
+          <mat-icon class="!w-4 !h-4 !text-[16px]">save</mat-icon>
+          Save
+          }
+        </button>
+        @if (hasPayoutEmail) {
+        <button
+          class="btn-sm px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+          [disabled]="isSavingEmail"
+          (click)="cancelEditEmail()">
+          Cancel
+        </button>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
   <!-- Payout action area -->
   <div class="table-card p-6 animate-fade-in">
-    @if (data.openRequest && data.openRequest.status === 'PENDING') {
+    @if (data.openRequest && (data.openRequest.status === 'PENDING' || data.openRequest.status === 'PROCESSING')) {
     <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
       <mat-icon class="text-amber-600 shrink-0">hourglass_top</mat-icon>
       <div>
         <p class="text-[15px] font-bold text-amber-800">
+          @if (data.openRequest.status === 'PROCESSING') {
+          Payout of {{ data.openRequest.amount | number:'1.2-2' }} EGP is being sent to your PayPal account.
+          } @else {
           Payout of {{ data.openRequest.amount | number:'1.2-2' }} EGP requested — awaiting superadmin approval.
+          }
         </p>
         <p class="text-[13px] text-amber-700 mt-0.5">
           Requested {{ data.openRequest.requestedAt | date:'mediumDate' }} ·
@@ -90,7 +167,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <p class="text-[15px] font-bold text-slate-800">Ready to get paid?</p>
-        @if (data.canRequest) {
+        @if (data.canRequest && !hasPayoutEmail) {
+        <p class="text-[13px] text-amber-700 mt-0.5 font-semibold">
+          Add a PayPal payout email above before requesting a payout.
+        </p>
+        } @else if (data.canRequest) {
         <p class="text-[13px] text-slate-500 mt-0.5">
           You can request a payout of {{ data.totals.pending | number:'1.2-2' }} EGP.
         </p>
@@ -102,7 +183,7 @@
       </div>
       <button
         class="btn-primary"
-        [disabled]="!data.canRequest || isRequesting"
+        [disabled]="!data.canRequest || !hasPayoutEmail || isRequesting"
         (click)="requestPayout()">
         @if (isRequesting) {
         <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
@@ -204,24 +285,36 @@
             </div>
             <span class="badge shrink-0"
               [class.badge-status-paid]="req.status === 'APPROVED'"
-              [class.badge-status-requested]="req.status === 'PENDING'"
-              [class.badge-status-rejected]="req.status === 'REJECTED'">
+              [class.badge-status-requested]="req.status === 'PENDING' || req.status === 'PROCESSING'"
+              [class.badge-status-rejected]="req.status === 'REJECTED' || req.status === 'FAILED'">
               {{ req.status }}
             </span>
           </div>
+          @if (req.status === 'PROCESSING') {
+          <div class="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-100 p-3">
+            <mat-icon class="text-blue-500 !w-4 !h-4 !text-[16px] shrink-0">sync</mat-icon>
+            <span class="text-[13px] text-blue-700">Being sent to your PayPal account. This can take a short while.</span>
+          </div>
+          }
           @if (req.status === 'REJECTED' && req.note) {
           <div class="flex items-start gap-2 rounded-lg bg-rose-50 border border-rose-100 p-3">
             <mat-icon class="text-rose-500 !w-4 !h-4 !text-[16px] shrink-0">info</mat-icon>
             <span class="text-[13px] text-rose-700"><span class="font-semibold">Reason:</span> {{ req.note }}</span>
           </div>
           }
-          @if (req.status === 'APPROVED' && (req.method || req.reference)) {
+          @if (req.status === 'FAILED' && req.failureReason) {
+          <div class="flex items-start gap-2 rounded-lg bg-rose-50 border border-rose-100 p-3">
+            <mat-icon class="text-rose-500 !w-4 !h-4 !text-[16px] shrink-0">error</mat-icon>
+            <span class="text-[13px] text-rose-700"><span class="font-semibold">Payout failed:</span> {{ req.failureReason }} — our team will retry.</span>
+          </div>
+          }
+          @if ((req.status === 'APPROVED' || req.status === 'PROCESSING') && (req.method || req.reference || req.gatewayReference)) {
           <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-600">
             @if (req.method) {
             <span><span class="font-semibold text-slate-500">Method:</span> {{ req.method }}</span>
             }
-            @if (req.reference) {
-            <span><span class="font-semibold text-slate-500">Reference:</span> {{ req.reference }}</span>
+            @if (req.reference || req.gatewayReference) {
+            <span><span class="font-semibold text-slate-500">Reference:</span> {{ req.reference || req.gatewayReference }}</span>
             }
           </div>
           }

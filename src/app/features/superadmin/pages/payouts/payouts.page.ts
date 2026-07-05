@@ -35,7 +35,7 @@ export class PayoutsPageComponent implements OnInit {
   showApproveModal = false;
   selectedPayout: PendingPayoutListItem | null = null;
   isProcessing = false;
-  approveMethod: PayoutMethod = 'bank_transfer';
+  approveMethod: PayoutMethod = 'paypal';
   approveReference = '';
 
   // Reject Modal State
@@ -80,7 +80,7 @@ export class PayoutsPageComponent implements OnInit {
 
   openApproveModal(payout: PendingPayoutListItem) {
     this.selectedPayout = payout;
-    this.approveMethod = 'bank_transfer';
+    this.approveMethod = 'paypal';
     this.approveReference = '';
     this.showApproveModal = true;
   }
@@ -89,12 +89,18 @@ export class PayoutsPageComponent implements OnInit {
     if (this.isProcessing) return;
     this.showApproveModal = false;
     this.selectedPayout = null;
-    this.approveMethod = 'bank_transfer';
+    this.approveMethod = 'paypal';
     this.approveReference = '';
   }
 
+  /**
+   * When paying via the automated PayPal gateway, no reference is needed (the
+   * gateway generates one). A reference is only required for a MANUAL transfer.
+   */
   get canConfirmApprove(): boolean {
-    return this.approveReference.trim().length > 0;
+    return (
+      this.approveMethod === 'paypal' || this.approveReference.trim().length > 0
+    );
   }
 
   confirmApprove() {
@@ -110,18 +116,24 @@ export class PayoutsPageComponent implements OnInit {
     this.isProcessing = true;
     this.cdr.detectChanges();
 
+    const reference = this.approveReference.trim();
     this.superadminService.approvePayout(this.selectedPayout.requestId, {
       method: this.approveMethod,
-      reference: this.approveReference.trim()
+      // Omit an empty reference so the API's automated PayPal path takes over.
+      ...(reference ? { reference } : {})
     }).subscribe({
       next: (res: PayoutProcessResponse) => {
         this.isProcessing = false;
         this.showApproveModal = false;
         this.selectedPayout = null;
-        this.approveMethod = 'bank_transfer';
+        this.approveMethod = 'paypal';
         this.approveReference = '';
         this.cdr.detectChanges();
-        this.snackBar.open(`Payout approved (Ref: ${res.reference})`, 'Close', { duration: 4000, panelClass: ['bg-green-600', 'text-white'] });
+        const msg =
+          res.status === 'PROCESSING'
+            ? `Payout sent to PayPal — it will confirm shortly (Ref: ${res.reference})`
+            : `Payout approved${res.reference ? ` (Ref: ${res.reference})` : ''}`;
+        this.snackBar.open(msg, 'Close', { duration: 4000, panelClass: ['bg-green-600', 'text-white'] });
         this.loadPayouts();
       },
       error: (err) => {
