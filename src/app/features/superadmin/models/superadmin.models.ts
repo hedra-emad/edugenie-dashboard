@@ -83,6 +83,12 @@ export interface PendingPayoutListItem {
   amount: number;
   earningsCount: number;
   requestedAt: string;
+  /** The instructor's PayPal payout email (snapshot), if provided. */
+  paypalEmail?: string | null;
+  /** 'PENDING' (new) or 'FAILED' (a gateway payout awaiting retry). */
+  status?: string;
+  /** Why a gateway payout failed (present when status is FAILED). */
+  failureReason?: string | null;
 }
 
 export interface PendingPayoutPaginatedResponse {
@@ -99,9 +105,14 @@ export interface PendingPayoutPaginatedResponse {
 
 export type PayoutMethod = 'bank_transfer' | 'paypal';
 
+/**
+ * Both fields are optional: when the PayPal gateway is configured on the API,
+ * the payout is automated and these are derived from the gateway. They are only
+ * needed for the MANUAL fallback (gateway off) — the API enforces that.
+ */
 export interface ApprovePayoutPayload {
-  method: PayoutMethod;
-  reference: string;
+  method?: PayoutMethod;
+  reference?: string;
 }
 
 export interface RejectPayoutPayload {

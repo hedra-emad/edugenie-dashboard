@@ -11,7 +11,18 @@ export interface EarningsTotals {
   paidOut: number;
 }
 
-export type PayoutRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type PayoutRequestStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'FAILED';
+
+/** The instructor's saved PayPal payout destination (email is masked). */
+export interface PayoutMethodResponse {
+  paypalEmail: string | null;
+  updatedAt: string | null;
+}
 
 export interface OpenPayoutRequest {
   id: string;
@@ -33,6 +44,8 @@ export interface PayoutRequestItem {
   status: PayoutRequestStatus;
   method: string | null;
   reference: string | null;
+  gatewayReference?: string | null;
+  failureReason?: string | null;
   note: string | null;
   requestedAt: string;
   processedAt: string | null;
