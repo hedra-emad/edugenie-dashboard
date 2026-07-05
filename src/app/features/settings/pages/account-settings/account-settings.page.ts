@@ -85,6 +85,8 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   cropTranslateY = 0;
   cropScale = 1;
   cropRotation = 0;
+  /** Minimum scale that exactly covers the crop circle — computed per image */
+  _minScale = 1;
 
   _isDragging = false;
   private _dragStartX = 0;
@@ -416,8 +418,14 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
     this._naturalW = img.naturalWidth;
     this._naturalH = img.naturalHeight;
 
-    const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW, this._naturalH);
-    this.cropScale = cover;
+    // Compute minimum scale: the image must cover the full crop diameter.
+    // The crop circle has diameter = CROP_RADIUS * 2.
+    // We scale from the image's natural dimensions, so the smaller side
+    // must reach (CROP_RADIUS * 2) pixels at the chosen scale.
+    this._minScale = (this.CROP_RADIUS * 2) / Math.min(this._naturalW, this._naturalH);
+
+    // Start at exactly the cover scale so the circle is always filled.
+    this.cropScale = this._minScale;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
     this.cropRotation = 0;
@@ -470,16 +478,17 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   onCropWheel(event: WheelEvent) {
     event.preventDefault();
     const delta = event.deltaY < 0 ? 0.08 : -0.08;
-    this.cropScale = Math.min(10, Math.max(0.1, this.cropScale + delta));
+    this.cropScale = Math.min(10, Math.max(this._minScale, this.cropScale + delta));
     this.refreshPreview();
   }
 
   // ─── Cropper: controls ────────────────────────────────────────────────────
   zoomIn() { this.cropScale = Math.min(10, +(this.cropScale + 0.1).toFixed(2)); this.refreshPreview(); }
-  zoomOut() { this.cropScale = Math.max(0.1, +(this.cropScale - 0.1).toFixed(2)); this.refreshPreview(); }
+  zoomOut() { this.cropScale = Math.max(this._minScale, +(this.cropScale - 0.1).toFixed(2)); this.refreshPreview(); }
 
   updateZoom(e: Event) {
-    this.cropScale = parseFloat((e.target as HTMLInputElement).value);
+    const raw = parseFloat((e.target as HTMLInputElement).value);
+    this.cropScale = Math.max(this._minScale, Math.min(10, raw));
     this.refreshPreview();
   }
 
@@ -487,8 +496,7 @@ export class AccountSettingsPageComponent implements OnInit, OnDestroy {
   rotateRight() { this.cropRotation += 90; this.refreshPreview(); }
 
   resetCropTransform() {
-    const cover = (this.CROP_RADIUS * 2) / Math.min(this._naturalW || 1, this._naturalH || 1);
-    this.cropScale = cover;
+    this.cropScale = this._minScale;
     this.cropTranslateX = 0;
     this.cropTranslateY = 0;
     this.cropRotation = 0;
