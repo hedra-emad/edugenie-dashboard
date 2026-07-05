@@ -43,7 +43,6 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
   private elementRef = inject(ElementRef);
   private injector = inject(Injector);
 
-  // @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 @ViewChildren('optionItem') optionItems!: QueryList<ElementRef<HTMLButtonElement>>;
   // Signals
@@ -237,18 +236,17 @@ effect(() => {
 
     if (this.isOpen()) {
       this.isOpen.set(false);
+      this.searchTerm.set('');
+      this.filteredCategories.set(this.availableCategories());
+      this.activeIndex.set(-1);
     } else {
       this.isOpen.set(true);
-      // Show full list when opening
       this.filteredCategories.set(this.availableCategories());
       this.activeIndex.set(-1);
 
-      // Auto-focus the input and select existing text
+      // Auto-focus the in-panel search input
       setTimeout(() => {
         this.searchInput?.nativeElement.focus();
-        if (this.selectedCategoryName()) {
-          this.searchInput?.nativeElement.select();
-        }
       }, 0);
     }
   }
@@ -260,31 +258,29 @@ effect(() => {
     this.searchSubject.next(term);
   }
 
-  onFocus() {
-    this.isOpen.set(true);
-    // Show full list
+  clearSearch() {
+    this.searchTerm.set('');
     this.filteredCategories.set(this.availableCategories());
     this.activeIndex.set(-1);
+    this.searchInput?.nativeElement.focus();
   }
 
   onBlur() {
-    // Close dropdown on blur
+    // Close dropdown on blur (slight delay allows click on option to fire first)
     setTimeout(() => {
-      this.isOpen.set(false);
-      this.isTouched.set(true);
-      if (this.onTouched) {
-        this.onTouched();
+      if (!this.elementRef.nativeElement.contains(document.activeElement)) {
+        this.isOpen.set(false);
+        this.isTouched.set(true);
+        this.searchTerm.set('');
+        if (this.onTouched) this.onTouched();
       }
-      // Restore search input to selected category name
-      this.searchTerm.set('');
-    }, 100); // Slight delay to allow item selection to fire
+    }, 150);
   }
 
   onEscape() {
     this.isOpen.set(false);
     this.searchTerm.set('');
     this.activeIndex.set(-1);
-    this.searchInput?.nativeElement.blur();
   }
 
  onArrowDown(event: Event) {
