@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { EarningsPayoutResponse, RequestPayoutResponse } from './earnings.models';
+import {
+  EarningsPayoutResponse,
+  PayoutMethodResponse,
+  RequestPayoutResponse,
+} from './earnings.models';
 
 @Injectable({
   providedIn: 'root'
@@ -18,5 +22,20 @@ export class EarningsService {
   /** Request a payout of the currently-available (cleared) share. */
   requestPayout(): Observable<RequestPayoutResponse> {
     return this.http.post<RequestPayoutResponse>(`${this.baseUrl}/request-payout`, {});
+  }
+
+  /** Get the saved PayPal payout email (masked), or null if none set. */
+  getPayoutMethod(): Observable<PayoutMethodResponse> {
+    return this.http.get<PayoutMethodResponse>(`${this.baseUrl}/payout-method`);
+  }
+
+  /** Set/replace the PayPal payout email. */
+  setPayoutMethod(paypalEmail: string): Observable<PayoutMethodResponse> {
+    return this.http.put<PayoutMethodResponse>(`${this.baseUrl}/payout-method`, { paypalEmail });
+  }
+
+  /** Clear the saved PayPal payout email. */
+  clearPayoutMethod(): Observable<{ cleared: boolean }> {
+    return this.http.delete<{ cleared: boolean }>(`${this.baseUrl}/payout-method`);
   }
 }
