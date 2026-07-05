@@ -29,11 +29,13 @@ export interface QuizQuestionOption {
 }
 
 export interface QuizQuestionDetail {
-  questionId: string;
+  questionId?: string;           // ← optional: brand-new instructor-authored questions have no id until saved
   text: string;                 // ← backend sends "questionText"
   options: QuizQuestionOption[]; // ← backend sends string[], not {optionId, text}[]
   correctAnswers: string[];
   type: QuestionType;
+  isIgnored?: boolean;             // ← NEW: soft-delete / hide flag from backend
+  createdBy?: 'AI' | 'INSTRUCTOR'; // ← NEW: question provenance from backend
 }
 
 export interface GeneratedQuiz {
@@ -60,14 +62,16 @@ export interface QuizConfigResponse {
 }
 
 export interface EditedQuestion {
-  questionId: string;     // useful even if backend doesn't match on it yet — future-proofing
+  questionId?: string;    // ← CHANGED to optional: omitted = backend appends a brand-new instructor question
   questionText: string;
-  type: QuestionType;     // real enum value now, not questionId
+  type: QuestionType;
   options: string[];
   correctAnswers: string[];
+  isIgnored?: boolean;    // ← NEW: sent so the backend can persist the hide/show toggle
 }
 
 export interface ApproveQuizDto {
+  sectionId?: string;
   editedQuestions?: EditedQuestion[];
 }
 
@@ -153,6 +157,8 @@ export class QuizzesService {
                 ? { optionId: opt, text: opt }
                 : opt
             ),
+            isIgnored: q.isIgnored ?? false,
+            createdBy: q.createdBy ?? 'AI',
           })),
         },
       };
@@ -171,8 +177,9 @@ private extractId(idField: any): string {
 }
 
   approveQuiz(quizId: string, dto: ApproveQuizDto = {}): Observable<ApproveQuizResponse> {
+    const finalQuizId = quizId && quizId !== 'undefined' ? quizId : 'new';
     return this.http.patch<ApproveQuizResponse>(
-      `${this.instructorBase}/${quizId}/approve`,
+      `${this.instructorBase}/${finalQuizId}/approve`,
       dto,
       { withCredentials: true }
     );
@@ -201,6 +208,8 @@ private extractId(idField: any): string {
           options: (q.options ?? []).map((opt: any) =>
             typeof opt === 'string' ? { optionId: opt, text: opt } : opt
           ),
+          isIgnored: q.isIgnored ?? false,
+          createdBy: q.createdBy ?? 'AI',
         })),
       };
     })
@@ -261,6 +270,8 @@ getQuizById(quizId: string): Observable<QuizDetailResponse | null> {
           options: (q.options ?? []).map((opt: any) =>
             typeof opt === 'string' ? { optionId: opt, text: opt } : opt
           ),
+          isIgnored: q.isIgnored ?? false,
+          createdBy: q.createdBy ?? 'AI',
         })),
       };
     })

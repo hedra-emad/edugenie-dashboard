@@ -991,13 +991,17 @@ async onDrop(event: DragEvent) {
     }
 
     if (this.mode() === 'update') {
-      // In update mode: disable if form is invalid OR no changes detected
-      // Check both form changes and preview video marked for deletion
+      // "See Sections" is always enabled; "Update Course" requires a valid form.
       const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
-      return this.courseForm.invalid || (!this.hasChanges() && !previewMarkedForDeletion);
+      const hasAnyChange = this.hasChanges() || previewMarkedForDeletion;
+      return hasAnyChange && this.courseForm.invalid;
     }
 
     return false;
+  }
+
+  goToSections() {
+    this.router.navigate(['/course-builder', this.courseId, 'sections']);
   }
 
   setGoals(goals: string[]) {
@@ -1038,7 +1042,11 @@ async onDrop(event: DragEvent) {
 
 
   getButtonIcon(): string {
-    // No icons for buttons
+    if (this.mode() === 'update') {
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      const hasAnyChange = this.hasChanges() || previewMarkedForDeletion;
+      return hasAnyChange ? 'save' : 'arrow_forward';
+    }
     return '';
   }
 
@@ -1050,7 +1058,9 @@ async onDrop(event: DragEvent) {
 
     if (this.mode() === 'update') {
       if (this.status() === 'updating') return 'Updating...';
-      return 'Update Course';
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      const hasAnyChange = this.hasChanges() || previewMarkedForDeletion;
+      return hasAnyChange ? 'Update Course' : 'See Sections';
     }
 
     return '';
@@ -1063,8 +1073,13 @@ async onDrop(event: DragEvent) {
     }
 
     if (this.mode() === 'update') {
-      // Always attempt update in update mode (button only enabled when hasChanges)
-      this.updateCourse();
+      const previewMarkedForDeletion = this.previewVideoUploadComponent?.markedForDeletion() || false;
+      const hasAnyChange = this.hasChanges() || previewMarkedForDeletion;
+      if (hasAnyChange) {
+        this.updateCourse();
+      } else {
+        this.goToSections();
+      }
     }
   }
 

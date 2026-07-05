@@ -1,4 +1,89 @@
 /* ═══════════════════════════════════════════════════════════
+   MODE SELECT — two-card picker (Manual vs AI)
+═══════════════════════════════════════════════════════════ */
+.mode-select-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  max-width: 680px;
+  margin: 0.5rem auto 0;
+}
+
+@media (max-width: 560px) {
+  .mode-select-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1.75rem 1.5rem;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.mode-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 24px rgba(59,24,146,0.12);
+  transform: translateY(-2px);
+}
+
+.mode-card--ai {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: linear-gradient(145deg, var(--color-surface) 60%, color-mix(in srgb, var(--color-primary) 6%, transparent));
+}
+
+.mode-card--ai:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 28px rgba(59,24,146,0.16);
+}
+
+.mode-card__icon {
+  font-size: 2.2rem !important;
+  width: 2.2rem !important;
+  height: 2.2rem !important;
+  color: var(--color-primary);
+  opacity: 0.85;
+  margin-bottom: 0.25rem;
+}
+
+.mode-card__title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.mode-card__desc {
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+
+.mode-card__cta {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-top: 0.25rem;
+  letter-spacing: 0.01em;
+  transition: gap 0.15s;
+}
+
+.mode-card:hover .mode-card__cta {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════
    Field label shared style
 ═══════════════════════════════════════════════════════════ */
 .field-label {
@@ -244,26 +329,30 @@
 
 .edit-btn {
   flex-shrink: 0;
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid var(--color-border);
   cursor: pointer;
   color: var(--color-text-muted);
-  padding: 0.15rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 0.375rem;
-  transition: color 0.15s, background 0.15s;
-  display: flex;
+  transition: all 0.15s;
+  display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .edit-btn:hover {
   color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .edit-btn mat-icon {
-  font-size: 1.05rem !important;
-  width: 1.05rem !important;
-  height: 1.05rem !important;
+  font-size: 0.95rem !important;
+  width: 0.95rem !important;
+  height: 0.95rem !important;
 }
 
 /* Options grid (read mode) */
@@ -680,7 +769,8 @@
     align-items: flex-start;
   }
   
-  .regen-btn {
+  .regen-btn,
+  .add-question-btn {
     margin-left: 0;
     width: 100%;
     justify-content: center;
@@ -694,4 +784,215 @@
   .approve-bar app-main-button {
     width: 100%;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Provenance / hidden badges (question header)
+═══════════════════════════════════════════════════════════ */
+.badge-provenance {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+}
+
+.badge-provenance--ai {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.badge-provenance--instructor {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-hidden {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Delete button — mirrors .edit-btn styling but with red hover */
+.delete-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.delete-btn:hover {
+  color: #b91c1c;
+  border-color: #fee2e2;
+  background: #fef2f2;
+}
+
+.delete-btn mat-icon {
+  font-size: 0.95rem !important;
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+}
+
+/* Add Question button — similar to .regen-btn but uses primary color */
+.add-question-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 999px;
+  padding: 0.3rem 0.875rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.add-question-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.add-question-btn mat-icon {
+  font-size: 0.95rem !important;
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+}
+
+/* Optional question-stem textarea for brand-new instructor questions */
+.edit-question-text-row {
+  margin-bottom: 0.75rem;
+}
+
+.edit-question-text-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.edit-question-text-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.edit-question-text-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+/* Question type selector pill buttons */
+.btn-pill {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.btn-pill-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.btn-pill-active:hover {
+  background: var(--color-primary);
+  color: white;
+  opacity: 0.9;
+}
+
+/* Add option button inline */
+.add-option-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  color: var(--color-primary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.15s;
+}
+
+.add-option-btn-inline:hover {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  border-color: var(--color-primary);
+}
+
+.add-option-btn-inline mat-icon {
+  font-size: 0.95rem !important;
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+}
+
+/* Remove option button */
+.remove-option-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: 0.375rem;
+  transition: all 0.15s;
+  margin-top: 0.25rem;
+}
+
+.remove-option-btn:hover {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.remove-option-btn mat-icon {
+  font-size: 1.1rem !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
 }
