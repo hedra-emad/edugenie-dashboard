@@ -11,40 +11,29 @@
     aria-haspopup="listbox"
     [attr.aria-disabled]="isDisabled()">
 
-    <!-- Search input wrapper -->
+    <!-- ── Trigger (closed-state button) ── -->
     <div
-      class="relative flex items-center rounded-xl border transition-all duration-200 bg-white"
-      [class.border-gray-300]="!isTouchedAndInvalid"
-      [class.border-red-500]="isTouchedAndInvalid"
-      [class.focus-within:ring-2]="!isDisabled()"
-      [class.focus-within:ring-primary/20]="!isDisabled()"
-      [class.focus-within:border-primary]="!isDisabled()"
-      [style.box-shadow]="isOpen() ? '0 10px 15px -3px rgba(var(--color-primary), 0.1)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'">
+      class="relative flex items-center rounded-xl border transition-all duration-200 bg-white cursor-pointer select-none"
+      [class.border-gray-300]="!isTouchedAndInvalid && !isOpen()"
+      [class.border-primary]="isOpen()"
+      [class.border-red-500]="isTouchedAndInvalid && !isOpen()"
+      [style.box-shadow]="isOpen() ? '0 10px 15px -3px rgba(0,0,0,0.08)' : '0 1px 3px 0 rgba(0,0,0,0.08)'"
+      (click)="toggleOpen()">
 
-      <!-- Leading search icon -->
-      <mat-icon class="absolute left-3 text-gray-400 pointer-events-none">
-        search
-      </mat-icon>
+      <!-- Leading category icon -->
+      <!-- <mat-icon class="absolute left-3 text-gray-400 pointer-events-none">
+        category
+      </mat-icon> -->
 
-      <!-- Search input -->
-      <input
-  #searchInput
-  type="text"
-  [value]="selectedCategoryName() || searchTerm()"
-  (input)="onSearchInput($event)"
-  (focus)="onFocus()"
-  (blur)="onBlur()"
-  (keydown.escape)="onEscape()"
-  (keydown.arrowdown)="onArrowDown($event)"
-  (keydown.arrowup)="onArrowUp($event)"
-  (keydown.enter)="onEnter()"
-  [disabled]="isDisabled()"
-  [placeholder]="selectedCategoryId() ? selectedCategoryName() : 'Select category'"
-  class="flex-1 px-4 py-3 pl-10 pr-16 bg-transparent outline-none text-sm placeholder:text-gray-400"
-  aria-label="Search or select a category"
-  [attr.aria-readonly]="isDisabled()" />
+      <!-- Display text -->
+      <span
+        class="flex-1 px-4 py-3  pr-16 text-sm"
+        [class.text-gray-800]="selectedCategoryId()"
+        [class.text-gray-400]="!selectedCategoryId()">
+        {{ selectedCategoryId() ? selectedCategoryName() : 'Select category' }}
+      </span>
 
-      <!-- Trailing icon cluster -->
+      <!-- Trailing controls -->
       <div class="absolute right-3 flex items-center gap-1">
         <!-- Clear button -->
         <button
@@ -55,40 +44,58 @@
           [disabled]="isDisabled()"
           aria-label="Clear selection"
           title="Clear selection">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">
-            close
-          </mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">close</mat-icon>
         </button>
 
-        <!-- Chevron (dropdown indicator) -->
-        <button
-          type="button"
-          (click)="toggleOpen()"
-          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
-          [disabled]="isDisabled()"
-          [attr.aria-label]="isOpen() ? 'Close dropdown' : 'Open dropdown'"
-          title="Toggle dropdown">
+        <!-- Chevron -->
+        <span class="p-1.5 rounded-md text-gray-400">
           <mat-icon
             class="!text-[16px] !w-[16px] !h-[16px] transition-transform duration-200"
             [class.rotate-180]="isOpen()">
             expand_more
           </mat-icon>
-        </button>
+        </span>
       </div>
     </div>
 
-    <!-- Dropdown panel -->
+    <!-- ── Dropdown panel ── -->
     <div
       *ngIf="isOpen()"
       class="absolute z-50 mt-2 w-full bg-white rounded-xl border overflow-hidden animate-fadeScaleIn"
       [style.border-color]="'var(--color-primary)'"
-      [style.box-shadow]="'0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'"
+      [style.box-shadow]="'0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)'"
       role="listbox">
 
+      <!-- ── Search row (always first) ── -->
+      <div class="px-3 pt-2 pb-3 border-b border-gray-100">
+        <div class="flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          <!-- <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] flex-shrink-0">search</mat-icon> -->
+          <input
+            #searchInput
+            type="text"
+            [value]="searchTerm()"
+            (input)="onSearchInput($event)"
+            (keydown.escape)="onEscape()"
+            (keydown.arrowdown)="onArrowDown($event)"
+            (keydown.arrowup)="onArrowUp($event)"
+            (keydown.enter)="onEnter()"
+            placeholder="Search categories…"
+            class="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
+            aria-label="Search categories" />
+          <!-- Inline clear for search term -->
+          <button
+            *ngIf="searchTerm()"
+            type="button"
+            (click)="clearSearch()"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Clear search">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">close</mat-icon>
+          </button>
+        </div>
+      </div>
+
       <!-- Loading skeleton -->
-      <div
-        *ngIf="isLoadingCategories()"
-        class="px-4 py-3 space-y-2">
+      <div *ngIf="isLoadingCategories()" class="px-4 py-3 space-y-2">
         <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
         <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
         <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
@@ -97,35 +104,22 @@
       <!-- Categories list -->
       <div
         *ngIf="!isLoadingCategories() && filteredCategories().length > 0"
-        class="max-h-64 overflow-y-auto">
+        class="max-h-56 overflow-y-auto">
         <button
-  *ngFor="let cat of filteredCategories(); let i = index; trackBy: trackByCategoryId"
-  #optionItem
-  type="button"
-  (click)="selectCategory(cat)"
-  (mouseenter)="setActiveIndex(i)"
-  class="w-full px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors text-left"
-  [class.bg-gray-100]="i === activeIndex() && selectedCategoryId() !== cat.id"
-  [style.backgroundColor]="selectedCategoryId() === cat.id ? 'var(--color-primary)' : ''"
-  [style.color]="selectedCategoryId() === cat.id ? '#ffffff' : 'inherit'"
-  role="option"
-  [attr.aria-selected]="selectedCategoryId() === cat.id">
-          <!-- Category icon or placeholder -->
-          <div
-            class="w-6 h-6 rounded-md flex-shrink-0 bg-gray-200 overflow-hidden"
-            *ngIf="!cat.iconUrl; else hasIcon">
-            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
-              <mat-icon class="!text-[12px] !w-[12px] !h-[12px] text-gray-600">
-                category
-              </mat-icon>
-            </div>
-          </div>
-          <ng-template #hasIcon>
-            <img
-              [src]="cat.iconUrl"
-              [alt]="cat.name"
-              class="w-6 h-6 rounded-md object-cover flex-shrink-0" />
-          </ng-template>
+          *ngFor="let cat of filteredCategories(); let i = index; trackBy: trackByCategoryId"
+          #optionItem
+          type="button"
+          (click)="selectCategory(cat)"
+          (mouseenter)="setActiveIndex(i)"
+          class="w-full px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors text-left"
+          [class.bg-gray-100]="i === activeIndex() && selectedCategoryId() !== cat.id"
+          [style.backgroundColor]="selectedCategoryId() === cat.id ? 'var(--color-primary)' : ''"
+          [style.color]="selectedCategoryId() === cat.id ? '#ffffff' : 'inherit'"
+          role="option"
+          [attr.aria-selected]="selectedCategoryId() === cat.id">
+
+
+
 
           <!-- Category name -->
           <span
@@ -149,9 +143,7 @@
       <div
         *ngIf="!isLoadingCategories() && filteredCategories().length === 0"
         class="py-6 text-center">
-        <mat-icon class="!text-5xl !w-12 !h-12 mx-auto mb-2 text-gray-300">
-          search_off
-        </mat-icon>
+        <mat-icon class="!text-5xl !w-12 !h-12 mx-auto mb-2 text-gray-300">search_off</mat-icon>
         <p class="text-sm text-gray-400">
           {{ searchTerm() ? 'No categories found' : 'No categories available' }}
         </p>
@@ -161,9 +153,7 @@
 
   <!-- Error message -->
   <div *ngIf="isTouchedAndInvalid" class="flex items-center gap-1.5 text-xs text-red-500 font-medium mt-1">
-    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">
-      error
-    </mat-icon>
+    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">error</mat-icon>
     <span>Category is required</span>
   </div>
 </div>
