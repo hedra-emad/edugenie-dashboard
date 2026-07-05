@@ -17,12 +17,6 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
   </div>
 
   <div class="space-y-2.5">
-    @if (goals.length === 0) {
-      <div class="text-sm italic py-2" [style.color]="'var(--color-text-secondary)'">
-        No goals added yet. Add what students will learn in this course.
-      </div>
-    }
-
     @for (goalCtrl of goals; track $index; let i = $index) {
       <div class="flex items-start gap-2">
         <div class="flex-1">
@@ -38,6 +32,13 @@ hover:bg-[var(--color-secondary)] hover:text-white active:scale-95">
                    'border-red-500': shouldShowGoalError(goalCtrl),
                    'border-gray-300': !shouldShowGoalError(goalCtrl)
                  }"></textarea>
+
+          <!-- Optional hint for first input -->
+          @if (i === 0) {
+            <div class="text-xs mt-1.5" [style.color]="'var(--color-text-secondary)'">
+              Optional — you can delete this goal
+            </div>
+          }
 
           @if (shouldShowGoalError(goalCtrl) && goalCtrl.errors?.['required']) {
             <div class="text-xs text-red-500 mt-1 font-medium">

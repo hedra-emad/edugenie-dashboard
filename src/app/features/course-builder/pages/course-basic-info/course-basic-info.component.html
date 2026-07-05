@@ -95,8 +95,15 @@
     </div>
 
     <!-- Course Preview Video (optional, collapsed by default) -->
-    <app-preview-video-upload [ownerId]="courseId ?? draftId" resourceType="course" [parentForm]="courseForm">
-</app-preview-video-upload>
+    <app-preview-video-upload
+      [ownerId]="courseId ?? draftId"
+      resourceType="course"
+      [parentForm]="courseForm"
+      (uploadStarted)="onPreviewUploadStarted()"
+      (uploadProgress)="previewUploadProgress = $event"
+      (uploadComplete)="onPreviewUploadComplete()"
+      (uploadError)="onPreviewUploadError()">
+    </app-preview-video-upload>
 
 
     <!-- Course Details -->
@@ -251,6 +258,40 @@
 
       <app-requirements-input [requirementsArray]="requirementsArray"></app-requirements-input>
 
+    </div>
+
+    <!-- ── Preview Upload Progress Bar (appears at bottom when upload starts) ── -->
+    <div *ngIf="showPreviewUploadBar"
+      class="rounded-xl border border-slate-100 bg-white shadow-sm p-4 space-y-3 animate-fade-in">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between text-xs font-semibold">
+        <span class="flex items-center gap-2 text-slate-700">
+          <span *ngIf="previewUploadProgress >= 0 && previewUploadProgress < 100"
+            class="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping"></span>
+          <mat-icon *ngIf="previewUploadProgress === 100" class="!text-[16px] !w-[16px] !h-[16px] text-green-600">check_circle</mat-icon>
+          <mat-icon *ngIf="previewUploadProgress < 0" class="!text-[16px] !w-[16px] !h-[16px] text-red-500">error_outline</mat-icon>
+          <span *ngIf="previewUploadProgress >= 0 && previewUploadProgress < 100">Uploading preview video…</span>
+          <span *ngIf="previewUploadProgress === 100" class="text-green-700">Preview video uploaded!</span>
+          <span *ngIf="previewUploadProgress < 0" class="text-red-600">Upload failed. Please try again.</span>
+        </span>
+        <span *ngIf="previewUploadProgress >= 0" class="font-bold text-[var(--color-primary)]">
+          {{ previewUploadProgress === 100 ? '100' : previewUploadProgress }}%
+        </span>
+      </div>
+
+      <!-- Progress Track -->
+      <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden shadow-inner">
+        <div
+          [ngClass]="{
+            'bg-[var(--color-primary)]': previewUploadProgress >= 0 && previewUploadProgress < 100,
+            'bg-green-500': previewUploadProgress === 100,
+            'bg-red-500': previewUploadProgress < 0
+          }"
+          class="h-2.5 rounded-full transition-all duration-300 ease-out"
+          [style.width.%]="previewUploadProgress < 0 ? 100 : previewUploadProgress">
+        </div>
+      </div>
     </div>
 
     <!-- Continue -->

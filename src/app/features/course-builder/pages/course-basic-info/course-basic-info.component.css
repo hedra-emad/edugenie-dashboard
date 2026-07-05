@@ -1,3 +1,14 @@
+/* ─── Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease both;
+}
+
 .level-btn--selected {
   background-color: var(--color-primary);
   color: var(--color-surface);

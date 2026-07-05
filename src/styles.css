@@ -761,3 +761,64 @@ app-filter-bar .chips-container app-sub-button.selected button {
 .toast-container .ngx-toastr.toast-mauve-warning .toast-progress {
   background: rgba(74, 23, 104, 0.25) !important;
 }
+
+/* ═══════════════════════════════════════
+   GLOBAL PAGE SCROLLBAR
+═══════════════════════════════════════ */
+
+/* Firefox: Page scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+/* Chrome, Edge, Safari: Page scrollbar */
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-light);
+}
+
+html::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Body scrollbar as fallback */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-light);
+}
+
+body::-webkit-scrollbar-corner {
+  background: transparent;
+}
