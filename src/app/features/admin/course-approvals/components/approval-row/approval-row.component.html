@@ -47,10 +47,10 @@
   @if (course.exceedsLimit) {
   <div class="warning-badge" title="Video length exceeds allowed platform limits.">
     <mat-icon class="warning-icon">warning</mat-icon>
-    <span>{{ course.videoDuration }}</span>
+    <span>{{ course.videoDuration | duration }}</span>
   </div>
   } @else {
-  <span class="duration-text">{{ course.videoDuration }}</span>
+  <span class="duration-text">{{ course.videoDuration | duration }}</span>
   }
 </td>
 

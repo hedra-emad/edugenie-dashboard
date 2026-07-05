@@ -16,6 +16,7 @@ import { ApproveCourseDialogComponent } from '../../../../shared/components/dial
 import { RejectCourseDialogComponent } from '../../../../shared/components/dialogs/reject-course-dialog/reject-course-dialog.component';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../../../shared/components/loading';
 import { CloudinaryThumbPipe } from '../../../../shared/pipes/cloudinary-thumb.pipe';
+import { DurationPipe } from '../../../../shared/pipes/duration.pipe';
 import { CourseAttachmentsService, Attachment } from '../services/course-attachments.service';
 
 type AttachState = 'idle' | 'loading' | 'loaded' | 'error';
@@ -36,6 +37,8 @@ type AttachState = 'idle' | 'loading' | 'loaded' | 'error';
     RejectCourseDialogComponent,
     PageSkeletonComponent,
     ButtonLoadingComponent,
+    CloudinaryThumbPipe,
+    DurationPipe
   ],
   templateUrl: './course-details-page.component.html',
   styleUrl: './course-details-page.component.css'
