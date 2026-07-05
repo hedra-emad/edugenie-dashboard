@@ -17,23 +17,29 @@ import {
   AllQuizzesResponse,
   QuizGenerationStatus,
   EnrollmentStatusResponse,
+  ApproveQuizDto,
 } from '../../../../core/services/quizzes';
 import { BackButtonComponent } from '../../components/shared/back-button/back-button';
 import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { CoursesService } from '../../../../core/services/courses';
-import { Course } from '../../../../core/models/course.model';
 import { PageSkeletonComponent, CardSkeletonComponent } from '../../../../shared/components/loading';
 import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
 
-type PagePhase = 'list' | 'form' | 'generating' | 'review';
+type PagePhase = 'list' | 'mode-select' | 'form' | 'generating' | 'review';
+
+interface DraftOption {
+  text: string;
+  isCorrect: boolean;
+}
 
 interface ReviewQuestion extends QuizQuestionDetail {
   editing: boolean;
-  draftOptions: string[];
-  draftCorrectAnswers: string[];
+  draftOptions: DraftOption[];
+  draftText?: string;
+  draftType?: QuestionType;
   editError: string;
-  wasEdited: boolean; // ← add this
+  wasEdited: boolean;
 }
 
 @Component({
@@ -93,6 +99,7 @@ export class QuizConfigPageComponent implements OnInit {
   approveError = '';
   approveLoading = false;
   isQuizApproved = false;
+  isManualMode = false; // true when the instructor chose "Manually" on the mode-select screen
 
   generatedQuiz: GeneratedQuiz | null = null;
   reviewQuestions: ReviewQuestion[] = [];
@@ -196,17 +203,17 @@ private loadAllQuizzes() {
       
       // Otherwise, show appropriate phase based on quiz count
       if (this.totalQuizzes === 0) {
-        this.phase = 'form';
+        this.phase = 'mode-select';
       } else {
         this.phase = 'list';
       }
     },
     error: (err) => {
       console.error('LOAD QUIZZES ERROR', err);
-      // Show form on error if no specific quiz requested
+      // Show mode-select on error if no specific quiz requested
       const routeQuizId = this.route.snapshot.paramMap.get('quizId');
       if (!routeQuizId) {
-        this.phase = 'form';
+        this.phase = 'mode-select';
       }
     },
   });
@@ -465,8 +472,41 @@ private navigateBackToList() {
   });
 }
 
-// Show generate form
+// Show mode-select screen
 showGenerateForm() {
+  this.isManualMode = false;
+  this.phase = 'mode-select';
+}
+
+// User chose "Manually"
+selectManualMode() {
+  this.isManualMode = true;
+  // Create a stub quiz object so the review template has something to bind to
+  this.generatedQuiz = {
+    _id: '',
+    sectionId: this.sectionId,
+    difficulty: QuizDifficulty.MEDIUM,
+    numberOfQuestions: 0,
+    questionType: QuestionType.MIXED,
+    generationStatus: 'COMPLETED' as any,
+    status: 'pending_review' as any,
+    questions: [],
+  } as GeneratedQuiz;
+  this.reviewQuestions = [];
+  this.isQuizApproved = false;
+  this.phase = 'review';
+  // Immediately open a blank question card so the instructor can start typing
+  this.addNewQuestion();
+}
+
+// User chose "By AI"
+selectAiMode() {
+  // Only clear manual mode when called fresh from the mode-select screen.
+  // If the instructor is already in review (has manual questions) we keep
+  // isManualMode = true so submit() will APPEND the AI results instead of replacing.
+  if (this.phase !== 'review') {
+    this.isManualMode = false;
+  }
   this.phase = 'form';
 }
 
@@ -511,7 +551,13 @@ cancelGenerate() {
         
         // If completed, show questions
         if (res.quiz.generationStatus === QuizGenerationStatus.COMPLETED && res.quiz.questions?.length) {
-          this.reviewQuestions = this.toReviewQuestions(res.quiz.questions || []);
+          const incoming = this.toReviewQuestions(res.quiz.questions || []);
+          if (this.isManualMode && this.reviewQuestions.length > 0) {
+            // Append AI-generated questions to the manually created ones
+            this.reviewQuestions = [...this.reviewQuestions, ...incoming];
+          } else {
+            this.reviewQuestions = incoming;
+          }
           console.log('REVIEW QUESTIONS:', this.reviewQuestions);
           this.phase = 'review';
           this.cdr.detectChanges();
@@ -530,18 +576,8 @@ cancelGenerate() {
         let errorMsg = 'Failed to generate quiz. Please try again.';
         
         if (err.status === 403) {
-          // Forbidden - likely enrollment threshold not met
-          let baseMessage = err.error?.message || err.error?.error || 'You do not have enough enrollments to generate a new quiz.';
-          
-          // Add helpful context with current enrollment status
-          if (this.enrollmentStatus && this.enrollmentStatus.hasApprovedQuiz) {
-            const needed = this.enrollmentStatus.enrollmentsNeeded;
-            const current = this.enrollmentStatus.newEnrollmentsSinceLastApproval;
-            const threshold = this.enrollmentStatus.enrollmentThreshold;
-            baseMessage += `\n\nCurrent new enrollments: ${current} / ${threshold} required\nYou need ${needed} more enrollment${needed > 1 ? 's' : ''}.`;
-          }
-          
-          errorMsg = baseMessage;
+          // Forbidden - the section has hit the maximum quizzes-per-section limit
+          errorMsg = err.error?.message || err.error?.error || `This section has reached the maximum limit of ${this.MAX_QUIZZES} quizzes.`;
         } else if (err.status === 0 || err.status === -1) {
           // Network error or CORS
           errorMsg = 'Unable to connect to server. Please check your connection.';
@@ -603,17 +639,29 @@ private pollForCompletion(attempt = 0) {
         'Please save or discard all open edits before approving.';
       return;
     }
+    if (this.activeQuestionsCount === 0) {
+      this.approveError =
+        'A quiz must have at least one question to be approved.';
+      return;
+    }
     this.approveError = '';
     this.approveLoading = true;
 
-    // Only send editedQuestions if any were actually changed
+    // We always send all remaining questions to support hard delete
     const edited = this.buildEditedQuestions();
-    const dto = edited.length ? { editedQuestions: edited } : {};
+    const dto: ApproveQuizDto = { editedQuestions: edited };
+    if (this.isManualMode || !this.generatedQuiz._id) {
+      dto.sectionId = this.sectionId;
+    }
 
     this.quizzesService.approveQuiz(this.generatedQuiz._id, dto).subscribe({
-      next: () => {
+      next: (res) => {
         // Ensure this runs inside Angular zone for proper change detection
         this.ngZone.run(() => {
+          if (res && res.quizId) {
+            this.generatedQuiz!._id = res.quizId;
+            this.viewingQuizId = res.quizId;
+          }
           console.log('✅ Quiz approved, quiz ID:', this.generatedQuiz?._id);
           
           // Show success toast first
@@ -680,6 +728,9 @@ private pollForCompletion(attempt = 0) {
       
       // Go back to review phase
       this.phase = 'review';
+    } else if (this.isManualMode && this.reviewQuestions.length > 0) {
+      // Instructor opened AI form from within a manual quiz session — go back to their work
+      this.phase = 'review';
     } else {
       // Normal cancel from form (when creating first quiz)
       if (this.totalQuizzes > 0) {
@@ -698,22 +749,25 @@ private pollForCompletion(attempt = 0) {
       this.toastr.warning('Cannot edit approved quiz questions');
       return;
     }
-    
-    // Don't allow editing of True/False questions
-    if (this.isTrueFalseType(q)) {
-      this.toastr.info('True/False questions cannot be edited');
-      return;
-    }
-    
-    q.draftOptions = [...q.options.map((o) => o.text)];
-    q.draftCorrectAnswers = [...q.correctAnswers];
+
+    q.draftOptions = q.options.map((o) => ({
+      text: o.text,
+      isCorrect: q.correctAnswers.includes(o.text),
+    }));
+    q.draftText = q.text;
+    q.draftType = q.type;
     q.editError = '';
     q.editing = true;
   }
 
   cancelEdit(q: ReviewQuestion) {
-    q.editing = false;
-    q.editError = '';
+    if (q.questionId === undefined && !q.text) {
+      // It's a new unsaved question, remove it completely from reviewQuestions
+      this.reviewQuestions = this.reviewQuestions.filter((question) => question !== q);
+    } else {
+      q.editing = false;
+      q.editError = '';
+    }
   }
 
   saveEdit(q: ReviewQuestion) {
@@ -723,121 +777,202 @@ private pollForCompletion(attempt = 0) {
       return;
     }
 
-    const options = q.draftOptions.map((o) => o.trim()).filter(Boolean);
-    const corrects = q.draftCorrectAnswers.filter((c) => options.includes(c));
+    const draftText = q.draftText?.trim();
+    if (!draftText) {
+      q.editError = 'Please enter the question text.';
+      return;
+    }
 
-  if (options.length < 2) {
-    q.editError = 'At least 2 options are required.';
-    return;
+    const validOptions = q.draftOptions
+      .map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }))
+      .filter((o) => o.text !== '');
+
+    if (validOptions.length < 2) {
+      q.editError = 'At least 2 options are required.';
+      return;
+    }
+
+    const corrects = validOptions.filter((o) => o.isCorrect).map((o) => o.text);
+    const isSingle = q.draftType === QuestionType.SINGLE_CHOICE || q.draftType === QuestionType.TRUE_FALSE;
+
+    if (isSingle && corrects.length > 1) {
+      q.editError = 'Single choice questions can only have one correct answer.';
+      return;
+    }
+
+    if (corrects.length === 0) {
+      q.editError = 'Select at least one correct answer from the current options.';
+      return;
+    }
+
+    q.text = draftText;
+    q.type = q.draftType || q.type;
+    q.options = validOptions.map((o) => ({ optionId: o.text, text: o.text }));
+    q.correctAnswers = corrects;
+    q.wasEdited = true;
+    q.editing = false;
+    q.editError = '';
   }
 
-  if (this.isSingleType(q) && corrects.length > 1) {
-  q.editError = 'Single choice questions can only have one correct answer.';
-  return;
-}
-
-  if (corrects.length === 0) {
-    q.editError = 'Select at least one correct answer from the current options.';
-    return;
+  // ── Instructor: hard delete a question ───────────────────────────────────────
+  deleteQuestion(q: ReviewQuestion) {
+    if (this.isQuizApproved) {
+      this.toastr.warning('Cannot edit approved quiz questions');
+      return;
+    }
+    this.reviewQuestions = this.reviewQuestions.filter((question) => question !== q);
+    this.toastr.success('Question removed. Click "Approve & Publish" to save changes.');
+    this.cdr.detectChanges();
   }
 
-  q.options = options.map((text) => ({ optionId: text, text }));
-  q.correctAnswers = corrects;
-  q.wasEdited = true; // ← add this
-  q.editing = false;
-  q.editError = '';
-}
+  // Count of questions that will actually be shown to students / scored
+  get activeQuestionsCount(): number {
+    return this.reviewQuestions.length;
+  }
 
-  toggleDraftCorrect(q: ReviewQuestion, optionText: string) {
+  // ── Instructor: author a brand-new question ────────────────────────────
+  addNewQuestion() {
+    if (this.isQuizApproved) {
+      this.toastr.warning('Cannot edit approved quiz questions');
+      return;
+    }
+
+    const defaultOptions = [
+      { text: 'Option 1', isCorrect: true },
+      { text: 'Option 2', isCorrect: false },
+    ];
+
+    const newQ: ReviewQuestion = {
+      questionId: undefined, // omitted on purpose — signals a NEW question to the backend
+      text: '',
+      type: QuestionType.SINGLE_CHOICE,
+      options: defaultOptions.map((opt) => ({ optionId: opt.text, text: opt.text })),
+      correctAnswers: ['Option 1'],
+      createdBy: 'INSTRUCTOR',
+      isIgnored: false,
+      editing: true,               // opens directly in edit mode
+      draftOptions: [...defaultOptions],
+      draftText: '',
+      draftType: QuestionType.SINGLE_CHOICE,
+      editError: '',
+      wasEdited: true,
+    };
+
+    this.reviewQuestions.push(newQ);
+    this.cdr.detectChanges();
+  }
+
+  // Choose / toggle question type dynamically
+  onDraftTypeChange(q: ReviewQuestion, newType: string) {
+    const typeEnum = newType as QuestionType;
+    q.draftType = typeEnum;
+
+    // 1. Handle single-choice / true-false vs multi-choice constraints
+    if (typeEnum === QuestionType.SINGLE_CHOICE || typeEnum === QuestionType.TRUE_FALSE) {
+      // Ensure at most one correct option is set
+      let foundCorrect = false;
+      q.draftOptions.forEach((opt) => {
+        if (opt.isCorrect) {
+          if (foundCorrect) {
+            opt.isCorrect = false;
+          } else {
+            foundCorrect = true;
+          }
+        }
+      });
+      // If none is correct, make the first one correct
+      if (!foundCorrect && q.draftOptions.length > 0) {
+        q.draftOptions[0].isCorrect = true;
+      }
+    }
+
+    // 2. If changing to TRUE_FALSE, enforce exactly True and False options
+    if (typeEnum === QuestionType.TRUE_FALSE) {
+      const isTrueCorrect = q.draftOptions.some(o => o.text.toLowerCase() === 'true' && o.isCorrect);
+      const isFalseCorrect = q.draftOptions.some(o => o.text.toLowerCase() === 'false' && o.isCorrect);
+      
+      q.draftOptions = [
+        { text: 'True', isCorrect: isTrueCorrect || (!isFalseCorrect) },
+        { text: 'False', isCorrect: isFalseCorrect && (!isTrueCorrect) }
+      ];
+    }
+  }
+
+  // Add draft option dynamically
+  addDraftOption(q: ReviewQuestion) {
+    if (q.draftOptions.length >= 6) {
+      this.toastr.warning('Maximum 6 options allowed');
+      return;
+    }
+    q.draftOptions.push({ text: '', isCorrect: false });
+  }
+
+  // Remove draft option dynamically
+  removeDraftOption(q: ReviewQuestion, index: number) {
+    if (q.draftOptions.length <= 2) {
+      this.toastr.warning('At least 2 options are required');
+      return;
+    }
+    const wasCorrect = q.draftOptions[index].isCorrect;
+    q.draftOptions.splice(index, 1);
+    
+    // If the removed option was the only correct one in a single choice, make another one correct
+    const isSingle = q.draftType === QuestionType.SINGLE_CHOICE || q.draftType === QuestionType.TRUE_FALSE;
+    if (wasCorrect && isSingle && q.draftOptions.length > 0) {
+      q.draftOptions[0].isCorrect = true;
+    }
+  }
+
+  toggleDraftCorrect(q: ReviewQuestion, optionIndex: number) {
     // Don't allow editing of approved quizzes
     if (this.isQuizApproved) {
       this.toastr.warning('Cannot edit approved quiz questions');
       return;
     }
 
-    const isSingle = q.type === QuestionType.SINGLE_CHOICE || q.type === QuestionType.TRUE_FALSE;
+    const isSingle = q.draftType === QuestionType.SINGLE_CHOICE || q.draftType === QuestionType.TRUE_FALSE;
 
-  if (isSingle) {
-    // Single-select: clicking an option always makes it the only correct one
-    q.draftCorrectAnswers = [optionText];
-    return;
-  }
-
-  // Multi-select: normal toggle
-  const idx = q.draftCorrectAnswers.indexOf(optionText);
-  if (idx === -1) {
-    q.draftCorrectAnswers = [...q.draftCorrectAnswers, optionText];
-  } else {
-    q.draftCorrectAnswers = q.draftCorrectAnswers.filter((c) => c !== optionText);
-  }
-}
-
-toggleCorrect(q: ReviewQuestion, optionText: string) {
-  // Don't allow editing of approved quizzes
-  if (this.isQuizApproved) {
-    this.toastr.warning('Cannot edit approved quiz questions');
-    return;
-  }
-  
-  // Don't allow editing of True/False questions
-  if (this.isTrueFalseType(q)) {
-    this.toastr.info('True/False questions cannot be edited');
-    return;
-  }
-  
-  if (this.isSingleType(q)) {
-    q.correctAnswers = [optionText];
-  } else {
-    const idx = q.correctAnswers.indexOf(optionText);
-
-    if (idx === -1) {
-      q.correctAnswers = [...q.correctAnswers, optionText];
+    if (isSingle) {
+      // Mark only this option as correct, others as incorrect
+      q.draftOptions.forEach((opt, idx) => {
+        opt.isCorrect = (idx === optionIndex);
+      });
     } else {
-      q.correctAnswers = q.correctAnswers.filter(c => c !== optionText);
+      // Multi-choice: toggle this option
+      q.draftOptions[optionIndex].isCorrect = !q.draftOptions[optionIndex].isCorrect;
     }
   }
 
-  q.wasEdited = true;
-}
-
-
-isSingleType(q: ReviewQuestion): boolean {
-  const t = (q.type || '').toString().toUpperCase();
-  return t === 'SINGLE_CHOICE' || t === 'TRUE_FALSE';
-}
-
-isTrueFalseType(q: ReviewQuestion): boolean {
-  const t = (q.type || '').toString().toUpperCase();
-  return t === 'TRUE_FALSE';
-}
-
-
-  updateDraftOption(q: ReviewQuestion, index: number, value: string) {
+  toggleCorrect(q: ReviewQuestion, optionText: string) {
     // Don't allow editing of approved quizzes
     if (this.isQuizApproved) {
       this.toastr.warning('Cannot edit approved quiz questions');
       return;
     }
 
-    // If the old text was a correct answer, keep the mapping
-    const old = q.draftOptions[index];
-    
-    // Update the array element directly instead of creating a new array
-    q.draftOptions[index] = value;
-    
-    // Update correctAnswers to track the renamed option
-    const correctIndex = q.draftCorrectAnswers.indexOf(old);
-    if (correctIndex !== -1) {
-      q.draftCorrectAnswers[correctIndex] = value;
+    if (this.isSingleType(q)) {
+      q.correctAnswers = [optionText];
+    } else {
+      const idx = q.correctAnswers.indexOf(optionText);
+
+      if (idx === -1) {
+        q.correctAnswers = [...q.correctAnswers, optionText];
+      } else {
+        q.correctAnswers = q.correctAnswers.filter(c => c !== optionText);
+      }
     }
+
+    q.wasEdited = true;
   }
 
-  // Handle option text changes from ngModel
-  onOptionTextChange(q: ReviewQuestion, index: number, newValue: string) {
-    // ngModel has already updated q.draftOptions[index]
-    // We need to look through correctAnswers and update any that match the old values
-    // This is tricky because we don't have the old value anymore
-    // Better approach: just don't do anything here, handle it in saveEdit
+  isSingleType(q: ReviewQuestion): boolean {
+    const t = (q.editing && q.draftType ? q.draftType : q.type || '').toString().toUpperCase();
+    return t === 'SINGLE_CHOICE' || t === 'TRUE_FALSE';
+  }
+
+  isTrueFalseType(q: ReviewQuestion): boolean {
+    const t = (q.editing && q.draftType ? q.draftType : q.type || '').toString().toUpperCase();
+    return t === 'TRUE_FALSE';
   }
 
   // Track by index to prevent re-rendering
@@ -866,9 +1001,10 @@ isTrueFalseType(q: ReviewQuestion): boolean {
   getPageTitle(): string {
     switch (this.phase) {
       case 'list': return 'Quizzes';
-      case 'form': return this.isRegenerating ? 'Regenerate Quiz' : 'Generate New Quiz';
+      case 'mode-select': return 'Create a Quiz';
+      case 'form': return this.isRegenerating ? 'Regenerate Quiz' : 'Generate Quiz with AI';
       case 'generating': return this.isRegenerating ? 'Regenerating Quiz...' : 'Generating Quiz...';
-      case 'review': return this.isQuizApproved ? 'Quiz Approved' : 'Review Generated Quiz';
+      case 'review': return this.isQuizApproved ? 'Quiz Approved' : (this.isManualMode ? 'Build Your Quiz' : 'Review Generated Quiz');
       default: return 'Quiz Configuration';
     }
   }
@@ -879,6 +1015,8 @@ isTrueFalseType(q: ReviewQuestion): boolean {
         return this.totalQuizzes === 0 
           ? 'No quizzes yet. Generate your first quiz to test student knowledge.'
           : `You have ${this.totalQuizzes} quiz(es) for this section. Maximum ${this.MAX_QUIZZES} quizzes allowed.`;
+      case 'mode-select':
+        return 'Choose how you want to create this quiz.';
       case 'form': 
         return this.isRegenerating 
           ? 'Update the quiz parameters to regenerate with new questions'
@@ -889,7 +1027,9 @@ isTrueFalseType(q: ReviewQuestion): boolean {
           : 'Please wait while the AI generates your quiz...';
       case 'review': return this.isQuizApproved 
           ? 'This quiz is live for enrolled students.'
-          : 'Check the AI-generated questions, edit if needed, then approve to publish.';
+          : (this.isManualMode
+              ? 'Add questions manually. You can also generate AI questions to append.'
+              : 'Check the AI-generated questions, edit if needed, then approve to publish.');
       default: return '';
     }
   }
@@ -924,9 +1064,6 @@ isTrueFalseType(q: ReviewQuestion): boolean {
     return q.correctAnswers.includes(optionText);
   }
 
-  isDraftCorrect(q: ReviewQuestion, optionText: string): boolean {
-    return q.draftCorrectAnswers.includes(optionText);
-  }
 
   private toReviewQuestions(
   questions: QuizQuestionDetail[]
@@ -961,14 +1098,15 @@ isTrueFalseType(q: ReviewQuestion): boolean {
   }
 
   private buildEditedQuestions(): EditedQuestion[] {
-  return this.reviewQuestions
-    .filter((q) => q.wasEdited) // track this flag in saveEdit()
-    .map((q) => ({
-      questionId: q.questionId,
-      questionText: q.text,
-      type: q.type,
-      options: q.options.map((o) => o.text),
-      correctAnswers: q.correctAnswers,
-    }));
-}
+    return this.reviewQuestions
+      .filter((q) => q.text && q.text.trim() !== '') // filter out empty/blank questions
+      .map((q) => ({
+        questionId: q.questionId, // undefined ⇒ backend appends a brand-new instructor question
+        questionText: q.text,
+        type: q.type,
+        options: q.options.map((o) => o.text),
+        correctAnswers: q.correctAnswers,
+        isIgnored: q.isIgnored,
+      }));
+  }
 }

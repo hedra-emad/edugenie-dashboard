@@ -66,27 +66,10 @@
           </div>
           <p class="text-sm text-green-700 mt-1">{{ enrollmentInfo.message }}</p>
           <p class="text-xs text-green-600 mt-1">
-            Current enrollments: <strong>{{ enrollmentInfo.currentEnrollments }}</strong> | 
-            New enrollments since last quiz: <strong>{{ enrollmentStatus.newEnrollmentsSinceLastApproval }}</strong>
+            Current enrollments: <strong>{{ enrollmentInfo.currentEnrollments }}</strong>
           </p>
         </div>
 
-        <!-- Subsequent quizzes - need more enrollments -->
-        <div *ngIf="enrollmentStatus.hasApprovedQuiz && !enrollmentStatus.canGenerateQuiz" class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div class="flex items-center gap-2 text-blue-800">
-            <mat-icon>hourglass_empty</mat-icon>
-            <span class="font-medium">More Enrollments Needed</span>
-          </div>
-          <p class="text-sm text-blue-700 mt-1">{{ enrollmentInfo.message }}</p>
-          <div class="text-xs text-blue-600 mt-2 space-y-1">
-            <p>Current enrollments: <strong>{{ enrollmentInfo.currentEnrollments }}</strong></p>
-            <p>New enrollments since last quiz: <strong>{{ enrollmentStatus.newEnrollmentsSinceLastApproval }}</strong> / {{ enrollmentStatus.enrollmentThreshold }}</p>
-            <p class="bg-blue-100 p-2 rounded flex items-start gap-1">
-              <mat-icon class="!text-[12px] !w-[12px] !h-[12px] mt-0.5">info</mat-icon>
-              <span>You need {{ enrollmentStatus.enrollmentThreshold }} new enrollments since your last approved quiz to generate another.</span>
-            </p>
-          </div>
-        </div>
       </div>
 
       <!-- Generate New Quiz Button -->
@@ -98,7 +81,7 @@
           'flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity' : 
           'flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed'">
         <mat-icon>{{ canGenerateNewQuiz ? 'add' : 'lock' }}</mat-icon>
-        <span>{{ canGenerateNewQuiz ? 'Generate New Quiz' : 'Generate Quiz (Need More Enrollments)' }}</span>
+        <span>{{ canGenerateNewQuiz ? 'Generate New Quiz' : 'Maximum Quiz Limit Reached' }}</span>
       </button>
     </div>
 
@@ -229,6 +212,33 @@
 
   </ng-container>
 
+  <!-- ══ PHASE: MODE SELECT ══════════════════════════════════════════════════ -->
+  <ng-container *ngIf="phase === 'mode-select'">
+    <div class="mode-select-grid">
+
+      <!-- Manual card -->
+      <button type="button" class="mode-card" (click)="selectManualMode()">
+        <mat-icon class="mode-card__icon">edit_note</mat-icon>
+        <span class="mode-card__title">Manually</span>
+        <p class="mode-card__desc">Write your own questions from scratch. You can also generate AI questions later and mix them in.</p>
+        <span class="mode-card__cta">Start adding questions →</span>
+      </button>
+
+      <!-- AI card -->
+      <button type="button" class="mode-card mode-card--ai" (click)="selectAiMode()">
+        <mat-icon class="mode-card__icon">auto_awesome</mat-icon>
+        <span class="mode-card__title">By AI</span>
+        <p class="mode-card__desc">Let the AI generate questions from your lesson transcripts. You can edit or delete them before publishing.</p>
+        <span class="mode-card__cta">Generate with AI →</span>
+      </button>
+
+    </div>
+
+    <div class="mt-6 flex justify-start">
+      <app-back-button label="Back" (back)="goBack()"></app-back-button>
+    </div>
+  </ng-container>
+
   <!-- ══ PHASE: GENERATING ═════════════════════════════════════════════════ -->
   <div *ngIf="phase === 'generating'" class="generating-card">
     <div class="generating-inner">
@@ -356,16 +366,25 @@
         <mat-icon>quiz</mat-icon>
         <span>{{ reviewQuestions.length }} questions</span>
       </div>
-      <div class="stat-chip">
+      <div class="stat-chip" *ngIf="!isManualMode">
         <mat-icon>signal_cellular_alt</mat-icon>
         <span>{{ generatedQuiz?.difficulty | lowercase | titlecase }}</span>
       </div>
-      <div class="stat-chip">
+      <div class="stat-chip" *ngIf="!isManualMode">
         <mat-icon>category</mat-icon>
         <span>{{ formatQuestionType(generatedQuiz?.questionType || '') }}</span>
       </div>
-      <!-- Regenerate button on quiz card -->
-      <button *ngIf="!isQuizApproved" class="regen-btn" type="button" (click)="regenerate()" matTooltip="Regenerate this quiz">
+      <!-- Add Question button -->
+      <button *ngIf="!isQuizApproved" class="add-question-btn" type="button" (click)="addNewQuestion()" matTooltip="Add a new instructor-authored question">
+        <mat-icon>add_circle_outline</mat-icon>
+        Add Question
+      </button>
+      <!-- In manual mode: Generate with AI button. In AI mode: Regenerate button -->
+      <button *ngIf="!isQuizApproved && isManualMode" class="regen-btn" type="button" (click)="selectAiMode()" matTooltip="Generate AI questions and append to your manual list">
+        <mat-icon>auto_awesome</mat-icon>
+        Generate with AI
+      </button>
+      <button *ngIf="!isQuizApproved && !isManualMode" class="regen-btn" type="button" (click)="regenerate()" matTooltip="Regenerate this quiz">
         <mat-icon>refresh</mat-icon>
         Regenerate
       </button>
@@ -385,8 +404,23 @@
         <div class="question-header">
           <span class="q-number">Q{{ i + 1 }}</span>
           <p class="q-text">{{ q.text }}</p>
-          <button *ngIf="!q.editing && !isQuizApproved && !isTrueFalseType(q)" class="edit-btn" type="button" (click)="startEdit(q)" title="Edit question">
+          <span *ngIf="q.createdBy === 'INSTRUCTOR'" class="badge-provenance badge-provenance--instructor">Instructor</span>
+          <span *ngIf="q.createdBy === 'AI'" class="badge-provenance badge-provenance--ai">AI</span>
+          <button *ngIf="!q.editing && !isQuizApproved" 
+                  class="delete-btn" 
+                  type="button" 
+                  (click)="deleteQuestion(q)" 
+                  title="Delete question">
+            <mat-icon>delete_outline</mat-icon>
+            <span>Delete</span>
+          </button>
+          <button *ngIf="!q.editing && !isQuizApproved" 
+                  class="edit-btn" 
+                  type="button" 
+                  (click)="startEdit(q)" 
+                  title="Edit question">
             <mat-icon>edit</mat-icon>
+            <span>Edit</span>
           </button>
         </div>
 
@@ -395,13 +429,13 @@
           <div *ngFor="let opt of q.options" 
                class="option-chip" 
                [class.option-chip--correct]="isCorrect(q, opt.text)" 
-               [class.cursor-pointer]="!isQuizApproved && !isTrueFalseType(q)"
-               [class.cursor-default]="isQuizApproved || isTrueFalseType(q)"
-               (click)="!isQuizApproved && !isTrueFalseType(q) && toggleCorrect(q, opt.text)">
-            <mat-icon *ngIf="isSingleType(q)" class="flex-shrink-0">
+               [class.cursor-pointer]="!isQuizApproved"
+               [class.cursor-default]="isQuizApproved"
+               (click)="!isQuizApproved && toggleCorrect(q, opt.text)">
+            <mat-icon *ngIf="q.type === 'SINGLE_CHOICE' || q.type === 'TRUE_FALSE'" class="flex-shrink-0">
               {{ isCorrect(q, opt.text) ? 'radio_button_checked' : 'radio_button_unchecked' }}
             </mat-icon>
-            <mat-icon *ngIf="!isSingleType(q)" class="flex-shrink-0">
+            <mat-icon *ngIf="q.type !== 'SINGLE_CHOICE' && q.type !== 'TRUE_FALSE'" class="flex-shrink-0">
               {{ isCorrect(q, opt.text) ? 'check_box' : 'check_box_outline_blank' }}
             </mat-icon>
             <span class="option-text">{{ opt.text }}</span>
@@ -410,29 +444,88 @@
 
         <!-- Edit Mode -->
         <div *ngIf="q.editing" class="edit-panel">
-          <p class="edit-hint"><mat-icon>info</mat-icon> Edit option text in the fields. Click the icon on the left to mark an answer as correct.</p>
-          <div class="edit-options">
-            <div *ngFor="let opt of q.draftOptions; let oi = index; trackBy: trackByIndex" class="edit-option-row">
+          <!-- Question type selector -->
+          <div class="edit-question-type-row mb-4">
+            <label class="edit-question-text-label">Question Type</label>
+            <div class="flex gap-2 mt-1">
               <button type="button" 
-                      class="correct-toggle" 
-                      [class.correct-toggle--on]="isDraftCorrect(q, opt)"
-                      [disabled]="isQuizApproved"
-                      (click)="toggleDraftCorrect(q, opt)">
-                <mat-icon *ngIf="isSingleType(q)">
-                  {{ isDraftCorrect(q, opt) ? 'radio_button_checked' : 'radio_button_unchecked' }}
-                </mat-icon>
-                <mat-icon *ngIf="!isSingleType(q)">
-                  {{ isDraftCorrect(q, opt) ? 'check_box' : 'check_box_outline_blank' }}
-                </mat-icon>
+                      class="btn-pill" 
+                      [class.btn-pill-active]="q.draftType === 'SINGLE_CHOICE'"
+                      (click)="onDraftTypeChange(q, 'SINGLE_CHOICE')">
+                Single Choice
               </button>
-              <input type="text" 
-                     class="edit-option-input" 
-                     [(ngModel)]="q.draftOptions[oi]"
-                     [disabled]="isQuizApproved"
-                     (ngModelChange)="onOptionTextChange(q, oi, $event)" 
-                     placeholder="Option text" />
+              <button type="button" 
+                      class="btn-pill" 
+                      [class.btn-pill-active]="q.draftType === 'MULTI_CHOICE'"
+                      (click)="onDraftTypeChange(q, 'MULTI_CHOICE')">
+                Multiple Choice
+              </button>
+              <button type="button" 
+                      class="btn-pill" 
+                      [class.btn-pill-active]="q.draftType === 'TRUE_FALSE'"
+                      (click)="onDraftTypeChange(q, 'TRUE_FALSE')">
+                True / False
+              </button>
             </div>
           </div>
+
+          <!-- Question text (always editable) -->
+          <div class="edit-question-text-row">
+            <label class="edit-question-text-label">Question text</label>
+            <textarea class="edit-question-text-input"
+                      [(ngModel)]="q.draftText"
+                      rows="2"
+                      placeholder="Type the question here..."></textarea>
+          </div>
+
+          <p class="edit-hint">
+            <mat-icon>info</mat-icon> 
+            Edit option text below. Click the radio or checkbox on the left to set correct answers.
+          </p>
+
+          <div class="edit-options">
+            <div *ngFor="let opt of q.draftOptions; let oi = index; trackBy: trackByIndex" class="edit-option-row">
+              <!-- Correct/incorrect toggle button -->
+              <button type="button" 
+                      class="correct-toggle" 
+                      [class.correct-toggle--on]="opt.isCorrect"
+                      [disabled]="isQuizApproved"
+                      (click)="toggleDraftCorrect(q, oi)">
+                <mat-icon *ngIf="q.draftType === 'SINGLE_CHOICE' || q.draftType === 'TRUE_FALSE'">
+                  {{ opt.isCorrect ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                </mat-icon>
+                <mat-icon *ngIf="q.draftType !== 'SINGLE_CHOICE' && q.draftType !== 'TRUE_FALSE'">
+                  {{ opt.isCorrect ? 'check_box' : 'check_box_outline_blank' }}
+                </mat-icon>
+              </button>
+
+              <!-- Option text input -->
+              <input type="text" 
+                     class="edit-option-input" 
+                     [(ngModel)]="opt.text"
+                     [disabled]="isQuizApproved || q.draftType === 'TRUE_FALSE'"
+                     placeholder="Option text" />
+
+              <!-- Remove option button (hidden if True/False, or if only 2 options) -->
+              <button *ngIf="q.draftType !== 'TRUE_FALSE' && q.draftOptions.length > 2 && !isQuizApproved"
+                      type="button"
+                      class="remove-option-btn"
+                      (click)="removeDraftOption(q, oi)"
+                      title="Remove option">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <!-- Add option inline (hidden if True/False, or >= 6 options) -->
+            <div *ngIf="q.draftType !== 'TRUE_FALSE' && q.draftOptions.length < 6 && !isQuizApproved">
+              <button type="button"
+                      class="add-option-btn-inline"
+                      (click)="addDraftOption(q)">
+                <mat-icon>add</mat-icon> Add Option
+              </button>
+            </div>
+          </div>
+
           <p *ngIf="q.editError" class="edit-error"><mat-icon>warning</mat-icon> {{ q.editError }}</p>
           <div class="edit-actions">
             <button type="button" class="btn-cancel-edit" (click)="cancelEdit(q)">Cancel</button>
@@ -449,10 +542,23 @@
     </div>
 
     <!-- Approve bar (outside quiz list - on quiz card) -->
-    <div *ngIf="!isQuizApproved" class="approve-bar">
-      <p class="approve-hint"><mat-icon>lightbulb</mat-icon> Students won't see this quiz until you approve it.</p>
+    <div *ngIf="!isQuizApproved && (isManualMode ? reviewQuestions.length >= 10 : reviewQuestions.length > 0)" class="approve-bar">
+      <!-- Progress hint for manual mode -->
+      <p *ngIf="isManualMode && reviewQuestions.length < 10" class="approve-hint">
+        <mat-icon>edit_note</mat-icon>
+        {{ reviewQuestions.length }}/10 questions — add {{ 10 - reviewQuestions.length }} more to unlock publishing.
+      </p>
+      <p *ngIf="!isManualMode || reviewQuestions.length >= 10" class="approve-hint">
+        <mat-icon>lightbulb</mat-icon> Students won't see this quiz until you approve it.
+      </p>
       <app-main-button [label]="'Approve & Publish'" [loading]="approveLoading" (action)="approve()"></app-main-button>
     </div>
+    <!-- Progress hint shown below the list when under 10 questions in manual mode -->
+    <p *ngIf="isManualMode && !isQuizApproved && reviewQuestions.length > 0 && reviewQuestions.length < 10"
+       class="manual-progress-hint">
+      <mat-icon>info</mat-icon>
+      {{ reviewQuestions.length }}/10 questions — add {{ 10 - reviewQuestions.length }} more to unlock "Approve &amp; Publish".
+    </p>
 
     <!-- Back to quiz list -->
     <div class="mt-6 flex justify-start">
