@@ -1,224 +1,155 @@
-<div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6 min-h-screen">
 
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-
       <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">
-        Super Admin Dashboard
+      Super Admin Dashboard
       </h1>
-      <p class="page-subtitle">
+      <p class="text-[12.5px] text-slate-400 mt-0.5 font-medium">
         Monitor platform performance, revenue, and system health in real-time.
       </p>
     </div>
-
     <div class="flex items-center gap-3">
       <!-- Date Picker Placeholder -->
-
-
-
     </div>
   </div>
 
   @if (isLoading) {
-  <!-- Skeleton loader: 6 cards matching real layout -->
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+  <!-- Skeleton loader -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
     @for (i of kpiSkeletons; track i) {
-    <div
-      class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden animate-pulse">
-      <!-- icon + label row -->
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl bg-slate-50 shrink-0"></div>
-        <div class="h-3 bg-slate-50 rounded-full w-20"></div>
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3 h-[120px] animate-pulse">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-slate-100 shrink-0"></div>
+        <div class="h-2.5 bg-slate-100 rounded-full w-20"></div>
       </div>
-      <!-- value -->
-      <div class="h-7 bg-slate-50 rounded-lg w-16 mb-2"></div>
-      <!-- trend -->
-      <div class="h-2.5 bg-slate-50 rounded-full w-24 mb-1"></div>
-      <!-- sparkline area -->
-      <div class="mt-auto h-[50px] w-full bg-slate-50 rounded-lg opacity-50"></div>
+      <div class="h-6 bg-slate-100 rounded-lg w-24"></div>
     </div>
     }
   </div>
   } @else {
-  <!-- Top 6 KPI Cards -->
+
+  <!-- ── Stat Cards ──────────────────────────────────────── -->
   @if (overview) {
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+
     <!-- 1. Platform Revenue -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600 shrink-0">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">attach_money</mat-icon>
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-500 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">attach_money</mat-icon>
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Platform Revenue</span>
       </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[18px] font-black text-slate-800 leading-none">{{ overview.platformRevenue | number
-          }} EGP</span>
-      </div>
-      <div class="mt-auto w-full h-[75px]">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-          <defs>
-            <linearGradient id="gradIndigo" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#6366F1" stop-opacity="0.15" />
-              <stop offset="100%" stop-color="#6366F1" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <path [attr.d]="getSparkFill(revenueSparkData)" fill="url(#gradIndigo)" />
-          <path [attr.d]="getSparkPath(revenueSparkData)" fill="none" stroke="#6366F1" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview.platformRevenue |
+        number }} EGP</span>
     </div>
 
     <!-- 2. Payout Liability -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-50 text-rose-500 shrink-0">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">account_balance_wallet</mat-icon>
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-rose-50 text-rose-400 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">account_balance_wallet</mat-icon>
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Payout Liability</span>
       </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[18px] font-black text-slate-800 leading-none">{{ overview.payoutLiability | number
-          }} EGP</span>
-      </div>
-      <div class="mt-auto w-full h-[75px]">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-          <defs>
-            <linearGradient id="gradRose" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.15" />
-              <stop offset="100%" stop-color="#F43F5E" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <path [attr.d]="getSparkFill(liabilitySparkData)" fill="url(#gradRose)" />
-          <path [attr.d]="getSparkPath(liabilitySparkData)" fill="none" stroke="#F43F5E" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview.payoutLiability |
+        number }} EGP</span>
     </div>
 
     <!-- 3. Pending Payouts -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-50 text-orange-500 shrink-0">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">payments</mat-icon>
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-orange-50 text-orange-400 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">payments</mat-icon>
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Pending Payouts</span>
       </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[24px] font-black text-slate-800 leading-none">{{ overview.pendingPayouts | number }}</span>
-      </div>
-      <div class="mt-auto w-full h-[75px]">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-          <defs>
-            <linearGradient id="gradOrange" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F97316" stop-opacity="0.15" />
-              <stop offset="100%" stop-color="#F97316" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <path [attr.d]="getSparkFill(payoutsSparkData)" fill="url(#gradOrange)" />
-          <path [attr.d]="getSparkPath(payoutsSparkData)" fill="none" stroke="#F97316" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none">{{ overview.pendingPayouts | number }}</span>
     </div>
 
-    <!-- 4. Active Admins -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">admin_panel_settings</mat-icon>
-        </div>
-        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Active Admins</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[24px] font-black text-slate-800 leading-none">{{ overview.activeAdmins | number }}</span>
-      </div>
-      <div class="mt-auto w-full h-[75px]">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-          <defs>
-            <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#A855F7" stop-opacity="0.15" />
-              <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <path [attr.d]="getSparkFill(adminsSparkData)" fill="url(#gradPurple)" />
-          <path [attr.d]="getSparkPath(adminsSparkData)" fill="none" stroke="#A855F7" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
-    </div> <!-- 5. Platform Fee -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-teal-50 text-teal-600 shrink-0">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">percent</mat-icon>
-        </div>
-        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Platform Fee</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[24px] font-black text-slate-800 leading-none">{{ platformConfig?.platformFeePercent
-          }}%</span>
-      </div>
-      <div class="mt-auto w-full h-[75px]">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-          <defs>
-            <linearGradient id="gradTeal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.15" />
-              <stop offset="100%" stop-color="#14B8A6" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <path [attr.d]="getSparkFill(feeSparkData)" fill="url(#gradTeal)" />
-          <path [attr.d]="getSparkPath(feeSparkData)" fill="none" stroke="#14B8A6" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
-    </div>
-
-    <!-- 6. System Status -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col h-[155px] overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+    <!-- 4. System Status -->
+    <div
+      class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
           [ngClass]="isSystemOperational ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">{{ isSystemOperational ? 'check_circle' : 'error'
-            }}</mat-icon>
+          <mat-icon class="!text-[16px] !w-4 !h-4">{{ isSystemOperational ? 'check_circle' : 'error' }}</mat-icon>
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">System Status</span>
       </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-[18px] font-black leading-none mt-1"
+      <div class="flex flex-col gap-0.5">
+        <span class="text-2xl font-bold leading-none"
           [ngClass]="isSystemOperational ? 'text-emerald-600' : 'text-rose-600'">
           {{ overview.systemStatus | titlecase }}
         </span>
-        <div class="text-[12px] font-medium mt-1" [ngClass]="isSystemOperational ? 'text-slate-400' : 'text-rose-500'">
-          {{ isSystemOperational ? 'All systems perfectly healthy' : 'Action required, issues detected' }}
-        </div>
+        <span class="text-[11px] font-medium text-slate-400 mt-1">
+          {{ isSystemOperational ? 'All systems healthy' : 'Action required' }}
+        </span>
       </div>
+    </div>
+
+  </div>
+  }
+
+  <!-- ── Critical Alerts (conditional) ─────────────────── -->
+  @if (overview && overview.criticalAlerts && overview.criticalAlerts.length > 0) {
+  <div class="bg-rose-50 border border-rose-100 rounded-2xl px-5 py-4 shadow-sm">
+    <div class="flex items-center justify-between mb-3 pb-3 border-b border-rose-100/60">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-rose-500 !text-[16px] !w-4 !h-4">notifications_active</mat-icon>
+        <h2 class="text-[13px] font-semibold text-slate-700">Critical Alerts</h2>
+      </div>
+      <button (click)="goTo('/admin/notifications')"
+        class="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View All</button>
+    </div>
+    <div class="flex flex-col gap-2">
+      @for (alert of overview.criticalAlerts; track alert.type) {
+      <div class="flex items-start gap-3 py-2">
+        @if (alert.type === 'payout_backlog') {
+        <mat-icon class="text-amber-500 !text-[16px] !w-4 !h-4 mt-0.5 shrink-0">warning</mat-icon>
+        <div class="flex flex-col">
+          <span class="text-[12.5px] font-semibold text-slate-700">Payout Backlog</span>
+          <span class="text-[11px] text-slate-400">{{ alert.count }} pending payouts · Oldest from: {{
+            alert.oldestPendingDate | date:'mediumDate' }}</span>
+        </div>
+        }
+        @if (alert.type === 'webhook_failure') {
+        <mat-icon class="text-rose-500 !text-[16px] !w-4 !h-4 mt-0.5 shrink-0">error_outline</mat-icon>
+        <div class="flex flex-col">
+          <span class="text-[12.5px] font-semibold text-slate-700">Webhook Failure: {{ alert.service }}</span>
+          <span class="text-[11px] text-slate-400">{{ alert.occurredCount }} occurrences</span>
+        </div>
+        }
+      </div>
+      }
     </div>
   </div>
   }
 
-
-  <!-- Second Row -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- ── Row 2: Revenue Overview + Payout Overview ──────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
     <!-- Revenue Overview -->
     <div class="col-span-1 lg:col-span-8 bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col">
-      <div class="flex items-center justify-between px-7 py-6 border-b border-slate-50">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <h2 class="text-[15px] font-bold text-slate-800">Revenue Overview</h2>
-        <!-- 'Last 7 Days' removed — keeping only 'View All' actions -->
       </div>
-      <div class="px-6 pt-5 pb-3 flex-1 flex flex-col justify-between">
+      <div class="px-6 pt-5 pb-4 flex-1 flex flex-col">
         <div class="flex flex-col mb-4">
-          <span class="text-[26px] font-black text-slate-800 leading-none">{{ overview?.platformRevenue | number
-            }} EGP</span>
-          <span class="block text-[11.5px] font-semibold text-slate-500 mt-1">Total Revenue</span>
-          <span class="block text-[11px] font-bold mt-1" [ngClass]="revenueGrowthClass">
+          <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview?.platformRevenue |
+            number }} EGP</span>
+          <span class="block text-[11px] font-medium text-slate-400 mt-1">Total Revenue</span>
+          <span class="block text-[11px] font-semibold mt-1" [ngClass]="revenueGrowthClass">
             {{ revenueGrowthLabel }}
           </span>
         </div>
 
-        <div class="flex-1 relative min-h-[120px]">
+        <div class="flex-1 relative min-h-[140px]">
           <!-- Chart implementation -->
           <svg class="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
             <line x1="55" y1="20" x2="480" y2="20" stroke="#F1F5F9" stroke-width="1.2" />
@@ -226,26 +157,26 @@
             <line x1="55" y1="100" x2="480" y2="100" stroke="#F1F5F9" stroke-width="1.2" />
             <line x1="55" y1="140" x2="480" y2="140" stroke="#F1F5F9" stroke-width="1.2" />
 
-            <text x="50" y="24" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
-              getRevenueYLabel(3) }}</text>
-            <text x="50" y="64" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
-              getRevenueYLabel(2) }}</text>
+            <text x="50" y="24" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{ getRevenueYLabel(3)
+              }}</text>
+            <text x="50" y="64" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{ getRevenueYLabel(2)
+              }}</text>
             <text x="50" y="104" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
               getRevenueYLabel(1) }}</text>
             <text x="50" y="144" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">0 EGP</text>
 
             <defs>
               <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#6366F1" stop-opacity="0.15" />
-                <stop offset="100%" stop-color="#6366F1" stop-opacity="0.0" />
+                <stop offset="0%" stop-color="#2A1069" stop-opacity="0.15" />
+                <stop offset="100%" stop-color="#2A1069" stop-opacity="0.0" />
               </linearGradient>
             </defs>
             <!-- Dynamic curve driven by backend platformRevenue -->
             <path [attr.d]="getRevenueFillPath()" fill="url(#revGrad)" />
-            <path [attr.d]="getRevenuePath()" fill="none" stroke="#6366F1" stroke-width="2.5" />
+            <path [attr.d]="getRevenuePath()" fill="none" stroke="#2A1069" stroke-width="2.5" />
 
             @for (pt of getRevenuePoints(); track $index) {
-            <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#6366F1" stroke="#fff" stroke-width="2" />
+            <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#2A1069" stroke="#fff" stroke-width="2" />
             }
 
             @for (day of revenueDays; track $index) {
@@ -259,15 +190,15 @@
 
     <!-- Payout Overview -->
     <div class="col-span-1 lg:col-span-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col">
-      <div class="flex items-center justify-between px-7 py-6 border-b border-slate-50">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <h2 class="text-[15px] font-bold text-slate-800">Payout Overview</h2>
         <button (click)="goTo('/admin/payouts')"
-          class="flex items-center gap-1 text-[11px] font-semibold text-indigo-500 hover:text-indigo-700">
-          View All Payouts <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">arrow_forward</mat-icon>
+          class="flex items-center gap-1 text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">
+          View All <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">arrow_forward</mat-icon>
         </button>
       </div>
-      <div class="p-5 flex flex-col xl:flex-row items-center justify-center flex-1 gap-6">
-        <div class="relative w-[115px] h-[115px] drop-shadow-xl shrink-0">
+      <div class="p-5 flex flex-col xl:flex-row items-center justify-center flex-1 gap-5">
+        <div class="relative w-[110px] h-[110px] shrink-0">
           <svg viewBox="0 0 144 144" class="w-full h-full transform -rotate-90">
             <!-- Purple (Paid) 75% -->
             <circle cx="72" cy="72" r="48" fill="none" stroke="#8B5CF6" stroke-width="28" stroke-dasharray="226 301"
@@ -280,27 +211,27 @@
               stroke-dashoffset="-277" />
           </svg>
           <div
-            class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-[26px] shadow-inner">
-            <span class="text-[13px] font-black text-slate-800 leading-none flex flex-col items-center gap-0.5">
-              <span>{{ overview?.payoutLiability | number }}</span>
-              <span class="text-[9px] font-bold text-slate-400">EGP</span>
-            </span>
-            <span class="text-[8px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Liability</span>
+            class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-[25px] shadow-sm">
+            <span class="text-[13px] font-bold text-slate-800 leading-none">{{ overview?.payoutLiability | number
+              }}</span>
+            <span
+              class="text-[9px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide leading-tight text-center">EGP<br>Liability</span>
           </div>
         </div>
 
-        <div class="flex flex-col gap-2 w-full px-2">
+        <div class="flex flex-col gap-2 w-full">
           @for (item of payoutStatus; track item.label) {
           <div
-            class="flex flex-col gap-1 w-full bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
+            class="flex flex-col gap-0.5 w-full bg-slate-50/70 px-3 py-2 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background]="item.color"></span>
-                <span class="text-[11.5px] font-bold text-slate-600">{{ item.label }}</span>
+                <span class="w-2 h-2 rounded-full shrink-0" [style.background]="item.color"></span>
+                <span class="text-[11px] font-semibold text-slate-600">{{ item.label }}</span>
               </div>
-              <span class="text-[10px] font-bold text-slate-400">({{ item.percent }}%)</span>
+              <span class="text-[10px] font-medium text-slate-400">{{ item.percent }}%</span>
             </div>
-            <span class="text-[13px] font-black text-slate-800 pl-4.5">{{ item.value | number }} EGP</span>
+            <span class="text-[12px] font-bold text-slate-700 pl-4 whitespace-nowrap">{{ item.value | number }}
+              EGP</span>
           </div>
           }
         </div>
@@ -308,69 +239,69 @@
     </div>
   </div>
 
-  <!-- Third Row -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- ── Row 3: System Health + Platform Activity + Top Admins ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
     <!-- System Health Score -->
-    <div class="col-span-1 lg:col-span-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col">
-      <div class="flex items-center justify-between px-7 py-6 border-b border-slate-50">
-        <h2 class="text-[15px] font-bold text-slate-800">System Health Score</h2>
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-[15px] font-bold text-slate-800">System Health</h2>
       </div>
-      <div class="px-7 py-6 flex flex-col flex-1">
-        <div class="flex justify-center mb-6">
-          <svg viewBox="0 0 144 100" class="w-[130px] h-[80px]">
+      <div class="px-6 py-5 flex flex-col flex-1">
+        <div class="flex justify-center mb-5">
+          <svg viewBox="0 0 144 100" class="w-[120px] h-[75px]">
             <!-- Track -->
             <path d="M 16 88 A 56 56 0 1 1 128 88" fill="none" stroke="#F1F5F9" stroke-width="14"
               stroke-linecap="round" />
             <!-- Score -->
             <path d="M 16 88 A 56 56 0 1 1 128 88" fill="none" [attr.stroke]="healthScoreColor" stroke-width="14"
               stroke-linecap="round" [attr.stroke-dasharray]="healthGaugeDash" />
-            <text x="72" y="70" text-anchor="middle" font-size="24" font-weight="900" fill="#1E293B"
+            <text x="72" y="70" text-anchor="middle" font-size="22" font-weight="700" fill="#1E293B"
               font-family="sans-serif">{{ healthScore }}%</text>
-            <text x="72" y="85" text-anchor="middle" font-size="10" font-weight="600" [attr.fill]="healthScoreColor"
+            <text x="72" y="84" text-anchor="middle" font-size="9" font-weight="600" [attr.fill]="healthScoreColor"
               font-family="sans-serif">{{ healthScoreLabel }}</text>
           </svg>
         </div>
 
-        <div class="flex flex-col gap-3 mt-auto">
+        <div class="flex flex-col gap-2.5 mt-auto">
           @if (systemHealth) {
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]"
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]"
                 [ngClass]="isApiHealthy ? 'text-emerald-500' : 'text-rose-500'">{{ isApiHealthy ? 'check_circle' :
                 'error' }}</mat-icon>
-              <span class="text-[12px] font-semibold text-slate-600">API Status</span>
+              <span class="text-[12px] font-medium text-slate-600">API Status</span>
             </div>
-            <span class="text-[11px] font-bold" [ngClass]="isApiHealthy ? 'text-emerald-600' : 'text-rose-600'">{{
+            <span class="text-[11px] font-semibold" [ngClass]="isApiHealthy ? 'text-emerald-600' : 'text-rose-600'">{{
               systemHealth.apiStatus | titlecase }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-500">check_circle</mat-icon>
-              <span class="text-[12px] font-semibold text-slate-600">Database</span>
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-emerald-500">check_circle</mat-icon>
+              <span class="text-[12px] font-medium text-slate-600">Database</span>
             </div>
-            <span class="text-[11px] font-bold text-emerald-600">Healthy</span>
+            <span class="text-[11px] font-semibold text-emerald-600">Healthy</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]"
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]"
                 [ngClass]="systemHealth.webhookFailuresLast24h === 0 ? 'text-emerald-500' : 'text-rose-500'">{{
                 systemHealth.webhookFailuresLast24h === 0 ? 'check_circle' : 'error' }}</mat-icon>
-              <span class="text-[12px] font-semibold text-slate-600">Webhooks</span>
+              <span class="text-[12px] font-medium text-slate-600">Webhooks</span>
             </div>
-            <span class="text-[11px] font-bold"
+            <span class="text-[11px] font-semibold"
               [ngClass]="systemHealth.webhookFailuresLast24h === 0 ? 'text-emerald-600' : 'text-rose-600'">{{
               systemHealth.webhookFailuresLast24h === 0 ? 'Healthy' : systemHealth.webhookFailuresLast24h + ' errors'
               }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between py-1">
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]"
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]"
                 [ngClass]="(systemHealth.errorRateLast24h ?? 0) < 1 ? 'text-emerald-500' : 'text-orange-500'">{{
                 (systemHealth.errorRateLast24h ?? 0) < 1 ? 'check_circle' : 'warning' }}</mat-icon>
-                  <span class="text-[12px] font-semibold text-slate-600">Services</span>
+                  <span class="text-[12px] font-medium text-slate-600">Services</span>
             </div>
-            <span class="text-[11px] font-bold"
+            <span class="text-[11px] font-semibold"
               [ngClass]="(systemHealth.errorRateLast24h ?? 0) < 1 ? 'text-emerald-600' : 'text-orange-600'">All
               Operational</span>
           </div>
@@ -380,52 +311,53 @@
     </div>
 
     <!-- Platform Activity -->
-    <div
-      class="col-span-1 lg:col-span-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col p-7 relative">
-      <div class="flex items-center justify-between mb-3">
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col p-6">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-[15px] font-bold text-slate-800">Platform Activity</h2>
-        <!-- 'Last 7 Days' removed — keeping only 'View All' actions -->
       </div>
 
-      <div class="flex flex-col z-10 mb-6">
-        <span class="text-[26px] font-black text-slate-800 leading-none">{{ recentEvents.length }}</span>
-        <span class="text-[11px] font-semibold text-slate-500 mt-1">Activities Tracked</span>
-        <span class="text-[11px] font-bold text-emerald-500 mt-1">Real-time Backend Logs</span>
+      <div class="flex flex-col mb-5">
+        <span class="text-2xl font-bold text-slate-800 leading-none">{{ recentEvents.length }}</span>
+        <span class="text-[11px] font-medium text-slate-400 mt-1">Activities Tracked</span>
+        <span class="text-[11px] font-semibold text-emerald-500 mt-0.5">Real-time Backend Logs</span>
       </div>
 
-      <div class="flex items-end justify-between flex-1 mt-auto h-[90px] pb-5">
+      <div class="flex items-end justify-between flex-1 mt-auto h-[90px] pb-5 gap-1">
         @for (val of activityValues; track $index) {
-        <div class="flex flex-col items-center gap-2 h-full justify-end w-[10%] group cursor-pointer">
-          <div class="w-full bg-[#2A1069] rounded-sm transition-all opacity-90 group-hover:opacity-100"
+        <div class="flex flex-col items-center gap-1.5 h-full justify-end flex-1 group cursor-pointer">
+          <div class="w-full rounded-sm transition-all opacity-75 group-hover:opacity-100 min-h-[2px]"
+            style="background:#2A1069"
             [style.height]="((val/maxActivityValue)*100) + '%'"></div>
-          <span class="text-[9px] font-bold text-slate-400">{{ activityDays[$index] }}</span>
+          <span class="text-[9px] font-medium text-slate-400">{{ activityDays[$index] }}</span>
         </div>
         }
       </div>
     </div>
 
     <!-- Top Admins -->
-    <div class="col-span-1 lg:col-span-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col p-7">
-      <div class="flex items-center justify-between mb-5">
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col p-6">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-[15px] font-bold text-slate-800">Top Admins by Activity</h2>
-        <!-- 'Last 7 Days' removed — keeping only 'View All' actions -->
       </div>
 
-      <div class="flex flex-col gap-4 mt-2">
+      <div class="flex flex-col gap-3 mt-1">
         @for (admin of getTopAdmins(); track admin.id; let i = $index) {
         <div class="flex items-center gap-3">
-          <span class="text-[12px] font-bold text-slate-400 w-3">{{ i + 1 }}</span>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+          <span class="text-[11px] font-semibold text-slate-300 w-4 text-center shrink-0">{{ i + 1 }}</span>
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
             [style.background]="['#6366F1','#8B5CF6','#A78BFA','#C4B5FD'][i]">
             {{ admin.initials }}
           </div>
-          <div class="flex flex-col min-w-0 w-[120px]">
-            <span class="text-[12px] font-bold text-slate-700 truncate">{{ admin.name }}</span>
-            <span class="text-[10px] text-slate-500">{{ admin.actionsThisMonth }} activities</span>
-          </div>
-          <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden ml-2">
-            <div class="h-full rounded-full" [style.background]="['#6366F1','#8B5CF6','#A78BFA','#C4B5FD'][i]"
-              [style.width]="admin.barPct + '%'"></div>
+          <div class="flex flex-col min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[12px] font-semibold text-slate-700 truncate">{{ admin.name }}</span>
+              <span class="text-[10px] font-medium text-slate-400 shrink-0">{{ admin.actionsThisMonth }}</span>
+            </div>
+            <div class="h-1 bg-slate-100 rounded-full overflow-hidden mt-1">
+              <div class="h-full rounded-full transition-all"
+                [style.background]="['#6366F1','#8B5CF6','#A78BFA','#C4B5FD'][i]" [style.width]="admin.barPct + '%'">
+              </div>
+            </div>
           </div>
         </div>
         }
@@ -433,98 +365,57 @@
     </div>
   </div>
 
-  <!-- Fourth Row: Alerts and Events (Spans Full Width, Split 50/50 inside) -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-    <!-- Critical Alerts -->
-    <div class="flex flex-col">
-      @if (overview && overview.criticalAlerts && overview.criticalAlerts.length > 0) {
-      <div class="bg-rose-50 border border-rose-100 rounded-2xl p-6 shadow-sm h-full flex flex-col">
-        <div class="flex items-center justify-between mb-4 border-b border-rose-100/50 pb-4">
-          <div class="flex items-center gap-2">
-            <mat-icon class="text-rose-500 !text-[18px] !w-[18px] !h-[18px]">notifications_active</mat-icon>
-            <h2 class="text-[14px] font-bold text-rose-700">Critical Alerts</h2>
-          </div>
-          <button (click)="goTo('/admin/notifications')"
-            class="text-[11px] font-bold text-indigo-500 hover:text-indigo-700">View All</button>
+  <!-- ── Recent System Events (full width) ──────────────── -->
+  <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 flex flex-col">
+    <div class="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-indigo-400 !text-[18px] !w-[18px] !h-[18px]">history</mat-icon>
+        <h2 class="text-[15px] font-bold text-slate-800">Recent System Events</h2>
+      </div>
+      <button (click)="goTo('/admin/audit-logs')"
+        class="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View All</button>
+    </div>
+
+    <div class="flex flex-col gap-0">
+      @for (event of recentEvents; track event.id; let isLast = $last) {
+      <div class="flex items-start gap-4 py-3.5" [class.border-b]="!isLast" [class.border-slate-50]="!isLast">
+        <!-- Icon -->
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          [ngClass]="getEventIconClass(event.action)">
+          <mat-icon class="!text-[16px] !w-4 !h-4">{{ getEventIcon(event.action) }}</mat-icon>
         </div>
-        <div class="flex flex-col gap-3">
-          @for (alert of overview.criticalAlerts; track alert.type) {
-          <div class="bg-white rounded-xl p-4 flex items-start gap-3 shadow-sm">
-            @if (alert.type === 'payout_backlog') {
-            <mat-icon class="text-amber-500 !text-[18px] !w-[18px] !h-[18px] mt-0.5">warning</mat-icon>
-            <div class="flex flex-col">
-              <span class="text-[13px] font-bold text-slate-800">Payout Backlog</span>
-              <span class="text-[11px] text-slate-500">{{ alert.count }} pending payouts</span>
-              <span class="text-[10px] text-slate-400 mt-1">Oldest from: {{ alert.oldestPendingDate | date:'medium'
-                }}</span>
-            </div>
-            }
-            @if (alert.type === 'webhook_failure') {
-            <mat-icon class="text-rose-500 !text-[18px] !w-[18px] !h-[18px] mt-0.5">error_outline</mat-icon>
-            <div class="flex flex-col">
-              <span class="text-[13px] font-bold text-slate-800">Webhook Failure: {{ alert.service }}</span>
-              <span class="text-[11px] text-slate-500">{{ alert.occurredCount }} times</span>
-            </div>
-            }
+
+        <!-- Details -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-4">
+            <span class="text-[13px] font-semibold text-slate-700 leading-tight truncate">
+              {{ getEventLabel(event.action) }}
+            </span>
+            <span
+              class="text-[10px] font-medium text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 shrink-0">
+              {{ getTimeAgo(event.createdAt) }}
+            </span>
           </div>
-          }
+          <!-- Actor Info -->
+          <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+            <mat-icon class="!text-[11px] !w-[11px] !h-[11px]">account_circle</mat-icon>
+            <span>By</span>
+            <span class="font-semibold text-slate-500 truncate">{{ event.performedBy.name || 'System' }}</span>
+            <span class="text-slate-200">·</span>
+            <span class="font-mono text-[10px]">{{ event.performedBy.id | slice:0:8 }}</span>
+          </div>
         </div>
       </div>
       }
-    </div>
-
-    <!-- Recent Events -->
-    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 flex-1 flex flex-col h-full">
-      <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-        <div class="flex items-center gap-2">
-          <mat-icon class="text-[#2A1069] !text-[20px] !w-5 !h-5">history</mat-icon>
-          <h2 class="text-[14px] font-bold text-slate-800">Recent System Events</h2>
-        </div>
-        <button (click)="goTo('/admin/audit-logs')"
-          class="text-[11px] font-bold text-indigo-500 hover:text-indigo-700">View All</button>
+      @if (!recentEvents.length) {
+      <div class="flex flex-col items-center justify-center py-10 text-slate-300">
+        <mat-icon class="!w-9 !h-9 !text-[36px] opacity-40 mb-2">event_busy</mat-icon>
+        <p class="text-[12px] font-semibold text-slate-400">No events logged yet</p>
+        <p class="text-[11px] text-slate-300 mt-1">Actions performed will appear here.</p>
       </div>
-
-      <div class="flex flex-col gap-4 flex-1">
-        @for (event of recentEvents; track event.id; let isLast = $last) {
-        <div class="flex items-start gap-4 pb-4" [class.border-b]="!isLast" [class.border-slate-50]="!isLast">
-          <!-- Icon with beautiful background -->
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white"
-            [ngClass]="getEventIconClass(event.action)">
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">{{ getEventIcon(event.action) }}</mat-icon>
-          </div>
-
-          <!-- Details -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-4">
-              <span class="text-[13px] font-bold text-slate-800 leading-tight truncate">
-                {{ getEventLabel(event.action) }}
-              </span>
-              <span
-                class="text-[10px] font-semibold text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-                {{ getTimeAgo(event.createdAt) }}
-              </span>
-            </div>
-
-            <!-- Actor Info -->
-            <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 font-medium">
-              <mat-icon class="!text-[12px] !w-3 !h-3 text-slate-400">account_circle</mat-icon>
-              <span>By:</span>
-              <span class="font-bold text-slate-600 truncate">{{ event.performedBy.name || 'System' }}</span>
-              <span class="text-slate-300">•</span>
-              <span class="text-[10px] text-slate-400 font-mono">ID: {{ event.performedBy.id | slice:0:8 }}</span>
-            </div>
-          </div>
-        </div>
-        }
-        @if (!recentEvents.length) {
-        <div class="flex flex-col items-center justify-center py-8 text-slate-400 flex-1">
-          <mat-icon class="!w-10 !h-10 !text-[40px] opacity-25 mb-2">event_busy</mat-icon>
-          <p class="text-[12px] font-semibold text-slate-500">No events logged yet</p>
-          <p class="text-[10.5px] text-slate-400 text-center mt-1">Actions performed will appear here.</p>
-        </div>
-        }
-      </div>
+      }
     </div>
   </div>
+
   }
 </div>

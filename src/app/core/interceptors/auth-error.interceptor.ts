@@ -69,7 +69,19 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
           !isAuthCall &&
           authService.isAuthenticated()
         ) {
-          redirectToLogin();
+          // Read the reason from the response body before clearing state
+          const body = error.error as Record<string, unknown> | null;
+          const isBlocked =
+            body?.['isBlocked'] === true ||
+            body?.['blocked'] === true ||
+            String(body?.['message'] ?? '').toLowerCase().includes('blocked');
+
+          const role = authService.getCurrentUser()?.role;
+          authService.clearCurrentUser();
+          const target = role === 'admin' || role === 'superadmin' ? '/admin-login' : '/login';
+          void router.navigate([target], {
+            queryParams: isBlocked ? { blocked: true } : { deactivated: true },
+          });
         }
       }
       return throwError(() => error);

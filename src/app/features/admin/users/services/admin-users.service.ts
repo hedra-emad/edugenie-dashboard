@@ -28,11 +28,11 @@ export class AdminUsersService {
     return this.http.patch(`/admin/users/${userId}/deactivate`, { reason });
   }
 
-  reactivateUser(userId: string): Observable<any> {
-    return this.http.patch(`/admin/users/${userId}/reactivate`, {});
+  blockUser(userId: string, reason: string): Observable<any> {
+    return this.http.patch(`/admin/users/${userId}/block`, { reason });
   }
 
-  deleteUser(userId: string, reason: string): Observable<any> {
-    return this.http.delete(`/admin/users/${userId}`, { body: { reason } });
+  reactivateUser(userId: string): Observable<any> {
+    return this.http.patch(`/admin/users/${userId}/reactivate`, {});
   }
 }
