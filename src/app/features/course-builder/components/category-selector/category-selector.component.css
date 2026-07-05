@@ -1,23 +1,37 @@
-.category-btn--selected {
-  background-color: var(--color-primary);
-  color: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(59, 24, 146, 0.2);
+@keyframes fadeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.category-btn--unselected {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
+.animate-fadeScaleIn {
+  animation: fadeScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.category-btn--unselected:hover {
-  background-color: var(--color-background-page);
-  border-color: var(--color-primary-light);
+/* Smooth scrollbar styling for dropdown list */
+.max-h-64 {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
-.category-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.max-h-64::-webkit-scrollbar {
+  width: 4px;
+}
+
+.max-h-64::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.max-h-64::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.max-h-64::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }

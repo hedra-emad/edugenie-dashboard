@@ -48,6 +48,14 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     private backupLocalPreviewUrl: string | null = null;
 
     /**
+     * Snapshot of the currently-saved video (url + publicId), captured the
+     * moment a replacement file is selected — BEFORE the form gets overwritten
+     * with the placeholder filename. Exists solely so discardReplacement() can
+     * restore the true saved state. Null whenever there is no pending replacement.
+     */
+    private originalSavedVideo: { url: string; publicId: string } | null = null;
+
+    /**
      * Tracks the public ID of the OLD video that should be deleted from Cloudinary
      * AFTER a successful save. Populated when the user replaces or removes a video.
      * The parent component reads this after its API call succeeds.
@@ -94,6 +102,16 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     get previewUrl(): string | null {
         if (this.localPreviewUrl) return this.localPreviewUrl;
         return this.previewVideoUrlControl?.value || null;
+    }
+
+    /**
+     * True when the user has selected a local file to replace an EXISTING saved
+     * video, and that replacement has not yet been uploaded. This is what
+     * distinguishes "replacing a saved video" (→ show Discard) from "uploading
+     * for the very first time" (→ no saved video to fall back to, so no Discard).
+     */
+    get hasPendingReplacement(): boolean {
+        return !!this.selectedFile && !!this.originalSavedVideo;
     }
 
     ngOnInit() {
@@ -198,6 +216,18 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
             URL.revokeObjectURL(this.localPreviewUrl);
         }
 
+        // Capture the currently-saved video BEFORE this call overwrites the form,
+        // but only the first time — if a replacement is already pending, keep the
+        // original backup so re-selecting a different file doesn't lose the true
+        // saved state.
+        if (!this.originalSavedVideo && this.hasSavedVideo) {
+            const savedUrl = this.previewVideoUrlControl?.value;
+            const savedPublicId = this.previewVideoPublicIdControl?.value;
+            if (savedUrl && savedPublicId) {
+                this.originalSavedVideo = { url: savedUrl, publicId: savedPublicId };
+            }
+        }
+
         this.selectedFile = file;
         this.localPreviewUrl = URL.createObjectURL(file);
 
@@ -251,6 +281,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
             this.previewVideoPublicIdControl?.markAsPristine();
             this.previewVideoPublicIdControl?.updateValueAndValidity();
 
+            this.originalSavedVideo = null;
             this.updateSnapshot({ state: 'idle', message: '' });
             return;
         }
@@ -276,6 +307,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
         this.previewVideoUrlControl?.markAsDirty();
         this.previewVideoUrlControl?.updateValueAndValidity();
 
+        this.originalSavedVideo = null;
         this.markedForDeletion.set(true);
         this.updateSnapshot({ state: 'saved' });
     }
@@ -306,6 +338,47 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Discards a PENDING REPLACEMENT ONLY. Restores the original saved video's
+     * form values exactly as they were before the user picked a replacement file.
+     * Does NOT mark anything for deletion, does NOT call Cloudinary, does NOT
+     * touch pendingDeletePublicId beyond clearing it, and does NOT affect the
+     * saved video in the database in any way. No-op if there is no pending
+     * replacement (defensive guard).
+     */
+    discardReplacement() {
+        if (!this.hasPendingReplacement || !this.originalSavedVideo) {
+            return;
+        }
+
+        this.videoError = null;
+
+        // Drop the pending local file from the draft system entirely.
+        this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
+
+        if (this.localPreviewUrl) {
+            URL.revokeObjectURL(this.localPreviewUrl);
+        }
+        this.selectedFile = null;
+        this.localPreviewUrl = null;
+
+        // Restore the form to exactly what was saved before the replacement began.
+        this.previewVideoUrlControl?.setValue(this.originalSavedVideo.url);
+        this.previewVideoUrlControl?.markAsPristine();
+        this.previewVideoUrlControl?.updateValueAndValidity();
+
+        this.previewVideoPublicIdControl?.setValue(this.originalSavedVideo.publicId);
+        this.previewVideoPublicIdControl?.markAsPristine();
+        this.previewVideoPublicIdControl?.updateValueAndValidity();
+
+        // Nothing needs to be deleted from Cloudinary — the replacement never happened.
+        this.pendingDeletePublicId = null;
+
+        this.originalSavedVideo = null;
+
+        this.updateSnapshot({ state: 'saved', progress: 0, message: 'Replacement discarded' });
+    }
+
+    /**
      * Called by the parent AFTER a successful save.
      * Clears transient state so the component reflects the newly persisted data.
      */
@@ -316,6 +389,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
         // Clear backups since save is complete
         this.backupSelectedFile = null;
         this.backupLocalPreviewUrl = null;
+        this.originalSavedVideo = null;
 
         // If video was marked for deletion and saved, actually remove from draft now
         if (!this.previewVideoUrlControl?.value) {
@@ -360,6 +434,7 @@ export class PreviewVideoUploadComponent implements OnInit, OnDestroy {
 
                         this.fileDraftService.removeFileFromDraft(this.ownerId, 'previewVideo');
                         this.selectedFile = null;
+                        this.originalSavedVideo = null;
                         if (this.localPreviewUrl) {
                             URL.revokeObjectURL(this.localPreviewUrl);
                             this.localPreviewUrl = null;
