@@ -7,10 +7,14 @@
   [showLessonsButton]="false" [showMobileMenu]="true" [hideMobileExpansionIndicator]="false"
   (deleteClicked)="deleteLesson()" (moveUpClicked)="moveUp.emit()" (moveDownClicked)="moveDown.emit()"
   [draftId]="draftId" [autoDetectDraftState]="true" [isDeleting]="isDeleting" [hasSaveFailed]="s === 'save_failed'"
-  [hasUploadError]="s === 'upload_error'">
+  [hasUploadError]="s === 'upload_error'" [isLocked]="isWorking">
 
   <!-- =================== CONTENT =================== -->
-  <div [formGroup]="lessonForm" class="space-y-5">
+  <div [formGroup]="lessonForm" class="space-y-5 transition-opacity duration-200"
+    [attr.inert]="isWorking ? '' : null"
+    [class.opacity-50]="isWorking"
+    [class.pointer-events-none]="isWorking"
+    [class.select-none]="isWorking">
 
     <div class="sm:hidden text-xs text-slate-500 mb-2">
       Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min
@@ -325,6 +329,13 @@
       </div>
 
     </div><!-- /VIDEO -->
+
+    <!-- Lesson Attachments -->
+    <app-attachment-manager
+      [courseId]="courseId"
+      [sectionId]="sectionId"
+      [lessonId]="lessonForm.get('id')?.value">
+    </app-attachment-manager>
 
     <!-- ── FOOTER ────────────────────────────────────── -->
     <div class="pt-4">

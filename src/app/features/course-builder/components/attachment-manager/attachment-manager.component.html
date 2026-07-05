@@ -29,7 +29,7 @@
       'border-slate-200 hover:border-[var(--color-primary)]': !isDraggingOver()
     }"
     class="border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center space-y-3 transition-all duration-200 cursor-pointer hover:shadow-sm animate-fade-in"
-    [class.py-10]="attachments().length === 0"
+    [class.py-5]="attachments().length === 0"
     [class.px-4]="true"
     [class.py-6]="attachments().length > 0">
 
@@ -119,24 +119,7 @@
                disabled:opacity-50" />
     </div>
 
-    <!-- Public/Private toggle (only for course & section level) -->
-    <div *ngIf="!isLessonLevel" class="flex items-center gap-3">
-      <button
-        type="button"
-        (click)="isPublicToggle.set(!isPublicToggle())"
-        [disabled]="isUploading()"
-        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200
-               disabled:opacity-50"
-        [ngClass]="isPublicToggle() ? 'bg-[var(--color-primary)]' : 'bg-gray-300'">
-        <span
-          class="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200"
-          [ngClass]="isPublicToggle() ? 'translate-x-[18px]' : 'translate-x-[3px]'">
-        </span>
-      </button>
-      <span class="text-xs text-[var(--color-text-secondary)]">
-        {{ isPublicToggle() ? 'Public — visible to anyone' : 'Private — enrolled students only' }}
-      </span>
-    </div>
+
 
     <!-- Lesson level: static label -->
     <div *ngIf="isLessonLevel" class="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
@@ -190,56 +173,135 @@
   <div *ngIf="pendingAttachments().length > 0" class="space-y-2">
       <div
         *ngFor="let p of pendingAttachments(); trackBy: trackPendingById"
-        class="flex items-center gap-3 p-3 rounded-lg border bg-[var(--color-surface)] transition-shadow"
-        [ngClass]="p.failed ? 'border-red-200 bg-red-50/40' : 'border-dashed border-[var(--color-primary)]/40 bg-blue-50/20'">
+        class="rounded-lg border transition-shadow overflow-hidden"
+        [ngClass]="p.failed ? 'border-red-200' : 'border-dashed border-[var(--color-primary)]/40'">
 
-        <!-- File icon -->
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-             [ngClass]="p.failed ? 'bg-red-100' : 'bg-[var(--color-primary)]/10'">
-          <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
-                    [ngClass]="p.failed ? 'text-red-500' : 'text-[var(--color-primary)]'">
-            {{ getFileIcon(p.file.name.split('.').pop() || '') }}
-          </mat-icon>
-        </div>
+        <!-- ── Normal queued-item row ── -->
+        <div *ngIf="editingPendingId() !== p.id"
+          class="flex items-center gap-3 p-3 bg-[var(--color-surface)]"
+          [ngClass]="p.failed ? 'bg-red-50/40' : 'bg-blue-50/20'">
 
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-[var(--color-text-primary)] truncate">{{ p.title }}</div>
-          <div class="flex items-center gap-2 text-[10px] text-[var(--color-text-secondary)]">
-            <span class="truncate max-w-[140px]">{{ p.file.name }}</span>
-            <span class="opacity-40">·</span>
-            <span>{{ formatFileSize(p.file.size) }}</span>
+          <!-- File icon -->
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+               [ngClass]="p.failed ? 'bg-red-100' : 'bg-[var(--color-primary)]/10'">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
+                      [ngClass]="p.failed ? 'text-red-500' : 'text-[var(--color-primary)]'">
+              {{ getFileIcon(p.file.name.split('.').pop() || '') }}
+            </mat-icon>
           </div>
-          <div *ngIf="p.failed" class="text-[10px] text-red-500 font-medium mt-0.5">
-            {{ p.error || 'Upload failed' }}
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-[var(--color-text-primary)] truncate">{{ p.title }}</div>
+            <div class="flex items-center gap-2 text-[10px] text-[var(--color-text-secondary)]">
+              <span class="truncate max-w-[140px]">{{ p.file.name }}</span>
+              <span class="opacity-40">·</span>
+              <span>{{ formatFileSize(p.file.size) }}</span>
+            </div>
+            <div *ngIf="p.failed" class="text-[10px] text-red-500 font-medium mt-0.5">
+              {{ p.error || 'Upload failed' }}
+            </div>
+          </div>
+
+          <!-- Status badge -->
+          <span *ngIf="!p.failed"
+                class="text-[10px] font-semibold text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-1 rounded-md flex-shrink-0">
+          </span>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <!-- Edit (only for pre-creation queued items) -->
+            <button
+              *ngIf="isPendingMode"
+              type="button"
+              (click)="startEditQueued(p.id)"
+              [disabled]="isUploading()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-primary)]/10 transition-colors disabled:opacity-50"
+              title="Edit attachment">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-primary)]">edit</mat-icon>
+            </button>
+            <button
+              *ngIf="p.failed"
+              type="button"
+              (click)="retryQueued(p.id, courseId ?? undefined, sectionId, lessonId)"
+              [disabled]="isUploading()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-primary)]/10 transition-colors disabled:opacity-50"
+              title="Retry upload">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-primary)]">refresh</mat-icon>
+            </button>
+            <button
+              type="button"
+              (click)="removeQueued(p.id)"
+              [disabled]="isUploading()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+              title="Remove from queue">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-error)]">close</mat-icon>
+            </button>
           </div>
         </div>
 
-        <!-- Status badge -->
-        <span *ngIf="!p.failed"
-              class="text-[10px] font-semibold text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-1 rounded-md flex-shrink-0">
-        </span>
+        <!-- ── Inline edit form for this queued item ── -->
+        <div *ngIf="editingPendingId() === p.id" class="p-3 bg-blue-50/50 space-y-3">
 
-        <!-- Actions -->
-        <div class="flex items-center gap-1 flex-shrink-0">
-          <button
-            *ngIf="p.failed"
-            type="button"
-            (click)="retryQueued(p.id, courseId ?? undefined, sectionId, lessonId)"
-            [disabled]="isUploading()"
-            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-primary)]/10 transition-colors disabled:opacity-50"
-            title="Retry upload">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-primary)]">refresh</mat-icon>
-          </button>
-          <button
-            type="button"
-            (click)="removeQueued(p.id)"
-            [disabled]="isUploading()"
-            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
-            title="Remove from queue">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-[var(--color-error)]">close</mat-icon>
-          </button>
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Edit Queued Attachment</div>
+            <button type="button" (click)="cancelEditQueued()"
+              class="w-7 h-7 rounded-full bg-white border border-[var(--color-border)] shadow-sm flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition">
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-[var(--color-error)]">close</mat-icon>
+            </button>
+          </div>
+
+          <!-- Current / replacement file -->
+          <div class="flex items-center gap-2 bg-white p-2 rounded-md border border-blue-100">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-[var(--color-primary)]">
+              {{ getFileIcon((editingPendingFile() ?? p.file).name.split('.').pop() || '') }}
+            </mat-icon>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-[var(--color-text-primary)] truncate">{{ (editingPendingFile() ?? p.file).name }}</div>
+              <div class="text-[10px] text-[var(--color-text-secondary)]">{{ formatFileSize((editingPendingFile() ?? p.file).size) }}</div>
+            </div>
+            <!-- Replace File button -->
+            <label class="text-[10px] font-semibold text-[var(--color-primary)] border border-[var(--color-primary)] px-2 py-1 rounded-md hover:bg-blue-50 transition-colors cursor-pointer">
+              Replace File
+              <input hidden type="file" [accept]="ACCEPTED_TYPES" (change)="onEditQueuedFileSelected($event)" />
+            </label>
+          </div>
+
+          <!-- Title input -->
+          <div class="space-y-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Title *</label>
+            <input
+              type="text"
+              [ngModel]="editingPendingTitle()"
+              (ngModelChange)="editingPendingTitle.set($event)"
+              placeholder="Enter attachment title"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] outline-none
+                     transition-all text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)]
+                     focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]" />
+          </div>
+
+          <!-- Save / Cancel -->
+          <div class="flex items-center gap-2 pt-1">
+            <button type="button" (click)="confirmEditQueued()"
+              [disabled]="!editingPendingTitle().trim()"
+              class="text-[10px] font-bold uppercase tracking-wider transition-all
+                     hover:bg-[var(--color-primary-light)] px-3 py-1.5 rounded-lg border
+                     text-white bg-[var(--color-primary)] shadow-md active:scale-95
+                     disabled:opacity-50 disabled:cursor-not-allowed leading-none
+                     flex items-center gap-1.5">
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
+              Save Changes
+            </button>
+            <button type="button" (click)="cancelEditQueued()"
+              class="text-[10px] font-bold uppercase tracking-wider transition-all
+                     px-3 py-1.5 rounded-lg border border-[var(--color-border)]
+                     text-[var(--color-text-secondary)] hover:bg-gray-50 leading-none">
+              Cancel
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
 
@@ -270,25 +332,6 @@
             
             <!-- Public/Private Toggle + Actions -->
             <div class="flex items-center gap-2">
-              <!-- Interactive Toggle for Course/Section attachments -->
-              <div *ngIf="!isLessonLevel" class="inline-flex items-center gap-1.5">
-                <button
-                  type="button"
-                  (click)="toggleVisibility(att)"
-                  [disabled]="updatingId() === att.id || deletingId() === att.id"
-                  class="relative inline-flex h-3.5 w-6 items-center rounded-full transition-colors duration-200
-                         disabled:opacity-50"
-                  [ngClass]="att.isPublic ? 'bg-[var(--color-primary)]' : 'bg-gray-300'"
-                  title="Toggle visibility">
-                  <span
-                    class="inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200"
-                    [ngClass]="att.isPublic ? 'translate-x-[12px]' : 'translate-x-[2px]'">
-                  </span>
-                </button>
-                <span class="text-[10px]" [ngClass]="att.isPublic ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--color-text-secondary)]'">
-                  {{ att.isPublic ? 'Public' : 'Private' }}
-                </span>
-              </div>
               
               <!-- Lesson level label -->
               <span *ngIf="isLessonLevel" class="inline-flex items-center gap-0.5 text-[10px] text-[var(--color-text-secondary)]">
@@ -403,24 +446,7 @@
                      disabled:opacity-50" />
           </div>
 
-          <!-- Public/Private toggle (only for course & section level) -->
-          <div *ngIf="!isLessonLevel" class="flex items-center gap-3">
-            <button
-              type="button"
-              (click)="isPublicToggle.set(!isPublicToggle())"
-              [disabled]="isUploading()"
-              class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200
-                     disabled:opacity-50"
-              [ngClass]="isPublicToggle() ? 'bg-[var(--color-primary)]' : 'bg-gray-300'">
-              <span
-                class="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200"
-                [ngClass]="isPublicToggle() ? 'translate-x-[18px]' : 'translate-x-[3px]'">
-              </span>
-            </button>
-            <span class="text-xs text-[var(--color-text-secondary)]">
-              {{ isPublicToggle() ? 'Public — visible to anyone' : 'Private — enrolled students only' }}
-            </span>
-          </div>
+
 
           <!-- Lesson level: static label -->
           <div *ngIf="isLessonLevel" class="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">

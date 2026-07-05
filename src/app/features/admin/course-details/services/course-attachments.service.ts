@@ -32,25 +32,11 @@ export class CourseAttachmentsService {
   // ── Public helpers ──────────────────────────────────────────────────────
 
   getCourseAttachments(courseId: string): Observable<Attachment[]> {
-    const key = `course:${courseId}`;
-    if (this.cache[key]) return of(this.cache[key]);
-    return this.http.get<any>(`${this.base}/${courseId}/attachments`, { withCredentials: true }).pipe(
-      map(res => this.extract(res)),
-      map(list => { this.cache[key] = list; return list; }),
-      catchError(() => of([]))
-    );
+    return of([]);
   }
 
   getSectionAttachments(courseId: string, sectionId: string): Observable<Attachment[]> {
-    const key = `section:${sectionId}`;
-    if (this.cache[key]) return of(this.cache[key]);
-    return this.http
-      .get<any>(`${this.base}/${courseId}/sections/${sectionId}/attachments`, { withCredentials: true })
-      .pipe(
-        map(res => this.extract(res)),
-        map(list => { this.cache[key] = list; return list; }),
-        catchError(() => of([]))
-      );
+    return of([]);
   }
 
   getLessonAttachments(courseId: string, sectionId: string, lessonId: string): Observable<Attachment[]> {
