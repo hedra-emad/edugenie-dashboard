@@ -31,6 +31,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { AppLoader } from '../../../../shared/components/add-loader/app-loader';
 import { SubButtonComponent } from '../../../../shared/components/sub-button/sub-button.component';
 import { ToastrService } from 'ngx-toastr';
+import { AttachmentManagerComponent } from '../attachment-manager/attachment-manager.component';
 
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all upload/save lifecycle states
@@ -93,6 +94,7 @@ function initialSnapshot(): UploadSnapshot {
     ExpansionPanelComponent,
     AppLoader,
     SubButtonComponent,
+    AttachmentManagerComponent,
   ],
   templateUrl: './lesson-card.component.html',
   styleUrl: './lesson-card.component.css',
@@ -155,6 +157,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   selectedVideoFile: File | null = null;
   selectedVideoUrl: string | null = null; // blob URL for preview
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild(AttachmentManagerComponent) attachmentManager?: AttachmentManagerComponent;
   // ── Misc UI ───────────────────────────────────────────────
   isDeleting = false; // Kept for template compatibility
   private saveLock = false;
@@ -962,21 +965,23 @@ export class LessonCardComponent implements OnInit, OnDestroy {
           let newId: string | null = null;
 
           if (!lessonId) {
-  newId = res.createdLessonId ?? null;
+            newId = res.createdLessonId ?? null;
 
-  if (newId) {
-    this.lessonForm.patchValue({ id: newId });
+            if (newId) {
+              this.lessonForm.patchValue({ id: newId });
 
-    this.lessonForm.get('id')?.updateValueAndValidity();
+              this.lessonForm.get('id')?.updateValueAndValidity();
 
-    this.lessonCreated.emit({
-      index: this.index,
-      id: newId,
-    });
+              this.lessonCreated.emit({
+                index: this.index,
+                id: newId,
+              });
 
-    
-  }
-}
+              if (this.attachmentManager) {
+                this.attachmentManager.flushPending(this.courseId, this.sectionId, newId).subscribe();
+              }
+            }
+          }
 
           this.lessonForm.markAsPristine();
           this.lessonForm.markAsUntouched();

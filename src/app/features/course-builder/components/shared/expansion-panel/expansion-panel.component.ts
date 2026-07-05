@@ -52,6 +52,8 @@ export class ExpansionPanelComponent {
   @Input() isLast = false;
   @Input() showDeleteButton = true;
   @Input() isDeleting = false;
+  /** When true, ALL header buttons are disabled (saving / uploading lock). */
+  @Input() isLocked = false;
   @Input() showLessonsButton = false;
   @Input() lessonsButtonDisabled = false;
   @Input() showMobileMenu = false;

@@ -57,8 +57,7 @@ import { QuizzesService } from '../../../../core/services/quizzes';
     MatMenuModule,
     DragDropModule,
     MatDialogModule,
-    ExpansionPanelComponent,
-    AttachmentManagerComponent
+    ExpansionPanelComponent
   ],
   templateUrl: './section-card.component.html',
   styleUrl: './section-card.component.css',
@@ -72,9 +71,6 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
   private quizzesService = inject(QuizzesService);
-
-  
-@ViewChild(AttachmentManagerComponent) attachmentManagerComponent?: AttachmentManagerComponent;
   // Lifecycle management
   private destroy$ = new Subject<void>();
 
@@ -231,69 +227,15 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
     const isDraft = rawId && String(rawId).startsWith('draft_');
     const sectionId = isDraft ? null : extractId(rawId);
 
-    // Check if there's a pending file in the attachment form that hasn't been added to queue
-    const attachmentMgr = this.attachmentManagerComponent;
-    const hasPendingFileInForm = attachmentMgr 
-      && attachmentMgr.pendingFile() 
-      && attachmentMgr.pendingTitle().trim();
-
-    // Helper to add pending file to queue
-    const addPendingFileToQueue = () => {
-      if (hasPendingFileInForm && attachmentMgr) {
-        const file = attachmentMgr.pendingFile()!;
-        const title = attachmentMgr.pendingTitle().trim();
-        const isPublic = attachmentMgr.isPublicToggle();
-        
-        attachmentMgr.pendingAttachments.update(list => [
-          ...list,
-          { 
-            id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, 
-            file, 
-            title, 
-            isPublic: attachmentMgr.isLessonLevel ? false : isPublic
-          }
-        ]);
-        attachmentMgr.cancelPending();
-      }
-    };
-
-    // If form is pristine and section exists
+    // If form is pristine and section exists, navigate directly to lessons
     if (this.sectionForm.pristine && sectionId) {
-      // Add pending file to queue if exists
-      addPendingFileToQueue();
-      
-      // Upload any pending attachments before navigating
-      if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0) {
-        this.isSaving = true;
-        this.cdr.markForCheck();
-        attachmentMgr.flushPending(this.courseId, sectionId).subscribe({
-          next: () => {
-            this.isSaving = false;
-            this.cdr.markForCheck();
-            this.router.navigate([
-              '/course-builder',
-              this.courseId,
-              'sections',
-              sectionId,
-              'lessons'
-            ]);
-          },
-          error: () => {
-            this.isSaving = false;
-            this.cdr.markForCheck();
-            this.toastr.error('Failed to upload some attachments');
-          }
-        });
-      } else {
-        // No pending attachments, navigate directly
-        this.router.navigate([
-          '/course-builder',
-          this.courseId,
-          'sections',
-          sectionId,
-          'lessons'
-        ]);
-      }
+      this.router.navigate([
+        '/course-builder',
+        this.courseId,
+        'sections',
+        sectionId,
+        'lessons'
+      ]);
       return;
     }
 
@@ -332,52 +274,18 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
 
         const sectionTitle = this.sectionForm.get('title')?.value || 'Section';
         const truncatedTitle = this.truncateName(sectionTitle);
-        
-        // Add pending file to queue if exists
-        addPendingFileToQueue();
-        
-        // Upload pending attachments if any, then navigate
-        if (attachmentMgr && attachmentMgr.pendingAttachments().length > 0 && newSectionId) {
-          attachmentMgr.flushPending(this.courseId, newSectionId).subscribe({
-            next: () => {
-              this.isSaving = false;
-              this.cdr.markForCheck();
-              this.toastr.success(`"${truncatedTitle}" saved successfully`);
-              this.router.navigate([
-                '/course-builder',
-                this.courseId,
-                'sections',
-                newSectionId,
-                'lessons'
-              ]);
-            },
-            error: () => {
-              this.isSaving = false;
-              this.cdr.markForCheck();
-              this.toastr.warning(`"${truncatedTitle}" saved, but some attachments failed to upload`);
-              this.router.navigate([
-                '/course-builder',
-                this.courseId,
-                'sections',
-                newSectionId,
-                'lessons'
-              ]);
-            }
-          });
-        } else {
-          // No pending attachments, navigate directly
-          this.isSaving = false;
-          this.cdr.markForCheck();
-          this.toastr.success(`"${truncatedTitle}" saved successfully`);
-          if (newSectionId) {
-            this.router.navigate([
-              '/course-builder',
-              this.courseId,
-              'sections',
-              newSectionId,
-              'lessons'
-            ]);
-          }
+
+        this.isSaving = false;
+        this.cdr.markForCheck();
+        this.toastr.success(`"${truncatedTitle}" saved successfully`);
+        if (newSectionId) {
+          this.router.navigate([
+            '/course-builder',
+            this.courseId,
+            'sections',
+            newSectionId,
+            'lessons'
+          ]);
         }
       },
       error: (err) => {
