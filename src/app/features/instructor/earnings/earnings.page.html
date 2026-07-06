@@ -42,157 +42,118 @@
     <div class="stat-card">
       <div class="stat-icon bg-emerald-100 text-emerald-600"><mat-icon>account_balance_wallet</mat-icon></div>
       <span class="stat-label">Available to withdraw</span>
-      <span class="stat-value text-emerald-600">{{ data.totals.pending | number:'1.2-2' }} EGP</span>
+      <span class="stat-value text-emerald-600">${{ data.totals.pending | number:'1.2-2' }}</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-amber-100 text-amber-600"><mat-icon>hourglass_top</mat-icon></div>
       <span class="stat-label">In review</span>
-      <span class="stat-value text-slate-800">{{ data.totals.inReview | number:'1.2-2' }} EGP</span>
+      <span class="stat-value text-slate-800">${{ data.totals.inReview | number:'1.2-2' }}</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-violet-100 text-[#3b1892]"><mat-icon>paid</mat-icon></div>
       <span class="stat-label">Paid out</span>
-      <span class="stat-value text-slate-800">{{ data.totals.paidOut | number:'1.2-2' }} EGP</span>
+      <span class="stat-value text-slate-800">${{ data.totals.paidOut | number:'1.2-2' }}</span>
       <span class="stat-sub">your share</span>
     </div>
     <div class="stat-card">
       <div class="stat-icon bg-slate-100 text-slate-600"><mat-icon>trending_up</mat-icon></div>
       <span class="stat-label">Total earned</span>
-      <span class="stat-value text-slate-800">{{ data.totals.totalEarned | number:'1.2-2' }} EGP</span>
+      <span class="stat-value text-slate-800">${{ data.totals.totalEarned | number:'1.2-2' }}</span>
       <span class="stat-sub">your share</span>
     </div>
   </div>
 
-  <!-- PayPal payout destination -->
+  <!-- Stripe Connect payout setup -->
   <div class="table-card p-6 animate-fade-in flex flex-col gap-4">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center shrink-0">
+      <div class="w-10 h-10 rounded-full bg-[#eef2ff] text-[#635bff] flex items-center justify-center shrink-0">
         <mat-icon>account_balance</mat-icon>
       </div>
       <div>
-        <p class="text-[15px] font-bold text-slate-800">PayPal payout destination</p>
-        <p class="text-[13px] text-slate-500">Approved payouts are sent to this PayPal account.</p>
+        <p class="text-[15px] font-bold text-slate-800">Stripe payouts</p>
+        <p class="text-[13px] text-slate-500">Your revenue share lands in your Stripe balance and pays out to your bank.</p>
       </div>
     </div>
 
-    @if (!isEditingEmail && hasPayoutEmail) {
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4">
+    @if (data.stripe.payoutsEnabled) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
       <div class="flex items-center gap-2 min-w-0">
-        <mat-icon class="text-[#1a73e8] !w-5 !h-5 !text-[20px] shrink-0">mail</mat-icon>
-        <span class="text-[15px] font-bold text-slate-800 truncate">{{ payoutMethod?.paypalEmail }}</span>
+        <mat-icon class="text-emerald-600 !w-5 !h-5 !text-[20px] shrink-0">check_circle</mat-icon>
+        <span class="text-[15px] font-bold text-emerald-800">Payouts enabled</span>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button
-          class="btn-sm px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors disabled:opacity-50"
-          [disabled]="isSavingEmail"
-          (click)="startEditEmail()">
-          Change
-        </button>
-        <button
-          class="btn-sm px-3 py-1.5 rounded-lg text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50"
-          [disabled]="isSavingEmail"
-          (click)="clearPayoutEmail()">
-          Remove
-        </button>
+      <div class="flex items-center gap-6 shrink-0">
+        <div class="text-right">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Available</p>
+          <p class="text-[15px] font-bold text-slate-800">{{ data.stripe.balanceAvailable | number:'1.2-2' }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Pending</p>
+          <p class="text-[15px] font-bold text-slate-500">{{ data.stripe.balancePending | number:'1.2-2' }}</p>
+        </div>
       </div>
     </div>
     } @else {
-    <div class="flex flex-col gap-2">
-      @if (!hasPayoutEmail) {
+    <div class="flex flex-col gap-3">
       <div class="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3">
         <mat-icon class="text-amber-600 !w-4 !h-4 !text-[16px] shrink-0">info</mat-icon>
-        <span class="text-[13px] text-amber-800">Add your PayPal email so we know where to send your payouts.</span>
-      </div>
-      }
-      <div class="flex flex-col sm:flex-row gap-2">
-        <input type="email"
-          class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent"
-          placeholder="you@paypal.com"
-          [(ngModel)]="emailInput"
-          [disabled]="isSavingEmail"
-          (keyup.enter)="savePayoutEmail()" />
-        <button
-          class="btn-primary shrink-0"
-          [disabled]="isSavingEmail || !emailInput.trim()"
-          (click)="savePayoutEmail()">
-          @if (isSavingEmail) {
-          <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-          Saving...
+        <span class="text-[13px] text-amber-800">
+          @if (data.stripe.hasAccount) {
+          Your Stripe onboarding isn't finished yet. Continue to enable payouts.
           } @else {
-          <mat-icon class="!w-4 !h-4 !text-[16px]">save</mat-icon>
-          Save
+          Connect a Stripe account to receive your earnings and pay them out to your bank.
           }
-        </button>
-        @if (hasPayoutEmail) {
-        <button
-          class="btn-sm px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
-          [disabled]="isSavingEmail"
-          (click)="cancelEditEmail()">
-          Cancel
-        </button>
-        }
+        </span>
       </div>
+      <button class="btn-primary self-start" [disabled]="isConnecting" (click)="connectStripe()">
+        @if (isConnecting) {
+        <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+        Redirecting to Stripe...
+        } @else {
+        <mat-icon class="!w-4 !h-4 !text-[16px]">open_in_new</mat-icon>
+        {{ data.stripe.hasAccount ? 'Continue Stripe setup' : 'Set up payouts (Stripe)' }}
+        }
+      </button>
     </div>
     }
   </div>
 
-  <!-- Payout action area -->
+  <!-- Payout status: automatic via Stripe -->
   <div class="table-card p-6 animate-fade-in">
-    @if (data.openRequest && (data.openRequest.status === 'PENDING' || data.openRequest.status === 'PROCESSING')) {
-    <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
-      <mat-icon class="text-amber-600 shrink-0">hourglass_top</mat-icon>
-      <div>
-        <p class="text-[15px] font-bold text-amber-800">
-          @if (data.openRequest.status === 'PROCESSING') {
-          Payout of {{ data.openRequest.amount | number:'1.2-2' }} EGP is being sent to your PayPal account.
-          } @else {
-          Payout of {{ data.openRequest.amount | number:'1.2-2' }} EGP requested — awaiting superadmin approval.
-          }
-        </p>
-        <p class="text-[13px] text-amber-700 mt-0.5">
-          Requested {{ data.openRequest.requestedAt | date:'mediumDate' }} ·
-          {{ data.openRequest.earningsCount }} item(s)
-        </p>
+    @if (data.stripe.payoutsEnabled) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-start gap-3">
+        <mat-icon class="text-emerald-600 shrink-0">autorenew</mat-icon>
+        <div>
+          <p class="text-[15px] font-bold text-slate-800">Payouts are automatic</p>
+          <p class="text-[13px] text-slate-500 mt-0.5 max-w-xl">
+            Your available balance is paid out to your bank automatically on your Stripe
+            schedule — no request or approval needed. New sales settle first (shown as
+            <span class="font-semibold">Pending</span>), then move to
+            <span class="font-semibold">Available</span> and pay out.
+          </p>
+        </div>
       </div>
-    </div>
-    <div class="mt-4">
-      <button class="btn-primary" [disabled]="true">
-        <mat-icon class="!w-4 !h-4 !text-[16px]">lock</mat-icon>
-        Request payout
+      <button
+        class="btn-primary shrink-0"
+        [disabled]="isOpeningDashboard"
+        (click)="openStripeDashboard()">
+        @if (isOpeningDashboard) {
+        <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
+        Opening...
+        } @else {
+        <mat-icon class="!w-4 !h-4 !text-[16px]">open_in_new</mat-icon>
+        Open Stripe dashboard
+        }
       </button>
     </div>
     } @else {
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <p class="text-[15px] font-bold text-slate-800">Ready to get paid?</p>
-        @if (data.canRequest && !hasPayoutEmail) {
-        <p class="text-[13px] text-amber-700 mt-0.5 font-semibold">
-          Add a PayPal payout email above before requesting a payout.
-        </p>
-        } @else if (data.canRequest) {
-        <p class="text-[13px] text-slate-500 mt-0.5">
-          You can request a payout of {{ data.totals.pending | number:'1.2-2' }} EGP.
-        </p>
-        } @else {
-        <p class="text-[13px] text-slate-500 mt-0.5">
-          You need at least {{ data.config.minimumPayoutThreshold | number:'1.2-2' }} EGP available to request a payout.
-        </p>
-        }
-      </div>
-      <button
-        class="btn-primary"
-        [disabled]="!data.canRequest || !hasPayoutEmail || isRequesting"
-        (click)="requestPayout()">
-        @if (isRequesting) {
-        <mat-icon class="animate-spin !w-4 !h-4 !text-[16px]">autorenew</mat-icon>
-        Requesting...
-        } @else {
-        <mat-icon class="!w-4 !h-4 !text-[16px]">payments</mat-icon>
-        Request payout
-        }
-      </button>
+    <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
+      <mat-icon class="text-amber-600 shrink-0">info</mat-icon>
+      <p class="text-[13px] text-amber-800">
+        Finish Stripe onboarding above to start receiving automatic payouts to your bank.
+      </p>
     </div>
     }
   </div>
@@ -234,7 +195,7 @@
                 }
               </td>
               <td class="px-6 py-4 align-middle">
-                <span class="text-[14px] font-black text-emerald-600">{{ item.amount | number:'1.2-2' }} EGP</span>
+                <span class="text-[14px] font-black text-emerald-600">${{ item.amount | number:'1.2-2' }}</span>
               </td>
               <td class="px-6 py-4 align-middle">
                 <span class="badge"
@@ -278,7 +239,7 @@
         <li class="rounded-xl border border-slate-200 p-4 flex flex-col gap-2">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <span class="text-[16px] font-black text-slate-800">{{ req.amount | number:'1.2-2' }} EGP</span>
+              <span class="text-[16px] font-black text-slate-800">${{ req.amount | number:'1.2-2' }}</span>
               <p class="text-[12px] text-slate-500 mt-0.5">
                 Requested {{ req.requestedAt | date:'medium' }} · {{ req.earningsCount }} item(s)
               </p>

@@ -211,7 +211,7 @@
                   <span class="text-[16px] font-black text-slate-800 leading-none">
                     Section Price: {{ section.price > 0 ? (section.price | number:'1.0-0') : 'Free' }}
                     @if (section.price > 0) {
-                    <span class="text-[0.8em] font-bold text-slate-800">EGP</span>
+                    <span class="text-[0.8em] font-bold text-slate-800">$</span>
                     }
                   </span>
                 </div>
@@ -410,7 +410,7 @@
                 class="detail-value font-black text-[26px] text-slate-800 leading-none">
                 {{ course.price > 0 ? (course.price | number:'1.0-0') : 'Free' }}
                 @if (course.price > 0) {
-                <span class="text-[0.8em] font-bold text-slate-800">EGP</span>
+                <span class="text-[0.8em] font-bold text-slate-800">$</span>
                 }
               </span></li>
             <li><span class="detail-label">Total Duration</span><span class="detail-value">{{ course.totalHours ?

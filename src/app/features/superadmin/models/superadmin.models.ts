@@ -1,6 +1,9 @@
 export interface SuperAdminDashboardOverviewResponse {
   systemStatus: string;
   platformRevenue: number;
+  grossSales: number;
+  instructorPayouts: number;
+  stripeFees: number;
   payoutLiability: number;
   activeAdmins: number;
   pendingPayouts: number;
@@ -85,10 +88,18 @@ export interface PendingPayoutListItem {
   requestedAt: string;
   /** The instructor's PayPal payout email (snapshot), if provided. */
   paypalEmail?: string | null;
-  /** 'PENDING' (new) or 'FAILED' (a gateway payout awaiting retry). */
+  /** 'PENDING' (new), 'PROCESSING' (gateway payout in flight) or 'FAILED'. */
   status?: string;
   /** Why a gateway payout failed (present when status is FAILED). */
   failureReason?: string | null;
+  /** PayPal payout batch id — shown for verification / status checks. */
+  gatewayReference?: string | null;
+}
+
+export interface SyncPayoutResponse {
+  requestId: string;
+  status: string;
+  detail?: string;
 }
 
 export interface PendingPayoutPaginatedResponse {

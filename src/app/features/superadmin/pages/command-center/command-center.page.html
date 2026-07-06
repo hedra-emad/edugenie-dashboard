@@ -32,7 +32,7 @@
 
   <!-- ── Stat Cards ──────────────────────────────────────── -->
   @if (overview) {
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
 
     <!-- 1. Platform Revenue -->
     <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
@@ -43,8 +43,47 @@
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Platform Revenue</span>
       </div>
-      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview.platformRevenue |
-        number }} EGP</span>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.platformRevenue |
+        number }}</span>
+    </div>
+
+    <!-- Gross Sales -->
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-sky-50 text-sky-500 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">storefront</mat-icon>
+        </div>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Gross Sales</span>
+      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.grossSales |
+        number }}</span>
+    </div>
+
+    <!-- Instructor Payouts -->
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-teal-50 text-teal-500 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">groups</mat-icon>
+        </div>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Instructor Payouts</span>
+      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.instructorPayouts |
+        number }}</span>
+    </div>
+
+    <!-- Stripe Fees -->
+    <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3
+                hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-violet-50 text-violet-500 shrink-0">
+          <mat-icon class="!text-[16px] !w-4 !h-4">credit_card</mat-icon>
+        </div>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Stripe Fees</span>
+      </div>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.stripeFees |
+        number:'1.2-2' }}</span>
     </div>
 
     <!-- 2. Payout Liability -->
@@ -56,8 +95,8 @@
         </div>
         <span class="text-[12px] font-semibold text-slate-500 leading-tight">Payout Liability</span>
       </div>
-      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview.payoutLiability |
-        number }} EGP</span>
+      <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.payoutLiability |
+        number }}</span>
     </div>
 
     <!-- 3. Pending Payouts -->
@@ -141,8 +180,8 @@
       </div>
       <div class="px-6 pt-5 pb-4 flex-1 flex flex-col">
         <div class="flex flex-col mb-4">
-          <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">{{ overview?.platformRevenue |
-            number }} EGP</span>
+          <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview?.platformRevenue |
+            number }}</span>
           <span class="block text-[11px] font-medium text-slate-400 mt-1">Total Revenue</span>
           <span class="block text-[11px] font-semibold mt-1" [ngClass]="revenueGrowthClass">
             {{ revenueGrowthLabel }}
@@ -163,7 +202,7 @@
               }}</text>
             <text x="50" y="104" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">{{
               getRevenueYLabel(1) }}</text>
-            <text x="50" y="144" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">0 EGP</text>
+            <text x="50" y="144" text-anchor="end" font-size="10" fill="#94A3B8" font-weight="500">$0</text>
 
             <defs>
               <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -215,7 +254,7 @@
             <span class="text-[13px] font-bold text-slate-800 leading-none">{{ overview?.payoutLiability | number
               }}</span>
             <span
-              class="text-[9px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide leading-tight text-center">EGP<br>Liability</span>
+              class="text-[9px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide leading-tight text-center">$<br>Liability</span>
           </div>
         </div>
 
@@ -230,8 +269,7 @@
               </div>
               <span class="text-[10px] font-medium text-slate-400">{{ item.percent }}%</span>
             </div>
-            <span class="text-[12px] font-bold text-slate-700 pl-4 whitespace-nowrap">{{ item.value | number }}
-              EGP</span>
+            <span class="text-[12px] font-bold text-slate-700 pl-4 whitespace-nowrap">${{ item.value | number }}</span>
           </div>
           }
         </div>

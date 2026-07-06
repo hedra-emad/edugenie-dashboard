@@ -154,6 +154,16 @@ export const routes: Routes = [
             (m) => m.InstructorEarningsPageComponent
           ),
       },
+      {
+        // Stripe Connect onboarding return landing.
+        path: 'stripe-callback',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor'] },
+        loadComponent: () =>
+          import('./features/instructor/stripe-callback/stripe-callback.page').then(
+            (m) => m.StripeCallbackPageComponent
+          ),
+      },
 
       // -- YOUR COURSE BUILDER ROUTES MERGED WITH MAIN'S GUARDS --
       {

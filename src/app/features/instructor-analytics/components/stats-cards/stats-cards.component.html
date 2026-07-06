@@ -9,8 +9,8 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Earnings</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.totalEarnings |
-                number:'1.2-2' }} EGP</h3>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.totalEarnings |
+                number:'1.2-2' }}</h3>
             <div class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-2"
                 [ngClass]="(stats.earningsChangePercent ?? 0) >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
                 {{ (stats.earningsChangePercent ?? 0) >= 0 ? '+' : '' }}{{ (stats.earningsChangePercent ?? 0) |
@@ -55,8 +55,8 @@
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pending Payouts</span>
         </div>
         <div>
-            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">{{ stats.pendingPayouts |
-                number:'1.2-2' }} EGP</h3>
+            <h3 class="text-2xl font-black text-[var(--color-text-primary)] leading-none">${{ stats.pendingPayouts |
+                number:'1.2-2' }}</h3>
             <div class="mt-2 h-[18px]"></div>
         </div>
     </div>

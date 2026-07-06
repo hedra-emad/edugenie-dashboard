@@ -191,9 +191,9 @@ export class CommandCenterPageComponent implements OnInit {
     const maxVal = Math.max(...(this.revenueValues.length ? this.revenueValues : [0]));
     const val = Math.round(maxVal * (step / 3));
     if (val >= 1000) {
-      return (val / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + 'k EGP';
+      return '$' + (val / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + 'k';
     }
-    return val.toLocaleString() + ' EGP';
+    return '$' + val.toLocaleString();
   }
 
   get revenueGrowthPercent(): number {

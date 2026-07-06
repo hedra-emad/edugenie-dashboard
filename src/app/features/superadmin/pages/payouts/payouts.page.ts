@@ -131,7 +131,7 @@ export class PayoutsPageComponent implements OnInit {
         this.cdr.detectChanges();
         const msg =
           res.status === 'PROCESSING'
-            ? `Payout sent to PayPal — it will confirm shortly (Ref: ${res.reference})`
+            ? `Payout sent to Stripe — it will confirm shortly (Ref: ${res.reference})`
             : `Payout approved${res.reference ? ` (Ref: ${res.reference})` : ''}`;
         this.snackBar.open(msg, 'Close', { duration: 4000, panelClass: ['bg-green-600', 'text-white'] });
         this.loadPayouts();
@@ -142,6 +142,37 @@ export class PayoutsPageComponent implements OnInit {
         const errorMsg = err?.error?.message || 'Failed to approve payout';
         this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
       }
+    });
+  }
+
+  /** Poll PayPal for a processing payout and finalize it (paid or failed). */
+  checkStatus(payout: PendingPayoutListItem) {
+    if (!payout.requestId || this.isProcessing) return;
+    this.isProcessing = true;
+    this.cdr.detectChanges();
+
+    this.superadminService.syncPayout(payout.requestId).subscribe({
+      next: (res) => {
+        this.isProcessing = false;
+        this.cdr.detectChanges();
+        const msg =
+          res.status === 'APPROVED'
+            ? 'Payout confirmed paid by Stripe ✓'
+            : res.status === 'FAILED'
+              ? `Payout failed: ${res.detail ?? 'see Stripe'}`
+              : `Still processing at Stripe${res.detail ? ` (${res.detail})` : ''}`;
+        this.snackBar.open(msg, 'Close', {
+          duration: 4000,
+          panelClass: [res.status === 'FAILED' ? 'bg-red-600' : 'bg-green-600', 'text-white'],
+        });
+        this.loadPayouts();
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        this.cdr.detectChanges();
+        const errorMsg = err?.error?.message || 'Failed to check payout status';
+        this.snackBar.open(errorMsg, 'Close', { duration: 3000, panelClass: ['bg-red-600', 'text-white'] });
+      },
     });
   }
 

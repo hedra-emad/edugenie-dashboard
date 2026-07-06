@@ -9,6 +9,7 @@ import {
   PayoutProcessResponse,
   ApprovePayoutPayload,
   RejectPayoutPayload,
+  SyncPayoutResponse,
   PlatformConfigResponse,
   UpdatePlatformConfigDto,
   AuditLogPaginatedResponse,
@@ -79,6 +80,11 @@ export class SuperadminService {
   /** Reject an instructor's payout request (records the reason). */
   rejectPayout(requestId: string, payload: RejectPayoutPayload): Observable<PayoutProcessResponse> {
     return this.http.patch<PayoutProcessResponse>(`${this.baseUrl}/payouts/${requestId}/reject`, payload);
+  }
+
+  /** Poll PayPal and finalize a processing payout (approved/paid or failed). */
+  syncPayout(requestId: string): Observable<SyncPayoutResponse> {
+    return this.http.patch<SyncPayoutResponse>(`${this.baseUrl}/payouts/${requestId}/sync`, {});
   }
 
   getPlatformConfig(): Observable<PlatformConfigResponse> {

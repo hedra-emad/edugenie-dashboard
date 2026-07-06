@@ -92,7 +92,7 @@
         <input type="number" min="0" [placeholder]="originalConfig?.minimumPayoutThreshold || 0" class="field-input field-input--icon-right font-bold"
           [(ngModel)]="formConfig.minimumPayoutThreshold" (input)="onFieldInput()" />
         <span
-          class="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-slate-400 pointer-events-none">EGP</span>
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-slate-400 pointer-events-none">$</span>
       </div>
     </div>
   </div>
@@ -182,9 +182,9 @@
         <div class="diff-row">
           <span class="diff-label">Payout Threshold</span>
           <div class="diff-values">
-            <span class="diff-old">{{ originalConfig?.minimumPayoutThreshold }} EGP</span>
+            <span class="diff-old">${{ originalConfig?.minimumPayoutThreshold }}</span>
             <mat-icon class="diff-arrow">arrow_forward</mat-icon>
-            <span class="diff-new">{{ formConfig.minimumPayoutThreshold }} EGP</span>
+            <span class="diff-new">${{ formConfig.minimumPayoutThreshold }}</span>
           </div>
         </div>
         }
