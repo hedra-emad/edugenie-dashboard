@@ -85,14 +85,14 @@
           <!-- Move up/down buttons (lesson mode) -->
           <ng-container *ngIf="showMoveButtons">
             <button type="button"
-              [disabled]="isFirst || isDeleting"
+              [disabled]="isFirst || isDeleting || isLocked"
               (click)="onMoveUpClicked($event)"
               class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Move lesson up">
               <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex items-center justify-center leading-none">arrow_upward</mat-icon>
             </button>
             <button type="button"
-              [disabled]="isLast || isDeleting"
+              [disabled]="isLast || isDeleting || isLocked"
               (click)="onMoveDownClicked($event)"
               class="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Move lesson down">
@@ -107,7 +107,7 @@
           <button *ngIf="showDeleteButton"
             type="button"
             (click)="onDeleteClicked($event)"
-            [disabled]="isDeleting"
+            [disabled]="isDeleting || isLocked"
             class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Delete">
             <mat-icon *ngIf="!isDeleting" class="!text-[14px] !w-[14px] !h-[14px] block">delete</mat-icon>
@@ -118,7 +118,7 @@
           <button *ngIf="showLessonsButton"
             type="button"
             (click)="onLessonsClicked($event)"
-            [disabled]="lessonsButtonDisabled || isDeleting"
+            [disabled]="lessonsButtonDisabled || isDeleting || isLocked"
             class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white disabled:opacity-30 disabled:border-[var(--color-border)] disabled:text-[var(--color-text-secondary)] disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all"
             aria-label="Go to Lessons">
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block">menu_book</mat-icon>
@@ -133,7 +133,7 @@
           <button *ngIf="showDeleteButton"
             type="button"
             (click)="onDeleteClicked($event)"
-            [disabled]="isDeleting"
+            [disabled]="isDeleting || isLocked"
             class="w-7 h-7 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Delete">
             <span class="flex items-center justify-center w-full h-full">
@@ -147,7 +147,7 @@
   class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-auto ml-2">
           <button type="button"
             [matMenuTriggerFor]="mobileMenu"
-            [disabled]="isDeleting"
+            [disabled]="isDeleting || isLocked"
             (click)="$event.stopPropagation()"
             class="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="More options">
@@ -160,7 +160,7 @@
           class="flex sm:hidden items-center gap-1.5 flex-shrink-0 self-center ml-2">
           <button type="button"
             (click)="onDeleteClicked($event)"
-            [disabled]="isDeleting"
+            [disabled]="isDeleting || isLocked"
             class="w-9 h-9 flex items-center justify-center rounded-full border border-red-100 text-[var(--color-error)] hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Delete">
             <mat-icon class="!text-[18px] !w-[18px] !h-[18px] block">delete</mat-icon>
@@ -172,7 +172,7 @@
       <!-- Expand/Collapse Button -->
       <button
         type="button"
-        [disabled]="isDeleting"
+        [disabled]="isDeleting || isLocked"
         class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 self-center flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         (click)="togglePanel($event, panel)"
         (touchstart)="$event.stopPropagation()">
@@ -186,7 +186,7 @@
 
   <!-- Mobile mat-menu -->
   <mat-menu #mobileMenu="matMenu" class="mobile-section-menu">
-    <button *ngIf="showDeleteButton" mat-menu-item (click)="onDeleteClicked($event)" [disabled]="isDeleting">
+    <button *ngIf="showDeleteButton" mat-menu-item (click)="onDeleteClicked($event)" [disabled]="isDeleting || isLocked">
       <mat-icon class="!text-[16px]">delete</mat-icon>
       <span>{{ isDeleting ? 'Deleting...' : 'Delete' }}</span>
     </button>

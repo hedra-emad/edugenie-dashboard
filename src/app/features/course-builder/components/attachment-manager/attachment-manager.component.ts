@@ -2,6 +2,8 @@ import {
   Component,
   Input,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   inject,
   signal,
   ChangeDetectionStrategy,
@@ -19,7 +21,6 @@ import { AttachmentsService } from '../../../../core/services/attachments';
 import { CloudinaryService } from '../../../../core/services/cloudinary';
 import {
   Attachment,
-  AttachmentParentType,
   CreateAttachmentPayload,
   MAX_ATTACHMENT_FILE_SIZE_BYTES,
   MAX_ATTACHMENTS_PER_PARENT,
@@ -42,12 +43,11 @@ import { catchError, map, switchMap } from 'rxjs/operators';
   templateUrl: './attachment-manager.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AttachmentManagerComponent implements OnInit {
+export class AttachmentManagerComponent implements OnInit, OnChanges {
   // ─── Inputs ────────────────────────────────────────────────
-  @Input({ required: true }) parentType!: AttachmentParentType;
-  @Input() courseId?: string | null;
-  @Input() sectionId?: string;
-  @Input() lessonId?: string;
+  @Input({ required: true }) courseId!: string | null;
+  @Input({ required: true }) sectionId!: string;
+  @Input({ required: true }) lessonId!: string;
 
   // ─── ViewChild ─────────────────────────────────────────────
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
@@ -66,12 +66,17 @@ export class AttachmentManagerComponent implements OnInit {
   deletingId = signal<string | null>(null);
   updatingId = signal<string | null>(null);
   editingAttachment = signal<Attachment | null>(null);
-  pendingAttachments = signal<{ id: string; file: File; title: string; isPublic: boolean; failed?: boolean; error?: string }[]>([]);
+  pendingAttachments = signal<{ id: string; file: File; title: string; failed?: boolean; error?: string }[]>([]);
+
+  // ID of the queued item currently being edited (pre-creation inline edit)
+  editingPendingId = signal<string | null>(null);
+  // Scratch state for the queued-item edit form
+  editingPendingTitle = signal('');
+  editingPendingFile = signal<File | null>(null);
 
   // Inline upload form state
   pendingFile = signal<File | null>(null);
   pendingTitle = signal('');
-  isPublicToggle = signal(false);
   fileError = signal<string | null>(null);
 
   // Expand/collapse state (mirrors PreviewVideoUploadComponent)
@@ -90,14 +95,12 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   get isPendingMode(): boolean {
-    return !this.courseId
-      || (this.parentType === AttachmentParentType.SECTION && !this.sectionId)
-      || (this.parentType === AttachmentParentType.LESSON && !this.lessonId);
+    return !this.courseId || !this.sectionId || !this.lessonId || this.lessonId.startsWith('draft_');
   }
 
   // ─── Lifecycle ─────────────────────────────────────────────
   ngOnInit(): void {
-    if (this.courseId) {
+    if (this.courseId && this.sectionId && this.lessonId && !this.isPendingMode) {
       this.loadAttachments();
     } else {
       // No parent yet — nothing to fetch, queue mode only
@@ -110,16 +113,28 @@ export class AttachmentManagerComponent implements OnInit {
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    const courseIdChanged = changes['courseId'] && !changes['courseId'].firstChange;
+    const sectionIdChanged = changes['sectionId'] && !changes['sectionId'].firstChange;
+    const lessonIdChanged = changes['lessonId'] && !changes['lessonId'].firstChange;
+
+    if (courseIdChanged || sectionIdChanged || lessonIdChanged) {
+      if (this.courseId && this.sectionId && this.lessonId && !this.isPendingMode) {
+        this.loadAttachments();
+      }
+    }
+  }
+
   // ─── Data Loading ──────────────────────────────────────────
   loadAttachments(): void {
-    if (!this.courseId) {
+    if (!this.courseId || this.isPendingMode) {
       this.isLoading.set(false);
       return;
     }
 
     this.isLoading.set(true);
           this.attachmentsService
-        .listForInstructor(this.courseId, this.sectionId!)
+        .listForInstructor(this.courseId!, this.sectionId!, this.lessonId!)
         .subscribe({
         next: (list) => {
           this.attachments.set(list);
@@ -141,7 +156,7 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   get isLessonLevel(): boolean {
-    return this.parentType === AttachmentParentType.LESSON;
+    return true; // attachments are always at lesson level
   }
 
   get countLabel(): string {
@@ -164,6 +179,10 @@ export class AttachmentManagerComponent implements OnInit {
     this.fileError.set(null);
 
     // Validate size
+    if (file.size === 0) {
+      this.fileError.set('File cannot be empty');
+      return;
+    }
     if (file.size > this.MAX_SIZE) {
       this.fileError.set(`File exceeds the 25 MB limit (${this.formatFileSize(file.size)})`);
       return;
@@ -177,15 +196,28 @@ export class AttachmentManagerComponent implements OnInit {
 
     // Default title from filename (without extension)
     const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    
+    if (this.isPendingMode) {
+      this.pendingAttachments.update(list => [
+        ...list,
+        {
+          id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          file,
+          title: nameWithoutExt
+        }
+      ]);
+      this.cancelPending();
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.pendingTitle.set(nameWithoutExt);
     this.pendingFile.set(file);
-    this.isPublicToggle.set(false);
   }
 
   cancelPending(): void {
     this.pendingFile.set(null);
     this.pendingTitle.set('');
-    this.isPublicToggle.set(false);
     this.fileError.set(null);
     this.editingAttachment.set(null);
   }
@@ -205,7 +237,6 @@ export class AttachmentManagerComponent implements OnInit {
     // Now enter edit mode for the clicked attachment
     this.editingAttachment.set(attachment);
     this.pendingTitle.set(attachment.title);
-    this.isPublicToggle.set(attachment.isPublic);
     this.pendingFile.set(null);
     this.fileError.set(null);
   }
@@ -229,7 +260,7 @@ export class AttachmentManagerComponent implements OnInit {
 
       this.pendingAttachments.update(list => [
         ...list,
-        { id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, file, title, isPublic: this.isLessonLevel ? false : this.isPublicToggle() }
+        { id: `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`, file, title }
       ]);
       this.cancelPending();
       this.cdr.markForCheck();
@@ -249,7 +280,6 @@ export class AttachmentManagerComponent implements OnInit {
           if (editing) {
             const payload: Partial<Attachment> = {
               title,
-              isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
               fileUrl: cloudRes.secure_url,
               filePublicId: cloudRes.public_id,
               fileType: cloudRes.format || ext,
@@ -279,9 +309,8 @@ export class AttachmentManagerComponent implements OnInit {
               filePublicId: cloudRes.public_id,
               fileType: cloudRes.format || ext,
               fileSize: cloudRes.bytes || file.size,
-              isPublic: this.isLessonLevel ? false : this.isPublicToggle(),
             };
-          this.attachmentsService.create(this.courseId!, payload, this.sectionId!).subscribe({
+          this.attachmentsService.create(this.courseId!, this.sectionId!, this.lessonId!, payload).subscribe({
               next: (attachment) => {
                 this.attachments.update((list) => [...list, attachment]);
                 this.isUploading.set(false);
@@ -305,7 +334,7 @@ export class AttachmentManagerComponent implements OnInit {
         },
       });
     } else if (editing) {
-      const payload: Partial<Attachment> = { title, isPublic: this.isLessonLevel ? false : this.isPublicToggle() };
+      const payload: Partial<Attachment> = { title };
       this.attachmentsService.update(editing.id, payload).subscribe({
         next: (updatedAttachment) => {
           this.attachments.update((list) => list.map((a) => (a.id === editing.id ? updatedAttachment : a)));
@@ -324,7 +353,58 @@ export class AttachmentManagerComponent implements OnInit {
   }
 
   removeQueued(id: string): void {
+    if (this.editingPendingId() === id) this.cancelEditQueued();
     this.pendingAttachments.update(list => list.filter(p => p.id !== id));
+  }
+
+  // ─── Queued-item inline edit (pre-creation only) ─────────────
+  startEditQueued(id: string): void {
+    // Toggle off if already editing this item
+    if (this.editingPendingId() === id) {
+      this.cancelEditQueued();
+      return;
+    }
+    const item = this.pendingAttachments().find(p => p.id === id);
+    if (!item) return;
+    this.editingPendingId.set(id);
+    this.editingPendingTitle.set(item.title);
+    this.editingPendingFile.set(null);
+    this.fileError.set(null);
+    this.cdr.markForCheck();
+  }
+
+  cancelEditQueued(): void {
+    this.editingPendingId.set(null);
+    this.editingPendingTitle.set('');
+    this.editingPendingFile.set(null);
+    this.fileError.set(null);
+    this.cdr.markForCheck();
+  }
+
+  onEditQueuedFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    input.value = '';
+    this.fileError.set(null);
+    if (file.size === 0) { this.fileError.set('File cannot be empty'); return; }
+    if (file.size > this.MAX_SIZE) { this.fileError.set(`File exceeds the 25 MB limit (${this.formatFileSize(file.size)})`); return; }
+    this.editingPendingFile.set(file);
+    this.cdr.markForCheck();
+  }
+
+  confirmEditQueued(): void {
+    const id = this.editingPendingId();
+    const title = this.editingPendingTitle().trim();
+    if (!id || !title) return;
+    const newFile = this.editingPendingFile();
+    this.pendingAttachments.update(list =>
+      list.map(p => {
+        if (p.id !== id) return p;
+        return { ...p, title, file: newFile ?? p.file };
+      })
+    );
+    this.cancelEditQueued();
   }
 
   // ─── Delete Flow ───────────────────────────────────────────
@@ -362,40 +442,12 @@ export class AttachmentManagerComponent implements OnInit {
     });
   }
 
-  // ─── Update Flow ───────────────────────────────────────────
-  toggleVisibility(attachment: Attachment): void {
-    if (this.isLessonLevel) return; // Lesson attachments are always private
 
-    this.updatingId.set(attachment.id);
-    const newIsPublic = !attachment.isPublic;
-
-    this.attachmentsService.update(attachment.id, { isPublic: newIsPublic }).subscribe({
-      next: (updatedAttachment) => {
-        this.attachments.update((list) =>
-          list.map((a) => (a.id === attachment.id ? updatedAttachment : a))
-        );
-        this.updatingId.set(null);
-        this.toastr.success(`"${attachment.title}" is now ${newIsPublic ? 'public' : 'private'}`);
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.updatingId.set(null);
-        this.toastr.error('Failed to update attachment visibility');
-        this.cdr.markForCheck();
-      },
-    });
-  }
 
   // ─── Helpers ───────────────────────────────────────────────
-  private buildFolder(courseId: string = this.courseId!, sectionId = this.sectionId, lessonId = this.lessonId): string {
-    const base = `edugenie/courses/attachments/${courseId}`;
-    if (sectionId && lessonId) {
-      return `${base}/sections/${sectionId}/lessons/${lessonId}`;
-    }
-    if (sectionId) {
-      return `${base}/sections/${sectionId}`;
-    }
-    return `${base}/course`;
+  private buildFolder(): string {
+    // edugenie/{courseId}/{sectionId}
+    return `edugenie/${this.courseId}/${this.sectionId}`;
   }
 
   formatFileSize(bytes: number): string {
@@ -437,12 +489,13 @@ export class AttachmentManagerComponent implements OnInit {
    * Failures don't kill the batch — failed items stay in pendingAttachments()
    * (flagged) so the user can retry just those, without re-selecting files.
    */
-  flushPending(courseId: string, sectionId?: string, lessonId?: string): Observable<Attachment[]> {
+  flushPending(courseId: string, sectionId: string, lessonId: string): Observable<Attachment[]> {
     const queue = this.pendingAttachments();
     if (queue.length === 0) return of([]);
 
     this.isUploading.set(true);
-    const folder = this.buildFolder(courseId, sectionId, lessonId);
+    // Use the passed IDs for the Cloudinary folder (component may not have them yet)
+    const folder = `edugenie/${courseId}/${sectionId}`;
 
     const tasks = queue.map(item =>
       this.cloudinaryService.uploadAttachment(item.file, folder).pipe(
@@ -455,10 +508,9 @@ export class AttachmentManagerComponent implements OnInit {
             filePublicId: cloudRes.public_id,
             fileType: cloudRes.format || ext,
             fileSize: cloudRes.bytes || item.file.size,
-            isPublic: item.isPublic,
           };
           
-          return this.attachmentsService.create(courseId, payload, sectionId!).pipe(
+          return this.attachmentsService.create(courseId, sectionId!, lessonId!, payload).pipe(
             map(attachment => ({ ok: true as const, id: item.id, attachment })),
             catchError(err => {
               // DB record failed after upload succeeded — best-effort cleanup of orphaned asset
@@ -502,7 +554,7 @@ export class AttachmentManagerComponent implements OnInit {
 
   /** Retry a single failed queued attachment after a flush partially failed. */
   retryQueued(id: string, courseId?: string, sectionId?: string, lessonId?: string): void {
-    if (!courseId) return; // shouldn't happen — failed items only exist post-creation
+    if (!courseId || !sectionId || !lessonId) return;
     const item = this.pendingAttachments().find(p => p.id === id);
     if (!item) return;
 
@@ -553,7 +605,6 @@ export class AttachmentManagerComponent implements OnInit {
     const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
     this.pendingTitle.set(nameWithoutExt);
     this.pendingFile.set(file);
-    this.isPublicToggle.set(false);
     this.expanded.set(true);
   }
 }

@@ -83,7 +83,10 @@ export class CommandCenterPageComponent implements OnInit {
 
         this.buildPayoutStatus();
         this.generateSparklines();
-        this.processPlatformActivity(res.logs?.data || []);
+
+        this.activityDays = this.overview?.activityChart?.labels || [];
+        this.activityValues = this.overview?.activityChart?.data || [];
+        this.maxActivityValue = Math.max(...this.activityValues, 10);
 
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -131,28 +134,6 @@ export class CommandCenterPageComponent implements OnInit {
     this.feeSparkData = build(fee, gentleWave);
   }
 
-  private processPlatformActivity(logs: AuditLogItem[]) {
-    const days = [];
-    const values = [];
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const now = new Date();
-
-    for (let i = 7; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * msPerDay);
-      const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      days.push(label);
-
-      const count = logs.filter(log => {
-        const logDate = new Date(log.createdAt);
-        return logDate.toDateString() === d.toDateString();
-      }).length;
-      values.push(count);
-    }
-
-    this.activityDays = days;
-    this.activityValues = values;
-    this.maxActivityValue = Math.max(...values, 10);
-  }
 
 
   getRevenuePoints(): { x: number; y: number; val: number }[] {

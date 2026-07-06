@@ -39,7 +39,8 @@
   bottom: 0;
   width: var(--sidebar-width, 260px);
   z-index: 50;
-  background-color: var(--color-primary, #3b1892);
+  background-color: var(--color-surface, #ffffff);   /* ← same as desktop */
+  border-right: 1px solid var(--color-border, #e5e7eb); /* ← same as desktop */
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
@@ -70,27 +71,29 @@
 .overlay-brand {
   font-size: 1.0625rem;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-primary, #3b1892);       /* ← matches desktop primary text */
   letter-spacing: -0.3px;
 }
 
 .overlay-close {
   width: 32px;
   height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border, #e5e7eb); /* ← matches desktop toggle */
+  background: transparent;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.9);
-  transition: background 0.15s;
+  color: var(--color-text-secondary, #6b7280);    /* ← matches desktop text */
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
 
 .overlay-close:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--color-sidebar-hover, #f5f3ff); /* ← matches desktop hover */
+  color: var(--color-primary, #3b1892);
+  border-color: #c4b5fd;
 }
 
 .overlay-close mat-icon { font-size: 20px; width: 20px; height: 20px; }
@@ -172,9 +175,10 @@
   font-size: 0.8rem;
 }
 
+/* overlay variant now identical to desktop */
 .profile-initials--overlay {
-  background-color: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  background-color: #e5e7eb;
+  color: var(--color-text-secondary, #6b7280);
 }
 
 /* Name */
@@ -186,7 +190,8 @@
   max-width: 200px;
 }
 
-.profile-name--overlay { color: rgba(255, 255, 255, 0.95); }
+/* overlay variant now identical to desktop */
+.profile-name--overlay { color: var(--color-text-primary, #1f2937); }
 
 /* Role */
 .profile-role {
@@ -196,7 +201,8 @@
   color: var(--color-text-secondary, #6b7280);
 }
 
-.profile-role--overlay { color: rgba(255, 255, 255, 0.6); }
+/* overlay variant now identical to desktop */
+.profile-role--overlay { color: var(--color-text-secondary, #6b7280); }
 
 /* ── Divider ── */
 .sidebar-divider {
@@ -205,8 +211,9 @@
   margin: 0 12px;
 }
 
+/* overlay divider now identical to desktop */
 .sidebar--overlay .sidebar-divider {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--color-border, #e5e7eb);
 }
 
 /* ════════════════════════════════════════════════
@@ -273,14 +280,14 @@
   gap: 0;
 }
 
-/* Overlay color scheme */
+/* Overlay nav links — identical to desktop */
 .nav-link--overlay {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .nav-link--overlay:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background-color: var(--color-sidebar-hover, #f5f3ff);
+  color: var(--color-primary, #3b1892);
 }
 
 /* ── Active state ── */
@@ -291,10 +298,10 @@
   font-weight: 600;
 }
 
-/* Overlay */
+/* Overlay active — identical to desktop */
 .sidebar--overlay .nav-active {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
+  background-color: var(--color-sidebar-active, #ede9fe) !important;
+  color: var(--color-primary, #3b1892) !important;
   font-weight: 600;
 }
 
@@ -322,7 +329,8 @@
 
 .nav-label--logout { color: #f87171; }
 
-.sidebar--overlay .nav-label--logout { color: rgba(252, 165, 165, 0.9); }
+/* overlay logout label identical to desktop */
+.sidebar--overlay .nav-label--logout { color: #f87171; }
 
 /* ── Button variant ── */
 .nav-link--btn {

@@ -4,11 +4,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { CourseApproval } from '../../models/course-approval.model';
 import { ButtonLoadingComponent } from '../../../../../shared/components/loading';
 import { CloudinaryThumbPipe } from '../../../../../shared/pipes/cloudinary-thumb.pipe';
+import { DurationPipe } from '../../../../../shared/pipes/duration.pipe';
 
 @Component({
   selector: '[app-approval-row]',
   standalone: true,
-  imports: [CommonModule, MatIconModule, ButtonLoadingComponent, CloudinaryThumbPipe],
+  imports: [CommonModule, MatIconModule, ButtonLoadingComponent, CloudinaryThumbPipe, DurationPipe],
   templateUrl: './approval-row.component.html',
   styleUrl: './approval-row.component.css'
 })

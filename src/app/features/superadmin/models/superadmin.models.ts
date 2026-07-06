@@ -8,10 +8,15 @@ export interface SuperAdminDashboardOverviewResponse {
   activeAdmins: number;
   pendingPayouts: number;
   revenueGrowthPercent: number;
-  revenueChart: {
+  revenueChart?: {
     labels: string[];
     data: number[];
   };
+  activityChart?: {
+    labels: string[];
+    data: number[];
+  };
+  totalActivities7Days?: number;
   criticalAlerts: {
     type: 'webhook_failure' | 'payout_backlog';
     service?: string;

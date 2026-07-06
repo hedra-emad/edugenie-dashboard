@@ -223,11 +223,23 @@ th:nth-child(4) { width: 12%; }
 th:nth-child(5) { width: 10%; }
 th.actions-th   { width: 100px; text-align: right; }
 
-/* Tablet: hide Duration column */
-@media (max-width: 1023px) and (min-width: 768px) {
+/* Tablet/pre-desktop 640px–1023px: hide Duration, auto layout, clean truncation */
+@media (max-width: 1023px) and (min-width: 640px) {
+  table {
+    table-layout: auto;
+    min-width: 460px;
+  }
+
+  th, td {
+    padding: 10px 8px;
+  }
+
+  th.checkbox-th  { width: 96px; }
+  th:nth-child(2) { width: auto; min-width: 120px; }
+  th:nth-child(3) { width: 18%; min-width: 80px; }
+  th:nth-child(4) { width: 12%; }
   th:nth-child(5) { display: none; }
-  th:nth-child(2) { width: 42%; }
-  th:nth-child(3) { width: 25%; }
+  th.actions-th   { width: 76px; }
 }
 
 /* Checkbox */

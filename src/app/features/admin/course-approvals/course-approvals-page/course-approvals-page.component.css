@@ -6,25 +6,25 @@
 /* Stats Grid Layout: 5 Cards Total */
 .stats-grid { display: grid; gap: 16px; }
 
-/* Desktop: all 5 cards in one row */
-@media (min-width: 1024px) {
+/* Desktop ≥900px: all 5 cards in one single row, no wrapping */
+@media (min-width: 900px) {
   .stats-grid { grid-template-columns: repeat(5, 1fr); }
   .stat-card { grid-column: span 1 !important; }
 }
 
-/* Tablet: 3 + 2 layout */
-@media (max-width: 1023px) and (min-width: 641px) {
+/* Tablet 641px–899px: 2 cards top row, 3 cards bottom row */
+@media (max-width: 899px) and (min-width: 641px) {
   .stats-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
   .stat-card:nth-child(1),
-  .stat-card:nth-child(2),
-  .stat-card:nth-child(3) { grid-column: span 2; }
+  .stat-card:nth-child(2) { grid-column: span 3; }
+  .stat-card:nth-child(3),
   .stat-card:nth-child(4),
-  .stat-card:nth-child(5) { grid-column: span 3; }
+  .stat-card:nth-child(5) { grid-column: span 2; }
 }
 
-/* Mobile: 1 column */
+/* Mobile ≤640px: one card per row, full width */
 @media (max-width: 640px) {
-  .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
   .stat-card { grid-column: span 1 !important; }
 }
 
@@ -35,6 +35,7 @@
   display: flex; align-items: center; gap: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 0; /* prevent card from overflowing grid cell */
 }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -45,9 +46,44 @@
 .icon-red    { background: #fee2e2; color: #dc2626; }
 .icon-gray   { background: #f3f4f6; color: #6b7280; }
 .icon-purple { background: #ede9fe; color: #7c3aed; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-label { font-size: 0.7125rem; font-weight: 600; color: var(--color-text-secondary, #6b7280); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-info { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.stat-label {
+  font-size: 0.7125rem; font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--color-text-primary, #1f2937); line-height: 1.2; }
+
+/* Tighten card padding at 900–1200px so all 5 fit without wrapping */
+@media (max-width: 1200px) and (min-width: 1100px) {
+  .stat-card { padding: 18px 14px; gap: 12px; }
+  .stat-icon { width: 42px; height: 42px; }
+  .stat-value { font-size: 1.375rem; }
+}
+
+/* Extra tight at 900–1099px — 5 cards in one row, content must fit */
+@media (max-width: 1099px) and (min-width: 900px) {
+  .stat-card { padding: 14px 10px; gap: 8px; }
+  .stat-icon { width: 36px; height: 36px; }
+  .stat-icon mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  .stat-value { font-size: 1.125rem; }
+  .stat-label { font-size: 0.6rem; letter-spacing: 0.3px; }
+}
+
+/* Tablet range: comfortable cards */
+@media (max-width: 899px) and (min-width: 641px) {
+  .stat-card { padding: 18px 16px; gap: 14px; }
+  .stat-icon { width: 44px; height: 44px; }
+  .stat-value { font-size: 1.375rem; }
+}
+
+/* Mobile: full-width comfortable cards */
+@media (max-width: 640px) {
+  .stat-card { padding: 16px 14px; gap: 12px; }
+  .stat-icon { width: 40px; height: 40px; }
+  .stat-value { font-size: 1.375rem; }
+}
 
 /* Bulk toolbar */
 .bulk-toolbar { display: flex; align-items: center; justify-content: space-between; background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 20px; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex-wrap: wrap; animation: slideInDown 0.2s ease-out; }

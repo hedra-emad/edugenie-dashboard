@@ -8,6 +8,8 @@ import {
   ElementRef,
   HostListener,
   ViewChild,
+  ViewChildren,
+  QueryList,
   DestroyRef,
   forwardRef,
   Injector,
@@ -41,8 +43,8 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
   private elementRef = inject(ElementRef);
   private injector = inject(Injector);
 
-  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
-
+@ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+@ViewChildren('optionItem') optionItems!: QueryList<ElementRef<HTMLButtonElement>>;
   // Signals
   availableCategories = signal<Category[]>([]);
   filteredCategories = signal<Category[]>([]);
@@ -99,6 +101,14 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
       },
       { allowSignalWrites: true }
     );
+    // Effect to scroll the active option into view on keyboard navigation
+effect(() => {
+  const index = this.activeIndex();
+  if (index >= 0 && this.optionItems) {
+    const el = this.optionItems.toArray()[index]?.nativeElement;
+    el?.scrollIntoView({ block: 'nearest' });
+  }
+});
   }
 
   ngOnInit() {
@@ -133,6 +143,10 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
         this.filterCategories(term);
       });
   }
+
+  setActiveIndex(index: number) {
+  this.activeIndex.set(index);
+}
 
   private filterCategories(term: string) {
     const trimmed = term.trim().toLowerCase();
@@ -222,18 +236,17 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
 
     if (this.isOpen()) {
       this.isOpen.set(false);
+      this.searchTerm.set('');
+      this.filteredCategories.set(this.availableCategories());
+      this.activeIndex.set(-1);
     } else {
       this.isOpen.set(true);
-      // Show full list when opening
       this.filteredCategories.set(this.availableCategories());
       this.activeIndex.set(-1);
 
-      // Auto-focus the input and select existing text
+      // Auto-focus the in-panel search input
       setTimeout(() => {
         this.searchInput?.nativeElement.focus();
-        if (this.selectedCategoryName()) {
-          this.searchInput?.nativeElement.select();
-        }
       }, 0);
     }
   }
@@ -245,64 +258,64 @@ export class CategorySelectorComponent implements OnInit, ControlValueAccessor {
     this.searchSubject.next(term);
   }
 
-  onFocus() {
-    this.isOpen.set(true);
-    // Show full list
+  clearSearch() {
+    this.searchTerm.set('');
     this.filteredCategories.set(this.availableCategories());
     this.activeIndex.set(-1);
+    this.searchInput?.nativeElement.focus();
   }
 
   onBlur() {
-    // Close dropdown on blur
+    // Close dropdown on blur (slight delay allows click on option to fire first)
     setTimeout(() => {
-      this.isOpen.set(false);
-      this.isTouched.set(true);
-      if (this.onTouched) {
-        this.onTouched();
+      if (!this.elementRef.nativeElement.contains(document.activeElement)) {
+        this.isOpen.set(false);
+        this.isTouched.set(true);
+        this.searchTerm.set('');
+        if (this.onTouched) this.onTouched();
       }
-      // Restore search input to selected category name
-      this.searchTerm.set('');
-    }, 100); // Slight delay to allow item selection to fire
+    }, 150);
   }
 
   onEscape() {
     this.isOpen.set(false);
     this.searchTerm.set('');
     this.activeIndex.set(-1);
-    this.searchInput?.nativeElement.blur();
   }
 
-  onArrowDown() {
-    if (!this.isOpen()) {
-      this.isOpen.set(true);
-      this.filteredCategories.set(this.availableCategories());
-      return;
-    }
-
-    const current = this.activeIndex();
-    const max = this.filteredCategories().length - 1;
-    if (current < max) {
-      this.activeIndex.set(current + 1);
-    } else {
-      this.activeIndex.set(0);
-    }
+ onArrowDown(event: Event) {
+  event.preventDefault();
+  if (!this.isOpen()) {
+    this.isOpen.set(true);
+    this.filteredCategories.set(this.availableCategories());
+    return;
   }
 
-  onArrowUp() {
-    if (!this.isOpen()) {
-      this.isOpen.set(true);
-      this.filteredCategories.set(this.availableCategories());
-      return;
-    }
-
-    const current = this.activeIndex();
-    const max = this.filteredCategories().length - 1;
-    if (current > 0) {
-      this.activeIndex.set(current - 1);
-    } else {
-      this.activeIndex.set(max);
-    }
+  const current = this.activeIndex();
+  const max = this.filteredCategories().length - 1;
+  if (current < max) {
+    this.activeIndex.set(current + 1);
+  } else {
+    this.activeIndex.set(0);
   }
+}
+
+onArrowUp(event: Event) {
+  event.preventDefault();
+  if (!this.isOpen()) {
+    this.isOpen.set(true);
+    this.filteredCategories.set(this.availableCategories());
+    return;
+  }
+
+  const current = this.activeIndex();
+  const max = this.filteredCategories().length - 1;
+  if (current > 0) {
+    this.activeIndex.set(current - 1);
+  } else {
+    this.activeIndex.set(max);
+  }
+}
 
   onEnter() {
     if (!this.isOpen()) return;

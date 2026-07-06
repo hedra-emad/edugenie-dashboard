@@ -3,7 +3,10 @@
   flex-direction: column;
   max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 80px;
+  padding: 0 16px 80px;   /* horizontal padding prevents edge-to-edge overflow */
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;     /* catch any remaining overflow at the page root */
 }
 
 .page-header {
@@ -89,6 +92,7 @@
   gap: 24px;
   align-items: start;
   margin-bottom: 24px;
+  min-width: 0;
 }
 
 .main-column,
@@ -96,6 +100,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;   /* essential — prevents flex/grid children from overflowing */
 }
 
 .card {
@@ -104,6 +109,9 @@
   border: 1px solid var(--color-border, #e5e7eb);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  min-width: 0;   /* prevent card from overflowing its grid/flex cell */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .content-card {
@@ -299,6 +307,17 @@
   margin-top: 1px;
 }
 
+/* Bullet used in Requirements list instead of the arrow icon */
+.req-bullet {
+  color: var(--color-primary, #3b1892);
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 20px;
+  text-align: center;
+}
+
 .card-header-flex {
   display: flex;
   justify-content: space-between;
@@ -380,9 +399,10 @@
   font-weight: 600;
   color: #1f2937;
   font-size: 0.9375rem;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Allow wrapping on narrow screens; ellipsis on single-line truncation */
+  white-space: nowrap;
 }
 
 .section-meta {
@@ -910,30 +930,89 @@ button:disabled {
 @media (max-width: 1023px) {
   .grid-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .sidebar-column {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 16px;
+    order: -1;
+  }
+
+  .main-column {
+    order: 0;
   }
 }
 
+/* Remove old inline instructor duplicate rules */
+.instructor-card--inline { display: none; }
+
+/* ── Tablet ──────────────────────────────────────────────────── */
 @media (max-width: 767px) {
+  .course-details-page {
+    padding: 0 12px 60px;
+  }
+
   .course-thumbnail {
     height: 200px;
   }
 
+  /* Sidebar stacks to single column */
   .sidebar-column {
     grid-template-columns: 1fr;
   }
 
-  .actions-inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
+  .content-card {
+    padding: 16px;
   }
 
+  .course-header-info {
+    padding: 16px;
+  }
+
+  .course-title {
+    font-size: 1.25rem;
+    word-break: break-word;
+  }
+
+  .course-description {
+    font-size: 0.875rem;
+  }
+
+  /* Goal and requirement tags: smaller text, tighter padding */
+  .goal-tag,
+  .req-tag {
+    font-size: 0.875rem;
+    padding: 10px 12px;
+  }
+
+  /* Accordion headers: smaller padding */
+  .accordion-header {
+    padding: 12px 12px;
+  }
+
+  .accordion-content {
+    padding: 12px;
+  }
+
+  /* Section name wraps on mobile */
+  .section-name {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Lesson items: allow title to wrap */
+  .lesson-title {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .lesson-description {
+    white-space: normal;
+  }
+
+  /* Actions buttons full width */
   .actions-buttons {
     width: 100%;
     flex-direction: column;
@@ -945,8 +1024,107 @@ button:disabled {
     padding: 14px 20px;
   }
 
+  /* Details list: allow wrapping on very narrow */
+  .details-list li {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .detail-value {
+    text-align: left;
+    font-size: 0.875rem;
+  }
+
+  /* Inline toggle: tighter */
+  .inline-toggle {
+    padding: 6px 8px;
+  }
+
+  /* Lesson right side: hide duration on very small screens if needed */
+  .lesson-right {
+    gap: 4px;
+  }
+}
+
+/* ── Small mobile ────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .course-details-page {
+    padding: 0 8px 48px;
+  }
+
+  .content-card {
+    padding: 12px;
+  }
+
+  .course-header-info {
+    padding: 12px;
+  }
+
+  .course-thumbnail {
+    height: 180px;
+  }
+
   .course-title {
-    font-size: 1.375rem;
+    font-size: 1.125rem;
+  }
+
+  .card-title {
+    font-size: 0.9375rem;
+  }
+
+  .instructor-card {
+    padding: 16px;
+  }
+
+  .details-card {
+    padding: 16px;
+  }
+
+  /* Goal/req tags even more compact */
+  .goal-tag,
+  .req-tag {
+    font-size: 0.8125rem;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  /* Accordion tighter */
+  .accordion-header {
+    padding: 10px 10px;
+  }
+
+  .section-number {
+    font-size: 0.65rem;
+  }
+
+  .section-name {
+    font-size: 0.875rem;
+  }
+
+  .accordion-content {
+    padding: 10px;
+  }
+
+  /* Attachment cards */
+  .att-card {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .att-filename { display: none; }
+  .att-btn { width: 26px; height: 26px; }
+  .attach-count { display: none; }
+
+  /* Lesson items */
+  .lesson-item {
+    padding: 8px 8px;
+    gap: 8px;
+  }
+
+  .lesson-icon mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -1194,11 +1372,8 @@ button:disabled {
 .att-btn--dl:hover   { background: #dcfce3; border-color: #86efac; color: #15803d; }
 
 /* ════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE (attachment-specific)
    ════════════════════════════════════════════════ */
 @media (max-width: 640px) {
   .preview-video-wrap { aspect-ratio: 4/3; }
-  .att-filename { display: none; }
-  .att-btn { width: 26px; height: 26px; }
-  .attach-count { display: none; }
 }
