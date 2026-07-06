@@ -117,7 +117,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
         padding: 12,
         cornerRadius: 10,
         displayColors: false,
-        callbacks: { label: (ctx: any) => ' ' + (ctx.parsed.y || 0).toLocaleString() + ' EGP' },
+        callbacks: { label: (ctx: any) => ' $' + (ctx.parsed.y || 0).toLocaleString() },
       },
     },
     scales: {
@@ -134,7 +134,7 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
           color: '#94a3b8',
           font: { size: 11, family: "'Inter', sans-serif" },
           padding: 8,
-          callback: (v) => Number(v).toLocaleString() + ' EGP',
+          callback: (v) => '$' + Number(v).toLocaleString(),
         },
       },
     },

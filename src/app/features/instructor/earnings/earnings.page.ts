@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { EarningsService } from './earnings.service';
-import { EarningsPayoutResponse, PayoutMethodResponse } from './earnings.models';
+import { EarningsPayoutResponse, StripeConnectInfo } from './earnings.models';
 
 @Component({
   selector: 'app-instructor-earnings',
@@ -20,105 +20,39 @@ export class InstructorEarningsPageComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   isLoading = true;
-  isRequesting = false;
+  isConnecting = false;
+  isOpeningDashboard = false;
   data: EarningsPayoutResponse | null = null;
-
-  // PayPal payout destination
-  payoutMethod: PayoutMethodResponse | null = null;
-  isEditingEmail = false;
-  emailInput = '';
-  isSavingEmail = false;
 
   ngOnInit() {
     this.loadPayouts();
-    this.loadPayoutMethod();
   }
 
-  get hasPayoutEmail(): boolean {
-    return !!this.payoutMethod?.paypalEmail;
+  get stripe(): StripeConnectInfo | null {
+    return this.data?.stripe ?? null;
   }
 
-  loadPayoutMethod() {
-    this.earningsService.getPayoutMethod().subscribe({
-      next: (res) => {
-        this.payoutMethod = res;
-        // Open the editor automatically when nothing is saved yet.
-        this.isEditingEmail = !res?.paypalEmail;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.payoutMethod = { paypalEmail: null, updatedAt: null };
-        this.isEditingEmail = true;
-        this.cdr.detectChanges();
-      },
-    });
+  /** Whether the instructor can request a payout (onboarded + enough pending). */
+  get payoutsEnabled(): boolean {
+    return !!this.data?.stripe?.payoutsEnabled;
   }
 
-  startEditEmail() {
-    this.emailInput = '';
-    this.isEditingEmail = true;
-    this.cdr.detectChanges();
-  }
-
-  cancelEditEmail() {
-    if (this.isSavingEmail) return;
-    // Only allow cancel when an email already exists to fall back to.
-    if (this.hasPayoutEmail) {
-      this.isEditingEmail = false;
-      this.emailInput = '';
-      this.cdr.detectChanges();
-    }
-  }
-
-  savePayoutEmail() {
-    const email = this.emailInput.trim();
-    if (!email || this.isSavingEmail) return;
-    this.isSavingEmail = true;
+  /** Start / resume Stripe Connect onboarding, then redirect to Stripe. */
+  connectStripe() {
+    if (this.isConnecting) return;
+    this.isConnecting = true;
     this.cdr.detectChanges();
 
-    this.earningsService.setPayoutMethod(email).subscribe({
+    this.earningsService.connectOnboard().subscribe({
       next: (res) => {
-        this.payoutMethod = res;
-        this.isEditingEmail = false;
-        this.emailInput = '';
-        this.isSavingEmail = false;
-        this.cdr.detectChanges();
-        this.snackBar.open('PayPal email saved', 'Close', {
-          duration: 3000,
-          panelClass: ['bg-green-600', 'text-white'],
-        });
+        // Full-page redirect to Stripe's hosted onboarding.
+        window.location.href = res.url;
       },
       error: (err) => {
-        this.isSavingEmail = false;
+        this.isConnecting = false;
         this.cdr.detectChanges();
-        const msg = err?.error?.message || 'Failed to save PayPal email';
+        const msg = err?.error?.message || 'Could not start Stripe onboarding';
         this.snackBar.open(Array.isArray(msg) ? msg[0] : msg, 'Close', {
-          duration: 4000,
-          panelClass: ['bg-red-600', 'text-white'],
-        });
-      },
-    });
-  }
-
-  clearPayoutEmail() {
-    if (this.isSavingEmail) return;
-    this.isSavingEmail = true;
-    this.cdr.detectChanges();
-
-    this.earningsService.clearPayoutMethod().subscribe({
-      next: () => {
-        this.payoutMethod = { paypalEmail: null, updatedAt: null };
-        this.isEditingEmail = true;
-        this.emailInput = '';
-        this.isSavingEmail = false;
-        this.cdr.detectChanges();
-        this.snackBar.open('PayPal email removed', 'Close', { duration: 3000 });
-      },
-      error: (err) => {
-        this.isSavingEmail = false;
-        this.cdr.detectChanges();
-        const msg = err?.error?.message || 'Failed to remove PayPal email';
-        this.snackBar.open(msg, 'Close', {
           duration: 4000,
           panelClass: ['bg-red-600', 'text-white'],
         });
@@ -146,9 +80,8 @@ export class InstructorEarningsPageComponent implements OnInit {
   }
 
   /**
-   * Guarantees the full shape even if the API returns an older/partial payload
-   * (e.g. before the new backend is deployed), so the template never reads
-   * properties off `undefined`. Real values flow through once the new API is live.
+   * Guarantees the full shape even if the API returns an older/partial payload,
+   * so the template never reads properties off `undefined`.
    */
   private normalize(res: EarningsPayoutResponse): EarningsPayoutResponse {
     const r = (res ?? {}) as Partial<EarningsPayoutResponse> & {
@@ -177,6 +110,14 @@ export class InstructorEarningsPageComponent implements OnInit {
         fromFullCourses: r.breakdown?.fromFullCourses ?? 0,
         fromSections: r.breakdown?.fromSections ?? 0,
       },
+      stripe: {
+        hasAccount: r.stripe?.hasAccount ?? false,
+        detailsSubmitted: r.stripe?.detailsSubmitted ?? false,
+        chargesEnabled: r.stripe?.chargesEnabled ?? false,
+        payoutsEnabled: r.stripe?.payoutsEnabled ?? false,
+        balanceAvailable: r.stripe?.balanceAvailable ?? 0,
+        balancePending: r.stripe?.balancePending ?? 0,
+      },
       requests: Array.isArray(r.requests) ? r.requests : [],
       history: Array.isArray(r.history)
         ? r.history.map((h) => ({
@@ -192,31 +133,27 @@ export class InstructorEarningsPageComponent implements OnInit {
     };
   }
 
-  requestPayout() {
-    if (!this.data?.canRequest || this.isRequesting) return;
-    if (!this.hasPayoutEmail) {
-      this.snackBar.open('Add a PayPal payout email first.', 'Close', {
-        duration: 4000,
-        panelClass: ['bg-red-600', 'text-white'],
-      });
-      return;
-    }
-    this.isRequesting = true;
+  /** Open the instructor's Stripe Express dashboard (balance + payout history). */
+  openStripeDashboard() {
+    if (this.isOpeningDashboard) return;
+    this.isOpeningDashboard = true;
     this.cdr.detectChanges();
 
-    this.earningsService.requestPayout().subscribe({
-      next: () => {
-        this.isRequesting = false;
+    this.earningsService.connectDashboard().subscribe({
+      next: (res) => {
+        this.isOpeningDashboard = false;
         this.cdr.detectChanges();
-        this.snackBar.open('Payout requested', 'Close', { duration: 4000, panelClass: ['bg-green-600', 'text-white'] });
-        this.loadPayouts();
+        window.open(res.url, '_blank', 'noopener');
       },
       error: (err) => {
-        this.isRequesting = false;
+        this.isOpeningDashboard = false;
         this.cdr.detectChanges();
-        const errorMsg = err?.error?.message || 'Failed to request payout';
-        this.snackBar.open(errorMsg, 'Close', { duration: 4000, panelClass: ['bg-red-600', 'text-white'] });
-      }
+        const errorMsg = err?.error?.message || 'Could not open Stripe dashboard';
+        this.snackBar.open(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg, 'Close', {
+          duration: 4000,
+          panelClass: ['bg-red-600', 'text-white'],
+        });
+      },
     });
   }
 }

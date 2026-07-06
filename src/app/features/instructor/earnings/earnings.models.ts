@@ -18,10 +18,18 @@ export type PayoutRequestStatus =
   | 'REJECTED'
   | 'FAILED';
 
-/** The instructor's saved PayPal payout destination (email is masked). */
-export interface PayoutMethodResponse {
-  paypalEmail: string | null;
-  updatedAt: string | null;
+/** Stripe Connect onboarding + live connected-account balance. */
+export interface StripeConnectInfo {
+  hasAccount: boolean;
+  detailsSubmitted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  balanceAvailable: number;
+  balancePending: number;
+}
+
+export interface ConnectOnboardResponse {
+  url: string;
 }
 
 export interface OpenPayoutRequest {
@@ -74,6 +82,7 @@ export interface EarningsPayoutResponse {
   canRequest: boolean;
   openRequest: OpenPayoutRequest | null;
   breakdown: EarningsBreakdown;
+  stripe: StripeConnectInfo;
   requests: PayoutRequestItem[];
   history: EarningsHistoryItem[];
 }

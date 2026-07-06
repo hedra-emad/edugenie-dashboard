@@ -31,6 +31,12 @@ const NO_CACHE: readonly string[] = [
   '/users/profile',
   '/notifications',
   '/cloudinary/sign',
+  // Earnings + platform config carry the superadmin-set minimum payout threshold
+  // and share %, which a superadmin can change in a different session. Never
+  // serve these from the read cache so instructors always see the current value
+  // on any navigation to the page.
+  '/earnings',
+  '/platform-config',
 ];
 
 interface CacheEntry {
