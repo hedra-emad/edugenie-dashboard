@@ -27,16 +27,16 @@ export interface InstructorReviewsResponse {
 export interface ReviewsFilterOptions {
   courseId?: string;
   rating?: number[];
+  sortBy?: string;
+  searchTerm?: string;
   page?: number;
   limit?: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class InstructorReviewsService {
-  private httpClient = inject(HttpClient);
-  private apiUrl = '/api/instructor/reviews';
+  private http = inject(HttpClient);
+  private readonly apiUrl = '/instructor/reviews';
 
   getReviews(filters: ReviewsFilterOptions): Observable<InstructorReviewsResponse> {
     let params = new HttpParams();
@@ -44,23 +44,23 @@ export class InstructorReviewsService {
     if (filters.courseId) {
       params = params.set('courseId', filters.courseId);
     }
-
     if (filters.rating && filters.rating.length > 0) {
       params = params.set('rating', filters.rating.join(','));
     }
-
+    if (filters.sortBy) {
+      params = params.set('sortBy', filters.sortBy);
+    }
+    if (filters.searchTerm) {
+      params = params.set('search', filters.searchTerm);
+    }
     if (filters.page) {
       params = params.set('page', filters.page.toString());
     }
 
-    if (filters.limit) {
-      params = params.set('limit', filters.limit.toString());
-    }
+    // Never exceed the backend @Max(100)
+    const limit = Math.min(filters.limit ?? 10, 100);
+    params = params.set('limit', limit.toString());
 
-    return this.httpClient.get<InstructorReviewsResponse>(this.apiUrl, { params });
-  }
-
-  getCoursesWithReviews(): Observable<any> {
-    return this.httpClient.get(`${this.apiUrl}/courses-summary`);
+    return this.http.get<InstructorReviewsResponse>(this.apiUrl, { params });
   }
 }

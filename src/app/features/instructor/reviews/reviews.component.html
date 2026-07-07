@@ -28,7 +28,7 @@
       </button>
     </div>
   </div>
-} @else if (reviews().length === 0) {
+} @else if (totalReviews() === 0) {
   <div class="state-container">
     <div class="empty-box">
       <mat-icon class="empty-icon">star_outline</mat-icon>
@@ -38,6 +38,7 @@
   </div>
 } @else {
   <div class="page-wrapper" id="reviews-top">
+
     <!-- Page Header -->
     <div class="page-header">
       <div>
@@ -93,23 +94,8 @@
       (clearFilters)="onClearFilters()">
     </app-filter-bar>
 
-    <!-- Results Summary -->
-    @if (filteredReviews().length !== reviews().length) {
-      <div class="results-summary">
-        <mat-icon>filter_list</mat-icon>
-        <span>{{ getResultsText() }}</span>
-      </div>
-    }
-
-    <!-- Reviews Container -->
-    @if (
-      filteredReviews().length === 0 &&
-      (currentFilters().searchTerm.trim() ||
-       currentFilters().selectedStatuses.length > 0 ||
-       currentFilters().selectedLevels.length > 0 ||
-       currentFilters().selectedPriceFilter !== 'all')
-    ) {
-      <!-- No Filter Results -->
+    <!-- Reviews list (server returns the current page directly) -->
+    @if (reviews().length === 0) {
       <div class="state-container">
         <div class="empty-box">
           <mat-icon class="empty-icon">filter_list_off</mat-icon>
@@ -123,8 +109,9 @@
       </div>
     } @else {
       <div class="reviews-container">
-        @for (review of pagedReviews; track review.reviewId) {
+        @for (review of reviews(); track review.reviewId) {
           <div class="review-card" [class.low-rating]="review.rating <= 2">
+
             <!-- Card Header -->
             <div class="review-header">
               <div class="reviewer-info">
@@ -156,7 +143,7 @@
               <p class="review-comment">{{ review.comment }}</p>
             </div>
 
-            <!-- Status Badge (if low rating) -->
+            <!-- Low-rating badge -->
             @if (review.rating <= 2) {
               <div class="review-status">
                 <mat-icon>warning</mat-icon>
@@ -168,7 +155,7 @@
       </div>
 
       <!-- Pagination -->
-      @if (totalPages > 1) {
+      @if (totalPages() > 1) {
         <nav class="pagination-nav">
           <button
             class="pagination-btn prev"
@@ -193,7 +180,7 @@
 
           <button
             class="pagination-btn next"
-            [disabled]="currentPage() === totalPages"
+            [disabled]="currentPage() === totalPages()"
             (click)="loadPage(currentPage() + 1)"
             [matTooltip]="'Next page'">
             <mat-icon>chevron_right</mat-icon>

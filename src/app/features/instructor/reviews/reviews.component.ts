@@ -2,7 +2,11 @@ import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angula
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { InstructorReviewsService, InstructorReview, ReviewsFilterOptions } from '../services/instructor-reviews.service';
+import {
+  InstructorReviewsService,
+  InstructorReview,
+  InstructorReviewsResponse,
+} from '../services/instructor-reviews.service';
 import { FilterBarComponent, FilterConfig, FilterState } from '../../../shared/components/filter-bar/filter-bar.component';
 
 // Angular Material
@@ -33,16 +37,32 @@ export class InstructorReviewsComponent implements OnInit {
   private reviewsService = inject(InstructorReviewsService);
   private destroyRef = inject(DestroyRef);
 
+  // ── Data ──────────────────────────────────────────────────────
   reviews = signal<InstructorReview[]>([]);
   isLoading = signal(true);
   hasError = signal(false);
   errorMsg = signal('');
 
-  // Pagination state
+  // ── Server-side pagination ────────────────────────────────────
   readonly pageSize = 10;
   currentPage = signal(1);
+  totalReviews = signal(0);
+  totalPages = signal(0);
 
-  // Current filter state
+  // ── Stats (from the currently loaded page + totals from meta) ─
+  // Average computed from current page data; total from meta
+  averageRating = computed(() => {
+    const list = this.reviews();
+    if (list.length === 0) return '0.0';
+    const sum = list.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / list.length).toFixed(1);
+  });
+
+  needsAttentionCount = computed(() =>
+    this.reviews().filter((r) => r.rating <= 2).length
+  );
+
+  // ── Filter state ──────────────────────────────────────────────
   currentFilters = signal<FilterState>({
     searchTerm: '',
     selectedStatuses: [],
@@ -51,20 +71,6 @@ export class InstructorReviewsComponent implements OnInit {
     selectedSort: 'newest',
   });
 
-  // Summary stats
-  totalReviews = signal(0);
-  averageRating = computed(() => {
-    const reviews = this.filteredReviews();
-    if (reviews.length === 0) return 0;
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-    return (sum / reviews.length).toFixed(1);
-  });
-
-  needsAttentionCount = computed(() => {
-    return this.filteredReviews().filter((r) => r.rating <= 2).length;
-  });
-
-  // Filter configuration
   filterConfig: FilterConfig = {
     statusOptions: [],
     levelOptions: [],
@@ -77,90 +83,51 @@ export class InstructorReviewsComponent implements OnInit {
     ],
   };
 
-  // Computed filtered reviews
-  filteredReviews = computed(() => {
-    const filters = this.currentFilters();
-    let filtered = this.reviews();
-
-    // Search filter (by student name, course title, or comment)
-    const search = filters.searchTerm.toLowerCase().trim();
-    if (search) {
-      filtered = filtered.filter(
-        (review) =>
-          review.studentName.toLowerCase().includes(search) ||
-          review.courseTitle.toLowerCase().includes(search) ||
-          review.comment.toLowerCase().includes(search)
-      );
-    }
-
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (filters.selectedSort) {
-        case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'oldest':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case 'rating_high':
-          return b.rating - a.rating;
-        case 'rating_low':
-          return a.rating - b.rating;
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  });
-
-  get totalPages(): number {
-    return Math.ceil(this.filteredReviews().length / this.pageSize);
-  }
-
-  get pagedReviews(): InstructorReview[] {
-    const start = (this.currentPage() - 1) * this.pageSize;
-    return this.filteredReviews().slice(start, start + this.pageSize);
-  }
-
+  // ── Pagination helpers ────────────────────────────────────────
   getPages(): number[] {
-    const total = this.totalPages;
+    const total = this.totalPages();
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
-
     const current = this.currentPage();
     const pages: number[] = [];
-
     if (current <= 4) {
       for (let i = 1; i <= 5; i++) pages.push(i);
-      pages.push(-1); // ellipsis
+      pages.push(-1);
       pages.push(total);
     } else if (current >= total - 3) {
       pages.push(1);
-      pages.push(-1); // ellipsis
+      pages.push(-1);
       for (let i = total - 4; i <= total; i++) pages.push(i);
     } else {
       pages.push(1);
-      pages.push(-1); // ellipsis
+      pages.push(-1);
       for (let i = current - 2; i <= current + 2; i++) pages.push(i);
-      pages.push(-1); // ellipsis
+      pages.push(-1);
       pages.push(total);
     }
-
     return pages;
   }
 
   loadPage(page: number): void {
-    if (page < 1 || page > this.totalPages) return;
+    if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.fetchReviews();
     const el = document.getElementById('reviews-top');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  getPaginationInfo(): string {
+    const start = (this.currentPage() - 1) * this.pageSize + 1;
+    const end = Math.min(this.currentPage() * this.pageSize, this.totalReviews());
+    return `Showing ${start} to ${end} of ${this.totalReviews()} reviews`;
+  }
+
+  // ── Filter / sort ─────────────────────────────────────────────
   onFilterChange(filterState: FilterState): void {
     this.currentFilters.set(filterState);
     this.currentPage.set(1);
+    this.fetchReviews();
   }
 
   onClearFilters(): void {
@@ -172,9 +139,14 @@ export class InstructorReviewsComponent implements OnInit {
       selectedSort: 'newest',
     });
     this.currentPage.set(1);
+    this.fetchReviews();
   }
 
-  // Get initials from a full name — safe for templates (no arrow functions allowed)
+  getResultsText(): string {
+    return `${this.totalReviews()} reviews`;
+  }
+
+  // ── Template helpers ──────────────────────────────────────────
   getInitials(name: string): string {
     if (!name) return '?';
     const parts = name.trim().split(' ');
@@ -183,27 +155,22 @@ export class InstructorReviewsComponent implements OnInit {
     return (first + second).toUpperCase();
   }
 
-  // Get star rating display
   getStarArray(rating: number): number[] {
-    return Array.from({ length: 5 }, (_, i) => i < rating ? 1 : 0);
+    return Array.from({ length: 5 }, (_, i) => (i < rating ? 1 : 0));
   }
 
-  // Format date
-  formatDate(date: any): string {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
+  formatDate(date: unknown): string {
+    return new Date(date as string).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   }
 
-  // Get time ago string
-  getTimeAgo(date: any): string {
-    const d = new Date(date);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - d.getTime()) / 1000);
-
+  getTimeAgo(date: unknown): string {
+    const seconds = Math.floor(
+      (Date.now() - new Date(date as string).getTime()) / 1000
+    );
     if (seconds < 60) return 'Just now';
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -215,63 +182,54 @@ export class InstructorReviewsComponent implements OnInit {
     return this.formatDate(date);
   }
 
-  getResultsText(): string {
-    const total = this.reviews().length;
-    const filtered = this.filteredReviews().length;
+  // ── Lifecycle ─────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.fetchReviews();
+  }
+
+  retry(): void {
+    this.hasError.set(false);
+    this.errorMsg.set('');
+    this.fetchReviews();
+  }
+
+  // ── API call ──────────────────────────────────────────────────
+  private fetchReviews(): void {
+    this.isLoading.set(true);
 
     const filters = this.currentFilters();
-    const hasActiveFilters =
-      filters.searchTerm.trim() ||
-      filters.selectedStatuses.length > 0 ||
-      filters.selectedLevels.length > 0 ||
-      filters.selectedPriceFilter !== 'all';
 
-    if (!hasActiveFilters) {
-      return `${total} reviews`;
-    }
+    // Map sort option to backend sortBy param
+    const sortMap: Record<string, string> = {
+      newest: 'newest',
+      oldest: 'oldest',
+      rating_high: 'rating_high',
+      rating_low: 'rating_low',
+    };
 
-    return `${filtered} of ${total} reviews`;
-  }
-
-  getPaginationInfo(): string {
-    const start = (this.currentPage() - 1) * this.pageSize + 1;
-    const end = Math.min(this.currentPage() * this.pageSize, this.filteredReviews().length);
-    const total = this.filteredReviews().length;
-    return `Showing ${start} to ${end} of ${total} reviews`;
-  }
-
-  ngOnInit(): void {
-    this.loadReviews();
-  }
-
-  private loadReviews(): void {
-    this.isLoading.set(true);
     this.reviewsService
       .getReviews({
-        page: 1,
-        limit: 1000, // Load all for client-side filtering
+        page: this.currentPage(),
+        limit: this.pageSize,
+        sortBy: sortMap[filters.selectedSort] as any,
+        searchTerm: filters.searchTerm.trim() || undefined,
       })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
-        next: (data) => {
+        next: (data: InstructorReviewsResponse) => {
           this.reviews.set(data.data);
           this.totalReviews.set(data.meta.total);
-          this.currentPage.set(1);
+          this.totalPages.set(data.meta.totalPages);
         },
         error: (err) => {
           this.hasError.set(true);
-          this.errorMsg.set(err?.error?.message ?? 'Failed to load reviews');
+          this.errorMsg.set(
+            err?.error?.message ?? err?.message ?? 'Failed to load reviews'
+          );
         },
       });
   }
-
-  retry(): void {
-    this.hasError.set(false);
-    this.errorMsg.set('');
-    this.loadReviews();
-  }
-  
 }
