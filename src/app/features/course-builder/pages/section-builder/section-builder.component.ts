@@ -254,6 +254,7 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
           videoUrl: [lesson.videoUrl || ''],
           videoPublicId: [lesson.videoPublicId || ''],
           videoDuration: [lesson.videoDuration || 0],
+          transcript: [lesson.transcript || ''],
           expanded: [false]
         })
       );

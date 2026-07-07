@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 // Angular Material
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -53,7 +55,7 @@ export interface FilterState {
   templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.css'
 })
-export class FilterBarComponent {
+export class FilterBarComponent implements OnDestroy {
   @Input() config: FilterConfig = {
     statusOptions: [],
     levelOptions: [],
@@ -77,6 +79,23 @@ export class FilterBarComponent {
   
   // Dropdowns state
   sortDropdownOpen = signal(false);
+
+  // Debounce search
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
+  constructor() {
+    this.searchSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => this.emitFilterChange());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   // Computed active filters count
   activeFilterCount = computed(() => {
@@ -108,10 +127,10 @@ export class FilterBarComponent {
     if (state.selectedSort !== undefined) this.selectedSort.set(state.selectedSort);
   }
 
-  // Handle search input change
+  // Handle search input change — debounced via Subject
   onSearchChange(value: string): void {
     this.searchTerm.set(value);
-    this.emitFilterChange();
+    this.searchSubject.next(value);
   }
 
   // Toggle drawer
