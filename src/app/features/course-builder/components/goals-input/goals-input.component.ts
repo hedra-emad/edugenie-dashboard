@@ -21,7 +21,7 @@ export class GoalsInputComponent implements OnInit {
     // Only add first empty input if this is a brand new form (no goals at all)
     // Don't re-add if user intentionally deleted all goals
     if (this.goalsArray.length === 0 && !this.hasUserDeletedAll()) {
-      this.addGoalToArray();
+      this.addGoalToArray(false);
     }
   }
 
@@ -36,26 +36,30 @@ export class GoalsInputComponent implements OnInit {
   }
 
   addGoal() {
-    this.addGoalToArray();
+    this.addGoalToArray(true);
   }
 
-  private addGoalToArray() {
+  private addGoalToArray(isUserAction: boolean) {
     const newControl = this.fb.control('', [
       Validators.required,
       Validators.pattern(/.*\S.*/)
     ]);
     
     this.goalsArray.push(newControl);
-    this.goalsArray.markAsDirty();
     
-    // Focus the new input after Angular's change detection completes
-    this.ngZone.onStable.pipe(take(1)).subscribe(() => {
-      const inputs = document.querySelectorAll('app-goals-input textarea');
-      const lastInput = inputs[inputs.length - 1] as HTMLTextAreaElement;
-      if (lastInput) {
-        lastInput.focus();
-      }
-    });
+    // Only mark dirty on user action (explicit "Add Goal" click)
+    if (isUserAction) {
+      this.goalsArray.markAsDirty();
+      
+      // Focus the new input
+      this.ngZone.onStable.pipe(take(1)).subscribe(() => {
+        const inputs = document.querySelectorAll('app-goals-input textarea');
+        const lastInput = inputs[inputs.length - 1] as HTMLTextAreaElement;
+        if (lastInput) {
+          lastInput.focus();
+        }
+      });
+    }
   }
 
   removeGoal(index: number) {
@@ -72,6 +76,8 @@ export class GoalsInputComponent implements OnInit {
 
   // Helper method to check if goal should show error
   shouldShowGoalError(control: FormControl): boolean {
-    return control.invalid && (control.touched || control.dirty);
+    // Only show error if control is invalid AND user has interacted with it
+    // Don't show error on initial page load
+    return control.invalid && control.touched;
   }
 }
