@@ -34,10 +34,7 @@
     <p class="empty-title">No courses yet</p>
     <p class="empty-sub">You haven't created any courses yet. Start building your first course and share your knowledge.
     </p>
-    <app-main-button
-      label="Create New Course"
-      icon="add"
-      (action)="goToCreateCourse()">
+    <app-main-button label="Create New Course" icon="add" (action)="goToCreateCourse()">
     </app-main-button>
   </div>
 </div>
@@ -53,10 +50,7 @@
     </div>
 
     <div class="header-actions">
-      <app-main-button
-        label="Create New Course"
-        icon="add"
-        (action)="goToCreateCourse()">
+      <app-main-button label="Create New Course" icon="add" (action)="goToCreateCourse()">
       </app-main-button>
 
       <div class="header-badge">
@@ -105,14 +99,15 @@
 
       <!-- Thumbnail with Gradient Overlay -->
       <div class="card-thumbnail-wrap">
-        <img [src]="(course.thumbnail | cloudinaryThumb) || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
+        <img
+          [src]="(course.thumbnail | cloudinaryThumb) || 'https://placehold.co/600x340/3B1892/ffffff?text=No+Thumbnail'"
           [alt]="course.title" class="card-thumbnail" width="600" height="340" decoding="async"
-          [attr.loading]="$index === 0 ? 'eager' : 'lazy'"
-          [attr.fetchpriority]="$index === 0 ? 'high' : 'auto'" />
+          [attr.loading]="$index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="$index === 0 ? 'high' : 'auto'" />
         <div class="thumbnail-overlay"></div>
 
         <!-- Hover Overlay -->
-        <div class="thumbnail-hover-overlay" (click)="editCourse(course.id); $event.stopPropagation()" style="cursor:pointer">
+        <div class="thumbnail-hover-overlay" (click)="editCourse(course.id); $event.stopPropagation()"
+          style="cursor:pointer">
           <mat-icon>visibility</mat-icon>
           <span>View Course</span>
         </div>

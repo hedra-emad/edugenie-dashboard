@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,6 +12,8 @@ import {
   FilterConfig,
   FilterState,
 } from '../../../shared/components/filter-bar/filter-bar.component';
+import { Subject, of } from 'rxjs';
+import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
@@ -39,10 +41,12 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 export class InstructorReviewsComponent implements OnInit {
   private reviewsService = inject(InstructorReviewsService);
   private destroyRef = inject(DestroyRef);
+  @ViewChild(FilterBarComponent) filterBar!: FilterBarComponent;
 
   // ── Data ──────────────────────────────────────────────────────
   reviews = signal<InstructorReview[]>([]);
   isLoading = signal(true);
+  isFetching = signal(false);
   hasError = signal(false);
   errorMsg = signal('');
 
@@ -61,18 +65,13 @@ export class InstructorReviewsComponent implements OnInit {
 
   // Global stats captured from the first unfiltered load — don't shift on filter
   globalAverage = signal('0.0');
-  globalNeedsAttention = signal(0);
 
-  // Page-level computed (only used to seed globalAverage / globalNeedsAttention)
+  // Page-level computed (only used to seed globalAverage)
   private averageRatingNow = computed(() => {
     const list = this.reviews();
     if (!list.length) return '0.0';
     return (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1);
   });
-
-  private needsAttentionNow = computed(() =>
-    this.reviews().filter((r) => r.rating <= 2).length,
-  );
 
   // ── Filter state ───────────────────────────────────────────────
   currentFilters = signal<FilterState>({
@@ -198,8 +197,62 @@ export class InstructorReviewsComponent implements OnInit {
     return this.formatDate(date);
   }
 
+  private fetchTrigger = new Subject<boolean>();
+  private isFirstLoad = true;
+
   // ── Lifecycle ──────────────────────────────────────────────────
   ngOnInit(): void {
+    this.fetchTrigger.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      debounceTime(300),
+      switchMap((isInitial) => {
+        if (isInitial) {
+          this.isLoading.set(true);
+        } else {
+          this.isFetching.set(true);
+        }
+        this.hasError.set(false);
+        const f = this.currentFilters();
+
+        const sortMap: Record<string, string> = {
+          newest: 'newest', oldest: 'oldest',
+          rating_high: 'rating_high', rating_low: 'rating_low',
+        };
+
+        const ratingFilter = f.selectedStatuses.map(Number).filter(n => n >= 1 && n <= 5);
+        const flaggedOnly  = f.selectedPriceFilter === 'flagged';
+
+        return this.reviewsService.getReviews({
+          page:        this.currentPage(),
+          limit:       this.pageSize,
+          sortBy:      sortMap[f.selectedSort] || 'newest',
+          search:      f.searchTerm.trim() || undefined,
+          rating:      ratingFilter.length ? ratingFilter : undefined,
+          flaggedOnly: flaggedOnly || undefined,
+        }).pipe(
+          catchError(err => {
+            this.hasError.set(true);
+            this.errorMsg.set(err?.error?.message ?? err?.message ?? 'Failed to load reviews');
+            return of(null);
+          })
+        );
+      })
+    ).subscribe((data) => {
+      if (data) {
+        this.reviews.set(data.data);
+        this.totalReviews.set(data.meta.total);
+        this.totalPages.set(data.meta.totalPages);
+
+        if (this.isFirstLoad) {
+          this.globalAverage.set(this.averageRatingNow());
+          this.hasNoReviewsAtAll.set(data.meta.total === 0);
+          this.isFirstLoad = false;
+        }
+      }
+      this.isLoading.set(false);
+      this.isFetching.set(false);
+    });
+
     this.fetchReviews(true);
   }
 
@@ -211,49 +264,6 @@ export class InstructorReviewsComponent implements OnInit {
 
   // ── API call ───────────────────────────────────────────────────
   private fetchReviews(isInitialLoad = false): void {
-    this.isLoading.set(true);
-    const f = this.currentFilters();
-
-    const sortMap: Record<string, string> = {
-      newest: 'newest', oldest: 'oldest',
-      rating_high: 'rating_high', rating_low: 'rating_low',
-    };
-
-    // selectedStatuses hold star values '1'..'5'
-    const ratingFilter = f.selectedStatuses.map(Number).filter(n => n >= 1 && n <= 5);
-    const flaggedOnly  = f.selectedPriceFilter === 'flagged';
-
-    this.reviewsService
-      .getReviews({
-        page:        this.currentPage(),
-        limit:       this.pageSize,
-        sortBy:      sortMap[f.selectedSort],
-        search:      f.searchTerm.trim() || undefined,
-        rating:      ratingFilter.length ? ratingFilter : undefined,
-        flaggedOnly: flaggedOnly || undefined,
-      })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.isLoading.set(false)),
-      )
-      .subscribe({
-        next: (data: InstructorReviewsResponse) => {
-          this.reviews.set(data.data);
-          this.totalReviews.set(data.meta.total);
-          this.totalPages.set(data.meta.totalPages);
-
-          if (isInitialLoad) {
-            // Lock in global stats so filters don't distort the header cards
-            this.globalAverage.set(this.averageRatingNow());
-            this.globalNeedsAttention.set(this.needsAttentionNow());
-            // Record whether this instructor has ANY reviews at all
-            this.hasNoReviewsAtAll.set(data.meta.total === 0);
-          }
-        },
-        error: (err) => {
-          this.hasError.set(true);
-          this.errorMsg.set(err?.error?.message ?? err?.message ?? 'Failed to load reviews');
-        },
-      });
+    this.fetchTrigger.next(isInitialLoad);
   }
 }
