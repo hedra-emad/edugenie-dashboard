@@ -160,6 +160,8 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   @ViewChild(AttachmentManagerComponent) attachmentManager?: AttachmentManagerComponent;
   // ── Misc UI ───────────────────────────────────────────────
   isDeleting = false; // Kept for template compatibility
+  dismissedRecoveryMessage = false; // Dismiss the recovery message with close button
+
   private saveLock = false;
   /** Snapshot of form values as of the last successful save — used to detect real changes */
   private savedSnapshot: { title: string } | null = null;
@@ -363,26 +365,18 @@ export class LessonCardComponent implements OnInit, OnDestroy {
 
   getButtonLabel(): string {
     switch (this.s) {
-      case 'uploading':
-        return 'Uploading…';
-      case 'uploading_recovered':
-        return 'Select Video';
       case 'saving':
       case 'retrying':
-        return this.isUpdateMode ? 'Updating…' : 'Creating…';
+        return this.isUpdateMode ? 'Updating…' : 'Saving…';
       case 'saving_recovered':
         return 'Retry Saving';
       case 'save_failed':
         return 'Retry Save';
-      case 'upload_error':
-        return 'Try Again';
-      case 'max_retries_exceeded':
-        return 'Select Video';
       default:
         break;
     }
-    if (!this.isUpdateMode) return 'Create Lesson';
-    return this.hasFormChanges ? 'Update Lesson' : 'No Changes';
+    if (!this.isUpdateMode) return 'Save Lesson';
+    return this.hasFormChanges ? 'Update Lesson' : 'Update Lesson';
   }
 
   // ─────────────────────────────────────────────────────────
@@ -836,11 +830,11 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private startCloudinaryUpload() {
     this.setState({ state: 'uploading', progress: 0, message: '' });
     this.startProgressTracking();
-    this.toastr.warning(
+    this.toastr.success(
       'Please stay on this page while the video is uploading. Refreshing, closing the tab, or navigating away may interrupt the upload.',
       'Uploading video',
       {
-        toastClass: 'ngx-toastr toast-mauve-warning',
+        toastClass: 'ngx-toastr toast-success',
       }
     );
 
@@ -1002,6 +996,9 @@ export class LessonCardComponent implements OnInit, OnDestroy {
             videoUrl: null,
             videoPublicId: null,
           });
+          
+          // Reset recovered message flag since save was successful
+          this.dismissedRecoveryMessage = false;
 
           // Kick off transcript polling if this lesson has a video but no transcript yet
           const finalLessonId = lessonId || newId;

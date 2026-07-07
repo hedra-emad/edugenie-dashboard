@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, Input, DestroyRef, signal } from '@angular/core';
+import { Component, OnInit, inject, Input, DestroyRef, signal, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
@@ -94,6 +94,7 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
 
+  @ViewChildren(SectionCardComponent) sectionCards!: QueryList<SectionCardComponent>;
 
   sectionForm = this.fb.group({
     sections: this.fb.array([])
@@ -149,6 +150,8 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
             if (idx !== -1) {
               const el = document.getElementById('section-card-' + idx);
               el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Refresh quiz state for the expanded section after navigation
+              this.refreshSectionQuizState(expand);
             }
           }, 150);
         }
@@ -400,6 +403,20 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
     }, 0);
   }
 
+  get emptySections(): { index: number; title: string }[] {
+    return this.sections
+      .map((section, index) => ({
+        index,
+        title: section.get('title')?.value || 'Untitled',
+        lessonCount: (section.get('lessons')?.value || []).length
+      }))
+      .filter(s => s.lessonCount === 0);
+  }
+
+  get hasValidationIssues(): boolean {
+    return this.emptySections.length > 0;
+  }
+
   formatCourseDuration(seconds: number): string {
     if (!seconds || seconds <= 0) return '0m';
     const h = Math.floor(seconds / 3600);
@@ -408,6 +425,33 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
     if (h > 0) return `${h}h ${m}m`;
     if (m > 0) return `${m}m ${s}s`;
     return `${s}s`;
+  }
+
+  // Refresh quiz state for a specific section when returning from quiz-config
+  private refreshSectionQuizState(sectionId: string) {
+    setTimeout(() => {
+      const sectionCard = this.sectionCards.find(card => 
+        card.sectionForm.get('id')?.value === sectionId
+      );
+      if (sectionCard) {
+        sectionCard.refreshQuizState();
+      }
+    }, 100);
+  }
+
+  scrollToSection(index: number) {
+    const element = document.getElementById('section-card-' + index);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight for visual feedback
+      const expandedId = this.sections[index].get('id')?.value;
+      if (expandedId) {
+        this.expandedSectionId = expandedId;
+        setTimeout(() => {
+          this.expandedSectionId = null;
+        }, 3000);
+      }
+    }
   }
 
 }

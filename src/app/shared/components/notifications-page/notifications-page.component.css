@@ -776,21 +776,39 @@
   .btn-mark-all {
     grid-column: 1;
     grid-row: 2;
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    padding: 8px 10px;
+    font-size: 0.7rem;
     background: var(--color-primary, #3b1892) !important;
     color: #ffffff !important;
     border-color: var(--color-primary, #3b1892) !important;
+    min-width: auto;
+    white-space: nowrap;
+    gap: 4px;
+  }
+
+  .btn-mark-all mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
   }
 
   .btn-clear-all {
     grid-column: 2;
     grid-row: 2;
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    padding: 8px 10px;
+    font-size: 0.7rem;
     background: var(--color-primary, #3b1892) !important;
     color: #ffffff !important;
     border-color: var(--color-primary, #3b1892) !important;
+    min-width: auto;
+    white-space: nowrap;
+    gap: 4px;
+  }
+
+  .btn-clear-all mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
   }
 
   .btn-outline {

@@ -5,7 +5,15 @@
 <ng-container *ngIf="!isLoading()">
   <div [formGroup]="courseForm" class="space-y-4">
 
-    <!-- Thumbnail -->
+    <!-- Form Title -->
+  <div class="mb-2">
+    <h2 class="text-xl font-bold text-[var(--color-primary)]">
+      Basic Course Information
+    </h2>
+    <p class="text-sm text-[var(--color-text-secondary)]">
+      Set up your course thumbnail, title, and description to get started.
+    </p>
+  </div>
 
     <!-- Thumbnail Upload -->
 
@@ -295,14 +303,18 @@
     </div>
 
     <!-- Continue -->
-
-    <div class="flex justify-end">
-
-
-      <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
-        [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isButtonDisabled()"
-        (action)="onMainAction()"></app-action-bar>
-
+    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3 sm:justify-end">
+      <!-- Compact note next to button (responsive) -->
+      <div *ngIf="status() === 'saving' || status() === 'updating'" class="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5 mb-2 sm:mb-0 sm:order-1">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px] flex-shrink-0">info</mat-icon>
+        <span class="leading-tight">Don't refresh — saving in progress</span>
+      </div>
+      <!-- Button -->
+      <div class="sm:order-2">
+        <app-action-bar [showBack]="false" [actionLabel]="getButtonLabel()" [actionIcon]="getButtonIcon()"
+          [loading]="status() === 'saving' || status() === 'updating'" [disabled]="isButtonDisabled()"
+          (action)="onMainAction()"></app-action-bar>
+      </div>
     </div>
   </div>
 </ng-container>

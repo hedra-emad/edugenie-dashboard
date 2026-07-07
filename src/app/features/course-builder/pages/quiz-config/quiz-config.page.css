@@ -729,9 +729,25 @@
   cursor: pointer;
 }
 
+/* Quiz info items - ensure icons and text align properly */
+.quiz-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quiz-card mat-icon {
+  display: inline !important;
+  vertical-align: middle;
+  line-height: 1;
+  height: auto !important;
+  width: auto !important;
+  font-size: inherit;
+}
+
 /* Quiz Number Badge */
 .quiz-number {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--color-text);
@@ -742,7 +758,7 @@
 
 /* Status Badge */
 .status-badge {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -763,7 +779,33 @@
 /* ═══════════════════════════════════════════════════════════
    Responsive adjustments
 ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .quiz-card {
+    padding: 0.875rem 1rem;
+  }
+  
+  .quiz-number {
+    font-size: 0.65rem;
+  }
+  
+  .status-badge {
+    font-size: 0.6rem;
+  }
+}
+
 @media (max-width: 640px) {
+  .quiz-card {
+    padding: 0.875rem 1rem;
+  }
+  
+  .quiz-number {
+    font-size: 0.65rem;
+  }
+  
+  .status-badge {
+    font-size: 0.6rem;
+  }
+  
   .stats-strip {
     flex-direction: column;
     align-items: flex-start;
@@ -784,6 +826,168 @@
   .approve-bar app-main-button {
     width: 100%;
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     MOBILE: Edit Panel Polish (Spacing & Alignment Only)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* 1. Edit Panel Base — Improved Vertical Rhythm */
+  .edit-panel {
+    border-top: 1px dashed var(--color-border);
+    padding-top: 1.25rem;
+  }
+
+  /* 2. Edit Question Type Row — Better Spacing */
+  .edit-question-type-row {
+    margin-bottom: 1.5rem;
+  }
+
+  /* 3. Question Type Label — Improved Hierarchy */
+  .edit-question-text-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+  }
+
+  /* 4. Question Type Pills — Better Spacing (no width reduction) */
+  .edit-question-type-row .flex {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  .btn-pill {
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    border-radius: 0.625rem;
+    flex: 0 1 calc(50% - 0.375rem);
+  }
+
+  .btn-pill:nth-child(odd):last-child {
+    margin: 0 auto;
+  }
+
+  /* 5. Question Text Row — Better Spacing */
+  .edit-question-text-row {
+    margin-bottom: 1.25rem;
+  }
+
+  /* 6. Question Textarea — Improved Height & Padding (keep full width) */
+  .edit-question-text-input {
+    min-height: 110px;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  /* 7. Helper Text — Better Visibility & Spacing */
+  .edit-hint {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    margin-bottom: 1.25rem;
+    align-items: flex-start;
+  }
+
+  .edit-hint mat-icon {
+    font-size: 1rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+  }
+
+  /* 8. Edit Options — Better Spacing Between Rows */
+  .edit-options {
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+  }
+
+  /* 9. Edit Option Row — Improved Spacing & Alignment (keep full width) */
+  .edit-option-row {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+  }
+
+  /* 10. Radio/Checkbox Toggle — Better Touch Target (no size reduction) */
+  .correct-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.375rem;
+    margin-top: 0;
+  }
+
+  .correct-toggle mat-icon {
+    font-size: 1.5rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  /* 11. Option Input — Improved Height (keep full width) */
+  .edit-option-input {
+    min-height: 2.75rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* 12. Remove Option Button — Better Touch Target */
+  .remove-option-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.5rem;
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+
+  .remove-option-btn mat-icon {
+    font-size: 1.25rem !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  /* 13. Add Option Button — Better Spacing & Readability */
+  .add-option-btn-inline {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  /* 14. Edit Error — Better Visibility */
+  .edit-error {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 0.875rem;
+    padding: 0.625rem 0.75rem;
+    background: #fef2f2;
+    border-left: 3px solid #dc2626;
+    border-radius: 0.375rem;
+  }
+
+  /* 15. Edit Actions — Improved Spacing & Touch Targets */
+  .edit-actions {
+    gap: 0.875rem;
+    margin-top: 1.25rem;
+    justify-content: center;
+  }
+
+  .btn-cancel-edit,
+  .btn-save-edit {
+    min-height: 2.75rem;
+    padding: 0.625rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .btn-cancel-edit {
+    border-radius: 0.625rem;
+  }
+
+  .btn-save-edit {
+    border-radius: 0.625rem;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -802,8 +1006,8 @@
 }
 
 .badge-provenance--ai {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
 }
 
 .badge-provenance--instructor {
@@ -996,3 +1200,40 @@
   width: 1.1rem !important;
   height: 1.1rem !important;
 }
+
+.question-card--ai {
+  border-left: 3px solid var(--color-primary); /* primary color accent */
+  background: linear-gradient(to right, rgba(59, 24, 146, 0.04), transparent 12%);
+}
+
+.question-card--manual {
+  border-left: 3px solid #6EE7B7; /* light green accent */
+  background: linear-gradient(to right, rgba(110, 231, 183, 0.05), transparent 12%);
+}
+
+.badge-provenance--ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-provenance--instructor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #ECFDF5;
+  color: #047857;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stat-chip--ai mat-icon { color: var(--color-primary); }
+.stat-chip--manual mat-icon { color: #059669; }

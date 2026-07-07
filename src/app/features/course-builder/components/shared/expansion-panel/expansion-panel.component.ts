@@ -63,6 +63,7 @@ export class ExpansionPanelComponent {
   @Input() quizButtonLabel = 'Generate Quiz'; // Add quiz button label input
   @Input() showUnsavedIndicator = false;
   @Input() showModifiedIndicator = false;
+  @Input() isEmpty = false; // New: indicates if section has no lessons
   
   // New unified draft indicator inputs
   @Input() draftId?: string;

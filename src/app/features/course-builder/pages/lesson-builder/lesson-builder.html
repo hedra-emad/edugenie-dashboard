@@ -25,7 +25,7 @@
     <!-- Empty state -->
     <app-empty-state *ngIf="!isLoading && lessonsArray.length === 0" icon="menu_book" title="No lessons in this section yet"
         description="Add lessons to start building your course content with videos, text, and interactive materials."
-        actionLabel="Create First Lesson" (actionClicked)="addLesson()">
+        actionLabel="Save First Lesson" (actionClicked)="addLesson()">
     </app-empty-state>
 
     <!-- Lesson cards -->
@@ -53,8 +53,6 @@
     <!-- Navigation Actions -->
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
-        <app-main-button [label]="hasQuiz ? 'Show Quiz' : 'Generate Quiz'" icon="arrow_forward" [disabled]="shouldDisableQuizButton"
-            (action)="goToQuiz()"></app-main-button>
     </div>
 
 </div>

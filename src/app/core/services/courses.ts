@@ -110,9 +110,18 @@ export class CoursesService {
    * 1. Course has at least one lesson
    * 2. All sections have approved quizzes
    */
-  canSubmitForReview(course: Course): { canSubmit: boolean; missingQuizSections: string[]; hasNoLessons: boolean } {
+  canSubmitForReview(course: Course): { canSubmit: boolean; missingQuizSections: string[]; hasNoLessons: boolean; emptySections: string[] } {
     if (!course.sections || course.sections.length === 0) {
-      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true };
+      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true, emptySections: [] };
+    }
+
+    // Check for empty sections (sections with no lessons)
+    const emptySections = course.sections
+      .filter(section => !section.lessons || section.lessons.length === 0)
+      .map(s => s.title);
+
+    if (emptySections.length > 0) {
+      return { canSubmit: false, missingQuizSections: [], hasNoLessons: false, emptySections };
     }
 
     // Check if course has at least one lesson
@@ -121,7 +130,7 @@ export class CoursesService {
     }, 0);
 
     if (totalLessons === 0) {
-      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true };
+      return { canSubmit: false, missingQuizSections: [], hasNoLessons: true, emptySections: [] };
     }
 
     // Check if ALL sections have approved quizzes
@@ -133,7 +142,8 @@ export class CoursesService {
     return {
       canSubmit: sectionsWithoutQuiz.length === 0,
       missingQuizSections: sectionsWithoutQuiz.map(s => s.title),
-      hasNoLessons: false
+      hasNoLessons: false,
+      emptySections: []
     };
   }
 
