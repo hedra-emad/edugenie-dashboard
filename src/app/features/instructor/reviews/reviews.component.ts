@@ -174,6 +174,15 @@ export class InstructorReviewsComponent implements OnInit {
     this.currentPage.set(1);
   }
 
+  // Get initials from a full name — safe for templates (no arrow functions allowed)
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    const first = parts[0]?.[0] ?? '';
+    const second = parts[1]?.[0] ?? '';
+    return (first + second).toUpperCase();
+  }
+
   // Get star rating display
   getStarArray(rating: number): number[] {
     return Array.from({ length: 5 }, (_, i) => i < rating ? 1 : 0);
@@ -264,4 +273,5 @@ export class InstructorReviewsComponent implements OnInit {
     this.errorMsg.set('');
     this.loadReviews();
   }
+  
 }

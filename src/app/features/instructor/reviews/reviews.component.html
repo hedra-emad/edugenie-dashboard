@@ -86,9 +86,9 @@
     </div>
 
     <!-- Filter Bar -->
-    <app-filter-bar 
-      [config]="filterConfig" 
-      placeholder="Search reviews by student, course, or feedback..." 
+    <app-filter-bar
+      [config]="filterConfig"
+      placeholder="Search reviews by student, course, or feedback..."
       (filterChange)="onFilterChange($event)"
       (clearFilters)="onClearFilters()">
     </app-filter-bar>
@@ -102,7 +102,13 @@
     }
 
     <!-- Reviews Container -->
-    @if (filteredReviews().length === 0 && (currentFilters().searchTerm.trim() || currentFilters().selectedStatuses.length > 0 || currentFilters().selectedLevels.length > 0 || currentFilters().selectedPriceFilter !== 'all')) {
+    @if (
+      filteredReviews().length === 0 &&
+      (currentFilters().searchTerm.trim() ||
+       currentFilters().selectedStatuses.length > 0 ||
+       currentFilters().selectedLevels.length > 0 ||
+       currentFilters().selectedPriceFilter !== 'all')
+    ) {
       <!-- No Filter Results -->
       <div class="state-container">
         <div class="empty-box">
@@ -123,7 +129,7 @@
             <div class="review-header">
               <div class="reviewer-info">
                 <div class="reviewer-avatar">
-                  {{ review.studentName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+                  {{ getInitials(review.studentName) }}
                 </div>
                 <div class="reviewer-details">
                   <div class="reviewer-name">{{ review.studentName }}</div>
