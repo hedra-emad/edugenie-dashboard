@@ -75,6 +75,13 @@ export class PublishCourseButtonComponent {
     return result;
   });
 
+  // Check if course is rejected
+  isRejected = computed(() => {
+    const status = this.courseStatus();
+    const result = status === 'REJECTED';
+    return result;
+  });
+
   // Check if button should be shown
   shouldShowButton = computed(() => {
     const published = this.isPublished();
@@ -104,6 +111,10 @@ export class PublishCourseButtonComponent {
     
     if (this.isUnderReview()) {
       return 'Your course is currently under review by an administrator. You will be notified once it is approved or if changes are needed.';
+    }
+
+    if (this.isRejected()) {
+      return 'Your course was rejected. Edit it to address the feedback and resubmit it for review. You can send it again as many times as needed.';
     }
     
     // Draft status - check if can submit

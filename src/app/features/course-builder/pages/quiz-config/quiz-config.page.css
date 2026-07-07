@@ -1006,8 +1006,8 @@
 }
 
 .badge-provenance--ai {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
 }
 
 .badge-provenance--instructor {
@@ -1202,8 +1202,8 @@
 }
 
 .question-card--ai {
-  border-left: 3px solid #A78BFA; /* light purple accent */
-  background: linear-gradient(to right, rgba(167, 139, 250, 0.04), transparent 12%);
+  border-left: 3px solid var(--color-primary); /* primary color accent */
+  background: linear-gradient(to right, rgba(59, 24, 146, 0.04), transparent 12%);
 }
 
 .question-card--manual {
@@ -1215,8 +1215,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background-color: #EDE9FE;
-  color: #6D28D9;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
   padding: 2px 8px;
   border-radius: 9999px;
   font-size: 11px;
@@ -1235,5 +1235,5 @@
   font-weight: 600;
 }
 
-.stat-chip--ai mat-icon { color: #7C3AED; }
+.stat-chip--ai mat-icon { color: var(--color-primary); }
 .stat-chip--manual mat-icon { color: #059669; }

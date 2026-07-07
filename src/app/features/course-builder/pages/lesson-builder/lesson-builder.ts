@@ -75,11 +75,18 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     this.quizzesService.getQuizForSection(this.sectionId).subscribe({
       next: (quiz) => {
         this.hasQuiz = !!quiz;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.hasQuiz = false;
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  // Public method to refresh quiz state (can be called from parent components)
+  refreshQuizState() {
+    this.checkQuizExists();
   }
 
   ngOnDestroy() {
@@ -314,7 +321,14 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
 
   get shouldDisableQuizButton(): boolean {
     // Disable if no saved lessons exist
-    return !this.hasSavedLessons;
+    if (!this.hasSavedLessons) return true;
+    
+    // Disable if any lesson is missing a transcript
+    const lessons = this.lessonsArray.controls as FormGroup[];
+    return !lessons.every(lesson => {
+      const transcript = lesson.get('transcript')?.value;
+      return transcript && String(transcript).trim() !== '';
+    });
   }
 
 }

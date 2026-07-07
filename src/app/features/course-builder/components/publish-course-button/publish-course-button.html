@@ -18,7 +18,7 @@
 </div>
 }
 
-<!-- Send for Review Button (only for draft) -->
+<!-- Send for Review Button (for draft and rejected courses) -->
 @if (shouldShowButton()) {
 <button type="button" (click)="publishCourse()" [disabled]="isDisabled()" 
     class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white

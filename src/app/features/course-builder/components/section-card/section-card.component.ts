@@ -160,6 +160,11 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
     this.checkQuizExists();
   }
 
+  // Public method to refresh quiz state (can be called from parent components)
+  refreshQuizState() {
+    this.checkQuizExists();
+  }
+
   private initializeDraftSystem() {
     // Generate or get draft ID
     let sectionId = this.sectionForm.get('id')?.value;
@@ -467,6 +472,29 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
       const id = lesson?.id;
       return id && id !== null && !this.draftStateService.isDraftId(String(id));
     });
+  }
+
+  get allLessonsHaveTranscripts(): boolean {
+    const lessons = this.sectionForm.get('lessons')?.value || [];
+    if (lessons.length === 0) return false; // No lessons = can't generate quiz
+    
+    return lessons.every((lesson: any) => {
+      // Check if lesson has a transcript
+      return lesson?.transcript && String(lesson.transcript).trim() !== '';
+    });
+  }
+
+  get canGenerateOrShowQuiz(): boolean {
+    // If quizzes already exist, allow showing them (only section needs to exist)
+    if (this.hasQuiz) {
+      return this.isExistingSection;
+    }
+    
+    // For generating new quizzes, need:
+    // 1. Section exists
+    // 2. Has created lessons
+    // 3. All lessons have transcripts
+    return this.isExistingSection && this.hasCreatedLessons && this.allLessonsHaveTranscripts;
   }
 
   get totalSectionDuration(): number {

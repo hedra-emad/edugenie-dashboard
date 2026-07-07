@@ -73,4 +73,4 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     }
   }
-}
+}

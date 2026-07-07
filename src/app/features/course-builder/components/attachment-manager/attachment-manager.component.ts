@@ -48,6 +48,7 @@ export class AttachmentManagerComponent implements OnInit, OnChanges {
   @Input({ required: true }) courseId!: string | null;
   @Input({ required: true }) sectionId!: string;
   @Input({ required: true }) lessonId!: string;
+  @Input() disabled = false; // Disable when lesson is saving/updating
 
   // ─── ViewChild ─────────────────────────────────────────────
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
@@ -544,7 +545,7 @@ export class AttachmentManagerComponent implements OnInit, OnChanges {
         this.cdr.markForCheck();
 
         if (this.pendingAttachments().some(p => p.failed)) {
-          this.toastr.warning(`${succeeded.length}/${queue.length} attachments uploaded. Some failed — you can retry them.`);
+          this.toastr.success(`${succeeded.length}/${queue.length} attachments uploaded. Some failed — you can retry them.`);
         }
 
         return succeeded.map(s => s.attachment);

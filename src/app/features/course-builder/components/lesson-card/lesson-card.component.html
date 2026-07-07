@@ -10,11 +10,7 @@
   [hasUploadError]="s === 'upload_error'" [isLocked]="isWorking">
 
   <!-- =================== CONTENT =================== -->
-  <div [formGroup]="lessonForm" class="space-y-5 transition-opacity duration-200"
-    [attr.inert]="isWorking ? '' : null"
-    [class.opacity-50]="isWorking"
-    [class.pointer-events-none]="isWorking"
-    [class.select-none]="isWorking">
+  <div [formGroup]="lessonForm" class="space-y-5 transition-opacity duration-200">
 
     <div class="sm:hidden text-xs text-slate-500 mb-2">
       Duration: {{ formatDuration(lessonForm.get('videoDuration')?.value || 0) }} min
@@ -24,13 +20,14 @@
     <div class="space-y-2">
       <label class="text-xs font-bold uppercase text-gray-700">Lesson Title *</label>
 
-      <input type="text" formControlName="title" placeholder="Enter lesson title…" class="w-full px-4 py-2.5 rounded-lg border focus:outline-none
+      <input type="text" formControlName="title" placeholder="Enter lesson title…" [disabled]="isWorking" class="w-full px-4 py-2.5 rounded-lg border focus:outline-none
                focus:ring-2 focus:ring-[var(--color-primary)]
-               focus:border-[var(--color-primary)] transition-all duration-200" [ngClass]="{
+               focus:border-[var(--color-primary)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed" [ngClass]="{
           'border-red-500':      lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched,
           'border-blue-400 !shadow-[0_0_8px_rgba(37,99,235,0.2)]':   lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty && !isUpdateMode,
           'border-[var(--color-primary)] !shadow-[0_0_8px_rgba(59,24,146,0.2)]': lessonForm.get('title')?.valid && lessonForm.get('title')?.dirty &&  isUpdateMode,
-          'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) && !lessonForm.get('title')?.dirty
+          'border-gray-300': !(lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) && !lessonForm.get('title')?.dirty,
+          'opacity-60 cursor-not-allowed': isWorking
         }" />
 
       @if (lessonForm.get('title')?.invalid && lessonForm.get('title')?.touched) {
@@ -58,12 +55,15 @@
       <!-- (A) DROP ZONE – no file selected, no uploaded URL -->
       <div *ngIf="!lessonForm.get('videoUrl')?.value && !selectedVideoFile" class="p-8 border-2 border-dashed rounded-[var(--radius-lg)] text-center bg-white
                hover:border-[var(--color-primary-light)] transition cursor-pointer
-               flex flex-col items-center justify-center" [ngClass]="{
+               flex flex-col items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+        [class.opacity-60]="isWorking"
+        [class.pointer-events-none]="isWorking"
+        [ngClass]="{
           'border-red-300 bg-red-50':          videoTouched && !isVideoValid,
           'border-[var(--color-border)]': !videoTouched || isVideoValid,
           'border-[var(--color-primary)] bg-[var(--color-primary)]/5': isDraggingVideo
-        }" (click)="fileInput.click()" (dragover)="onVideoDragOver($event)" (dragleave)="onVideoDragLeave($event)"
-        (drop)="onVideoDrop($event)">
+        }" (click)="isWorking ? null : fileInput.click()" (dragover)="isWorking ? null : onVideoDragOver($event)" (dragleave)="isWorking ? null : onVideoDragLeave($event)"
+        (drop)="isWorking ? null : onVideoDrop($event)">
 
         <mat-icon class="text-5xl" [ngClass]="{
             'text-red-400':                          videoTouched && !isVideoValid,
@@ -102,8 +102,8 @@
         }">
 
         <!-- Remove -->
-        <button type="button" (click)="removeSelectedVideo()" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-[var(--color-border)]
-                 shadow-sm flex items-center justify-center hover:bg-[var(--color-background)] transition">
+        <button type="button" (click)="removeSelectedVideo()" [disabled]="isWorking" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-[var(--color-border)]
+                 shadow-sm flex items-center justify-center hover:bg-[var(--color-background)] transition disabled:opacity-60 disabled:cursor-not-allowed">
           <mat-icon class="!text-[16px] text-[var(--color-error)]">close</mat-icon>
         </button>
 
@@ -166,14 +166,14 @@
           <input #replaceInput hidden type="file" accept="video/*" (change)="onFileChange($event)">
 
           <!-- Normal state: plain Replace Video -->
-          <app-sub-button *ngIf="s !== 'save_failed'" label="Replace Video" icon="upload"
-            (action)="replaceInput.click()">
+          <app-sub-button *ngIf="s !== 'save_failed'" label="Replace Video" icon="upload" [disabled]="isWorking"
+            (action)="isWorking ? null : replaceInput.click()">
           </app-sub-button>
 
           <!-- save_failed state: Change Video (always shown so user isn't stuck) -->
-          <button *ngIf="s === 'save_failed'" type="button" (click)="replaceInput.click()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-primary)]
+          <button *ngIf="s === 'save_failed'" type="button" (click)="replaceInput.click()" [disabled]="isWorking" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-primary)]
                    text-[11px] font-semibold text-[var(--color-primary)] bg-white hover:bg-[var(--color-primary)] hover:text-white
-                   transition-colors duration-150 shadow-sm">
+                   transition-colors duration-150 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">swap_horiz</mat-icon>
             Change Video instead
           </button>
@@ -190,8 +190,8 @@
             Transcript
           </label>
 
-          <button *ngIf="isTranscriptReady || isTranscriptFailed" type="button" (click)="regenerateTranscript()"
-            class="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline">
+          <button *ngIf="isTranscriptReady || isTranscriptFailed" type="button" (click)="regenerateTranscript()" [disabled]="isWorking"
+            class="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline disabled:opacity-60 disabled:cursor-not-allowed">
             <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">autorenew</mat-icon>
             Regenerate
           </button>
@@ -259,17 +259,18 @@
       </div>
 
       <!-- (D2) Recovery message for interrupted uploads -->
-      <!-- (D2) Recovery message for interrupted uploads -->
-      <div *ngIf="isRecoveredState"
-        class="text-xs text-center bg-red-50 border border-red-300 rounded-xl p-4 shadow-sm">
+      <!-- (D2) Recovery message for interrupted uploads - with close button -->
+      <div *ngIf="isRecoveredState && !dismissedRecoveryMessage"
+        class="text-xs bg-red-50 border border-red-300 rounded-xl p-4 shadow-sm relative">
+        <button type="button" (click)="dismissedRecoveryMessage = true" 
+          class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors"
+          title="Dismiss">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">close</mat-icon>
+        </button>
         <div class="flex items-center justify-center gap-2 text-red-600 font-semibold text-sm">
           <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           {{ s === 'uploading_recovered' ? 'Upload was interrupted' : 'Save was interrupted' }}
         </div>
-        <div class="mt-1.5 text-red-500 leading-relaxed">
-          {{ snap.message }}
-        </div>
-
       </div>
 
       <!-- (E) PROGRESS PANEL – upload → save pipeline -->
@@ -334,12 +335,19 @@
     <app-attachment-manager
       [courseId]="courseId"
       [sectionId]="sectionId"
-      [lessonId]="lessonForm.get('id')?.value">
+      [lessonId]="lessonForm.get('id')?.value"
+      [disabled]="isWorking">
     </app-attachment-manager>
 
     <!-- ── FOOTER ────────────────────────────────────── -->
-    <div class="pt-4">
-      <div class="pt-4">
+    <div class="pt-4 flex flex-col sm:flex-row sm:items-center sm:gap-3 sm:justify-end">
+      <!-- Compact note next to button (responsive) - shows during any active operation -->
+      <div *ngIf="s === 'saving' || s === 'retrying' || s === 'uploading' || s === 'upload_success'" class="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-2 sm:mb-0 sm:order-1 flex-shrink-0">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px] flex-shrink-0">info</mat-icon>
+        <span class="leading-tight text-nowrap">Don't refresh — saving in progress</span>
+      </div>
+      <!-- Button -->
+      <div class="sm:order-2">
         <app-action-bar [actionLabel]="getButtonLabel()" [actionIcon]="'save'"
           [loading]="s === 'saving' || s === 'retrying'" [disabled]="shouldDisableButton" (action)="saveLesson()">
         </app-action-bar>
