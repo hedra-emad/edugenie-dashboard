@@ -44,6 +44,7 @@ export class SidebarComponent implements OnInit {
 
   readonly instructorNavItems: NavItem[] = [
     { icon: 'menu_book', label: 'My Courses', route: '/my-courses' },
+    { icon: 'star', label: 'Reviews', route: '/reviews' },
     { icon: 'analytics', label: 'Analytics', route: '/analytics' },
     { icon: 'account_balance_wallet', label: 'Earnings', route: '/earnings' },
     { icon: 'notifications', label: 'Notifications', route: '/notifications' },

@@ -1,0 +1,203 @@
+@if (isLoading()) {
+  <div class="reviews-grid skeleton-grid">
+    @for (i of [1,2,3,4,5,6]; track i) {
+      <div class="skeleton-review-card">
+        <div class="skeleton-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-text">
+            <div class="skeleton-name"></div>
+            <div class="skeleton-course"></div>
+          </div>
+        </div>
+        <div class="skeleton-content">
+          <div class="skeleton-comment"></div>
+          <div class="skeleton-comment"></div>
+        </div>
+      </div>
+    }
+  </div>
+} @else if (hasError()) {
+  <div class="state-container">
+    <div class="error-box">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p class="error-title">Failed to load reviews</p>
+      <p class="error-sub">{{ errorMsg() }}</p>
+      <button class="action-btn-primary" (click)="retry()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+} @else if (reviews().length === 0) {
+  <div class="state-container">
+    <div class="empty-box">
+      <mat-icon class="empty-icon">star_outline</mat-icon>
+      <p class="empty-title">No reviews yet</p>
+      <p class="empty-sub">Your students haven't left any reviews on your courses yet. Keep teaching great content and reviews will start coming in.</p>
+    </div>
+  </div>
+} @else {
+  <div class="page-wrapper" id="reviews-top">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="text-[30px] sm:text-[36px] font-black text-[#1a0b59] leading-none tracking-tight mb-2">
+          Reviews
+        </h1>
+        <p class="page-subtitle">See what students are saying about your courses.</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="stats-grid">
+          <!-- Average Rating -->
+          <div class="stat-card">
+            <div class="stat-icon star">
+              <mat-icon>star</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ averageRating() }}</div>
+              <div class="stat-label">Average Rating</div>
+            </div>
+          </div>
+
+          <!-- Total Reviews -->
+          <div class="stat-card">
+            <div class="stat-icon reviews">
+              <mat-icon>message</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ totalReviews() }}</div>
+              <div class="stat-label">Total Reviews</div>
+            </div>
+          </div>
+
+          <!-- Needs Attention -->
+          <div class="stat-card">
+            <div class="stat-icon attention">
+              <mat-icon>warning</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ needsAttentionCount() }}</div>
+              <div class="stat-label">Needs Attention</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <app-filter-bar 
+      [config]="filterConfig" 
+      placeholder="Search reviews by student, course, or feedback..." 
+      (filterChange)="onFilterChange($event)"
+      (clearFilters)="onClearFilters()">
+    </app-filter-bar>
+
+    <!-- Results Summary -->
+    @if (filteredReviews().length !== reviews().length) {
+      <div class="results-summary">
+        <mat-icon>filter_list</mat-icon>
+        <span>{{ getResultsText() }}</span>
+      </div>
+    }
+
+    <!-- Reviews Container -->
+    @if (filteredReviews().length === 0 && (currentFilters().searchTerm.trim() || currentFilters().selectedStatuses.length > 0 || currentFilters().selectedLevels.length > 0 || currentFilters().selectedPriceFilter !== 'all')) {
+      <!-- No Filter Results -->
+      <div class="state-container">
+        <div class="empty-box">
+          <mat-icon class="empty-icon">filter_list_off</mat-icon>
+          <p class="empty-title">No reviews match your filters</p>
+          <p class="empty-sub">Try adjusting your search terms or filters to find reviews.</p>
+          <button class="action-btn-primary" (click)="onClearFilters()">
+            <mat-icon>clear_all</mat-icon>
+            Clear All Filters
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="reviews-container">
+        @for (review of pagedReviews; track review.reviewId) {
+          <div class="review-card" [class.low-rating]="review.rating <= 2">
+            <!-- Card Header -->
+            <div class="review-header">
+              <div class="reviewer-info">
+                <div class="reviewer-avatar">
+                  {{ review.studentName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+                </div>
+                <div class="reviewer-details">
+                  <div class="reviewer-name">{{ review.studentName }}</div>
+                  <div class="review-meta">
+                    <span class="course-title">{{ review.courseTitle }}</span>
+                    <span class="review-date" [matTooltip]="formatDate(review.createdAt)">
+                      {{ getTimeAgo(review.createdAt) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rating Stars -->
+              <div class="review-rating">
+                @for (star of getStarArray(review.rating); track $index) {
+                  <mat-icon class="star" [class.filled]="star === 1">star</mat-icon>
+                }
+                <span class="rating-badge">{{ review.rating }}/5</span>
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="review-body">
+              <p class="review-comment">{{ review.comment }}</p>
+            </div>
+
+            <!-- Status Badge (if low rating) -->
+            @if (review.rating <= 2) {
+              <div class="review-status">
+                <mat-icon>warning</mat-icon>
+                <span>Needs Attention</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <nav class="pagination-nav">
+          <button
+            class="pagination-btn prev"
+            [disabled]="currentPage() === 1"
+            (click)="loadPage(currentPage() - 1)"
+            [matTooltip]="'Previous page'">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          @for (p of getPages(); track p) {
+            @if (p === -1) {
+              <span class="pagination-ellipsis">...</span>
+            } @else {
+              <button
+                (click)="loadPage(p)"
+                class="pagination-btn number"
+                [class.active]="currentPage() === p">
+                {{ p }}
+              </button>
+            }
+          }
+
+          <button
+            class="pagination-btn next"
+            [disabled]="currentPage() === totalPages"
+            (click)="loadPage(currentPage() + 1)"
+            [matTooltip]="'Next page'">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </nav>
+
+        <div class="pagination-info">
+          {{ getPaginationInfo() }}
+        </div>
+      }
+    }
+  </div>
+}

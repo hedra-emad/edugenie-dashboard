@@ -137,6 +137,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reviews',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['instructor'] },
+        loadComponent: () =>
+          import('./features/instructor/reviews/reviews.component').then(
+            (m) => m.InstructorReviewsComponent
+          ),
+      },
+      {
         path: 'analytics',
         canActivate: [authGuard, roleGuard],
         data: { roles: ['instructor'] },
