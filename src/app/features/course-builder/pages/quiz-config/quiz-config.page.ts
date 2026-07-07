@@ -100,6 +100,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
   quizzes: QuizListItem[] = [];
   totalQuizzes = 0;
   readonly MAX_QUIZZES = 5;
+  readonly MAX_QUESTIONS_PER_QUIZ = MAX_QUESTIONS_PER_QUIZ;
   readonly ENROLLMENT_THRESHOLD = 30;
   isManualMode = false;
   generationIntent: 'replace' | 'append' = 'replace'; // NEW: decides append vs replace on submit()
@@ -140,7 +141,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
 
   quizForm: FormGroup = this.fb.group({
     difficulty: [QuizDifficulty.MEDIUM, Validators.required],
-    numberOfQuestions: [10, [Validators.required, Validators.min(1), Validators.max(20)]],
+    numberOfQuestions: [5, [Validators.required, Validators.min(1), Validators.max(MAX_QUESTIONS_PER_QUIZ)]],
     questionTypes: [[QuestionType.SINGLE_CHOICE], Validators.required],
   });
 
@@ -591,7 +592,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
     // Set dynamic validation for numberOfQuestions field
     const maxVal = this.remainingQuestionSlots;
     const minVal = 1;
-    const defaultVal = Math.min(10, maxVal);
+    const defaultVal = Math.min(MAX_QUESTIONS_PER_QUIZ, maxVal);
 
     // Ensure difficulty and questionTypes have valid defaults
     const difficulty = this.generatedQuiz?.difficulty 
@@ -902,7 +903,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
     // Reset form to default values
     this.quizForm.patchValue({
       difficulty: difficulty,
-      numberOfQuestions: this.generatedQuiz?.numberOfQuestions || 10,
+      numberOfQuestions: this.generatedQuiz?.numberOfQuestions || MAX_QUESTIONS_PER_QUIZ,
       questionTypes: questionTypes,
     });
     this.quizForm.get('numberOfQuestions')?.updateValueAndValidity();
@@ -1047,7 +1048,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
     }
 
     if (this.remainingQuestionSlots <= 0) {
-      this.toastr.warning('Maximum quiz size of 20 questions reached.');
+      this.toastr.warning(`Maximum quiz size of ${MAX_QUESTIONS_PER_QUIZ} questions reached.`);
       return;
     }
 
@@ -1681,14 +1682,14 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
   // without touching existing questions (AI or manual).
   generateMore() {
     if (this.remainingQuestionSlots <= 0) {
-      this.toastr.warning('Maximum quiz size of 20 questions reached.');
+      this.toastr.warning(`Maximum quiz size of ${MAX_QUESTIONS_PER_QUIZ} questions reached.`);
       return;
     }
 
     this.generationIntent = 'append';
 
     const maxVal = this.remainingQuestionSlots;
-    const defaultVal = Math.min(10, maxVal);
+    const defaultVal = Math.min(MAX_QUESTIONS_PER_QUIZ, maxVal);
 
     this.quizForm
       .get('numberOfQuestions')

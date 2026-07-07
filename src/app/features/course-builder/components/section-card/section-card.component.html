@@ -9,7 +9,8 @@
   (lessonsClicked)="onGoToLessons()"
   (quizClicked)="onGoToQuiz()" 
   [draftId]="draftId" 
-  [autoDetectDraftState]="true">
+  [autoDetectDraftState]="true"
+  [isEmpty]="isEmpty">
 
   <!-- Expanded content: full form -->
   <div [formGroup]="sectionForm" class=" space-y-5">

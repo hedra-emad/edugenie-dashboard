@@ -403,6 +403,20 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
     }, 0);
   }
 
+  get emptySections(): { index: number; title: string }[] {
+    return this.sections
+      .map((section, index) => ({
+        index,
+        title: section.get('title')?.value || 'Untitled',
+        lessonCount: (section.get('lessons')?.value || []).length
+      }))
+      .filter(s => s.lessonCount === 0);
+  }
+
+  get hasValidationIssues(): boolean {
+    return this.emptySections.length > 0;
+  }
+
   formatCourseDuration(seconds: number): string {
     if (!seconds || seconds <= 0) return '0m';
     const h = Math.floor(seconds / 3600);
@@ -423,6 +437,21 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
         sectionCard.refreshQuizState();
       }
     }, 100);
+  }
+
+  scrollToSection(index: number) {
+    const element = document.getElementById('section-card-' + index);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight for visual feedback
+      const expandedId = this.sections[index].get('id')?.value;
+      if (expandedId) {
+        this.expandedSectionId = expandedId;
+        setTimeout(() => {
+          this.expandedSectionId = null;
+        }, 3000);
+      }
+    }
   }
 
 }

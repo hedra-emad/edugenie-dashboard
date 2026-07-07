@@ -73,6 +73,15 @@
             matTooltipShowDelay="500">
           </div>
 
+          <!-- Empty Section Indicator -->
+          <div *ngIf="isEmpty"
+            class="flex-shrink-0 ml-1 flex items-center justify-center w-5 h-5 rounded-full bg-[color-mix(in_srgb,_var(--color-primary)_20%,_transparent)] border border-[var(--color-primary)]"
+            matTooltip="This section is empty - no lessons added. Add at least one lesson to enable course submission."
+            matTooltipPosition="above"
+            matTooltipShowDelay="500">
+            <mat-icon class="!text-[12px] !w-[12px] !h-[12px] text-[var(--color-primary)]">layers_clear</mat-icon>
+          </div>
+
           <span *ngIf="subtitle"
             class="text-xs text-[var(--color-text-secondary)] ml-2 shrink-0 duration-text hidden sm:inline font-normal">
             {{ subtitle }}

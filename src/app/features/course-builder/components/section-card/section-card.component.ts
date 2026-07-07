@@ -509,6 +509,10 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
     return lessons.length;
   }
 
+  get isEmpty(): boolean {
+    return this.totalLessonsCount === 0;
+  }
+
   formatDuration(seconds: number): string {
     if (!seconds || seconds <= 0) return '0m';
     const h = Math.floor(seconds / 3600);
