@@ -28,7 +28,7 @@
       </button>
     </div>
   </div>
-} @else if (totalReviews() === 0) {
+} @else if (hasNoReviewsAtAll()) {
   <div class="state-container">
     <div class="empty-box">
       <mat-icon class="empty-icon">star_outline</mat-icon>
@@ -38,7 +38,6 @@
   </div>
 } @else {
   <div class="page-wrapper" id="reviews-top">
-
     <!-- Page Header -->
     <div class="page-header">
       <div>
@@ -56,7 +55,7 @@
               <mat-icon>star</mat-icon>
             </div>
             <div class="stat-content">
-              <div class="stat-value">{{ averageRating() }}</div>
+              <div class="stat-value">{{ globalAverage() }}</div>
               <div class="stat-label">Average Rating</div>
             </div>
           </div>
@@ -78,7 +77,7 @@
               <mat-icon>warning</mat-icon>
             </div>
             <div class="stat-content">
-              <div class="stat-value">{{ needsAttentionCount() }}</div>
+              <div class="stat-value">{{ globalNeedsAttention() }}</div>
               <div class="stat-label">Needs Attention</div>
             </div>
           </div>
@@ -96,17 +95,17 @@
 
     <!-- Reviews list (server returns the current page directly) -->
     @if (reviews().length === 0) {
-      <div class="state-container">
-        <div class="empty-box">
-          <mat-icon class="empty-icon">filter_list_off</mat-icon>
-          <p class="empty-title">No reviews match your filters</p>
-          <p class="empty-sub">Try adjusting your search terms or filters to find reviews.</p>
-          <button class="action-btn-primary" (click)="onClearFilters()">
-            <mat-icon>clear_all</mat-icon>
-            Clear All Filters
-          </button>
-        </div>
-      </div>
+  <div class="state-container">
+    <div class="empty-box">
+      <mat-icon class="empty-icon">filter_list_off</mat-icon>
+      <p class="empty-title">No reviews match your filters</p>
+      <p class="empty-sub">Try adjusting your search terms or filters to find reviews.</p>
+      <button class="action-btn-primary" (click)="onClearFilters()">
+        <mat-icon>clear_all</mat-icon>
+        Clear All Filters
+      </button>
+    </div>
+  </div>
     } @else {
       <div class="reviews-container">
         @for (review of reviews(); track review.reviewId) {
@@ -115,13 +114,26 @@
             <!-- Card Header -->
             <div class="review-header">
               <div class="reviewer-info">
-                <div class="reviewer-avatar">
-                  {{ getInitials(review.studentName) }}
-                </div>
+                <!-- Avatar: photo if available, initials fallback -->
+                @if (review.studentAvatar) {
+                  <img
+                    class="reviewer-avatar reviewer-avatar--img"
+                    [src]="review.studentAvatar"
+                    [alt]="review.studentName"
+                    loading="lazy" />
+                } @else {
+                  <div class="reviewer-avatar">
+                    {{ getInitials(review.studentName) }}
+                  </div>
+                }
                 <div class="reviewer-details">
                   <div class="reviewer-name">{{ review.studentName }}</div>
                   <div class="review-meta">
                     <span class="course-title">{{ review.courseTitle }}</span>
+                    @if (review.sectionTitle) {
+                      <span class="meta-sep">›</span>
+                      <span class="section-title">{{ review.sectionTitle }}</span>
+                    }
                     <span class="review-date" [matTooltip]="formatDate(review.createdAt)">
                       {{ getTimeAgo(review.createdAt) }}
                     </span>
@@ -148,6 +160,17 @@
               <div class="review-status">
                 <mat-icon>warning</mat-icon>
                 <span>Needs Attention</span>
+              </div>
+            }
+
+            <!-- Flagged badge -->
+            @if (review.isFlagged) {
+              <div class="review-flagged">
+                <mat-icon>flag</mat-icon>
+                <span>Flagged</span>
+                @if (review.flagReason) {
+                  <span class="flag-reason">— {{ review.flagReason }}</span>
+                }
               </div>
             }
           </div>

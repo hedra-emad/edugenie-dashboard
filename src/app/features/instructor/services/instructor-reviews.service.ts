@@ -6,9 +6,13 @@ export interface InstructorReview {
   reviewId: string;
   courseId: string;
   courseTitle: string;
+  sectionTitle: string | null;
   studentName: string;
+  studentAvatar: string | null;
   rating: number;
   comment: string;
+  isFlagged: boolean;
+  flagReason: string | null;
   createdAt: Date;
 }
 
@@ -28,7 +32,8 @@ export interface ReviewsFilterOptions {
   courseId?: string;
   rating?: number[];
   sortBy?: string;
-  searchTerm?: string;
+  search?: string;
+  flaggedOnly?: boolean;
   page?: number;
   limit?: number;
 }
@@ -41,25 +46,14 @@ export class InstructorReviewsService {
   getReviews(filters: ReviewsFilterOptions): Observable<InstructorReviewsResponse> {
     let params = new HttpParams();
 
-    if (filters.courseId) {
-      params = params.set('courseId', filters.courseId);
-    }
-    if (filters.rating && filters.rating.length > 0) {
-      params = params.set('rating', filters.rating.join(','));
-    }
-    if (filters.sortBy) {
-      params = params.set('sortBy', filters.sortBy);
-    }
-    if (filters.searchTerm) {
-      params = params.set('search', filters.searchTerm);
-    }
-    if (filters.page) {
-      params = params.set('page', filters.page.toString());
-    }
+    if (filters.courseId)        params = params.set('courseId',    filters.courseId);
+    if (filters.rating?.length)  params = params.set('rating',      filters.rating.join(','));
+    if (filters.sortBy)          params = params.set('sortBy',      filters.sortBy);
+    if (filters.search)          params = params.set('search',      filters.search);
+    if (filters.flaggedOnly)     params = params.set('flaggedOnly', 'true');
+    if (filters.page)            params = params.set('page',        filters.page.toString());
 
-    // Never exceed the backend @Max(100)
-    const limit = Math.min(filters.limit ?? 10, 100);
-    params = params.set('limit', limit.toString());
+    params = params.set('limit', String(Math.min(filters.limit ?? 10, 100)));
 
     return this.http.get<InstructorReviewsResponse>(this.apiUrl, { params });
   }

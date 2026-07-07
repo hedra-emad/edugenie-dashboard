@@ -7,6 +7,7 @@
         type="text"
         [value]="searchTerm()" 
         (input)="onSearchChange($any($event.target).value)"
+        (keydown.enter)="$event.preventDefault()"
         [placeholder]="placeholder"
         class="search-input">
       <mat-icon class="search-icon">search</mat-icon>
