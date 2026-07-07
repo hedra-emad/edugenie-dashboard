@@ -15,13 +15,13 @@ import { take } from 'rxjs/operators';
 export class RequirementsInputComponent implements OnInit {
   private fb = inject(FormBuilder);
   private ngZone = inject(NgZone);
-  @Input({ required: true }) requirementsArray!: FormArray;
+  @Input() requirementsArray!: FormArray;
 
   ngOnInit() {
     // Only add first empty input if this is a brand new form (no requirements at all)
     // Don't re-add if user intentionally deleted all requirements
     if (this.requirementsArray.length === 0 && !this.hasUserDeletedAll()) {
-      this.addRequirementToArray();
+      this.addRequirementToArray(false);
     }
   }
 
@@ -36,26 +36,30 @@ export class RequirementsInputComponent implements OnInit {
   }
 
   addRequirement() {
-    this.addRequirementToArray();
+    this.addRequirementToArray(true);
   }
 
-  private addRequirementToArray() {
+  private addRequirementToArray(isUserAction: boolean) {
     const newControl = this.fb.control('', [
       Validators.required,
       Validators.pattern(/.*\S.*/)
     ]);
     
     this.requirementsArray.push(newControl);
-    this.requirementsArray.markAsDirty();
     
-    // Focus the new input after Angular's change detection completes
-    this.ngZone.onStable.pipe(take(1)).subscribe(() => {
-      const inputs = document.querySelectorAll('app-requirements-input textarea');
-      const lastInput = inputs[inputs.length - 1] as HTMLTextAreaElement;
-      if (lastInput) {
-        lastInput.focus();
-      }
-    });
+    // Only mark dirty on user action (explicit "Add Requirement" click)
+    if (isUserAction) {
+      this.requirementsArray.markAsDirty();
+      
+      // Focus the new input
+      this.ngZone.onStable.pipe(take(1)).subscribe(() => {
+        const inputs = document.querySelectorAll('app-requirements-input textarea');
+        const lastInput = inputs[inputs.length - 1] as HTMLTextAreaElement;
+        if (lastInput) {
+          lastInput.focus();
+        }
+      });
+    }
   }
 
   removeRequirement(index: number) {
@@ -72,6 +76,8 @@ export class RequirementsInputComponent implements OnInit {
 
   // Helper method to check if requirement should show error
   shouldShowRequirementError(control: FormControl): boolean {
-    return control.invalid && (control.touched || control.dirty);
+    // Only show error if control is invalid AND user has interacted with it
+    // Don't show error on initial page load
+    return control.invalid && control.touched;
   }
 }
