@@ -94,22 +94,22 @@ export class CoursesListComponent implements OnInit {
     // Search filter
     const search = filters.searchTerm.toLowerCase().trim();
     if (search) {
-      filtered = filtered.filter(course => 
-        course.title.toLowerCase().includes(search) || 
+      filtered = filtered.filter(course =>
+        course.title.toLowerCase().includes(search) ||
         course.description.toLowerCase().includes(search)
       );
     }
 
     // Status filter
     if (filters.selectedStatuses.length > 0) {
-      filtered = filtered.filter(course => 
+      filtered = filtered.filter(course =>
         filters.selectedStatuses.includes(course.courseStatus.toLowerCase())
       );
     }
 
     // Level filter
     if (filters.selectedLevels.length > 0) {
-      filtered = filtered.filter(course => 
+      filtered = filtered.filter(course =>
         filters.selectedLevels.includes(course.level.toLowerCase())
       );
     }
@@ -246,17 +246,17 @@ export class CoursesListComponent implements OnInit {
   getResultsText(): string {
     const total = this.courses().length;
     const filtered = this.filteredCourses().length;
-    
+
     const filters = this.currentFilters();
-    const hasActiveFilters = filters.searchTerm.trim() || 
-                           filters.selectedStatuses.length > 0 || 
-                           filters.selectedLevels.length > 0 || 
-                           filters.selectedPriceFilter !== 'all';
-    
+    const hasActiveFilters = filters.searchTerm.trim() ||
+      filters.selectedStatuses.length > 0 ||
+      filters.selectedLevels.length > 0 ||
+      filters.selectedPriceFilter !== 'all';
+
     if (!hasActiveFilters) {
       return `${total} courses`;
     }
-    
+
     return `${filtered} of ${total} courses`;
   }
 }

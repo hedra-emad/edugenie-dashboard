@@ -63,6 +63,7 @@ export class FilterBarComponent implements OnDestroy {
     sortOptions: []
   };
   @Input() placeholder = 'Search...';
+  @Input() showSearch = true;
   
   @Output() filterChange = new EventEmitter<FilterState>();
   @Output() clearFilters = new EventEmitter<void>();
@@ -131,6 +132,12 @@ export class FilterBarComponent implements OnDestroy {
   onSearchChange(value: string): void {
     this.searchTerm.set(value);
     this.searchSubject.next(value);
+  }
+
+  // Clear search input
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.searchSubject.next('');
   }
 
   // Toggle drawer

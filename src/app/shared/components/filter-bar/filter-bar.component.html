@@ -1,18 +1,25 @@
 <div class="filter-bar-container">
 
   <!-- Search Input -->
-  <div class="search-container">
-    <div class="search-field">
-      <input 
-        type="text"
-        [value]="searchTerm()" 
-        (input)="onSearchChange($any($event.target).value)"
-        (keydown.enter)="$event.preventDefault()"
-        [placeholder]="placeholder"
-        class="search-input">
-      <mat-icon class="search-icon">search</mat-icon>
+  @if (showSearch) {
+    <div class="search-container">
+      <div class="search-field">
+        <input 
+          type="text"
+          [value]="searchTerm()" 
+          (input)="onSearchChange($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault()"
+          [placeholder]="placeholder"
+          class="search-input">
+        <mat-icon class="search-icon">search</mat-icon>
+        @if (searchTerm()) {
+          <button class="search-clear-btn" (click)="clearSearch()" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Filter Actions -->
   <div class="filter-actions">
@@ -31,15 +38,6 @@
       }
     </div>
 
-    <!-- Clear Filters Button (appears to the right when active) -->
-    @if (activeFilterCount() > 0) {
-      <app-sub-button
-        label="Remove Filters"
-        icon="clear_all"
-        class="remove-filters-mobile"
-        (action)="clearAllFilters()">
-      </app-sub-button>
-    }
   </div>
 </div>
 
