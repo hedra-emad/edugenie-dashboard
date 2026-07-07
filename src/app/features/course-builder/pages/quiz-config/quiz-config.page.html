@@ -20,79 +20,35 @@
     </p>
   </div>
 
+  <!-- ══ PHASE: LOADING ═══════════════════════════════════════════════════ -->
+  <ng-container *ngIf="phase === 'loading'">
+    <div class="py-12">
+      <app-page-skeleton [showBadge]="false" [showStats]="false"></app-page-skeleton>
+    </div>
+  </ng-container>
+
   <!-- ══ PHASE: LIST (Quiz Cards) ═════════════════════════════════════════ -->
   <ng-container *ngIf="phase === 'list'">
     
-    <!-- Enrollment Info & Generate Button -->
+    <!-- Generate New Quiz Button -->
     <div class="mb-6">
-      
-      <!-- Loading enrollment status -->
-      <div *ngIf="enrollmentStatusLoading()" class="mb-4">
-        <app-card-skeleton [showImage]="false" [showFooter]="false" customClass="!p-3"></app-card-skeleton>
-      </div>  
-
-      <!-- Enrollment Status Display -->
-      <div *ngIf="!enrollmentStatusLoading() && enrollmentStatus" class="mb-4">
-        
-      <!-- First quiz (no quizzes at all) -->
-        <div *ngIf="!enrollmentStatus.hasApprovedQuiz && totalQuizzes === 0" class="p-3 bg-green-50 border border-green-100 rounded-lg">
-          <div class="flex items-center gap-2 text-green-800">
-            <mat-icon>rocket_launch</mat-icon>
-            <span class="font-medium">Ready to Start</span>
-          </div>
-          <p class="text-sm text-green-700 mt-1">{{ enrollmentInfo.message }}</p>
-          <p class="text-xs text-green-600 mt-1">
-            Current enrollments: <strong>{{ enrollmentInfo.currentEnrollments }}</strong>
-          </p>
-        </div>
-
-        <!-- Has pending quizzes but no approved ones yet -->
-        <div *ngIf="!enrollmentStatus.hasApprovedQuiz && totalQuizzes > 0" class="p-3 bg-[#FEF3C7] border border-[#FCD34D] rounded-lg">
-          <div class="flex items-center gap-2 text-[#92400E]">
-            <mat-icon>pending</mat-icon>
-            <span class="font-medium">Quiz Under Review</span>
-          </div>
-          <p class="text-sm text-[#92400E] mt-1">You have a quiz pending approval. Approve it or generate a new one.</p>
-          <p class="text-xs text-[#92400E] opacity-80 mt-1">
-            Current enrollments: <strong>{{ enrollmentStatus.currentEnrollmentCount }}</strong>
-          </p>
-        </div>
-
-        <!-- Subsequent quizzes - can generate -->
-        <div *ngIf="enrollmentStatus.hasApprovedQuiz && enrollmentStatus.canGenerateQuiz" class="p-3 bg-green-50 border border-green-100 rounded-lg">
-          <div class="flex items-center gap-2 text-green-800">
-            <mat-icon>check_circle</mat-icon>
-            <span class="font-medium">Ready to Generate</span>
-          </div>
-          <p class="text-sm text-green-700 mt-1">{{ enrollmentInfo.message }}</p>
-          <p class="text-xs text-green-600 mt-1">
-            Current enrollments: <strong>{{ enrollmentInfo.currentEnrollments }}</strong>
-          </p>
-        </div>
-
-      </div>
-
-      <!-- Generate New Quiz Button -->
       <button 
         *ngIf="totalQuizzes < MAX_QUIZZES"
-        [disabled]="!canGenerateNewQuiz"
         (click)="showGenerateForm()"
-        [class]="canGenerateNewQuiz ? 
-          'flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity' : 
-          'flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed'">
-        <mat-icon>{{ canGenerateNewQuiz ? 'add' : 'lock' }}</mat-icon>
-        <span>{{ canGenerateNewQuiz ? 'Generate New Quiz' : 'Maximum Quiz Limit Reached' }}</span>
+        class="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity">
+        <mat-icon>add</mat-icon>
+        <span>Generate New Quiz</span>
       </button>
     </div>
 
     <!-- Max quizzes reached message -->
-    <div *ngIf="!canGenerateNewQuiz && totalQuizzes >= MAX_QUIZZES" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <div class="flex items-center gap-2 text-blue-800">
+    <div *ngIf="!canGenerateNewQuiz && totalQuizzes >= MAX_QUIZZES" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+      <div class="flex items-center gap-2 text-amber-900">
         <mat-icon>info</mat-icon>
-        <span class="font-medium">Maximum quiz limit reached</span>
+        <span class="font-semibold">Quiz limit reached</span>
       </div>
-      <p class="text-sm text-blue-700 mt-1">
-        This section has {{ totalQuizzes }} quizzes. You can generate a maximum of {{ MAX_QUIZZES }} quizzes per section.
+      <p class="text-sm text-amber-800 mt-2">
+        You have <strong>{{ totalQuizzes }}</strong> quiz{{ totalQuizzes !== 1 ? 'zes' : '' }} for this section. Maximum <strong>{{ MAX_QUIZZES }}</strong> quizzes allowed.
       </p>
     </div>
 
@@ -125,35 +81,58 @@
                   <span class="status-badge status-badge--pending">Pending Review</span>
                 </div>
                 
-                <div class="flex flex-wrap gap-3 text-sm text-[var(--color-text-secondary)]">
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">help_outline</mat-icon>
-                    {{ quiz.numberOfQuestions }} questions
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">signal_cellular_alt</mat-icon>
-                    {{ quiz.difficulty | lowercase | titlecase }}
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">category</mat-icon>
-                    {{ formatQuestionType(quiz.questionType) }}
-                  </span>
-                </div>
+                <div class="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-[var(--color-text-secondary)] content-start">
+  <div class="inline-flex items-center gap-1">
+    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">help_outline</mat-icon>
+    <span class="whitespace-nowrap">{{ getQuizCardStats(quiz).total }} Q</span>
+  </div>
+  <div class="inline-flex items-center gap-1" *ngIf="getQuizCardStats(quiz).aiCount > 0">
+    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">auto_awesome</mat-icon>
+    <span class="whitespace-nowrap">AI: {{ getQuizCardStats(quiz).aiCount }}</span>
+  </div>
+  <div class="inline-flex items-center gap-1" *ngIf="getQuizCardStats(quiz).manualCount > 0">
+    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">person</mat-icon>
+    <span class="whitespace-nowrap">M: {{ getQuizCardStats(quiz).manualCount }}</span>
+  </div>
+  <div class="inline-flex items-center gap-1" *ngIf="quiz.difficulty">
+    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">signal_cellular_alt</mat-icon>
+    <span class="whitespace-nowrap">{{ quiz.difficulty | lowercase | titlecase }}</span>
+  </div>
+  <div class="inline-flex items-center gap-1" *ngFor="let entry of typeCountEntries(getQuizCardStats(quiz).typeCounts)">
+    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">category</mat-icon>
+    <span class="whitespace-nowrap">{{ formatQuestionType(entry.type) }}: {{ entry.count }}</span>
+  </div>
+</div>
 
                 <div class="flex flex-wrap gap-3 text-xs text-[var(--color-text-muted)] mt-2">
                   <span>Created: {{ quiz.createdAt | date:'short' }}</span>
-                  <span>Enrollments at gen: {{ quiz.enrollmentCountAtGeneration }}</span>
+                  <!-- <span>Enrollments at gen: {{ quiz.enrollmentCountAtGeneration }}</span> -->
                 </div>
               </div>
 
-              <!-- Action Buttons -->
               <div class="flex items-center gap-2">
+                <button 
+                  type="button"
+                  [matMenuTriggerFor]="quizMenu"
+                  (click)="$event.stopPropagation(); selectedQuizId = quiz.quizId"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+                  title="Options">
+                  <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">more_vert</mat-icon>
+                </button>
                 <mat-icon class="text-[var(--color-primary)]">arrow_forward</mat-icon>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Pending Quiz Context Menu -->
+      <mat-menu #quizMenu="matMenu">
+        <button mat-menu-item (click)="selectedQuizId && deletePendingQuiz(selectedQuizId)" (menuClosed)="selectedQuizId = null">
+          <mat-icon class="!text-[16px]">delete</mat-icon>
+          <span>Delete</span>
+        </button>
+      </mat-menu>
 
       <!-- Approved Quizzes -->
       <div *ngIf="approvedQuizzes.length > 0">
@@ -174,19 +153,27 @@
                   <span class="status-badge status-badge--approved">Approved</span>
                 </div>
                 
-                <div class="flex flex-wrap gap-3 text-sm text-[var(--color-text-secondary)]">
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">help_outline</mat-icon>
-                    {{ quiz.numberOfQuestions }} questions
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">signal_cellular_alt</mat-icon>
-                    {{ quiz.difficulty | lowercase | titlecase }}
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <mat-icon class="!text-[16px]">category</mat-icon>
-                    {{ formatQuestionType(quiz.questionType) }}
-                  </span>
+                <div class="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-[var(--color-text-secondary)] content-start">
+                  <div class="inline-flex items-center gap-1">
+                    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">help_outline</mat-icon>
+                    <span class="whitespace-nowrap">{{ getQuizCardStats(quiz).total }} Q</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1" *ngIf="getQuizCardStats(quiz).aiCount > 0">
+                    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">auto_awesome</mat-icon>
+                    <span class="whitespace-nowrap">AI: {{ getQuizCardStats(quiz).aiCount }}</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1" *ngIf="getQuizCardStats(quiz).manualCount > 0">
+                    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">person</mat-icon>
+                    <span class="whitespace-nowrap">M: {{ getQuizCardStats(quiz).manualCount }}</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1" *ngIf="quiz.difficulty">
+                    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">signal_cellular_alt</mat-icon>
+                    <span class="whitespace-nowrap">{{ quiz.difficulty | lowercase | titlecase }}</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1" *ngFor="let entry of typeCountEntries(getQuizCardStats(quiz).typeCounts)">
+                    <mat-icon class="!text-[14px] sm:!text-[16px] flex-shrink-0">category</mat-icon>
+                    <span class="whitespace-nowrap">{{ formatQuestionType(entry.type) }}: {{ entry.count }}</span>
+                  </div>
                 </div>
 
                 <div class="flex flex-wrap gap-3 text-xs text-[var(--color-text-muted)] mt-2">
@@ -307,27 +294,27 @@
         <div>
           <label class="field-label">
             Number of Questions
-            <span class="text-[var(--color-text-muted)] font-normal normal-case ml-1">(10 – 20)</span>
+            <span class="text-[var(--color-text-muted)] font-normal normal-case ml-1">({{ getMinQuestions() }} – {{ getMaxQuestions() }})</span>
           </label>
           <input  
             type="number"
             formControlName="numberOfQuestions"
-            min="10" max="20"
+            min="1" [max]="getMaxQuestions()"
             class="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-text)] bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" />
-          <p *ngIf="quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched" class="text-xs text-red-500 mt-1 font-medium">Must be between 10 and 20</p>
-          <p *ngIf="!(quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1">Must be between 10 and 20.</p>
+          <p *ngIf="quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched" class="text-xs text-red-500 mt-1 font-medium">Must be between 1 and {{ getMaxQuestions() }}</p>
+          <p *ngIf="!(quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1">Generate between 1 and {{ getMaxQuestions() }} questions.</p>
         </div>
 
         <!-- Question type -->
         <div>
-          <label class="field-label">Question Type</label>
+          <label class="field-label">Question Types</label>
           <div class="flex flex-wrap sm:flex-nowrap gap-3">
             <button
-              *ngFor="let qt of questionTypes"
+              *ngFor="let qt of questionTypesList"
               type="button"
-              (click)="quizForm.get('questionType')?.setValue(qt)"
-              [class.btn-pill-active]="quizForm.get('questionType')?.value === qt"
-              [class.btn-pill]="quizForm.get('questionType')?.value !== qt"
+              (click)="toggleQuestionType(qt)"
+              [class.btn-pill-active]="isQuestionTypeSelected(qt)"
+              [class.btn-pill]="!isQuestionTypeSelected(qt)"
               class="flex-1 min-w-[120px] py-2.5 rounded-xl border border-[var(--color-primary)] text-sm font-bold capitalize transition-all duration-200 hover:shadow-sm">
               {{ formatQuestionTypeButton(qt) }}
             </button>
@@ -336,9 +323,8 @@
 
         <div class="pt-6 mt-4 border-t border-[var(--color-border)] flex justify-center items-center gap-3">
           <button 
-            *ngIf="isRegenerating" 
             type="button" 
-            (click)="cancelRegenerate()"
+            (click)="cancelGenerate()"
             class="px-6 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors font-medium">
             Cancel
           </button>
@@ -360,35 +346,113 @@
   <!-- ══ PHASE: REVIEW ═════════════════════════════════════════════════════ -->
   <ng-container *ngIf="phase === 'review'">
 
+    <!-- Question Filter Bar -->
+    <app-question-filter-bar
+      [config]="questionFilterConfig"
+      [placeholder]="'Search questions...'"
+      (filterChange)="onQuestionFilterChange($event)"
+      (clearFilters)="onClearQuestionFilters()">
+    </app-question-filter-bar>
+
     <!-- Stats strip -->
-    <div class="stats-strip">
-      <div class="stat-chip">
-        <mat-icon>quiz</mat-icon>
-        <span>{{ reviewQuestions.length }} questions</span>
-      </div>
-      <div class="stat-chip" *ngIf="!isManualMode">
-        <mat-icon>signal_cellular_alt</mat-icon>
-        <span>{{ generatedQuiz?.difficulty | lowercase | titlecase }}</span>
-      </div>
-      <div class="stat-chip" *ngIf="!isManualMode">
-        <mat-icon>category</mat-icon>
-        <span>{{ formatQuestionType(generatedQuiz?.questionType || '') }}</span>
-      </div>
-      <!-- Add Question button -->
-      <button *ngIf="!isQuizApproved" class="add-question-btn" type="button" (click)="addNewQuestion()" matTooltip="Add a new instructor-authored question">
-        <mat-icon>add_circle_outline</mat-icon>
-        Add Question
-      </button>
-      <!-- In manual mode: Generate with AI button. In AI mode: Regenerate button -->
-      <button *ngIf="!isQuizApproved && isManualMode" class="regen-btn" type="button" (click)="selectAiMode()" matTooltip="Generate AI questions and append to your manual list">
-        <mat-icon>auto_awesome</mat-icon>
-        Generate with AI
-      </button>
-      <button *ngIf="!isQuizApproved && !isManualMode" class="regen-btn" type="button" (click)="regenerate()" matTooltip="Regenerate this quiz">
-        <mat-icon>refresh</mat-icon>
-        Regenerate
-      </button>
+<div class="stats-strip">
+  <!-- Row 1: Info badges (counts and stats) -->
+  <div class="flex flex-wrap gap-2">
+    <!-- Total questions -->
+    <div class="stat-chip stat-chip--total">
+      <mat-icon>quiz</mat-icon>
+      <span>{{ quizStats.total }} Question{{ quizStats.total === 1 ? '' : 's' }}</span>
     </div>
+
+    <!-- AI count -->
+    <div class="stat-chip stat-chip--ai" *ngIf="quizStats.aiCount > 0">
+      <mat-icon>auto_awesome</mat-icon>
+      <span>AI: {{ quizStats.aiCount }}</span>
+    </div>
+
+    <!-- Manual count -->
+    <div class="stat-chip stat-chip--manual" *ngIf="quizStats.manualCount > 0">
+      <mat-icon>person</mat-icon>
+      <span>Manual: {{ quizStats.manualCount }}</span>
+    </div>
+
+    <!-- Question types -->
+    <div class="stat-chip" *ngFor="let entry of typeCountEntries(quizStats.typeCounts)">
+      <mat-icon>category</mat-icon>
+      <span>{{ formatQuestionType(entry.type) }}: {{ entry.count }}</span>
+    </div>
+
+    <!-- Remaining slots -->
+    <div class="stat-chip bg-amber-50 text-amber-800 border border-amber-100" *ngIf="!isQuizApproved">
+      <mat-icon class="text-amber-600">hourglass_empty</mat-icon>
+      <span>{{ remainingQuestionSlots }} slot(s) remaining</span>
+    </div>
+
+    <!-- Difficulty -->
+    <div class="stat-chip" *ngIf="generatedQuiz?.difficulty">
+      <mat-icon>signal_cellular_alt</mat-icon>
+      <span>{{ generatedQuiz?.difficulty | lowercase | titlecase }}</span>
+    </div>
+  </div>
+
+  <!-- Row 2: Autosave status -->
+  <div class="flex flex-wrap gap-2" *ngIf="autosaveStatus() !== 'idle'">
+    <div class="stat-chip autosave-chip autosave-chip--saving" *ngIf="autosaveStatus() === 'saving'">
+      <mat-icon>cloud_upload</mat-icon>
+      <span>Saving draft…</span>
+    </div>
+    <div class="stat-chip autosave-chip autosave-chip--saved" *ngIf="autosaveStatus() === 'saved'">
+      <mat-icon>cloud_done</mat-icon>
+      <span>Draft saved</span>
+    </div>
+    <div class="stat-chip autosave-chip autosave-chip--error" *ngIf="autosaveStatus() === 'error'">
+      <mat-icon>cloud_off</mat-icon>
+      <span>Save failed — will retry on next edit</span>
+    </div>
+  </div>
+
+  <!-- Row 3: Action buttons -->
+  <div class="flex flex-wrap gap-2">
+    <!-- Add Question button -->
+    <button
+      *ngIf="!isQuizApproved"
+      class="add-question-btn"
+      type="button"
+      [disabled]="remainingQuestionSlots <= 0"
+      [class.opacity-50]="remainingQuestionSlots <= 0"
+      [class.cursor-not-allowed]="remainingQuestionSlots <= 0"
+      (click)="addNewQuestion()"
+      matTooltip="Add a new instructor-authored question">
+      <mat-icon>add_circle_outline</mat-icon>
+      Add Question
+    </button>
+
+    <!-- Generate Questions button -->
+    <button
+      *ngIf="!isQuizApproved"
+      class="regen-btn"
+      type="button"
+      [disabled]="remainingQuestionSlots <= 0"
+      [class.opacity-50]="remainingQuestionSlots <= 0"
+      [class.cursor-not-allowed]="remainingQuestionSlots <= 0"
+      (click)="generateMore()"
+      matTooltip="Generate additional AI questions and add them to this quiz">
+      <mat-icon>auto_awesome</mat-icon>
+      Generate Questions
+    </button>
+
+    <!-- Regenerate All button -->
+    <button
+      *ngIf="!isQuizApproved && !isManualMode"
+      class="regen-btn regen-btn--secondary"
+      type="button"
+      (click)="regenerate()"
+      matTooltip="Replace ALL questions in this quiz with a fresh AI batch">
+      <mat-icon>refresh</mat-icon>
+      Regenerate All
+    </button>
+  </div>
+</div>
 
     <!-- Approve error -->
     <div *ngIf="approveError" class="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200 flex items-start gap-2">
@@ -398,31 +462,45 @@
 
     <!-- Question list -->
     <div class="question-list">
-      <div *ngFor="let q of reviewQuestions; let i = index" class="question-card" [class.question-card--editing]="q.editing">
-        
-        <!-- Question header -->
-        <div class="question-header">
-          <span class="q-number">Q{{ i + 1 }}</span>
-          <p class="q-text">{{ q.text }}</p>
-          <span *ngIf="q.createdBy === 'INSTRUCTOR'" class="badge-provenance badge-provenance--instructor">Instructor</span>
-          <span *ngIf="q.createdBy === 'AI'" class="badge-provenance badge-provenance--ai">AI</span>
-          <button *ngIf="!q.editing && !isQuizApproved" 
-                  class="delete-btn" 
-                  type="button" 
-                  (click)="deleteQuestion(q)" 
-                  title="Delete question">
-            <mat-icon>delete_outline</mat-icon>
-            <span>Delete</span>
-          </button>
-          <button *ngIf="!q.editing && !isQuizApproved" 
-                  class="edit-btn" 
-                  type="button" 
-                  (click)="startEdit(q)" 
-                  title="Edit question">
-            <mat-icon>edit</mat-icon>
-            <span>Edit</span>
-          </button>
-        </div>
+      <div *ngFor="let q of filteredReviewQuestions; let i = index"
+     class="question-card"
+     [class.question-card--editing]="q.editing"
+     [class.question-card--ai]="q.createdBy === 'AI'"
+     [class.question-card--manual]="q.createdBy === 'INSTRUCTOR'">
+
+  <div class="question-header">
+    <span class="q-number">Q{{ i + 1 }}</span>
+    <p class="q-text">{{ q.text }}</p>
+
+    <span *ngIf="q.createdBy === 'INSTRUCTOR'" class="badge-provenance badge-provenance--instructor">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">person</mat-icon>
+      Manual
+    </span>
+    <span *ngIf="q.createdBy === 'AI'" class="badge-provenance badge-provenance--ai">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">auto_awesome</mat-icon>
+      AI
+    </span>
+
+    <!-- 3-Dot Menu for Edit/Delete (only if not approved) -->
+    <button *ngIf="!q.editing && !isQuizApproved" 
+            type="button"
+            [matMenuTriggerFor]="questionMenu"
+            (click)="$event.stopPropagation()"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
+            title="Options">
+      <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">more_vert</mat-icon>
+    </button>
+    <mat-menu #questionMenu="matMenu">
+      <button mat-menu-item (click)="startEdit(q)">
+        <mat-icon class="!text-[16px]">edit</mat-icon>
+        <span>Edit</span>
+      </button>
+      <button mat-menu-item (click)="deleteQuestion(q)">
+        <mat-icon class="!text-[16px]">delete</mat-icon>
+        <span>Delete</span>
+      </button>
+    </mat-menu>
+  </div>
 
         <!-- Read Mode -->
         <div *ngIf="!q.editing" class="options-grid">
@@ -533,7 +611,7 @@
                     class="btn-save-edit" 
                     [disabled]="isQuizApproved"
                     (click)="saveEdit(q)">
-              <mat-icon>check</mat-icon> Save changes
+              Save 
             </button>
           </div>
         </div>
@@ -542,23 +620,21 @@
     </div>
 
     <!-- Approve bar (outside quiz list - on quiz card) -->
-    <div *ngIf="!isQuizApproved && (isManualMode ? reviewQuestions.length >= 10 : reviewQuestions.length > 0)" class="approve-bar">
-      <!-- Progress hint for manual mode -->
-      <p *ngIf="isManualMode && reviewQuestions.length < 10" class="approve-hint">
-        <mat-icon>edit_note</mat-icon>
-        {{ reviewQuestions.length }}/10 questions — add {{ 10 - reviewQuestions.length }} more to unlock publishing.
-      </p>
-      <p *ngIf="!isManualMode || reviewQuestions.length >= 10" class="approve-hint">
-        <mat-icon>lightbulb</mat-icon> Students won't see this quiz until you approve it.
-      </p>
-      <app-main-button [label]="'Approve & Publish'" [loading]="approveLoading" (action)="approve()"></app-main-button>
-    </div>
-    <!-- Progress hint shown below the list when under 10 questions in manual mode -->
-    <p *ngIf="isManualMode && !isQuizApproved && reviewQuestions.length > 0 && reviewQuestions.length < 10"
-       class="manual-progress-hint">
-      <mat-icon>info</mat-icon>
-      {{ reviewQuestions.length }}/10 questions — add {{ 10 - reviewQuestions.length }} more to unlock "Approve &amp; Publish".
-    </p>
+    <!-- Approve bar (outside quiz list - on quiz card) -->
+<div *ngIf="!isQuizApproved && quizStats.total >= 10" class="approve-bar">
+  <p class="approve-hint">
+    <mat-icon>lightbulb</mat-icon> Students won't see this quiz until you approve it.
+  </p>
+  <app-main-button [label]="'Approve & Publish'" [loading]="approveLoading" (action)="approve()"></app-main-button>
+</div>
+
+<!-- Progress hint shown when under 10 questions, regardless of mode -->
+<p *ngIf="!isQuizApproved && quizStats.total > 0 && quizStats.total < 10"
+   class="manual-progress-hint">
+  <mat-icon>info</mat-icon>
+  {{ quizStats.total }}/10 questions — add {{ 10 - quizStats.total }} more to unlock "Approve &amp; Publish".
+</p>
+
 
     <!-- Back to quiz list -->
     <div class="mt-6 flex justify-start">
