@@ -7,9 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { LessonCardComponent } from '../../components/lesson-card/lesson-card.component';
 import { SectionsService } from '../../../../core/services/sections';
 import { LessonsService } from '../../../../core/services/lessons';
-import { QuizzesService } from '../../../../core/services/quizzes';
 import { BackButtonComponent } from "../../components/shared/back-button/back-button";
-import { MainButtonComponent } from '../../../../shared/components/main-button/main-button.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -32,7 +30,6 @@ import { PageSkeletonComponent } from '../../../../shared/components/loading';
     MatButtonModule,
     LessonCardComponent,
     BackButtonComponent,
-    MainButtonComponent,
     DragDropModule,
     EmptyStateComponent,
     PageSkeletonComponent
@@ -55,9 +52,7 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
   courseId!: string;
   sectionId!: string;
   isLoading = true;
-  hasQuiz = false; // Track if section has a quiz
   private destroy$ = new Subject<void>();
-  private quizzesService = inject(QuizzesService);
 
   lessonsForm = this.fb.group({
     lessons: this.fb.array<FormGroup>([])
@@ -68,25 +63,6 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     this.sectionId = this.route.snapshot.paramMap.get('sectionId')!;
 
     this.loadLessons();
-    this.checkQuizExists();
-  }
-
-  private checkQuizExists() {
-    this.quizzesService.getQuizForSection(this.sectionId).subscribe({
-      next: (quiz) => {
-        this.hasQuiz = !!quiz;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.hasQuiz = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  // Public method to refresh quiz state (can be called from parent components)
-  refreshQuizState() {
-    this.checkQuizExists();
   }
 
   ngOnDestroy() {
@@ -250,10 +226,6 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
     );
   }
 
-  goToQuiz() {
-    this.router.navigate(['/course-builder', this.courseId, 'sections', this.sectionId, 'quiz-config']);
-  }
-
   moveUp(index: number) {
     if (index === 0) return;
     const arr = this.lessonsArray;
@@ -316,18 +288,6 @@ export class LessonBuilder implements OnInit, OnDestroy, HasPendingOperations {
       const id = lesson.get('id')?.value;
       // If lesson has no ID, it's potentially being created
       return !id || id === null;
-    });
-  }
-
-  get shouldDisableQuizButton(): boolean {
-    // Disable if no saved lessons exist
-    if (!this.hasSavedLessons) return true;
-    
-    // Disable if any lesson is missing a transcript
-    const lessons = this.lessonsArray.controls as FormGroup[];
-    return !lessons.every(lesson => {
-      const transcript = lesson.get('transcript')?.value;
-      return transcript && String(transcript).trim() !== '';
     });
   }
 

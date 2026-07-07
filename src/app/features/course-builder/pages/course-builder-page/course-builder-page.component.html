@@ -13,12 +13,20 @@
       <div class="flex items-center justify-center gap-3 overflow-x-auto whitespace-nowrap px-2">
 
         <!-- Step 1 -->
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
-            [class.bg-[var(--color-primary)]]="currentStep() >= 1" [class.text-white]="currentStep() >= 1" [class.border-[var(--color-primary)]]="currentStep() >= 1"
-            [class.bg-white]="currentStep() < 1" [class.border-[var(--color-border)]]="currentStep() < 1" [class.text-[var(--color-text-secondary)]]="currentStep() < 1">
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-xs font-semibold text-[var(--color-primary)] uppercase tracking-wider">Course</span>
+          <button
+            type="button"
+            (click)="navigateToStep(1)"
+            class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border cursor-pointer hover:bg-[var(--color-secondary)] hover:bg-opacity-20"
+            [class.bg-[var(--color-primary)]]="currentStep() >= 1"
+            [class.text-white]="currentStep() >= 1"
+            [class.border-[var(--color-primary)]]="currentStep() >= 1"
+            [class.bg-white]="currentStep() < 1"
+            [class.border-[var(--color-border)]]="currentStep() < 1"
+            [class.text-[var(--color-text-secondary)]]="currentStep() < 1">
             1
-          </div>
+          </button>
         </div>
 
         <!-- line -->
@@ -27,40 +35,20 @@
         </div>
 
         <!-- Step 2 -->
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
-            [class.bg-[var(--color-primary)]]="currentStep() >= 2" [class.text-white]="currentStep() >= 2" [class.border-[var(--color-primary)]]="currentStep() >= 2"
-            [class.bg-white]="currentStep() < 2" [class.border-[var(--color-border)]]="currentStep() < 2" [class.text-[var(--color-text-secondary)]]="currentStep() < 2">
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-xs font-semibold text-[var(--color-primary)] uppercase tracking-wider">Section</span>
+          <button
+            type="button"
+            (click)="navigateToStep(2)"
+            class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border cursor-pointer hover:bg-[var(--color-secondary)] hover:bg-opacity-20"
+            [class.bg-[var(--color-primary)]]="currentStep() >= 2"
+            [class.text-white]="currentStep() >= 2"
+            [class.border-[var(--color-primary)]]="currentStep() >= 2"
+            [class.bg-white]="currentStep() < 2"
+            [class.border-[var(--color-border)]]="currentStep() < 2"
+            [class.text-[var(--color-text-secondary)]]="currentStep() < 2">
             2
-          </div>
-        </div>
-
-        <!-- line -->
-        <div class="w-16 sm:w-20 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 3"
-          [class.bg-gray-300]="currentStep() < 3">
-        </div>
-
-        <!-- Step 3 -->
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
-            [class.bg-[var(--color-primary)]]="currentStep() >= 3" [class.text-white]="currentStep() >= 3" [class.border-[var(--color-primary)]]="currentStep() >= 3"
-            [class.bg-white]="currentStep() < 3" [class.border-[var(--color-border)]]="currentStep() < 3" [class.text-[var(--color-text-secondary)]]="currentStep() < 3">
-            3
-          </div>
-        </div>
-
-        <!-- line -->
-        <div class="w-16 sm:w-20 h-[2px]" [class.bg-[var(--color-primary)]]="currentStep() >= 4"
-          [class.bg-gray-300]="currentStep() < 4">
-        </div>
-
-        <!-- Step 4 -->
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 text-sm rounded-full flex items-center justify-center font-bold transition-all border"
-            [class.bg-[var(--color-primary)]]="currentStep() >= 4" [class.text-white]="currentStep() >= 4" [class.border-[var(--color-primary)]]="currentStep() >= 4"
-            [class.bg-white]="currentStep() < 4" [class.border-[var(--color-border)]]="currentStep() < 4" [class.text-[var(--color-text-secondary)]]="currentStep() < 4">
-            4
-          </div>
+          </button>
         </div>
 
       </div>

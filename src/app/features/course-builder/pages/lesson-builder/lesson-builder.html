@@ -53,9 +53,6 @@
     <!-- Navigation Actions -->
     <div class="flex justify-between items-center mt-6">
         <app-back-button label="Back" (back)="goBackToSections()"></app-back-button>
-        <app-main-button [label]="hasQuiz ? 'Show Quiz' : 'Generate Quiz'" icon="arrow_forward" [disabled]="shouldDisableQuizButton"
-            [title]="shouldDisableQuizButton ? 'All lessons must have transcripts before generating a quiz' : ''"
-            (action)="goToQuiz()"></app-main-button>
     </div>
 
 </div>

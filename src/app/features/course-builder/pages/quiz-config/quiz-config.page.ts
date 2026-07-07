@@ -1210,13 +1210,15 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.flushPendingAutosave().subscribe(() => {
-      this.router.navigate([
-        '/course-builder',
-        this.courseId,
-        'sections',
-        this.sectionId,
-        'lessons',
-      ]);
+      this.router.navigate(
+        ['/course-builder', this.courseId, 'sections'],
+        {
+          queryParams: {
+            highlight: this.sectionId,
+            expand: this.sectionId
+          }
+        }
+      );
     });
   }
 

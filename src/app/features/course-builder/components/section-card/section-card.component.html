@@ -5,7 +5,7 @@
   [isDeleting]="isDeleting" [showLessonsButton]="true" [lessonsButtonDisabled]="!isExistingSection"
   [showMobileMenu]="true" [hideMobileExpansionIndicator]="true" (deleteClicked)="requestDelete()"
   [showQuizButton]="true" [quizButtonDisabled]="!canGenerateOrShowQuiz" 
-  [quizButtonLabel]="hasQuiz ? 'Show Quiz' : 'Generate Quiz'"
+  [quizButtonLabel]="hasQuiz ? 'Quizzes' : 'Create Quiz'"
   (lessonsClicked)="onGoToLessons()"
   (quizClicked)="onGoToQuiz()" 
   [draftId]="draftId" 
@@ -152,7 +152,7 @@
     <!-- Action Buttons -->
     <div class="pt-1 flex justify-between items-center gap-2">
 
-      <!-- Desktop: Generate/Show Quiz (secondary action) -->
+      <!-- Generate/Show Quiz (secondary action - left side) -->
       <button type="button" (click)="onGoToQuiz()" [disabled]="!canGenerateOrShowQuiz || isDeleting"
         class="text-[11px] font-bold uppercase tracking-wider transition-all
          hover:bg-[var(--color-primary)] hover:text-white px-4 py-2
@@ -163,7 +163,7 @@
         {{ hasQuiz ? 'Show Quiz' : 'Generate Quiz' }}
       </button>
 
-      <!-- Update / Create (always visible) -->
+      <!-- Update / Create (always visible - right side) -->
       <button type="button" (click)="saveSection()" [disabled]="sectionForm.invalid || isSaving || isDeleting"
         class="text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5
          hover:bg-[var(--color-primary-light)] px-4 py-2 rounded-md border

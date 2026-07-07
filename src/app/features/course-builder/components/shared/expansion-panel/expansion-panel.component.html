@@ -126,6 +126,18 @@
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block ml-0.5">chevron_right</mat-icon>
           </button>
 
+          <!-- Quizzes pill button (section mode) -->
+          <button *ngIf="showQuizButton"
+            type="button"
+            (click)="onQuizClicked($event)"
+            [disabled]="quizButtonDisabled || isDeleting || isLocked"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white disabled:opacity-30 disabled:border-[var(--color-border)] disabled:text-[var(--color-text-secondary)] disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all"
+            aria-label="Go to Quizzes">
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block">quiz</mat-icon>
+            <span>{{ quizButtonLabel }}</span>
+            <mat-icon class="!text-[14px] !w-[14px] !h-[14px] block ml-0.5">chevron_right</mat-icon>
+          </button>
+
         </div>
 
         <!-- Mobile actions: delete only (lesson mode, no menu) -->

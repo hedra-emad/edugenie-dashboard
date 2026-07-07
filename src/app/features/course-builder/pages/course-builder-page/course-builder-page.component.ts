@@ -158,12 +158,17 @@ export class CourseBuilderPageComponent implements OnInit {
     this.router.navigate(['/course-builder', id, 'sections']);
   }
 
+  navigateToStep(step: number) {
+    if (step === 1) {
+      this.router.navigate(['/course-builder', this.courseId() || '']);
+    } else if (step === 2) {
+      this.router.navigate(['/course-builder', this.courseId() || '', 'sections']);
+    }
+  }
+
   private updateStep(url: string) {
-    if (url.includes('quiz-config')) {
-      this.currentStep.set(4);
-    } else if (url.includes('lessons')) {
-      this.currentStep.set(3);
-    } else if (url.includes('sections')) {
+    // Reduced to 2 steps: 1 = course-basic-info, 2 = sections-builder (includes lessons & quizzes)
+    if (url.includes('sections') || url.includes('lessons') || url.includes('quiz-config')) {
       this.currentStep.set(2);
     } else {
       this.currentStep.set(1);
