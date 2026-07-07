@@ -149,20 +149,20 @@
 
       <div class="card-divider"></div>
 
-      <mat-card-footer class="card-footer">
-        <div class="stat-item">
+      <mat-card-footer class="card-footer flex items-center justify-between">
+        <div class="stat-item flex flex-row items-center gap-1.5">
           <mat-icon>group</mat-icon>
-          <span>{{ course.totalEnrollments }} enrolled</span>
+          <span class="whitespace-nowrap">{{ course.totalEnrollments }} enrolled</span>
         </div>
 
-        <div class="stat-item">
+        <div class="stat-item flex flex-row items-center gap-1.5">
           <mat-icon>library_books</mat-icon>
-          <span>{{ course.totalLessons }} lessons</span>
+          <span class="whitespace-nowrap">{{ course.totalLessons }} lessons</span>
         </div>
 
-        <div class="stat-item">
+        <div class="stat-item flex flex-row items-center gap-1.5">
           <mat-icon>schedule</mat-icon>
-          <span>{{ formatTotalHours(course.totalHours) }}</span>
+          <span class="whitespace-nowrap">{{ formatTotalHours(course.totalHours) }}</span>
         </div>
       </mat-card-footer>
 
