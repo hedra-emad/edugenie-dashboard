@@ -830,7 +830,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   private startCloudinaryUpload() {
     this.setState({ state: 'uploading', progress: 0, message: '' });
     this.startProgressTracking();
-    this.toastr.warning(
+    this.toastr.success(
       'Please stay on this page while the video is uploading. Refreshing, closing the tab, or navigating away may interrupt the upload.',
       'Uploading video',
       {
