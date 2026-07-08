@@ -294,15 +294,15 @@
         <div>
           <label class="field-label">
             Number of Questions
-            <span class="text-[var(--color-text-muted)] font-normal normal-case ml-1">({{ getMinQuestions() }} – {{ getMaxQuestions() }})</span>
+            <span class="text-[var(--color-text-muted)] font-normal normal-case ml-1">(1 – {{ getMaxQuestions() }})</span>
           </label>
           <input  
             type="number"
             formControlName="numberOfQuestions"
             min="1" [max]="getMaxQuestions()"
             class="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-text)] bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" />
-          <p *ngIf="quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched" class="text-xs text-red-500 mt-1 font-medium">Must be between 1 and {{ getMaxQuestions() }}</p>
-          <p *ngIf="!(quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1">Generate between 1 and {{ getMaxQuestions() }} questions.</p>
+          <p *ngIf="quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched" class="text-xs text-red-500 mt-1 font-medium">Must be between 1 and {{ getMaxQuestions() }}.</p>
+          <p *ngIf="!(quizForm.get('numberOfQuestions')?.invalid && quizForm.get('numberOfQuestions')?.touched)" class="text-xs text-[var(--color-text-secondary)] mt-1">Generate up to {{ getMaxQuestions() }} questions (quiz maximum is {{ MAX_QUESTIONS_PER_QUIZ }}).</p>
         </div>
 
         <!-- Question type -->
