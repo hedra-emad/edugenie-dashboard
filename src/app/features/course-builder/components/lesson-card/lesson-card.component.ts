@@ -704,6 +704,7 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   removeSelectedVideo() {
   this.videoTouched = true;
   this.stopTranscriptPolling();
+
   const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
   if (publicId && this.s !== 'saved') {
     this.cloudinaryService.deleteAsset(publicId, 'video')
@@ -711,36 +712,25 @@ export class LessonCardComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  // Tear down the OLD binding (kills the stale valueChanges subscription
-  // and removes the orphaned draft entry) before swapping IDs
-  this.formDraftInteg.clearDraft({
-    draftId: this.draftId,
-    type: 'lesson',
-    parentId: this.sectionId,
-  });
+  // Drop the in-memory file / metadata for this field, but keep the SAME draftId —
+  // no reconnect, no disconnect, no risk of clobbering a real lesson id.
+  this.fileDraftService.removeFileFromDraft(this.draftId, 'video');
 
-  const newDraftId = this.formDraftInteg.generateDraftId('lesson', this.sectionId);
-  this.lessonForm.patchValue({ id: newDraftId });
-  this.draftId = newDraftId;
-
-  // Reconnect so autosave writes to the NEW draftId going forward
-  this.formDraftInteg.connectForm(this.lessonForm, {
-    draftId: this.draftId,
-    type: 'lesson',
-    parentId: this.sectionId,
-    excludeFields: ['id', 'expanded'],
-    fileFields: [{
-      fieldName: 'video',
-      uploadType: 'video',
-      validation: { maxSize: 500 * 1024 * 1024, allowedTypes: ['video'], maxDuration: this.MAX_DURATION },
-    }],
-    autoSave: true,
-    autoSaveDelay: 1000,
-  });
+  this.lessonForm.patchValue({ videoUrl: null, videoPublicId: null, videoDuration: 0 });
 
   this.selectedVideoFile = null;
   if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
   this.selectedVideoUrl = null;
+
+  // Persist the cleared state right away so the draft entry reflects "no video"
+  // instead of leaving a stale/inconsistent snapshot for the debounce to catch later.
+  this.formDraftInteg.saveDraftNow(this.lessonForm, {
+    draftId: this.draftId,
+    type: 'lesson',
+    parentId: this.sectionId,
+    excludeFields: ['id', 'expanded'],
+  });
+
   this.setState(initialSnapshot());
 }
 
