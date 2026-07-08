@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Subscription, filter, take, finalize } from 'rxjs';
+import { Subscription, filter, take, finalize, forkJoin } from 'rxjs';
 import { PageSkeletonComponent, ButtonLoadingComponent } from '../../shared/components/loading';
 import { CloudinaryThumbPipe } from '../../shared/pipes/cloudinary-thumb.pipe';
 import { StatsCardsComponent } from './components/stats-cards/stats-cards.component';
@@ -12,15 +12,12 @@ import { SalesTableComponent } from './components/sales-table/sales-table.compon
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, registerables, ChartConfiguration, ChartData } from 'chart.js';
 
-// Register chart.js here, in the lazy analytics chunk, rather than globally via
-// provideCharts() in app.config — keeps all of chart.js out of the initial
-// bundle (it loads only when a user opens an analytics page). ng2-charts'
-// BaseChartDirective renders against this global registry. Idempotent.
 Chart.register(...registerables);
 import { InstructorAnalyticsService } from './services/instructor-analytics.service';
 import { InstructorAnalyticsResponse } from './models/instructor-analytics.model';
 import { InstructorCoursesService } from '../instructor/services/instructor-courses.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AdminUsersService } from '../admin/users/services/admin-users.service';
 
 @Component({
   selector: 'app-instructor-analytics',
@@ -41,12 +38,13 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrl: './instructor-analytics.page.css'
 })
 export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
-  private analyticsService = inject(InstructorAnalyticsService);
-  private instructorCoursesService = inject(InstructorCoursesService);
-  private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly analyticsService = inject(InstructorAnalyticsService);
+  private readonly instructorCoursesService = inject(InstructorCoursesService);
+  private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly adminUsersService = inject(AdminUsersService);
 
-  // Instructor view
+  userProfile: any = null;
   analyticsData: InstructorAnalyticsResponse | null = null;
   publishedCoursesCount: number | undefined = undefined;
   recentSalesData: any[] = [];
@@ -424,6 +422,19 @@ export class InstructorAnalyticsPageComponent implements OnInit, OnDestroy {
               this.platformData = { error: true, topCourses: [], topInstructors: [], totalUsers: 0, totalStudents: 0, totalInstructors: 0 };
             } else {
               this.platformData = data;
+              
+              // Override totalStudents and totalInstructors with accurate data
+              forkJoin({
+                students: this.adminUsersService.getUsers(1, 1, 'student'),
+                instructors: this.adminUsersService.getUsers(1, 1, 'instructor')
+              }).subscribe({
+                next: ({ students, instructors }) => {
+                  this.platformData.totalStudents = students.meta?.total || 0;
+                  this.platformData.totalInstructors = instructors.meta?.total || 0;
+                  this.cdr.detectChanges();
+                }
+              });
+
               // Admin Revenue Chart logic
               const rc = data?.revenueChart;
               this.hasAdminRevenueChart = true;
