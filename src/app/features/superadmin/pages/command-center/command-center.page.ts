@@ -55,6 +55,8 @@ export class CommandCenterPageComponent implements OnInit {
 
 
   payoutStatus: { label: string; value: number; percent: number; color: string }[] = [];
+  // Data-driven donut ring arcs (stroke-dasharray + offset) for Payout Overview.
+  payoutArcs: { color: string; dash: string; offset: number }[] = [];
 
 
   ngOnInit() { this.loadData(); }
@@ -102,15 +104,30 @@ export class CommandCenterPageComponent implements OnInit {
 
 
   private buildPayoutStatus() {
-    const total = this.overview?.payoutLiability ?? 0;
-    const paid = +(total * 0.75).toFixed(0);
-    const pending = +(total * 0.17).toFixed(0);
-    const failed = Math.max(0, total - paid - pending);
+    // Real split from the backend: paid out (reconciled from Stripe payout.paid)
+    // vs owed (not yet paid). No fabricated "failed" bucket.
+    const paid = this.overview?.paidOut ?? 0;
+    const owed = this.overview?.payoutLiability ?? 0;
+    const total = paid + owed;
+    const pct = (v: number) => (total > 0 ? Math.round((v / total) * 100) : 0);
     this.payoutStatus = [
-      { label: 'Paid Out', value: paid, percent: 75, color: '#8B5CF6' },
-      { label: 'Pending', value: pending, percent: 17, color: '#F97316' },
-      { label: 'Failed', value: +failed.toFixed(0), percent: 8, color: '#EF4444' }
+      { label: 'Paid Out', value: +paid.toFixed(2), percent: pct(paid), color: '#8B5CF6' },
+      { label: 'Owed', value: +owed.toFixed(2), percent: pct(owed), color: '#F97316' }
     ];
+
+    // Build the donut ring from the real percentages (r=48 → circumference ≈ 301.6).
+    const C = 2 * Math.PI * 48;
+    let off = 0;
+    this.payoutArcs = this.payoutStatus.map((s) => {
+      const len = (C * s.percent) / 100;
+      const arc = {
+        color: s.color,
+        dash: `${len.toFixed(1)} ${(C - len).toFixed(1)}`,
+        offset: -off,
+      };
+      off += len;
+      return arc;
+    });
   }
 
 
