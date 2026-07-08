@@ -621,7 +621,7 @@
 
     <!-- Approve bar (outside quiz list - on quiz card) -->
     <!-- Approve bar (outside quiz list - on quiz card) -->
-<div *ngIf="!isQuizApproved && quizStats.total >= MAX_QUESTIONS_PER_QUIZ" class="approve-bar">
+<div *ngIf="!isQuizApproved && quizStats.total >= MIN_QUESTIONS_PER_QUIZ && quizStats.total <= MAX_QUESTIONS_PER_QUIZ" class="approve-bar">
   <p class="approve-hint">
     <mat-icon>lightbulb</mat-icon> Students won't see this quiz until you approve it.
   </p>
@@ -629,10 +629,17 @@
 </div>
 
 <!-- Progress hint shown when under 5 questions, regardless of mode -->
-<p *ngIf="!isQuizApproved && quizStats.total > 0 && quizStats.total < MAX_QUESTIONS_PER_QUIZ"
+<p *ngIf="!isQuizApproved && quizStats.total > 0 && quizStats.total < MIN_QUESTIONS_PER_QUIZ"
    class="manual-progress-hint">
   <mat-icon>info</mat-icon>
-  {{ quizStats.total }}/{{ MAX_QUESTIONS_PER_QUIZ }} questions — add {{ MAX_QUESTIONS_PER_QUIZ - quizStats.total }} more to unlock "Approve &amp; Publish".
+  {{ quizStats.total }}/{{ MIN_QUESTIONS_PER_QUIZ }} questions — add {{ MIN_QUESTIONS_PER_QUIZ - quizStats.total }} more to unlock "Approve &amp; Publish".
+</p>
+
+<!-- Progress hint shown when over 20 questions -->
+<p *ngIf="!isQuizApproved && quizStats.total > MAX_QUESTIONS_PER_QUIZ"
+   class="manual-progress-hint text-red-600">
+  <mat-icon class="text-red-600">warning</mat-icon>
+  {{ quizStats.total }}/{{ MAX_QUESTIONS_PER_QUIZ }} questions — remove {{ quizStats.total - MAX_QUESTIONS_PER_QUIZ }} question(s) to unlock "Approve &amp; Publish".
 </p>
 
 
