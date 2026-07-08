@@ -589,9 +589,8 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
       this.generationIntent = 'append';
     }
 
-    // Set dynamic validation for numberOfQuestions field
-    const maxVal = this.remainingQuestionSlots;
-    const minVal = 1;
+    // Set dynamic validation: min 1, max = remaining slots (up to MAX_QUESTIONS_PER_QUIZ)
+    const maxVal = this.getMaxQuestions();
     const defaultVal = Math.min(MAX_QUESTIONS_PER_QUIZ, maxVal);
 
     // Ensure difficulty and questionTypes have valid defaults
@@ -604,7 +603,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
 
     this.quizForm
       .get('numberOfQuestions')
-      ?.setValidators([Validators.required, Validators.min(minVal), Validators.max(maxVal)]);
+      ?.setValidators([Validators.required, Validators.min(1), Validators.max(maxVal)]);
     this.quizForm.patchValue({
       difficulty: difficulty,
       numberOfQuestions: defaultVal,
