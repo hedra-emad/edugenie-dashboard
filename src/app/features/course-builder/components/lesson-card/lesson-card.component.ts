@@ -702,27 +702,47 @@ export class LessonCardComponent implements OnInit, OnDestroy {
   }
 
   removeSelectedVideo() {
-    // Clean up Cloudinary video if exists and not saved
-    this.videoTouched = true;
-    this.stopTranscriptPolling();
-    const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
-    if (publicId && this.s !== 'saved') {
-      this.cloudinaryService.deleteAsset(publicId, 'video')
-        .pipe(takeUntil(this.destroy$))
-        .subscribe();
-    }
-
-    // Reset form to use draft ID (no placeholder to delete)
-    const newDraftId = this.formDraftInteg.generateDraftId('lesson', this.sectionId);
-    this.lessonForm.patchValue({ id: newDraftId });
-    this.draftId = newDraftId;
-
-    this.selectedVideoFile = null;
-    if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
-
-    this.selectedVideoUrl = null;
-    this.setState(initialSnapshot());
+  this.videoTouched = true;
+  this.stopTranscriptPolling();
+  const publicId = this.lessonForm.get('videoPublicId')?.value || this.snap.videoPublicId;
+  if (publicId && this.s !== 'saved') {
+    this.cloudinaryService.deleteAsset(publicId, 'video')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
   }
+
+  // Tear down the OLD binding (kills the stale valueChanges subscription
+  // and removes the orphaned draft entry) before swapping IDs
+  this.formDraftInteg.clearDraft({
+    draftId: this.draftId,
+    type: 'lesson',
+    parentId: this.sectionId,
+  });
+
+  const newDraftId = this.formDraftInteg.generateDraftId('lesson', this.sectionId);
+  this.lessonForm.patchValue({ id: newDraftId });
+  this.draftId = newDraftId;
+
+  // Reconnect so autosave writes to the NEW draftId going forward
+  this.formDraftInteg.connectForm(this.lessonForm, {
+    draftId: this.draftId,
+    type: 'lesson',
+    parentId: this.sectionId,
+    excludeFields: ['id', 'expanded'],
+    fileFields: [{
+      fieldName: 'video',
+      uploadType: 'video',
+      validation: { maxSize: 500 * 1024 * 1024, allowedTypes: ['video'], maxDuration: this.MAX_DURATION },
+    }],
+    autoSave: true,
+    autoSaveDelay: 1000,
+  });
+
+  this.selectedVideoFile = null;
+  if (this.selectedVideoUrl) URL.revokeObjectURL(this.selectedVideoUrl);
+  this.selectedVideoUrl = null;
+  this.setState(initialSnapshot());
+}
 
   // ─────────────────────────────────────────────────────────
   // Save entry-point (main action button)
