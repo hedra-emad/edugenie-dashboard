@@ -36,6 +36,34 @@ export class AuthService {
   private readonly authApiUrl = '/auth';
   private readonly usersApiUrl = '/users';
 
+  // JS-readable mirror of "this browser has an active staff session". The real
+  // JWT/refresh cookies are httpOnly (unreadable from JS), so a never-logged-in
+  // visitor has no way to know there's no session — and would otherwise fire a
+  // GET /users/profile (401) + POST /auth/refresh (401) pair on every load that
+  // the browser logs to the console. This flag lets us skip those calls for
+  // guests. Set on any successful auth, cleared on logout/session-clear.
+  private static readonly SESSION_HINT_KEY = 'edugenie_has_session';
+
+  hasSessionHint(): boolean {
+    try {
+      return localStorage.getItem(AuthService.SESSION_HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private setSessionHint(on: boolean): void {
+    try {
+      if (on) {
+        localStorage.setItem(AuthService.SESSION_HINT_KEY, '1');
+      } else {
+        localStorage.removeItem(AuthService.SESSION_HINT_KEY);
+      }
+    } catch {
+      // localStorage unavailable (SSR / private mode) — the flag is a hint only.
+    }
+  }
+
   private readonly currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
@@ -58,6 +86,16 @@ export class AuthService {
   ]);
 
   initializeAuth(): Observable<void> {
+    // Guest (never logged in): no session hint → skip the profile fetch entirely,
+    // so no /users/profile 401 and no downstream /auth/refresh 401 in the console.
+    if (!this.hasSessionHint()) {
+      if (!this.initialization$) {
+        this.authInitializedSubject.next(true);
+        this.initialization$ = of(void 0);
+      }
+      return this.initialization$;
+    }
+
     if (!this.initialization$) {
       this.initialization$ = this.http
         .get<ProfileApiResponse>(`${this.usersApiUrl}/profile`)
@@ -405,6 +443,7 @@ export class AuthService {
 
     this.currentUserSubject.next(user);
     this.currentUserSignal.set(user);
+    this.setSessionHint(true);
 
     if (user?.id) {
       this.notificationsService.connectPusher(user.id);
@@ -415,6 +454,7 @@ export class AuthService {
     this.notificationsService.disconnectPusher();
     this.currentUserSubject.next(null);
     this.currentUserSignal.set(null);
+    this.setSessionHint(false);
   }
 
   getCurrentUser(): UserProfile | null {

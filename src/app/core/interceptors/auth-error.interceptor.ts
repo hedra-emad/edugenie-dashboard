@@ -48,7 +48,10 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error instanceof HttpErrorResponse) {
         const isAuthCall = AUTH_PATHS.some((p) => req.url.includes(p));
 
-        if (error.status === 401 && !isAuthCall) {
+        // Only attempt a silent refresh when a session was actually expected.
+        // A guest (no session hint) 401 must not spawn a /auth/refresh — that
+        // just adds a second console 401 for a visitor who never logged in.
+        if (error.status === 401 && !isAuthCall && authService.hasSessionHint()) {
           // Concurrent 401s share one in-flight refresh (deduped in the service).
           return authService.refreshSession().pipe(
             // `next(req)` re-runs only the downstream chain, so a second 401
