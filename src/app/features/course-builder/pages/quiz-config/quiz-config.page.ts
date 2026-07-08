@@ -32,6 +32,7 @@ import {
   EnrollmentStatusResponse,
   ApproveQuizDto,
   MAX_QUESTIONS_PER_QUIZ,
+  MIN_QUESTIONS_PER_QUIZ,
   QuizStats, // ← NEW
   computeQuizStats,
   CreateQuizDto, // ← NEW
@@ -101,6 +102,7 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
   totalQuizzes = 0;
   readonly MAX_QUIZZES = 5;
   readonly MAX_QUESTIONS_PER_QUIZ = MAX_QUESTIONS_PER_QUIZ;
+  readonly MIN_QUESTIONS_PER_QUIZ = MIN_QUESTIONS_PER_QUIZ;
   readonly ENROLLMENT_THRESHOLD = 30;
   isManualMode = false;
   generationIntent: 'replace' | 'append' = 'replace'; // NEW: decides append vs replace on submit()
@@ -817,8 +819,8 @@ export class QuizConfigPageComponent implements OnInit, OnDestroy {
       this.approveError = 'Please save or discard all open edits before approving.';
       return;
     }
-    if (this.activeQuestionsCount === 0) {
-      this.approveError = 'A quiz must have at least one question to be approved.';
+    if (this.activeQuestionsCount < this.MIN_QUESTIONS_PER_QUIZ) {
+      this.approveError = `A quiz must have at least ${this.MIN_QUESTIONS_PER_QUIZ} questions to be approved.`;
       return;
     }
     this.approveError = '';

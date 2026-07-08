@@ -20,7 +20,8 @@ export enum QuestionType {
  * Applies to all questions regardless of origin (AI, instructor, or mixed).
  * All frontend validations must reference this constant — never hardcode 5.
  */
-export const MAX_QUESTIONS_PER_QUIZ = 5;
+export const MAX_QUESTIONS_PER_QUIZ = 20;
+export const MIN_QUESTIONS_PER_QUIZ = 5;
 
 export interface CreateQuizDto {
   sectionId: string;
