@@ -10,6 +10,7 @@ import {
   ApprovePayoutPayload,
   RejectPayoutPayload,
   SyncPayoutResponse,
+  InstructorStripeBalanceResponse,
   PlatformConfigResponse,
   UpdatePlatformConfigDto,
   AuditLogPaginatedResponse,
@@ -70,6 +71,11 @@ export class SuperadminService {
       .set('page', page.toString())
       .set('limit', limit.toString());
     return this.http.get<PendingPayoutPaginatedResponse>(`${this.baseUrl}/payouts/pending`, { params });
+  }
+
+  /** Live per-instructor Stripe Connect payout balances + onboarding status. */
+  getInstructorStripeBalances(): Observable<InstructorStripeBalanceResponse> {
+    return this.http.get<InstructorStripeBalanceResponse>(`${this.baseUrl}/payouts/stripe-balances`);
   }
 
   /** Approve an instructor's payout request (records the transfer method + reference). */

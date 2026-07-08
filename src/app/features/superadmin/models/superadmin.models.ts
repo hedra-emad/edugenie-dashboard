@@ -119,6 +119,24 @@ export interface PendingPayoutPaginatedResponse {
   };
 }
 
+/** Live per-instructor Stripe Connect payout snapshot (superadmin payouts board). */
+export interface InstructorStripeBalance {
+  instructorId: string;
+  instructorName: string;
+  instructorEmail: string;
+  /** 'enabled' = payouts on; 'onboarding' = account not payout-ready yet; 'none' = no usable account. */
+  status: 'enabled' | 'onboarding' | 'none';
+  detailsSubmitted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  balanceAvailable: number;
+  balancePending: number;
+}
+
+export interface InstructorStripeBalanceResponse {
+  data: InstructorStripeBalance[];
+}
+
 export type PayoutMethod = 'bank_transfer' | 'paypal';
 
 /**
