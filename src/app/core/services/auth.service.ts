@@ -359,11 +359,20 @@ export class AuthService {
     // admin-login page, while everyone else (instructors) is bounced to the
     // EduGenie app's logout route — the app is where they authenticate.
     const role = this.getCurrentUser()?.role;
+    // Staff (admin/superadmin) re-authenticate on THIS app's /admin-login. Decide
+    // by role, but fall back to the current route: a logout fired from the /admin
+    // area is always staff, so even if the in-memory user was already cleared (so
+    // `role` is undefined) the admin still lands on /admin-login instead of being
+    // bounced to the student app's home.
+    const url = this.router.url.split('?')[0];
+    const inAdminArea = url === '/admin' || url.startsWith('/admin/');
+    const isStaffAdmin =
+      role === 'admin' || role === 'superadmin' || inAdminArea;
     return this.http.post(`${this.authApiUrl}/logout`, {}).pipe(
       catchError(() => of(null)),
       tap(() => {
         this.clearCurrentUser();
-        if (role === 'admin' || role === 'superadmin') {
+        if (isStaffAdmin) {
           this.router.navigate(['/admin-login']);
         } else {
           const nextjsUrl = environment.studentAppUrl;
