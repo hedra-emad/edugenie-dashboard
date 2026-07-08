@@ -2,9 +2,13 @@ export interface SuperAdminDashboardOverviewResponse {
   systemStatus: string;
   platformRevenue: number;
   grossSales: number;
+  /** Total instructor share earned (lifetime, non-reversed) — not money paid out. */
   instructorPayouts: number;
   stripeFees: number;
+  /** Instructor share not yet paid out (owed). */
   payoutLiability: number;
+  /** Instructor share actually paid out (reconciled from Stripe payout.paid). */
+  paidOut: number;
   activeAdmins: number;
   pendingPayouts: number;
   revenueGrowthPercent: number;

@@ -67,7 +67,7 @@
         <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-teal-50 text-teal-500 shrink-0">
           <mat-icon class="!text-[16px] !w-4 !h-4">groups</mat-icon>
         </div>
-        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Instructor Payouts</span>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Instructor Share (total)</span>
       </div>
       <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.instructorPayouts |
         number }}</span>
@@ -93,7 +93,7 @@
         <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-rose-50 text-rose-400 shrink-0">
           <mat-icon class="!text-[16px] !w-4 !h-4">account_balance_wallet</mat-icon>
         </div>
-        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Payout Liability</span>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Owed to Instructors</span>
       </div>
       <span class="text-2xl font-bold text-slate-800 leading-none whitespace-nowrap">${{ overview.payoutLiability |
         number }}</span>
@@ -106,7 +106,7 @@
         <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-orange-50 text-orange-400 shrink-0">
           <mat-icon class="!text-[16px] !w-4 !h-4">payments</mat-icon>
         </div>
-        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Pending Payouts</span>
+        <span class="text-[12px] font-semibold text-slate-500 leading-tight">Instructors Awaiting Payout</span>
       </div>
       <span class="text-2xl font-bold text-slate-800 leading-none">{{ overview.pendingPayouts | number }}</span>
     </div>
@@ -239,22 +239,20 @@
       <div class="p-5 flex flex-col xl:flex-row items-center justify-center flex-1 gap-5">
         <div class="relative w-[110px] h-[110px] shrink-0">
           <svg viewBox="0 0 144 144" class="w-full h-full transform -rotate-90">
-            <!-- Purple (Paid) 75% -->
-            <circle cx="72" cy="72" r="48" fill="none" stroke="#8B5CF6" stroke-width="28" stroke-dasharray="226 301"
-              stroke-dashoffset="0" />
-            <!-- Orange (Pending) 17% -->
-            <circle cx="72" cy="72" r="48" fill="none" stroke="#F97316" stroke-width="28" stroke-dasharray="51 301"
-              stroke-dashoffset="-226" />
-            <!-- Red (Failed) 8% -->
-            <circle cx="72" cy="72" r="48" fill="none" stroke="#F43F5E" stroke-width="28" stroke-dasharray="24 301"
-              stroke-dashoffset="-277" />
+            <!-- Base track -->
+            <circle cx="72" cy="72" r="48" fill="none" stroke="#e2e8f0" stroke-width="28" />
+            <!-- Real Paid / Owed arcs, driven by payoutArcs -->
+            @for (arc of payoutArcs; track $index) {
+            <circle cx="72" cy="72" r="48" fill="none" [attr.stroke]="arc.color" stroke-width="28"
+              [attr.stroke-dasharray]="arc.dash" [attr.stroke-dashoffset]="arc.offset" />
+            }
           </svg>
           <div
             class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-[25px] shadow-sm">
             <span class="text-[13px] font-bold text-slate-800 leading-none">{{ overview?.payoutLiability | number
               }}</span>
             <span
-              class="text-[9px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide leading-tight text-center">$<br>Liability</span>
+              class="text-[9px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide leading-tight text-center">$<br>Owed</span>
           </div>
         </div>
 
