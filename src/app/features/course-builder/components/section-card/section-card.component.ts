@@ -88,6 +88,8 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
   @Output() delete = new EventEmitter<number>();
   @Output() goToLessons = new EventEmitter<void>();
   @Output() sectionCreated = new EventEmitter<string>();
+  /** Emitted after any successful section save (create or update) so the parent can refresh course-level metadata (e.g. total price). */
+  @Output() sectionUpdated = new EventEmitter<void>();
 
 
   // ================= UI State =================
@@ -283,6 +285,10 @@ export class SectionCardComponent implements OnInit, OnDestroy, OnChanges {
         this.isSaving = false;
         this.cdr.markForCheck();
         this.toastr.success(`"${truncatedTitle}" saved successfully`);
+
+        // Notify parent to refresh course-level metadata (e.g. total price)
+        this.sectionUpdated.emit();
+
         if (newSectionId) {
           this.router.navigate([
             '/course-builder',
