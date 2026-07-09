@@ -16,6 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Section } from '../../../../core/models/section.model';
 import { Lesson } from '../../../../core/models/lesson.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { CourseBuilderPageComponent } from '../course-builder-page/course-builder-page.component';
 
 import { DraftStateService } from '../../../../core/services/draft-state.service';
 import { FormDraftIntegrationService } from '../../../../core/services/form-draft-integration.service';
@@ -93,6 +94,8 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
   isLoading = true;
   private draftStateService = inject(DraftStateService);
   private formDraftIntegration = inject(FormDraftIntegrationService);
+  /** Optional reference to the page shell — used to refresh course metadata after a section save. */
+  private courseBuilderPage = inject(CourseBuilderPageComponent, { optional: true });
 
   @ViewChildren(SectionCardComponent) sectionCards!: QueryList<SectionCardComponent>;
 
@@ -224,6 +227,14 @@ export class SectionBuilderComponent implements OnInit, AfterViewInit {
 
   onSectionCreated(sectionId: string) {
     this.expandedSectionId = sectionId;
+  }
+
+  /**
+   * Called when a section card successfully saves — triggers a fresh course data
+   * fetch so the parent page's `courseData` signal reflects the updated total price.
+   */
+  onSectionUpdated() {
+    this.courseBuilderPage?.refreshCourseData();
   }
 
   onSectionDropped(event: CdkDragDrop<FormGroup[]>) {

@@ -95,6 +95,7 @@
           <app-section-card [sectionForm]="sectionGroup" [index]="sectionIdx" [courseId]="courseId"
             [highlight]="sectionGroup.get('id')?.value === highlightSectionId"
             [expanded]="sectionGroup.get('id')?.value === expandedSectionId" (sectionCreated)="onSectionCreated($event)"
+            (sectionUpdated)="onSectionUpdated()"
             (delete)="onSectionDeleted(sectionIdx)">
           </app-section-card>
         </div>
