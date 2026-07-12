@@ -1,59 +1,83 @@
-# EdugenieDashboard
+# EduGenie — Admin & Instructor Dashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.22.
+The management dashboard for **EduGenie**, an AI-powered e-learning platform. Built with **Angular 20** and **TypeScript**, it gives instructors, admins and super-admins the tools to build courses, manage users, and track revenue.
 
-## Development server
+**Live:** https://edugenie-dashboard.vercel.app
+**Related:** [API](https://github.com/hedra-emad/edugenie-api) · [Student web app](https://github.com/hedra-emad/edugenie-student-web)
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
-```
+## Features
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **Course builder** — create and manage courses, sections and lessons
+- **Instructor workspace** — content management and student progress
+- **Instructor analytics** — enrollment, engagement and revenue charts (Chart.js)
+- **Admin panel** — user management, approvals, categories, moderation
+- **Super-admin** — platform-wide configuration, roles and audit logs
+- **Authentication** — JWT and Google OAuth with role-based route guards
+- **Settings** — profile, payouts and account configuration
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Tech Stack
 
-```bash
-ng generate component component-name
-```
+| Concern | Technology |
+|---|---|
+| Framework | Angular 20, TypeScript |
+| Charts | Chart.js via ng2-charts |
+| Forms | Angular Reactive Forms |
+| Auth | JWT + Google OAuth, route guards |
+| Deployment | Vercel |
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Getting Started
 
 ```bash
-ng test
+npm install
+npm start            # http://localhost:4200
 ```
 
-## Running end-to-end tests
+### Environment
 
-For end-to-end (e2e) testing, run:
+Set the API base URL in `src/environments/environment.ts`:
+
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'https://edugenie-api.vercel.app',
+};
+```
+
+### Scripts
 
 ```bash
-ng e2e
+npm start        # dev server
+npm run build    # production build
+npm run test     # unit tests
+npm run lint     # lint
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## Project Structure
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```
+src/app/features/
+├── auth/                    # login, OAuth callback, password reset
+├── course-builder/          # course, section and lesson authoring
+├── instructor/              # instructor workspace
+├── instructor-analytics/    # revenue and engagement charts
+├── admin/                   # user and content management
+├── superadmin/              # platform administration
+├── settings/
+└── errors/
+```
+
+---
+
+## Team
+
+Built by a 5-developer team for the **ITI Intensive Code Camp — Full-Stack Web & Generative AI Development using MERN**.
+
+Maintainer: [Hedra Emad](https://github.com/hedra-emad) — Team Leader
